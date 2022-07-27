@@ -39,9 +39,6 @@ to reduce performance bottlenecks.
 * Ubuntu 20.04 LTS (Vulkan only)
 * Ubuntu 22.04 LTS (Vulkan only)
 
-## Support ##
-For support, please visit the RRA repository github page: https://github.com/GPUOpen-Tools/radeon_raytracing_analyzer
-
 ## License ##
 Radeon Raytracing Analyzer is licensed under the MIT license. See the License.txt file for complete license information.
 

@@ -1,0 +1,566 @@
+/**
+* Radeon Raytracing Analyzer stylesheet
+*
+* Centralized location for styling of widgets
+*/
+
+/*************************************/
+/* Global
+/*************************************/
+
+QWidget#main_content_
+{
+    background-color: white;
+}
+
+QTableView::item:selected
+{
+    border: none;
+    color: white;
+    background-color: #0078d7;
+}
+
+QSplitter::handle
+{
+    background: gray;
+    width: 1px;
+}
+
+QSlider::groove:horizontal
+{
+    height: 2px;
+    background-color : #AFAFAF;
+    margin: 2px 0;
+}
+
+QSlider::handle:horizontal
+{
+    background-color : #0074D6;
+    width: 6px;
+    height:15px;
+    margin: -15px 0;
+}
+
+QSlider::handle:horizontal:hover
+{
+    background-color : black;
+    width: 6px;
+    height:15px;
+    margin: -15px 0
+}
+
+QSlider::handle:disabled
+{
+    background-color : grey;
+    width: 6px;
+    height:15px;
+    margin: -15px 0
+}
+
+FileLoadingWidget
+{
+    background-color: rgb(255, 255, 255);
+    color: gray;
+}
+
+RecentTraceMiniWidget
+{
+    font-size: 9.75pt;
+}
+
+ScaledCycleButton
+{
+    background: white;
+    border: none;
+    font-size: 9.75pt;
+    text-align: center;
+}
+
+ScaledTableView, ScaledTreeView
+{
+    font-size: 9pt;
+}
+
+ScaledHeaderView
+{
+    font: bold 9pt;
+}
+
+ScaledTabWidget
+{
+    font:  bold 8pt;
+}
+
+ScaledTabWidget > QTabBar::tab
+{
+    padding: 0.5em 1em 0.5em 1em;
+}
+
+ScaledTabWidget > QTabBar::tab:!first
+{
+    margin-left: -1px;
+}
+
+ScaledTabWidget > QTabBar::tab:selected
+{
+    background-color: white;
+    border: 1px solid #C4C4C3;
+    border-bottom: 1px solid white;
+}
+
+ScaledTabWidget > QTabBar::tab:!selected
+{
+    background-color: rgb(236, 236, 236);
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: 1px solid #C4C4C3;
+}
+
+ScaledTabWidget > QTabBar::tab:!selected:hover {
+    background-color: rgb(237, 246, 255)
+}
+
+ScaledLabel, ScaledPushButton, QLabel, QPushButton
+{
+    font-size: 9.75pt;
+}
+
+ColoredLegendGraphicsView
+{
+    font-size: 8pt;
+}
+
+ArrowIconComboBox
+{
+    background: white;
+    border: none;
+    font-size: 9.75pt;
+    text-align:left;
+}
+
+TextSearchWidget
+{
+   font-size: 9.75pt;
+   border: 1px solid gray;
+   background: white;
+}
+
+QFrame#warning_widget_
+{
+    background-color: #f0e5ad;
+}
+
+ColoredCheckbox
+{
+    font-size: 9.75pt;
+    qproperty-button_text_ratio: 1.2;
+}
+
+/*************************************/
+/* MainWindow
+/*************************************/
+
+MainWindow QWidget#bottom_spacer_label_
+{
+    background-color: rgb(240, 240, 240);
+}
+
+MainWindow QTabWidget::pane
+{
+    border : 0px  solid #444;
+    background: solid white;
+}
+
+MainWindow #main_tab_widget_ > QTabWidget::pane
+{
+    border-top: 0px solid #444;
+    border-bottom: 0px solid #444;
+}
+
+MainWindow #main_tab_widget_ > QTabBar
+{
+    font: bold 10.5pt;
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab
+{
+    background: rgb(51,51,51);
+    color: #666;
+    bottom: 1px;
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:top
+{
+    margin: 0px 0px 0 0;
+    padding: 4px 8px;
+    border-bottom: 4px solid transparent;
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:selected
+{
+    color: white;
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:top:hover
+{
+    border-bottom: 4px solid rgb(135,20,16);
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:top:selected
+{
+    border-bottom: 4px solid rgb(224,30,55);
+}
+
+MainWindow #main_tab_widget_ > QTabBar::tab:!selected:hover
+{
+    color: #999;
+}
+
+MainWindow QTabWidget#tlas_sub_tab_
+{
+    font:  bold 10pt;
+}
+
+MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab
+{
+    border: 1px solid #C4C4C3;
+    padding: 1em 2em 1em 2em;
+}
+
+MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab:selected
+{
+    background-color: white;
+    border: 1px solid #C4C4C3;
+    border-bottom: 1px solid white;
+    margin-left: -1px;
+}
+
+MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab:!selected
+{
+    background-color: rgb(236, 236, 236);
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: 1px solid #C4C4C3;
+    margin-left: -1px;
+}
+
+MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab:!selected:hover {
+    background-color: rgb(237, 246, 255)
+}
+
+MainWindow QTabWidget#blas_sub_tab_
+{
+    font:  bold 10pt;
+}
+
+MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab
+{
+    border: 1px solid #C4C4C3;
+    padding: 1em 2em 1em 2em;
+}
+
+MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:selected
+{
+    background-color: white;
+    border: 1px solid #C4C4C3;
+    border-bottom: 1px solid white;
+    margin-left: -1px;
+}
+
+MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:!selected
+{
+    background-color: rgb(236, 236, 236);
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: 1px solid #C4C4C3;
+    margin-left: -1px;
+}
+
+MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:!selected:hover {
+    background-color: rgb(237, 246, 255)
+}
+
+/*************************************/
+/* Welcome Pane
+/*************************************/
+
+WelcomePane ScaledLabel
+{
+    font-size: 11.75pt;
+}
+
+/*************************************/
+/* About Pane
+/*************************************/
+
+AboutPane ScaledPushButton
+{
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+AboutPane ScaledPushButton:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+AboutPane QLabel, ScaledLabel
+{
+    font-size: 8.75pt;
+}
+
+AboutPane ScaledLabel#label_app_title_
+{
+    font-size: 11.75pt;
+}
+
+AboutPane ScaledLabel#label_related_actions_
+{
+    font-size: 11.75pt;
+}
+
+/*************************************/
+/* Summary Pane
+/*************************************/
+
+QScrollArea#tlas_overview_scroll_area_
+{
+    border-style: none;
+    background-color: white;
+}
+
+QWidget#tlas_scroll_area_contents_
+{
+    border-style: none;
+    background-color: white;
+}
+
+QLabel#acceleration_structure_diagram_
+{
+    image: url(:/Resources/assets/acceleration_structure_overview.svg);
+}
+
+ScaledLabel#tlas_summary_header_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#tlas_list_header_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#total_memory_label_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#total_memory_content_
+{
+    font: 12pt;
+}
+
+QWidget#tlas_pane_
+{
+    background-color: rgb(240, 240, 240);
+}
+
+ScaledLabel#tlas_memory_size_
+{
+    font: 13pt;
+}
+
+ScaledLabel#instance_count_
+{
+    font: 13pt;
+}
+
+ScaledLabel#total_triangles_label_
+{
+    font: bold 13pt;
+}
+
+ScaledLabel#total_triangles_content_
+{
+    font: 13pt;
+}
+
+ScaledLabel#unique_triangles_label_
+{
+    font: bold 13pt;
+}
+
+ScaledLabel#unique_triangles_content_
+{
+    font: 13pt;
+}
+
+QFrame#tlas_pane_line_separator_
+{
+    color: rgb(216, 216, 216);
+}
+
+ScaledLabel#blas_count_
+{
+    font: 13pt;
+}
+
+ScaledLabel#total_memory_size_
+{
+    font: 13pt;
+}
+
+ScaledPushButton#tlas_title_
+{
+    font: 20pt;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#tlas_title_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+ScaledPushButton#tlas_title_address_
+{
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left
+}
+
+ScaledPushButton#tlas_title_address_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+/*************************************/
+/* BVH (TLAS/BLAS) Panes
+/*************************************/
+
+ScaledLabel#content_node_address_
+{
+    font: bold 12pt;
+    color: black;
+    border: none;
+    text-align: left;
+}
+
+ScaledLabel#content_node_type_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#title_blas_address_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#title_tlas_address_
+{
+    font: bold 12pt;
+}
+
+ScaledPushButton#content_blas_address_
+{
+    font: bold;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_blas_address_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+ScaledPushButton#content_blas_address_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
+ScaledPushButton#content_parent_
+{
+    font: bold;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_parent_blas_
+{
+    font: bold;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_parent_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+ScaledPushButton#content_parent_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
+ExpandingScrollArea#side_panel_scroll_area_
+{
+    border-style: none;
+    background-color: white;
+}
+
+QWidget#side_pane_content_
+{
+    background-color: white;
+}
+
+ScaledLabel#label_camera_header_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#label_renderer_header_
+{
+    font: bold 12pt;
+}
+
+QPushButton#view_button_
+{
+    background-color: white;
+    border: none;
+}
+
+QPushButton#renderer_button_
+{
+    background-color: white;
+    border: none;
+}
+
+QPushButton#bvh_button_
+{
+    background-color: white;
+    border: none;
+}
+
+ScaledLabel#content_rendering_mode_label_
+{
+    font: 10pt;
+}
+
+ColoredRadioButton
+{
+    font: 10pt;
+}
+
+/*************************************/
+/* Device Configuration Pane
+/*************************************/
+
+DeviceConfigurationPane QLabel#label_amd_logo_
+{
+    image: url(:/Resources/assets/amd_logo.svg);
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   class="ionicon"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="refresh-outline2.svg"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs12" />
+  <sodipodi:namedview
+     id="namedview10"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="1.9859757"
+     inkscape:cx="508.31438"
+     inkscape:cy="407.35645"
+     inkscape:window-width="3840"
+     inkscape:window-height="2066"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg8" />
+  <title
+     id="title2">Refresh</title>
+  <path
+     style="color:#000000;fill:currentColor;stroke-linecap:round;stroke-miterlimit:10;-inkscape-stroke:none"
+     d="m 256,118 c -71.13931,0 -135.3791,42.9231 -162.601563,108.64648 -27.222417,65.72328 -12.146078,141.4965 38.156253,191.79883 50.30233,50.30233 126.07555,65.37867 191.79883,38.15625 C 389.0769,429.3791 432,365.13931 432,294 a 16,16 0 0 0 -16,-16 16,16 0 0 0 -16,16 c 0,58.28834 -35.04255,110.73256 -88.89258,133.03711 -53.8499,22.30449 -115.70933,9.9977 -156.92578,-31.21875 C 112.96519,354.60191 100.6584,292.74248 122.96289,238.89258 145.26744,185.04255 197.71166,150 256,150 c 21.72782,0 36.32067,0.7576 45.51367,1.77734 1.87193,0.20765 2.57599,0.47126 4.02149,0.73243 a 16,16 0 0 0 0.11132,0.56054 16,16 0 0 0 21.42383,7.28321 c 0,0 3.60673,-0.94954 7.83203,-6.2129 2.11266,-2.63167 5.09315,-8.05969 3.89453,-14.75585 -1.19861,-6.69617 -5.88346,-10.95832 -9.375,-13.07227 -6.98307,-4.2279 -13.29012,-5.10959 -24.38085,-6.33984 C 293.95029,118.7424 278.45213,118 256,118 Z m 56.92969,13.64648 a 16,16 0 0 0 -3.12696,2.74219 c 0.0444,-0.0582 0.10472,-0.22727 0.14649,-0.2793 2.41906,-3.01336 2.98047,-2.46289 2.98047,-2.46289 z"
+     id="path4" />
+  <path
+     style="color:#000000;fill:currentColor;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+     d="m 251.85937,42.544922 a 16,16 0 0 0 -7.17382,4.140625 16,16 0 0 0 0,22.628906 L 313.37109,138 244.68555,206.68555 a 16,16 0 0 0 0,22.6289 16,16 0 0 0 22.6289,0 l 80,-80 a 16.0016,16.0016 0 0 0 0,-22.6289 l -80,-80.000003 a 16,16 0 0 0 -15.45508,-4.140625 z"
+     id="path6" />
+  <metadata
+     id="metadata1046">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>Refresh</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>

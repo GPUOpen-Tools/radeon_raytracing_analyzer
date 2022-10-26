@@ -1,0 +1,20 @@
+<RCC>
+  <qresource prefix="/Resources">
+    <file>../assets/amd_logo.svg</file>
+    <file>../assets/browse_back_normal.svg</file>
+    <file>../assets/browse_back_pressed.svg</file>
+    <file>../assets/browse_back_disabled.svg</file>
+    <file>../assets/browse_fwd_normal.svg</file>
+    <file>../assets/browse_fwd_pressed.svg</file>
+    <file>../assets/browse_fwd_disabled.svg</file>
+    <file>../assets/kbd_mouse.svg</file>
+    <file>../assets/icon_32x32.png</file>
+    <file>../assets/icon_48x48.png</file>
+    <file>../assets/stop_128x128.png</file>
+    <file>../assets/third_party/ionicons/search_icon.png</file>
+    <file>../assets/third_party/ionicons/wand.svg</file>
+    <file>../assets/third_party/ionicons/refresh-outline.svg</file>
+    <file>../assets/acceleration_structure_overview.svg</file>
+    <file>stylesheet.qss</file>
+  </qresource>
+</RCC>

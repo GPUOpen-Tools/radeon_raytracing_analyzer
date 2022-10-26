@@ -39,11 +39,14 @@ to reduce performance bottlenecks.
 * Ubuntu 20.04 LTS (Vulkan only)
 * Ubuntu 22.04 LTS (Vulkan only)
 
+## Build instructions
+See [BUILD.md](BUILD.md) for more details.
+
 ## License ##
-Radeon Raytracing Analyzer is licensed under the MIT license. See the License.txt file for complete license information.
+Radeon Raytracing Analyzer is licensed under the MIT license. See the [License.txt](License.txt) file for complete license information.
 
 ## Copyright information ##
-Please see NOTICES.txt for third party license information.
+Please see [NOTICES.txt](NOTICES.txt) for third party license information.
 
 ## DISCLAIMER ##
 The information contained herein is for informational purposes only, and is subject to change without notice. While every

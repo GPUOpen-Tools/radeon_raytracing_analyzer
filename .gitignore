@@ -1,0 +1,12 @@
+*~
+*.pyc
+*.orig
+__pycache__/
+build/linux
+build/mac
+build/win
+documentation/build
+documentation/source/_build
+external
+.vscode
+*.aps

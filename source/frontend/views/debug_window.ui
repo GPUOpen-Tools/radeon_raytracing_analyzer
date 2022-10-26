@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DebugWindow</class>
+ <widget class="QDialog" name="debug_window_">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>720</width>
+    <height>150</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Debug Output - use DbgMsg() or qDebug()</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/Resources/assets/icon_48x48.png</normaloff>:/Resources/assets/icon_48x48.png
+   </iconset>
+  </property>
+  <layout class="QGridLayout" name="grid_layout_">
+   <item row="0" column="0">
+    <widget class="QPlainTextEdit" name="plain_text_edit_"/>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

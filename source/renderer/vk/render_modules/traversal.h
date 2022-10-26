@@ -1,0 +1,131 @@
+//=============================================================================
+// Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Declaration for traversal module.
+//=============================================================================
+
+#ifndef RRA_RENDERER_VK_RENDER_MODULES_TRAVERSAL_H_
+#define RRA_RENDERER_VK_RENDER_MODULES_TRAVERSAL_H_
+
+#include "../render_module.h"
+#include "../buffer_guard.h"
+#include "../image_guard.h"
+
+namespace rra
+{
+    namespace renderer
+    {
+        /// @brief Render module to render the traversal
+        class TraversalRenderModule : public RenderModule
+        {
+        public:
+            /// @brief Constructor.
+            TraversalRenderModule();
+
+            /// @brief Destructor.
+            virtual ~TraversalRenderModule() = default;
+
+            /// @brief Initialize render module.
+            ///
+            /// @param [in] context The context to initialize.
+            virtual void Initialize(const RenderModuleContext* context) override;
+
+            /// @brief Draw onto given command buffer.
+            ///
+            /// @param [in] context The frame context used to draw a new frame.
+            virtual void Draw(const RenderFrameContext* context) override;
+
+            /// @brief Cleanup render module.
+            ///
+            /// @param [in] context The context to cleanup.
+            virtual void Cleanup(const RenderModuleContext* context) override;
+
+            /// @brief Uploads the required storage buffers to the device.
+            ///
+            /// @param [in] context The draw context.
+            void UploadTraversalData(const RenderFrameContext* context);
+
+            /// @brief Initialize the descriptor set layout and pipeline layout.
+            void SetupDescriptorSetLayoutAndPipelineLayout();
+
+            /// @brief Initialize the descriptor pool.
+            void SetupDescriptorPool();
+
+            /// @brief Initialize the descriptor set.
+            ///
+            /// @param [in] frame_id The frame id to update for.
+            void UpdateDescriptorSet(uint32_t frame_id);
+
+            /// @brief Queue traversal counter min max updates.
+            ///
+            /// @param [in] update_function The update function to call on the next update.
+            void QueueTraversalCounterRangeUpdate(std::function<void(uint32_t min, uint32_t max)> update_function);
+
+            /// @brief Queue traversal counter min max updates.
+            ///
+            /// @param [in] update_function The update function to call on the next update.
+            void SetTraversalCounterContinuousUpdateFunction(std::function<void(uint32_t min, uint32_t max)> update_function);
+
+            /// @brief Checks if the traversal counter continuous update function is set.
+            ///
+            /// @returns True if the traversal counter continuous update function is set.
+            bool IsTraversalCounterContinuousUpdateFunctionSet();
+
+        private:
+            const RenderModuleContext* context_ = nullptr;  ///< The renderer context for the module.
+
+            std::vector<bool>            traversal_descriptor_set_update_flags_;             ///< Flags to check if the descriptor set should be updated.
+            std::vector<VkDescriptorSet> traversal_descriptor_sets_;                         ///< The descriptor sets used for rendering traversal.
+            VkDescriptorSetLayout        traversal_descriptor_set_layout_ = VK_NULL_HANDLE;  ///< The descriptor set layout used for rendering traversal.
+
+            VkDescriptorPool descriptor_pool_ = VK_NULL_HANDLE;  ///< The descriptor pool used for rendering traversal.
+
+            VkPipeline       compute_pipeline_                = VK_NULL_HANDLE;  ///< The compute pipeline.
+            VkPipeline       subsample_pipeline_              = VK_NULL_HANDLE;  ///< The subsample pipeline.
+            VkPipeline       trace_traversal_pipeline_        = VK_NULL_HANDLE;  ///< The pipeline used for tracing traversal.
+            VkPipelineLayout trace_traversal_pipeline_layout_ = VK_NULL_HANDLE;  ///< The pipeline layout used for tracing traversal.
+
+            bool empty_scene_ = true;  ///< Flag to indicate that we have an empty scene.
+
+            BufferGuard top_level_volumes_guard_;          ///< Buffer guard for volumes.
+            BufferGuard top_level_volumes_staging_guard_;  ///< Buffer guard for staging volumes.
+
+            BufferGuard top_level_vertices_guard_;          ///< Buffer guard for vertexes.
+            BufferGuard top_level_vertices_staging_guard_;  ///< Buffer guard for staging vertexes.
+
+            BufferGuard top_level_instances_guard_;          ///< Buffer guard for instances.
+            BufferGuard top_level_instances_staging_guard_;  ///< Buffer guard for staging instances.
+
+            uint64_t           last_scene_iteration_ = UINT64_MAX;  ///< Last rendered scene iteration to keep track of changes.
+            RendererSceneInfo* last_scene_           = nullptr;     ///< The last scene pointer.
+
+            struct Counter
+            {
+                VkBuffer      buffer     = VK_NULL_HANDLE;
+                VmaAllocation allocation = VK_NULL_HANDLE;
+            };
+
+            std::vector<Counter> counter_gpu_buffers_;          ///< Buffer guard for the counters in gpu.
+            std::vector<Counter> counter_cpu_buffers_;          ///< Buffer guard for the counters in cpu.
+            uint32_t             counter_gpu_buffer_size_ = 0;  ///< Counter buffer size.
+            uint32_t             counter_cpu_buffer_size_ = 0;  ///< Counter cpu side buffer size.
+
+            uint32_t last_offscreen_image_width_  = 0;  ///< The last offscreen image width.
+            uint32_t last_offscreen_image_height_ = 0;  ///< The last offscreen image height.
+
+            std::vector<std::function<void(uint32_t min, uint32_t max)>>
+                traversal_counter_range_update_functions_;  ///< The set of temporary functions to call when a new update is available.
+
+            std::function<void(uint32_t min, uint32_t max)> traversal_counter_range_continuous_update_function_ =
+                nullptr;  ///< The update function to call for continuous updates.
+
+            /// @brief Creates the counter buffers.
+            ///
+            /// @param [in] context the context to use to create the counter buffers.
+            void CreateCounterBuffers(const RenderFrameContext* context);
+        };
+    }  // namespace renderer
+}  // namespace rra
+
+#endif  // RRA_RENDERER_VK_RENDER_MODULES_CHECKER_CLEAR_H_

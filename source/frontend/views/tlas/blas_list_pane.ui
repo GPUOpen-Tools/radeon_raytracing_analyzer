@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BlasListPane</class>
+ <widget class="QWidget" name="BlasListPane">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1392</width>
+    <height>1116</height>
+   </rect>
+  </property>
+  <layout class="QHBoxLayout" name="horizontal_layout_">
+   <item>
+    <widget class="QScrollArea" name="main_scroll_area_">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="main_content_">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1372</width>
+        <height>1096</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="vertical_layout_1_">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="TextSearchWidget" name="search_box_"/>
+       </item>
+       <item>
+        <widget class="ScaledTableView" name="blas_table_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TextSearchWidget</class>
+   <extends>QLineEdit</extends>
+   <header>qt_common/custom_widgets/text_search_widget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScaledTableView</class>
+   <extends>QTreeView</extends>
+   <header>qt_common/custom_widgets/scaled_table_view.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../../resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

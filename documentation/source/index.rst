@@ -4,7 +4,7 @@ The Radeon™ Raytracing Analyzer (RRA)
 The Radeon Raytracing Analyzer is a tool designed to help developers improve the raytracing performance on AMD Radeon 6000 series GPU's. The tool
 focuses on the visualization of Acceleration Structures, which in our case consist of Bounding Volume Hierarchies. RRA allows the developer to
 visualize the bounding box hierarchies, and related scene geometries, to quickly identify issues with the bounding volume hierarchies, such as
-overlaping bounding volumes and sparse geometry layout within bounding volumes. Once identified, the developer can revisit their BVH generation
+overlapping bounding volumes and sparse geometry layout within bounding volumes. Once identified, the developer can revisit their BVH generation
 strategy.
 
 This document describes how the Radeon Raytracing Analyzer can be used to examine a bounding volume hierarchy.
@@ -20,6 +20,8 @@ Supported graphics APIs, RDNA hardware, and operating systems
 
 \ **Supported RDNA hardware**
 
+-  AMD Radeon RX 7000 series
+
 -  AMD Radeon RX 6000 series
 
 \ **Supported Operating Systems**
@@ -27,8 +29,6 @@ Supported graphics APIs, RDNA hardware, and operating systems
 -  Windows® 10
 
 -  Windows® 11
-
--  Ubuntu 20.04 LTS (Vulkan only)
 
 -  Ubuntu 22.04 LTS (Vulkan only)
 

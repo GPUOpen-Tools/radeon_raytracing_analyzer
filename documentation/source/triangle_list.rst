@@ -11,27 +11,29 @@ address of the TLAS containing the BLAS.
 
 The following fields are displayed:
 
-* Triangle address – The virtual address for the instance node within the TLAS.
+* Geometry index - The index of the geometry that the triangle belongs to.
 
-* Triangle offset – The offset for the instance node within the TLAS.
+* Opaque - Presence of the opaque geometry flag.
 
-* Triangle count – The number of triangles in the triangle node.
+* No duplicate any hit invocation - Presence of the no duplicate any hit invocation geometry flag.
 
-* Geometry index – The geometry index of the triangle.
+* Primitive index - The API index of the triangle accessible in shaders.
 
-* Is inactive - Is this triangle node inactive.
+* Node address - The virtual address of this node in GPU memory.
+
+* Node offset - The relative address of this node relative to the BLAS address.
+
+* Active - Whether or not this triangle is active according to the API specification definition.
 
 * Triangle surface area - The surface area of the triangle node.
 
 * SAH - The surface area heuristic of the triangle node.
 
-* Vertex0
+* Vertex0 - The vertex position of the first triangle vertex.
 
-* Vertex1
+* Vertex1 - The vertex position of the second triangle vertex.
 
-* Vertex2
-
-* Vertex3 - Only used if 2 or more triangles in the node.
+* Vertex2 - The vertex position of the third triangle vertex.
 
 The columns can be sorted by clicking on the column header, apart from the vertex
 columns; sorting is disabled for these columns. The arrow in the heading shows if

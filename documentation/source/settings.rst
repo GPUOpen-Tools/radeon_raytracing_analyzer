@@ -19,9 +19,9 @@ around the scene. The speed is altered using a slider on the viewer panes. The d
 maximum speed is optimal in most cases but for very large scenes, it may be useful
 to increase this value.
 
-**Frustum cull ratio** Objects which take small amounts of screenspace are culled for
-efficiency. Lowering this ratio will allow further objects to be rendered at the cost
-of rendering time. The default value is sufficient for most needs.
+**Small object culling** Objects which take small amounts of screen space are culled for
+efficiency. Moving the slider closer to the high setting will result in more culling
+and better performance.
 
 **Decimal precision** The number of decimal places that floating point values throughout
 the app will be displayed at. Hovering the mouse over a floating point value will display

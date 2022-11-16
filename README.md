@@ -1,18 +1,18 @@
 # Radeon™ Raytracing Analyzer
 
-The Radeon Raytracing Analyzer (RRA) is a tool designed to help improve the raytracing performance of AMD GPU's that support raytracing.
+The Radeon Raytracing Analyzer (RRA) is a tool designed to help improve the raytracing performance of AMD GPUs that support raytracing.
 The tool thus far focuses on the visualization of the Acceleration Structures, which consist of Bounding Volume Hierarchies.
 
 Game developers are responsible for creating the acceleration structures and so need a method of visualizing these acceleration structures
 and how they can affect performance.
 
 RRA allows the developer to visualize the bounding box hierarchies, and related scene geometries, via a standard rasterizer renderer or using
-a traversal counter view which will quickly hightlight areas of concern. Once identified, the developer can revisit their BVH generation strategy
+a traversal counter view which will quickly highlight areas of concern. Once identified, the developer can revisit their BVH generation strategy
 to reduce performance bottlenecks.
 
 ## Getting Started
 
-1. Install the latest AMD Video/display driver. Completely remove previously installed drivers.  On Windows, the driver installation factory reset option should be used.
+1. Install the latest AMD Video/display driver. Completely remove previously installed drivers. On Windows, the driver installation factory reset option should be used.
 2. Unzip/Untar the download file. The directory includes the following:
    * Radeon Developer Service (RDS)
    * Radeon Developer Service CLI (RDS headless)
@@ -31,6 +31,7 @@ to reduce performance bottlenecks.
  * Vulkan
 
 ## Supported ASICs
+* AMD Radeon RX 7000 series
 * AMD Radeon RX 6000 series
 
 ## Supported Operating Systems

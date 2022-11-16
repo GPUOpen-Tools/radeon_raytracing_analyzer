@@ -44,3 +44,35 @@ selected triangle node.
 On the right are the same rendering and camera controls as seen in the TLAS pane; the functionality of
 these are nearly identical. The only difference is that there is no option to show instance transforms
 in the BLAS pane.
+
+.. _triangle-splitting-label:
+
+Triangle splitting
+~~~~~~~~~~~~~~~~~~
+Triangle splitting is another driver optimization that can be used if a triangle isn't axis aligned. This
+can result in a lot of empty space in the bounding volume. In this case, the triangle is split into
+smaller triangles, each with a smaller bounding volume. This reduces the triangle-area to bounding volume
+ratio.
+
+It should be noted that all split triangles will share the same 3 triangle vertices, and parts of the
+triangle will lie outside of the split triangle bounding volume. This can be seen with geometry rendering
+(below).
+
+.. image:: media/blas/split_triangles_1.png
+
+Image (a) Shows the bounding volume around the entire triangle geometry. Notice that this triangle is about
+45 degrees to one of the axes; the unused space in the bounding volume can be clearly seen. Images (b) and (c)
+show the individual split triangles making up the triangle geometry in (a).
+
+Since ray tracing deals with bounding volumes, only the part of the triangle inside the bounding volume
+will be considered. This can be seen with the traversal rendering, where only the area of the triangle inside
+the bounding volume is visible (below).
+
+.. image:: media/blas/split_triangles_2.png
+
+These 2 images are from the same scene, but seen from a slightly different angle.
+
+When a split triangle is selected, the left-side pane will indicate that the triangle is split, as seen below.
+A list of the split triangle siblings is also shown, allowing easy selection.
+
+.. image:: media/blas/split_triangles_stats_1.png

@@ -17,19 +17,19 @@ The following fields are displayed:
 
 * Build type - The state of the FastTrace/FastBuild build flags.
 
-* Instances – The number of instances of the given BLAS within the parent TLAS.
+* Instances – The number of instances of the given BLAS in all TLASes.
 
 * Nodes – The total number of nodes in the BLAS, including leaf nodes.
 
 * Boxes – The total number of box nodes within the BLAS, including both Box16 and Box32.
 
-* 32-bit boxes – The total number of 32-bit box nodes in the BLAS.
+* 32-bit boxes – The total number of box nodes with 32-bit floating point precision bounding boxes in the BLAS.
 
-* 16-bit boxes – The total number of 16-bit box nodes in the BLAS.
+* 16-bit boxes – The total number of box nodes with 16-bit floating point precision bounding boxes in the BLAS.
 
 * Triangle nodes – The total number of triangle nodes within the BLAS.
 
-* Procedural nodes – The total number of procedural nodes within the BLAS.
+* Procedural nodes – The total number of AABB nodes within the BLAS.
 
 * Memory usage - The amount of GPU memory used to store this BLAS.
 

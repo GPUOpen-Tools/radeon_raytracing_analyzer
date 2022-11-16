@@ -25,7 +25,8 @@ The left section shows a summary of the currently selected TLAS:
    In a TLAS, there are box nodes (either Box16 or Box32 for 16-bit or 32-bit
    floating point values, respectively). Each box node can contain up to 4 child nodes,
    which can be box nodes or instance nodes. Instance nodes are leaf nodes. An instance
-   node is a bottom-level acceleration structure and will contain the geometry to render.
+   node contains a reference to a bottom-level acceleration structure which contains
+   the geometry to render.
 
    a.  Selecting a node will highlight the node and all its child nodes in the treeview.
        Any instance nodes selected will be shown selected in the scene as having a
@@ -39,7 +40,7 @@ The left section shows a summary of the currently selected TLAS:
       node name. Any hidden nodes will be grayed out in the treeview and will not be rendered
       in the scene. This allows the user to just see the geometry of interest.
 
-   d.  Double-clicking on an instance node will navigate to the BLAS pane and select it.
+   d.  Double-clicking on an instance node will open the BLAS it references in the BLAS pane.
 
 #. The section below the treeview gives details about the currently selected node, including
    the parent node and extents. Clicking the parent address will select the parent node.
@@ -61,19 +62,19 @@ In the center is a rendering of the scene. The scene will consist of a series of
 bounding volumes with geometry contained within that volume. Various display modes
 can be altered by the user to change how the scene is rendered.
 
-The camera used to view the scene can be manipulated using a mouse and keyboard
+The viewport camera can be manipulated using a mouse and keyboard
 using a preset control style (described later).
 
-It is sometimes easy to get disoriented in a scene or the whole scene is behind the
-camera or if the camera is zoomed out so far that the scene disappears. In this case,
-pressing the "R" key in all camera modes will reset the camera to its default position.
+Pressing the "R" key in all camera modes will reset the camera to its default position.
 
-It is possible to select an Instance within the scene by clicking on any mesh within
-the viewport. The TLAS hierarchy tree view will expand as necessary to focus on the
-selected Instance. Pressing the "F" key will focus the camera on the selected object
-in the scene.
+It is possible to select an instance within the scene by clicking on any mesh within
+the viewport. Multiple instances can be selected by holding down the Ctrl key
+while clicking. The TLAS hierarchy tree view will expand as necessary to focus on the
+selected instance. Pressing the "F" key will focus the camera on the selected object
+in the scene. If multiple instances are selected, the view will be adjusted so all
+selected instances are visible.
 
-An orientation 'gizmo' is overlaid on the scene, in the top-right corner. This shows how
+An orientation gizmo is overlaid on the scene, in the top-right corner. This shows how
 the coordinate axes are aligned with the scene.
 
 A context menu can be displayed by right-clicking on the scene.
@@ -83,7 +84,7 @@ A context menu can be displayed by right-clicking on the scene.
 The list of options are:
 
 #. **Add instance under mouse to selection** - Select the instance under the mouse. It
-   is possible to have more than one instance selected so that instances can be grouped.
+   is possible to have more than one instance selected.
    One possible use-case is to select the instances that are of interest and hide everything
    else in the scene.
 
@@ -133,13 +134,13 @@ Rendering controls
 
 The **Rendering controls** section includes checkboxes to control how the scene is rendered.
 
-The Rendering modes combo-box allows selection of the rendering mode. The default is the
+The rendering mode radio buttons allow selection of the rendering mode. The default is the
 **Geometry rendering mode**, showing the triangles which make up the scene. An example of this
 rendering mode can be seen at the beginning of this section.
 
-The **Traversal counter mode** is a display mode that counts ray interections with elements from within
+The **Traversal counter mode** is a display mode that counts ray intersections with elements from within
 the acceleration structure. Examples would include triangle/box hit and test counts.
-See the section below for more information on the Traversal counters.
+See the section below for more information on the traversal counters.
   
 In geometry rendering mode, there are 4 checkboxes that control what is visible in the scene:
 
@@ -162,20 +163,34 @@ In traversal counter rendering mode, the controls are slightly different, as see
 
 .. image:: media/tlas/popout_view_3.png
 
-* The **Counter range** slider allows the user to set a minimum and maximum count limit. The results of
-  changing the slider values can be seen instantly in the scene.
+* The **Accept first hit** checkbox simulates the accept first hit ray flag that can be passed to the
+  trace ray invocation in the shader. The traversal algorithm visualized by the heatmap will be altered
+  based on this flag.
+
+* The **Box sort heuristic** describes how box nodes are sorted during traversal. This determines the
+  order in which box nodes are checked for intersections. It's dependent on ray flags and system configuration.
+
+  * The **Closest** sort heurstic checks the closest box nodes first for intersections.
+
+  * The **Middle point** sort heuristic checks the box nodes with the closest centers first for intersections.
+
+  * The **Largest** sort heuristic checks the largest box nodes first for intersections.
+
+* The **Counter range** slider allows the user to set a minimum and maximum traversal count limit to display on
+  in the heatmap. The results of changing the slider values can be seen instantly in the viewport.
   
   * The **Counter range** slider has a range between 0 and 1000 but the limit can be changed in the
     **General** section of the settings under **Maximum traversal count**.
   
   * The values under the slider are the current minimum and maximum values of the 2 slider handles.
 
-* Clicking on the **Wand icon** will automatically adjust the slider values to provide the optimum
-  range.
+* Clicking on the **Wand icon** will automatically adjust the slider values to the minimum and maximum
+  pixel values visible in the viewport.
   
 * The **Continuous update** checkbox, when enabled, will automatically adjust the counter range slider
-  as the scene is moved around. It saves the work of clicking on the wand icon to optimize the color
-  range of the scene. NOTE: When **Continuous update** is enabled, the wand icon is disabled.
+  to the minimum and maximum pixel values visible as the viewport camera is moved around. It saves the
+  work of clicking on the wand icon to update the color range of the scene. NOTE: When **Continuous update**
+  is enabled, the wand icon is disabled.
 
 The **Show axis aligned BVH**, **Show instance transform**, and **Show wireframe** checkboxes are also
 present, along with the culling mode combo box. But in traversal counter rendering mode, the selected culling mode
@@ -187,10 +202,12 @@ Camera controls
 
 The **Camera controls** section allows selection of the camera controls.
 
-* A combo box allows selection of the camera control style. This can be either **CAD control style**
-  or **FPS control style**. depending on the control style the user is most familiar
-  with, whether it be a modeling (CAD) package or a gaming application (FPS). The camera
-  setting is global, so changing the camera style on the TLAS viewer pane selects the same
+* A combo box allows selection of the camera control style. This can be either **CAD control style**,
+  **FPS control style** or **Axis-free control style** and is chosen depending on the control style the
+  user is most familiar with, whether it be a modeling (CAD) package or a gaming application (FPS).
+  The **Axis-free** camera does not constrain the camera by orienting itself with a global up-axis. This
+  is useful for applications that do not have a natural up-axis, like space exploration games.
+  The camera setting is global, so changing the camera style on the TLAS viewer pane selects the same
   camera style on the BLAS viewer pane, and vice versa. Switching from CAD control style to FPS control
   style will not retain the CAD focal point, so upon switching back to CAD you will need to focus on
   an instance again to revolve the camera around it.
@@ -200,6 +217,11 @@ The **Camera controls** section allows selection of the camera controls.
 * The **Mouse and keyboard** icon will display a list of all the valid hotkeys for the currently
   selected control style and are primarily used to drive the camera. 
   Common keyboard shortcuts are also described in the keyboard shortcuts section in the settings menu. 
+
+.. only:: internal
+
+   * The **Copy camera params** and **paste camera params** allow the camera position to be
+     saved and restored. This can be helpful to return to a point of interest in a scene later.
 
 * The **Projection** combo box allows selection of the projection mode, switching between
   perspective and orthographic viewing modes. The default is perspective.
@@ -216,6 +238,11 @@ The **Camera controls** section allows selection of the camera controls.
 
 * The **Field of view** slider changes the camera's field of view.
 
+.. only:: internal
+
+    * The **Near plane** slider changes the near clipping plane. (The far plane is set to a
+      large constant.)
+
 * The **Movement speed** slider changes the speed of the camera. The maximum speed can be set in the
   **General** section of the settings under **Maximum camera movement speed**.
 
@@ -226,9 +253,9 @@ Given the complexity of acceleration structures and the specifics of the ray tra
 operates on these structures, it can be very diffcult to evaluate the performance cost of a given scene. 
 
 The traversal counter visualization will help simplify this complexity and help reduce traversal count
-signatures by editing BLASes and repositioning of Instances in the TLAS.
+signatures by editing BLASes and repositioning of instances in the TLAS.
 
-  * The counters are calculated on-the-fly and are not the same as those provided by the Radeon GPU Profiler
+  * The counters are calculated on-the-fly and are not the same as those provided by the Radeon GPU Profiler.
 
   * RRA counters terminate on closest hit and ignore any subsequent rays that are launched.
 
@@ -268,12 +295,12 @@ There are several different counter types to choose from:
     respectively. The number of tests is equal to the sum of the number of hits and misses. Some parts of the scene may be
     denser depending on the perspective. The dense parts may overlap so the ray may not be able to discard volumes.
 
-  * The **triangle hit** counter is the number of triangles that have been used as the closest hit
+  * The **Triangle hit** counter is the number of triangles that have been used as the closest hit
     candidate. As the ray traverses an acceleration structure, it may encounter triangles in an
     unspecified order. If the ray hits a triangle, it will compare this triangle with the current
     closest hit triangle. If there isn't a closest hit triangle, this triangle will be assigned as
-    the closest hit. The **triangle miss** is the number of triangles that have been tested but
-    were not a closest hit. The **triangle test** is the sum of hits and misses.
+    the closest hit. The **Triangle miss** is the number of triangles that have been tested but
+    were not a closest hit. The **Triangle test** is the sum of hits and misses.
 
 Coloring modes
 ~~~~~~~~~~~~~~
@@ -322,7 +349,13 @@ The coloring modes are available in a row above the scene rendering.
       A unique color for each combination of instance mask flags.
 
    * Opacity (Geometry)
+      A color showing the final opacity of each geometry as a function of instance and geometry flags. These colors can be configured in the Themes and colors section of the Settings under 'Opacity coloring'.
+
+   * Opacity (Geometry)
       A color showing the presence of the opacity flag. These colors can be configured in the Themes and colors section of the Settings under 'Opacity coloring'.
+
+   * Force opaque / no opaque flag (Instance)
+      Combines the ForceOpaque and ForceNoOpaque instance flags, giving 4 possible color combinations. These colors can be configured in the Themes and colors section of the Settings under 'Instance force opaque/no-opaque'.
 
    * Geometry index (Geometry)
       A unique color for each geometry index within a BLAS.
@@ -345,9 +378,6 @@ The coloring modes are available in a row above the scene rendering.
    * Flip facing flag (Instance)
       Shows whether the 'FlipFacing' instance flag is enabled. These colors can be configured in the Themes and colors section of the Settings under 'Flag indication colors'.
 
-   * Force opaque / no opaque flag (Instance)
-      Combines the ForceOpaque and ForceNoOpaque instance flags, giving 4 possible color combinations. These colors can be configured in the Themes and colors section of the Settings under 'Instance force opaque/no-opaque'.
-
    * Tree level (Triangle)
       A heatmap showing the triangle's depth within the BVH.
 
@@ -369,13 +399,24 @@ The coloring modes are available in a row above the scene rendering.
    * Triangle count (BLAS)
       A heatmap showing the triangle count of each BLAS.
 
+   * Rebraiding (Instance)
+      Shows which instances have been rebraided by the driver. See the section on `Rebraiding`_ below for more information.
+
+   * Triangle splitting (Triangle)
+      Shows which triangles have been split by the driver. See the section on :ref:`Triangle splitting <triangle-splitting-label>` in the BLAS viewer section for more information.
+
    * Lighting
       Directionally lit shading.
 
    * Technical drawing
       Directionally lit Gooch shading.
 
-#. **Traversal counters** is only available when the Traversal rendering mode is
+     .. only:: internal
+
+      * Leaf node triangle index (Triangle)
+         The triangle index within a leaf node.
+
+#. **Traversal counters** is only available when the traversal rendering mode is
    enabled, and allows for different hit and test counters to be used when colorizing
    the scene. Each pixel shows how many bounding volume tests or hits were performed.
    There are a number of counters available and details of each can be obtained by
@@ -391,7 +432,7 @@ The coloring modes are available in a row above the scene rendering.
       The number of instances that are hit before the closest hit is found.
 
    * Box volume hit
-      The number of volumes the ray interects with.
+      The number of volumes the ray intersects with.
 
    * Box volume miss
       The number of volumes the ray has been tested with but doesn't intersect with.
@@ -408,8 +449,25 @@ The coloring modes are available in a row above the scene rendering.
    * Triangle test
       The number of triangles which the ray has been tested against. This is the sum of triangle hits and misses.
 
-#. **Heatmap selection** allows which heatmap to use. The default heatmap uses a **temperature** scheme
-   where the colors vary from red to blue via green. The **spectrum** scheme uses more of the visible
-   color spectrum, giving a wider range of colors. The **viridis** and **plasma** color schemes are
+#. **Heatmap selection** allows which heatmap to use. The default heatmap uses a **Temperature** scheme
+   where the colors vary from red to green to blue. The **Spectrum** scheme uses more of the visible
+   color spectrum, giving a wider range of colors. The **Viridis** and **Plasma** color schemes are
    perceptually uniform heatmaps. Each heatmap will show the scene slightly differently with some heatmaps
    showing certain areas of the scene better than others.
+
+.. _Rebraiding:
+
+Rebraiding
+~~~~~~~~~~
+Rebraiding is a TLAS build strategy used by the driver. When the build algorithm determines that the
+combination of an instance transform with a particular BLAS will yield a small SAH number it may decide to
+rebraid that instance to reduce the amount of empty bounding box volume. A rebraided instance will be split
+into the number of immediate child nodes of the BLAS root node. The instances that are split will retain
+all the data used by the original instance, however, the extents of each instance will now use the extent
+of the BLAS node it corresponds to. Rebraiding is an optimization done automatically by the driver, so the
+application developer has no direct control over it.
+
+Rebraided instances will be clearly marked on the left-side pane when an instance is selected, as seen below.
+If the instance has been rebraided, the sibling nodes will be listed, allowing for easy selection.
+
+.. image:: media/tlas/rebraiding_stats_1.png

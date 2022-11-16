@@ -8,11 +8,21 @@ all instances in the selected TLAS.
 
 The following fields are displayed:
 
-* Instance address – The virtual address for the instance node within the TLAS.
+* Instance index - The API index for the instance.
 
-* Instance offset – The offset for the instance node within the TLAS.
+* Instance address – The virtual GPU address for the instance node within the TLAS.
 
-* Instance mask - The mask specified for the instance node.
+* Instance offset – The relative address for the instance node with respect to the TLAS address.
+
+* Instance mask - The mask specified for the instance node determining which trace ray calls will interact with it.
+
+* Flip facing - Instance flag specifying whether triangles front face should be inverted.
+
+* Force opaque - Instance flag specifying if this instance should be opaque regardless of geometry flags.
+
+* Force no opaque - Instance flag specifying if this instance should be non-opaque regardless of geometry flags.
+
+* Rebraid sibling count - If this instance was split into multiple instance nodes by the driver, this is how many sibling instance nodes this instance has.
 
 * X Position – The X-position of the instance in the scene.
 
@@ -29,7 +39,3 @@ Typically, instances are created with their own local co-ordinate system. When
 placed in the scene, each instance requires a transformation from its local
 co-ordinate system to the world co-ordinate system. This is shown by the
 position and transform matrix in the table.
-
-In some cases, the positions can all be 0. This just means that the instance
-has been created in world-space co-ordinates and does not need to be translated.
-This is typically done when only one instance of a BLAS is used in a scene.

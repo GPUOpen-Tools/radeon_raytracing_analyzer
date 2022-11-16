@@ -1,9 +1,21 @@
-Radeon Raytracing Analyzer V1.0 07/26/2022
+Radeon Raytracing Analyzer V1.1 12/14/2022
 ------------------------------------------
 
-V1.0
+V1.1 Changes
 ------------------------------------
-This is the first public release of the Radeon Raytracing Analyzer.
+1) Addition of an axis-free camera.
+2) Camera placed at 45 degrees above the scene on trace load.
+3) Support for rebraided instances:
+  a) Coloring mode to show which instances are rebraided.
+  b) Allow selection of rebraided siblings.
+4) Support for split triangles:
+  a) Improved selection.
+  b) Coloring mode to show which triangles are split.
+  c) Sibling triangles shown and selectable from the UI.
+5) The 'Frustum cull ratio' in the settings has been replaced with "Small object culling". This should be more intuitive.
+6) Additional fields added to the instance and triangles tables.
+7) Keyboard shortcuts added for all panes on the Welcome and Settings lists. Some keys have also been remapped to avoid conflict with the Adrenaline software. See the documentation or keyboard shortcuts pane for details.
+8) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -15,3 +27,9 @@ Known Issues
 (6) Unicode folders and filenames are currently not supported.
 (7) There is currently no default "Application 'up' axis" in the viewer panes. When loading or reloading RRA traces, orient your scene and press the "U" key to automatically set the up axis.
 
+Release Notes History
+------------------------------------
+
+V1.0
+------------------------------------
+This is the first public release of the Radeon Raytracing Analyzer.

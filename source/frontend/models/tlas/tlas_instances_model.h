@@ -8,11 +8,10 @@
 #ifndef RRA_MODELS_TLAS_TLAS_INSTANCES_MODEL_H_
 #define RRA_MODELS_TLAS_TLAS_INSTANCES_MODEL_H_
 
-#include "qt_common/custom_widgets/scaled_table_view.h"
 #include "qt_common/utils/model_view_mapper.h"
 
-#include "models/tlas/tlas_instances_item_model.h"
-#include "models/tlas/tlas_instances_proxy_model.h"
+#include "models/instances_item_model.h"
+#include "models/instances_proxy_model.h"
 
 namespace rra
 {
@@ -93,7 +92,7 @@ namespace rra
         /// @brief Get the proxy model. Used to set up a connection between the table being sorted and the UI update.
         ///
         /// @return the proxy model.
-        TlasInstancesProxyModel* GetProxyModel() const;
+        InstancesProxyModel* GetProxyModel() const;
 
     public slots:
         /// @brief Handle what happens when the search filter changes.
@@ -102,8 +101,8 @@ namespace rra
         void SearchTextChanged(const QString& filter);
 
     private:
-        TlasInstancesItemModel*  table_model_;  ///< Holds the TLAS instance list table data.
-        TlasInstancesProxyModel* proxy_model_;  ///< Proxy model for the TLAS instance list table.
+        InstancesItemModel*  table_model_;  ///< Holds the TLAS instance list table data.
+        InstancesProxyModel* proxy_model_;  ///< Proxy model for the TLAS instance list table.
         std::map<int64_t, TlasInstancesModelAddress>
             addressable_instance_index_;  ///< A map to address a blas aligned instance index to a non aligned instance index.
     };

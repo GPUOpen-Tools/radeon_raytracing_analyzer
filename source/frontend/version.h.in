@@ -1,0 +1,34 @@
+//=============================================================================
+// Copyright (c) 2021-@YEAR@ Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Version number info.
+//=============================================================================
+
+#ifndef RRA_VERSION_H
+#define RRA_VERSION_H
+
+#define STRINGIFY_MACRO_(a) #a
+#define STRINGIFY_MACRO(a) STRINGIFY_MACRO_(a)
+#define STRINGIFY_VERSION(major, minor, patch, build) \
+    STRINGIFY_MACRO(major) "." STRINGIFY_MACRO(minor) "." STRINGIFY_MACRO(patch) "." STRINGIFY_MACRO(build)
+
+#define PRODUCT_APP_NAME "Radeon Raytracing Analyzer"  ///< Application name
+
+#ifdef BETA
+#define PRODUCT_BUILD_SUFFIX " - Beta"  ///< The build suffix to apply to the product name.(alpha, beta etc.)
+#else
+#define PRODUCT_BUILD_SUFFIX ""  ///< The build suffix to apply to the product name.(alpha, beta etc.)
+#endif
+
+#define PRODUCT_MAJOR_VERSION @RRA_MAJOR_VERSION@    ///< The major version number.
+#define PRODUCT_MINOR_VERSION @RRA_MINOR_VERSION@    ///< The minor version number.
+#define PRODUCT_BUGFIX_NUMBER @RRA_BUGFIX_NUMBER@    ///< The bugfix number.
+#define PRODUCT_BUILD_NUMBER @RRA_BUILD_NUMBER@      ///< The build number.
+#define PRODUCT_BUILD_DATE_STRING @DATE@             ///< The build date string.
+#define PRODUCT_BUILD_CURRENT_YEAR @YEAR_STRING@     ///< The current year.
+
+#define PRODUCT_VERSION_STRING STRINGIFY_VERSION(PRODUCT_MAJOR_VERSION, PRODUCT_MINOR_VERSION, PRODUCT_BUGFIX_NUMBER, PRODUCT_BUILD_NUMBER)
+#define PRODUCT_COPYRIGHT_STRING "Copyright (C) " PRODUCT_BUILD_CURRENT_YEAR " Advanced Micro Devices, Inc. All rights reserved."
+
+#endif  // RRA_VERSION_H

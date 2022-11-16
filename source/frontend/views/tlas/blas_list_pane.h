@@ -14,6 +14,18 @@
 #include "models/tlas/blas_list_table_item_delegate.h"
 #include "views/base_pane.h"
 
+/// @brief The CPU submission markers.
+enum BlasFilters
+{
+    kAllowUpdate,         ///< The BLAS filter type is graphics.
+    kAllowCompaction,     ///< The BLAS filter type is compute.
+    kLowMemory,           ///< The BLAS filter type is DMA.
+    kBuildTypeFastBuild,  ///< The BLAS filter type is wait.
+    kBuildTypeFastTrace,  ///< The BLAS filter type is signal.
+
+    kBlasFiltersCount,  ///< The BLAS filter type count.
+};
+
 /// @brief Class declaration.
 class BlasListPane : public BasePane
 {
@@ -41,12 +53,22 @@ public:
     /// @brief Trace closed.
     virtual void OnTraceClose() Q_DECL_OVERRIDE;
 
+    /// @brief Process user clicks on a list widget item.
+    ///
+    /// @param [in] check_box The check box that was modified.
+    void BlasFilterComboBoxItemClicked(QCheckBox* check_box);
+
+    /// @brief Add something to the BLAS fitler list.
+    ///
+    /// @param [in] filter The new BLAS filter to add.
+    void AddBlasFilterItem(BlasFilters filter);
+
 protected:
     /// @brief Filter events to catch right clicks to deselect rows in BLAS table.
-    /// 
+    ///
     /// @param obj The object associated with the event.
     /// @param event The Qt event.
-    /// 
+    ///
     /// @return True if the event should be filtered, false otherwise.
     bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -83,11 +105,12 @@ private slots:
 private:
     Ui::BlasListPane* ui_;  ///< Pointer to the Qt UI design.
 
-    rra::BlasListModel*        model_;           ///< Container class for the widget models.
-    uint64_t                   tlas_index_;      ///< The currently selected TLAS index.
-    uint64_t                   blas_index_;      ///< The currently selected BLAS index.
-    bool                       data_valid_;      ///< Is the trace data valid.
-    BlasListTableItemDelegate* table_delegate_;  ///< The delegate responsible for painting the table.
+    rra::BlasListModel*        model_;                                 ///< Container class for the widget models.
+    uint64_t                   tlas_index_;                            ///< The currently selected TLAS index.
+    uint64_t                   blas_index_;                            ///< The currently selected BLAS index.
+    bool                       data_valid_;                            ///< Is the trace data valid.
+    BlasListTableItemDelegate* table_delegate_;                        ///< The delegate responsible for painting the table.
+    QCheckBox*                 blas_filter_array_[kBlasFiltersCount];  ///< Checkboxes in dropdown to filter BLASes.
 };
 
 #endif  // RRA_VIEWS_TLAS_BLAS_LIST_PANE_H_

@@ -2,21 +2,21 @@
 // Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief  Header for a proxy filter that processes the TLAS instances table.
+/// @brief  Header for a proxy filter that processes the instances tables.
 //=============================================================================
 
-#ifndef RRA_MODELS_TLAS_TLAS_INSTANCES_PROXY_MODEL_H_
-#define RRA_MODELS_TLAS_TLAS_INSTANCES_PROXY_MODEL_H_
+#ifndef RRA_MODELS_INSTANCES_PROXY_MODEL_H_
+#define RRA_MODELS_INSTANCES_PROXY_MODEL_H_
 
 #include <QTableView>
 
 #include "models/table_proxy_model.h"
-#include "models/tlas/tlas_instances_item_model.h"
+#include "models/instances_item_model.h"
 
 namespace rra
 {
     /// @brief Class to filter out and sort the BLAS list table.
-    class TlasInstancesProxyModel : public TableProxyModel
+    class InstancesProxyModel : public TableProxyModel
     {
         Q_OBJECT
 
@@ -24,10 +24,10 @@ namespace rra
         /// @brief Constructor.
         ///
         /// @param [in] parent The parent widget.
-        explicit TlasInstancesProxyModel(QObject* parent = nullptr);
+        explicit InstancesProxyModel(QObject* parent = nullptr);
 
         /// @brief Destructor.
-        virtual ~TlasInstancesProxyModel();
+        virtual ~InstancesProxyModel();
 
         /// @brief Initialize the acceleration structure table model.
         ///
@@ -36,7 +36,7 @@ namespace rra
         /// @param [in] num_columns The table column count.
         ///
         /// @return the model for the TLAS table model.
-        TlasInstancesItemModel* InitializeAccelerationStructureTableModels(QTableView* view, int num_rows, int num_columns);
+        InstancesItemModel* InitializeAccelerationStructureTableModels(QTableView* view, int num_rows, int num_columns);
 
     protected:
         /// @brief Make the filter run across multiple columns.
@@ -57,4 +57,4 @@ namespace rra
     };
 }  // namespace rra
 
-#endif  // RRA_MODELS_TLAS_TLAS_INSTANCES_PROXY_MODEL_H_
+#endif  // RRA_MODELS_INSTANCES_PROXY_MODEL_H_

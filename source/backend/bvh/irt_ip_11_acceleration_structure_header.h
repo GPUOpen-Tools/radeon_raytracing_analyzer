@@ -131,14 +131,6 @@ namespace rta
 
         /// @brief Get the number of half interior nodes with high-precision bounding boxes.
         ///
-        /// @return The number of half interior nodes with high-precision bounding boxes.
-        std::uint32_t GetInteriorHalfFp32NodeCount() const;
-
-        /// @brief Set the number of half interior nodes with high-precision bounding boxes.
-        ///
-        /// @param [in] interior_node_count The number of half interior nodes with high-precision bounding boxes.
-        void SetInteriorHalfFp32NodeCount(const std::uint32_t interior_node_count);
-
         /// @brief Get the number of interior nodes with low-precision bounding boxes.
         ///
         /// @return The number of low-precision bounding boxes.
@@ -223,16 +215,6 @@ namespace rta
         /// @return true if the header is valid, false if not.
         bool IsValid() const;
 
-        /// @brief Is half-box node enabled.
-        ///
-        /// @return true if enabled, false if not.
-        bool IsHalfBoxNodeEnabled() const;
-
-        /// @brief Is half-box node supported.
-        ///
-        /// @return true if supported, false if not.
-        bool IsHalfBoxNodeSupported() const;
-
     private:
         virtual const IRtIp11AccelerationStructurePostBuildInfo& GetPostBuildInfoImpl() const = 0;
 
@@ -255,10 +237,6 @@ namespace rta
         virtual std::uint32_t GetInteriorFp32NodeCountImpl() const = 0;
 
         virtual void SetInteriorFp32NodeCountImpl(const std::uint32_t interior_node_count) = 0;
-
-        virtual std::uint32_t GetInteriorHalfFp32NodeCountImpl() const = 0;
-
-        virtual void SetInteriorHalfFp32NodeCountImpl(const std::uint32_t interior_node_count) = 0;
 
         virtual std::uint32_t GetInteriorFp16NodeCountImpl() const = 0;
 
@@ -287,10 +265,6 @@ namespace rta
                                         const RayTracingBinaryVersion& rt_binary_header_version = kSupportedRayTracingBinaryHeaderVersion) = 0;
 
         virtual bool IsValidImpl() const = 0;
-
-        virtual bool IsHalfBoxNodeEnabledImpl() const = 0;
-
-        virtual bool IsHalfBoxNodeSupportedImpl() const = 0;
     };
 
     /// @brief Create a new RT IP 1.1 acceleration structure header.

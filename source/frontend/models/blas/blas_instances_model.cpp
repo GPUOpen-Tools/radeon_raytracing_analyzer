@@ -15,11 +15,13 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "models/blas/blas_instances_item_model.h"
+#include "models/instances_item_model.h"
 
 #include "public/rra_bvh.h"
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
+
+#include "../scene.h"
 
 namespace rra
 {
@@ -67,8 +69,11 @@ namespace rra
         }
         table_model_->SetRowCount(instance_count);
 
-        BlasInstancesStatistics stats      = {};
-        uint64_t                rows_added = 0;
+        rra::Scene scene;
+        scene.Initialize(SceneNode::ConstructFromTlas(tlas_index));
+
+        InstancesTableStatistics stats      = {};
+        uint64_t                 rows_added = 0;
         for (int instance_index = 0; instance_index < instance_count; instance_index++)
         {
             uint32_t node_ptr = 0;
@@ -77,7 +82,7 @@ namespace rra
                 continue;
             }
 
-            if (RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_ptr, &stats.instance_index))
+            if (RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_ptr, &stats.unique_instance_index))
             {
                 continue;
             }
@@ -86,6 +91,26 @@ namespace rra
             {
                 continue;
             }
+
+            uint32_t tlas_instance_index = 0;
+            if (RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_ptr, &tlas_instance_index))
+            {
+                continue;
+            }
+            stats.instance_index = tlas_instance_index;
+
+            auto rebraid_siblings       = scene.GetRebraidedInstances(tlas_instance_index);
+            stats.rebraid_sibling_count = static_cast<uint32_t>(rebraid_siblings.size() - 1);
+
+            uint32_t instance_flags{};
+            if (RraTlasGetInstanceFlags(tlas_index, node_ptr, &instance_flags) != kRraOk)
+            {
+                continue;
+            }
+            stats.cull_disable_flag = instance_flags & VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+            stats.flip_facing_flag  = instance_flags & VK_GEOMETRY_INSTANCE_TRIANGLE_FLIP_FACING_BIT_KHR;
+            stats.force_opaque      = instance_flags & VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
+            stats.force_no_opaque   = instance_flags & VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR;
 
             if (RraBvhGetNodeOffset(node_ptr, &stats.instance_offset) != kRraOk)
             {
@@ -121,7 +146,7 @@ namespace rra
             proxy_model_ = nullptr;
         }
 
-        proxy_model_ = new BlasInstancesProxyModel();
+        proxy_model_ = new InstancesProxyModel();
         table_model_ = proxy_model_->InitializeAccelerationStructureTableModels(table_view, num_rows, num_columns);
         table_model_->Initialize(table_view);
     }
@@ -139,7 +164,7 @@ namespace rra
 
     QModelIndex BlasInstancesModel::GetTableModelIndex(uint64_t instance_index) const
     {
-        return proxy_model_->FindModelIndex(instance_index, kBlasInstancesColumnInstanceIndex);
+        return proxy_model_->FindModelIndex(instance_index, kInstancesColumnUniqueInstanceIndex);
     }
 
     void BlasInstancesModel::SearchTextChanged(const QString& filter)
@@ -148,7 +173,7 @@ namespace rra
         proxy_model_->invalidate();
     }
 
-    BlasInstancesProxyModel* BlasInstancesModel::GetProxyModel() const
+    InstancesProxyModel* BlasInstancesModel::GetProxyModel() const
     {
         return proxy_model_;
     }

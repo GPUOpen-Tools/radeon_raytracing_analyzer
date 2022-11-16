@@ -66,6 +66,16 @@ namespace rta
         return GetBuildFlagsImpl();
     }
 
+    bool IRtIp11AccelerationStructurePostBuildInfo::GetRebraiding() const
+    {
+        return GetRebraidingImpl();
+    }
+
+    std::uint32_t IRtIp11AccelerationStructurePostBuildInfo::GetTriangleSplitting() const
+    {
+        return GetTriangleSplittingImpl();
+    }
+
     void IRtIp11AccelerationStructurePostBuildInfo::LoadFromBuffer(std::size_t size, void* buffer)
     {
         return LoadFromBufferImpl(size, buffer);
@@ -74,6 +84,11 @@ namespace rta
     void IRtIp11AccelerationStructurePostBuildInfo::SaveToBuffer(void* buffer) const
     {
         SaveToBufferImpl(buffer);
+    }
+
+    bool IRtIp11AccelerationStructurePostBuildInfo::GetFusedInstances() const
+    {
+        return GetFusedInstancesImpl();
     }
 
     // RT IP 1.1-specific implementation of build info.
@@ -103,8 +118,15 @@ namespace rta
         void                            SetBottomLevelFp16ModeImpl(const BvhLowPrecisionInteriorNodeMode mode) override;
         BvhLowPrecisionInteriorNodeMode GetBottomLevelFp16ModeImpl() const override;
 
-        void          SetBuildFlagsImpl(const BvhBuildFlags flags) override;
+        void SetBuildFlagsImpl(const BvhBuildFlags flags) override;
+
+        bool GetRebraidingImpl() const override;
+
+        bool GetFusedInstancesImpl() const override;
+
         BvhBuildFlags GetBuildFlagsImpl() const override;
+
+        std::uint32_t GetTriangleSplittingImpl() const override;
 
         void LoadFromBufferImpl(std::size_t size, void* buffer) override;
 
@@ -120,7 +142,10 @@ namespace rta
                 std::uint32_t build_mode : 4;              ///< CPU/GPU build mode based on build type (Linear=0, AC=1, PLOC=2).
                 std::uint32_t tri_compression : 3;         ///< BLAS TriangleCompressionMode: None=0, Two=1, Pair=2.
                 std::uint32_t bottom_level_fp16_mode : 2;  ///< BLAS FP16 box mode: None=0, Leaf=1, Mixed=2, All=3.
-                std::uint32_t reserved : 5;                ///< Unused bits.
+                std::uint32_t triangle_splitting : 1;      ///< Enable TriangleSplitting.
+                std::uint32_t rebraid : 1;                 ///< Enable Rebraid.
+                std::uint32_t fused_instance_node : 1;     ///< Enable fused instance nodes.
+                std::uint32_t reserved : 2;                ///< Unused bits.
                 std::uint32_t build_flags : 16;            ///< Build flags of acceleration structure.
             };
             std::uint32_t info_ = {};
@@ -162,9 +187,24 @@ namespace rta
         build_flags = static_cast<std::uint32_t>(ToDxrBuildFlags(flags));
     }
 
+    bool DxrRtIp11AccelerationStructurePostBuildInfo::GetRebraidingImpl() const
+    {
+        return static_cast<bool>(rebraid);
+    }
+
+    bool DxrRtIp11AccelerationStructurePostBuildInfo::GetFusedInstancesImpl() const
+    {
+        return static_cast<bool>(fused_instance_node);
+    }
+
     BvhBuildFlags DxrRtIp11AccelerationStructurePostBuildInfo::GetBuildFlagsImpl() const
     {
         return ToBvhBuildFlags(static_cast<dxr::amd::AccelerationStructureBuildFlags>(build_flags));
+    }
+
+    std::uint32_t DxrRtIp11AccelerationStructurePostBuildInfo::GetTriangleSplittingImpl() const
+    {
+        return triangle_splitting;
     }
 
     void DxrRtIp11AccelerationStructurePostBuildInfo::LoadFromBufferImpl(std::size_t size, void* buffer)

@@ -108,6 +108,12 @@ void SummaryPane::AddTlasPanes()
             tlas_overview_pane.tlas_title_address_->setEnabled(false);
         }
 
+        if (model_->RebraidingEnabled())
+        {
+            tlas_overview_pane.number_of_inactive_instances_label_->hide();
+            tlas_overview_pane.number_of_inactive_instances_content_->hide();
+        }
+
         ui_->tlas_pane_list_->addWidget(tlas_pane);
     }
 }

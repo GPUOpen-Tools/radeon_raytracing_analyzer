@@ -45,6 +45,11 @@ namespace rra
         kSidePaneViewInvertVertical,
         kSidePaneViewInvertHorizontal,
 
+        kSidePaneArchitectureNavi2,
+        kSidePaneArchitectureNavi3,
+
+        kSidePaneRayFlagsAcceptFirstHit,
+
         kSidePaneViewXUp,
         kSidePaneViewYUp,
         kSidePaneViewZUp,
@@ -56,7 +61,7 @@ namespace rra
         kSidePaneViewNumWidgets,
     };
 
-    constexpr float kDefaultMovementSpeedMultiplier = 0.002f;    ///< The default movement speed is this multiple of the maximum movement speed.
+    constexpr float kDefaultSpeedDiagonalMultiplier = 0.25f;      ///< The default speed is this multiple of the scene bounding volume diagonal.
     constexpr float kMinimumMovementSpeedMultiplier = 0.00005f;  ///< The minimum movement speed is this multiple of the maximum movement speed.
     const int32_t   kMovementSliderMaximum          = 1000;      ///< The number of tick marks on the slider, essentially.
 
@@ -195,6 +200,16 @@ namespace rra
         /// @param [in] index An index selected in the combo box corresponding to the style.
         bool SetControlStyle(int index);
 
+        /// @brief Sets the vertical axis inversion.
+        ///
+        /// @param enabled True to invert the axis, false otherwise.
+        void SetInvertVertical(bool enabled);
+
+        /// @brief Sets the vertical axis inversion.
+        ///
+        /// @param enabled True to invert the axis, false otherwise.
+        void SetInvertHorizontal(bool enabled);
+
         /// @brief Toggles the vertical axis inversion.
         void ToggleInvertVertical();
 
@@ -212,6 +227,18 @@ namespace rra
 
         /// @brief Set the up axis as Z.
         void SetUpAxisAsZ();
+
+        /// @brief Set Architecture to Navi2.
+        void SetArchitectureToNavi2();
+
+        /// @brief Set Architecture to Navi3.
+        void SetArchitectureToNavi3();
+
+        /// @brief Enable the accept first hit flag.
+        void EnableRayFlagsAcceptFirstHit();
+
+        /// @brief Disable the accept first hit flag.
+        void DisableRayFlagsAcceptFirstHit();
 
         /// @brief Set whether or not to use orthographic projection.
         ///
@@ -237,6 +264,11 @@ namespace rra
         ///
         /// @return The maximum speed.
         float GetMovementSpeedLimit();
+
+        /// @brief Get the box sort heuristic name depending on the current configuration.
+        ///
+        /// @return The box sort heuristic name.
+        QString GetBoxSortHeuristicName();
 
     private:
         /// @brief Convert a movement speed slider value to a valid range-clamped movement speed value.
@@ -264,14 +296,14 @@ namespace rra
             rra::ViewerIOOrientation orientation;
         };
 
-        rra::renderer::ViewStateAdapter*                view_state_adapter_       = nullptr;  ///< The adapter used to alter the view state.
-        rra::renderer::RenderStateAdapter*              render_state_adapter_     = nullptr;  ///< The adapter used to toggle mesh render states.
-        CameraControllers                               camera_controllers_       = {};       ///< The camera controllers object to manage camera controllers.
-        ViewerIO*                                       current_controller_       = nullptr;  ///< The camera controller currently in use.
-        static CameraUIControls                         camera_controls_;                     ///< The camera controls shared by all instances of this class.
-        std::function<void(rra::renderer::HeatmapData)> heatmap_update_callback_ = nullptr;   ///< The heatmap update callback.
-        float                                           movement_speed_minimum_  = {};        ///< The minimum movement speed. Set from settings.
-        float                                           movement_speed_maximum_  = {};        ///< The maximum movement speed. Set from settings.
+        rra::renderer::ViewStateAdapter*                view_state_adapter_   = nullptr;     ///< The adapter used to alter the view state.
+        rra::renderer::RenderStateAdapter*              render_state_adapter_ = nullptr;     ///< The adapter used to toggle mesh render states.
+        CameraControllers                               camera_controllers_   = {};          ///< The camera controllers object to manage camera controllers.
+        ViewerIO*                                       current_controller_   = nullptr;     ///< The camera controller currently in use.
+        static CameraUIControls                         camera_controls_;                    ///< The camera controls shared by all instances of this class.
+        std::function<void(rra::renderer::HeatmapData)> heatmap_update_callback_ = nullptr;  ///< The heatmap update callback.
+        float                                           movement_speed_minimum_  = {};       ///< The minimum movement speed. Set from settings.
+        float                                           movement_speed_maximum_  = {};       ///< The maximum movement speed. Set from settings.
     };
 }  // namespace rra
 

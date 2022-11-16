@@ -25,7 +25,7 @@ namespace rra
 
     /// @brief The SceneCollectionModel base class declaration.
     ///
-    /// The all-scenes model is used to query the loaded TLAS & BLAS data sets to generate rendering data.
+    /// The scene collection model is used to query the loaded TLAS & BLAS data sets to generate rendering data.
     /// It contains data and accepts queries about ALL scenes in the trace, in oppose to instances of Scene
     /// which are specific TLAS and BLAS scenes in the trace.
     class SceneCollectionModel
@@ -74,13 +74,42 @@ namespace rra
         /// @param [out] scene_model_closest_hit The closest hit.
         ///
         /// @returns Will return 'kRraOk' when successful, or an error code in case of failure.
-        virtual RraErrorCode CastClosestHitRayOnBvh(uint64_t              bvh_index,
-                                                    const glm::vec3&      origin,
-                                                    const glm::vec3&      direction,
+        virtual RraErrorCode CastClosestHitRayOnBvh(uint64_t                        bvh_index,
+                                                    const glm::vec3&                origin,
+                                                    const glm::vec3&                direction,
                                                     SceneCollectionModelClosestHit& scene_model_closest_hit) const = 0;
 
         /// @brief Reset any values in the model to their default state.
         virtual void ResetModelValues() = 0;
+
+        /// @brief Check if fused instances are enabled.
+        ///
+        /// @param [in] bvh_index The index to check for fused instances.
+        ///
+        /// @returns True if fused instances are enabled.
+        virtual bool GetFusedInstancesEnabled(uint64_t bvh_index) const = 0;
+
+    protected:
+        /// @brief Cast a ray into a BLAS to find the closest hit.
+        ///
+        /// @param bvh_index     The index of the BLAS.
+        /// @param instance_node The nod
+        /// @param origin
+        /// @param direction
+        /// @param scene_model_closest_hit
+        void CastClosestHitRayOnBlas(uint64_t                        bvh_index,
+                                     uint32_t                        instance_node,
+                                     const glm::vec3&                origin,
+                                     const glm::vec3&                direction,
+                                     SceneCollectionModelClosestHit& scene_model_closest_hit) const;
+
+        /// @brief During ray cast traversal, get whether this node should be skipped.
+        ///
+        /// @param blas_index The index of the BLAS containing the node.
+        /// @param node_id The node to query.
+        ///
+        /// @return true if node should be skipped, false otherwise.
+        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const = 0;
     };
 }  // namespace rra
 

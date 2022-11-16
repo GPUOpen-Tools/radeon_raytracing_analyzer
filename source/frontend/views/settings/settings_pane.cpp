@@ -14,6 +14,18 @@
 #include "views/custom_widgets/colored_checkbox.h"
 #include "views/widget_util.h"
 
+constexpr float kMaxCullRatio{0.01f}; ///< The maximum cull ratio able to be set by the settings slider.
+
+float SliderToFrustumCullRatio(int slider_value)
+{
+    return kMaxCullRatio * (slider_value / 100.0f);
+}
+
+int FrustumCullRatioToSlider(float ratio)
+{
+    return ratio * (100.0f / kMaxCullRatio);
+}
+
 SettingsPane::SettingsPane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::SettingsPane)
@@ -46,10 +58,8 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->content_max_movement_speed_->setValue(rra::Settings::Get().GetMovementSpeedLimit());
     connect(ui_->content_max_movement_speed_, SIGNAL(valueChanged(int)), this, SLOT(MovementSpeedLimitChanged(int)));
 
-    ui_->content_frustum_cull_ratio_->setMaximum(1.0);
-    ui_->content_frustum_cull_ratio_->setMinimum(0.0);
-    ui_->content_frustum_cull_ratio_->setValue(rra::Settings::Get().GetFrustumCullRatio());
-    connect(ui_->content_frustum_cull_ratio_, SIGNAL(valueChanged(double)), this, SLOT(FrustumCullRatioIsChanged(double)));
+    ui_->small_object_culling_content_->setValue(FrustumCullRatioToSlider(rra::Settings::Get().GetFrustumCullRatio()));
+    connect(ui_->small_object_culling_content_, SIGNAL(valueChanged(int)), this, SLOT(SmallObjectCullingIsChanged(int)));
 
     ui_->content_decimal_precision_->setMinimum(1);
     ui_->content_decimal_precision_->setMaximum(9);
@@ -73,9 +83,9 @@ void SettingsPane::MovementSpeedLimitChanged(int new_limit)
     rra::Settings::Get().SaveSettings();
 }
 
-void SettingsPane::FrustumCullRatioIsChanged(double new_ratio)
+void SettingsPane::SmallObjectCullingIsChanged(int value)
 {
-    rra::Settings::Get().SetFrustumCullRatio(new_ratio);
+    rra::Settings::Get().SetFrustumCullRatio(SliderToFrustumCullRatio(value));
     rra::Settings::Get().SaveSettings();
 }
 

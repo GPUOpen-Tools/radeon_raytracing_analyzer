@@ -24,6 +24,17 @@ RraErrorCode RraAsicInfoGetDeviceID(int32_t* device_id)
     return data_set_.asic_info.GetDeviceID(device_id);
 }
 
+RraErrorCode RraAsicInfoIsDeviceNavi3(bool* out_is_navi_3)
+{
+    uint16_t     major_number;
+    RraErrorCode result = data_set_.asic_info.GetGfxIpLevelMajor(&major_number);
+    if (result == kRraOk)
+    {
+        *out_is_navi_3 = (major_number == 11);
+    }
+    return result;
+}
+
 RraErrorCode RraAsicInfoGetDeviceRevisionID(int32_t* device_revision_id)
 {
     return data_set_.asic_info.GetDeviceRevisionID(device_revision_id);
@@ -97,8 +108,8 @@ RraErrorCode RraAsicInfoGetRaytracingVersion(uint16_t* out_version_major, uint16
         return kRraErrorInvalidPointer;
     }
 
-    const rta::IRtIp11AccelerationStructureHeader& header = tlas->GetHeader();
-    rta::RayTracingBinaryVersion version = header.GetGpuRtDriverInterfaceVersion();
+    const rta::IRtIp11AccelerationStructureHeader& header  = tlas->GetHeader();
+    rta::RayTracingBinaryVersion                   version = header.GetGpuRtDriverInterfaceVersion();
 
     *out_version_major = version.version_major;
     *out_version_minor = version.version_minor;

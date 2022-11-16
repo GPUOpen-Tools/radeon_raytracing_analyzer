@@ -414,6 +414,7 @@ void AccelerationStructureViewerPane::UpdateCameraController()
         if (camera_controller != last_camera_controller_)
         {
             last_camera_controller_ = camera_controller;
+            model_->SetCameraController(camera_controller);
 
             if (rra::Settings::Get().GetCameraResetOnStyleChange())
             {
@@ -667,6 +668,10 @@ void AccelerationStructureViewerPane::KeyPressed(QKeyEvent* key_event)
     {
     case Qt::Key_C:
         model_->AdaptTraversalCounterRangeToView();
+        break;
+
+    case Qt::Key_V:
+        model_->ToggleInstanceTransformWireframe();
         break;
 
     case Qt::Key_B:

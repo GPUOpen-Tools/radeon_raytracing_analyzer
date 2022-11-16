@@ -8,11 +8,10 @@
 #ifndef RRA_MODELS_BLAS_BLAS_INSTANCES_MODEL_H_
 #define RRA_MODELS_BLAS_BLAS_INSTANCES_MODEL_H_
 
-#include "qt_common/custom_widgets/scaled_table_view.h"
 #include "qt_common/utils/model_view_mapper.h"
 
-#include "models/blas/blas_instances_item_model.h"
-#include "models/blas/blas_instances_proxy_model.h"
+#include "models/instances_item_model.h"
+#include "models/instances_proxy_model.h"
 
 namespace rra
 {
@@ -80,17 +79,17 @@ namespace rra
         /// @brief Get the proxy model. Used to set up a connection between the table being sorted and the UI update.
         ///
         /// @return the proxy model.
-        BlasInstancesProxyModel* GetProxyModel() const;
-    
-    public slots :
+        InstancesProxyModel* GetProxyModel() const;
+
+    public slots:
         /// @brief Handle what happens when the search filter changes.
         ///
         /// @param [in] filter The search text filter.
         void SearchTextChanged(const QString& filter);
 
     private:
-        BlasInstancesItemModel*  table_model_;  ///< Holds the BLAS instance list table data.
-        BlasInstancesProxyModel* proxy_model_;  ///< Proxy model for the BLAS instance list table.
+        InstancesItemModel*  table_model_;  ///< Holds the BLAS instance list table data.
+        InstancesProxyModel* proxy_model_;  ///< Proxy model for the BLAS instance list table.
     };
 }  // namespace rra
 

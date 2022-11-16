@@ -10,6 +10,7 @@
 #include "qt_common/utils/qt_util.h"
 
 #include "public/rra_assert.h"
+#include "public/rra_api_info.h"
 
 #include "constants.h"
 #include "settings/settings.h"
@@ -45,17 +46,18 @@ namespace rra
         // Set default column widths wide enough to show table contents.
         acceleration_structure_table->SetColumnPadding(0);
 
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnTriangleAddress, 18);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnTriangleOffset, 15);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnTriangleCount, 13);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnGeometryIndex, 13);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnIsInactive, 10);
+        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnGeometryFlagOpaque, 10);
+        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit, 20);
+        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnPrimitiveIndex, 13);
+        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnNodeAddress, 18);
+        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnNodeOffset, 15);
+        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnActive, 10);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnTriangleSurfaceArea, 15);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnSAH, 10);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex0, 20);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex1, 20);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex2, 20);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex3, 20);
 
         // Allow users to resize columns if desired.
         acceleration_structure_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
@@ -82,16 +84,14 @@ namespace rra
             int decimal_precision = rra::Settings::Get().GetDecimalPrecision();
             switch (index.column())
             {
-            case kBlasTrianglesColumnTriangleAddress:
-                return QString("0x") + QString("%1").arg(cache.triangle_address, 0, 16);
-            case kBlasTrianglesColumnTriangleOffset:
-                return QString("0x") + QString("%1").arg(cache.triangle_offset, 0, 16);
-            case kBlasTrianglesColumnTriangleCount:
-                return QString("%1").arg(cache.triangle_count);
             case kBlasTrianglesColumnGeometryIndex:
                 return QString("%1").arg(cache.geometry_index);
-            case kBlasTrianglesColumnIsInactive:
-                return (cache.is_inactive == true ? QString("Yes") : QString("No"));
+            case kBlasTrianglesColumnPrimitiveIndex:
+                return QString("%1").arg(cache.primitive_index);
+            case kBlasTrianglesColumnNodeAddress:
+                return QString("0x") + QString("%1").arg(cache.triangle_address, 0, 16);
+            case kBlasTrianglesColumnNodeOffset:
+                return QString("0x") + QString("%1").arg(cache.triangle_offset, 0, 16);
             case kBlasTrianglesColumnTriangleSurfaceArea:
                 return QString::number(cache.triangle_surface_area, kQtFloatFormat, decimal_precision);
             case kBlasTrianglesColumnSAH:
@@ -108,17 +108,6 @@ namespace rra
                 return QString::number(cache.vertex_2.x, kQtFloatFormat, decimal_precision) + "," +
                        QString::number(cache.vertex_2.y, kQtFloatFormat, decimal_precision) + "," +
                        QString::number(cache.vertex_2.z, kQtFloatFormat, decimal_precision);
-            case kBlasTrianglesColumnVertex3:
-                if (cache.triangle_count > 1)
-                {
-                    return QString::number(cache.vertex_3.x, kQtFloatFormat, decimal_precision) + "," +
-                           QString::number(cache.vertex_3.y, kQtFloatFormat, decimal_precision) + "," +
-                           QString::number(cache.vertex_3.z, kQtFloatFormat, decimal_precision);
-                }
-                else
-                {
-                    return "-";
-                }
 
             default:
                 break;
@@ -144,35 +133,36 @@ namespace rra
                 return QString::number(cache.vertex_2.x, kQtFloatFormat, kQtTooltipFloatPrecision) + ", " +
                        QString::number(cache.vertex_2.y, kQtFloatFormat, kQtTooltipFloatPrecision) + ", " +
                        QString::number(cache.vertex_2.z, kQtFloatFormat, kQtTooltipFloatPrecision);
-            case kBlasTrianglesColumnVertex3:
-                if (cache.triangle_count > 1)
-                {
-                    return QString::number(cache.vertex_3.x, kQtFloatFormat, kQtTooltipFloatPrecision) + ", " +
-                           QString::number(cache.vertex_3.y, kQtFloatFormat, kQtTooltipFloatPrecision) + ", " +
-                           QString::number(cache.vertex_3.z, kQtFloatFormat, kQtTooltipFloatPrecision);
-                }
-                else
-                {
-                    break;
-                }
 
             default:
                 break;
+            }
+        }
+        else if (role == Qt::CheckStateRole)
+        {
+            switch (index.column())
+            {
+            case kBlasTrianglesColumnGeometryFlagOpaque:
+                return cache.geometryFlagOpaque ? Qt::Checked : Qt::Unchecked;
+            case kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit:
+                return cache.geometryFlagNoDuplicateAnyHit ? Qt::Checked : Qt::Unchecked;
+            case kBlasTrianglesColumnActive:
+                return cache.is_inactive ? Qt::Unchecked : Qt::Checked;
             }
         }
         else if (role == Qt::UserRole)
         {
             switch (index.column())
             {
-            case kBlasTrianglesColumnTriangleAddress:
-                return QVariant::fromValue<qulonglong>(cache.triangle_address);
-            case kBlasTrianglesColumnTriangleOffset:
-                return QVariant::fromValue<qulonglong>(cache.triangle_offset);
-            case kBlasTrianglesColumnTriangleCount:
-                return QVariant::fromValue<quint32>(cache.triangle_count);
             case kBlasTrianglesColumnGeometryIndex:
                 return QVariant::fromValue<quint32>(cache.geometry_index);
-            case kBlasTrianglesColumnIsInactive:
+            case kBlasTrianglesColumnPrimitiveIndex:
+                return QVariant::fromValue<quint32>(cache.primitive_index);
+            case kBlasTrianglesColumnNodeAddress:
+                return QVariant::fromValue<qulonglong>(cache.triangle_address);
+            case kBlasTrianglesColumnNodeOffset:
+                return QVariant::fromValue<qulonglong>(cache.triangle_offset);
+            case kBlasTrianglesColumnActive:
                 return QVariant::fromValue<bool>(cache.is_inactive);
             case kBlasTrianglesColumnTriangleSurfaceArea:
                 return QVariant::fromValue<float>(cache.triangle_surface_area);
@@ -182,7 +172,6 @@ namespace rra
             case kBlasTrianglesColumnVertex0:
             case kBlasTrianglesColumnVertex1:
             case kBlasTrianglesColumnVertex2:
-            case kBlasTrianglesColumnVertex3:
                 return QVariant::fromValue<uint32_t>(cache.node_id);
 
             default:
@@ -205,16 +194,20 @@ namespace rra
             {
                 switch (section)
                 {
-                case kBlasTrianglesColumnTriangleAddress:
-                    return "Triangle address";
-                case kBlasTrianglesColumnTriangleOffset:
-                    return "Triangle offset";
-                case kBlasTrianglesColumnTriangleCount:
-                    return "Triangle count";
                 case kBlasTrianglesColumnGeometryIndex:
                     return "Geometry index";
-                case kBlasTrianglesColumnIsInactive:
-                    return "Is inactive";
+                case kBlasTrianglesColumnGeometryFlagOpaque:
+                    return "Opaque";
+                case kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit:
+                    return "No duplicate any hit invocation";
+                case kBlasTrianglesColumnPrimitiveIndex:
+                    return "Primitive index";
+                case kBlasTrianglesColumnNodeAddress:
+                    return "Node address";
+                case kBlasTrianglesColumnNodeOffset:
+                    return "Node offset";
+                case kBlasTrianglesColumnActive:
+                    return "Active";
                 case kBlasTrianglesColumnTriangleSurfaceArea:
                     return "Triangle surface area";
                 case kBlasTrianglesColumnSAH:
@@ -225,8 +218,6 @@ namespace rra
                     return "Vertex1";
                 case kBlasTrianglesColumnVertex2:
                     return "Vertex2";
-                case kBlasTrianglesColumnVertex3:
-                    return "Vertex3";
                 default:
                     break;
                 }
@@ -235,18 +226,41 @@ namespace rra
             {
                 switch (section)
                 {
-                case kBlasTrianglesColumnTriangleAddress:
-                    return "The address of this triangle in the BLAS";
-                case kBlasTrianglesColumnTriangleOffset:
-                    return "The offset of this triangle in the BLAS";
-                case kBlasTrianglesColumnTriangleCount:
-                    return "The number of triangles in this triangle node";
                 case kBlasTrianglesColumnGeometryIndex:
-                    return "The geometry index";
-                case kBlasTrianglesColumnIsInactive:
-                    return "Whether this triangle is inactive or not";
-                case kBlasTrianglesColumnTriangleSurfaceArea:
-                    return "The surface area of the triangle";
+                    return "The index of the geometry that this triangle belongs to";
+                case kBlasTrianglesColumnGeometryFlagOpaque:
+                    if (RraApiInfoIsVulkan())
+                    {
+                        return "Presence of the VK_GEOMETRY_OPAQUE_BIT_KHR geometry flag";
+                    }
+                    else
+                    {
+                        return "Presence of the D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE geometry flag";
+                    }
+                case kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit:
+                    if (RraApiInfoIsVulkan())
+                    {
+                        return "Presence of the VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR geometry flag";
+                    }
+                    else
+                    {
+                        return "Presence of the D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION geometry flag";
+                    }
+                case kBlasTrianglesColumnPrimitiveIndex:
+                    return "The index of the triangle accessible in shaders";
+                case kBlasTrianglesColumnNodeAddress:
+                    return "The virtual address of this triangle in GPU memory";
+                case kBlasTrianglesColumnNodeOffset:
+                    return "The address of this triangle relative to the BLAS address";
+                case kBlasTrianglesColumnActive:
+                    if (RraApiInfoIsVulkan())
+                    {
+                        return "The active status of the triangle according to the definition in the Vulkan specification";
+                    }
+                    else
+                    {
+                        return "The active status of the triangle according to the definition in the DirectX 12 specification";
+                    }
                 case kBlasTrianglesColumnSAH:
                     return "The triangle surface area heuristic value";
                 default:

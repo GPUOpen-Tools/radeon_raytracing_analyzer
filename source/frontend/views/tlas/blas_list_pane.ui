@@ -39,7 +39,24 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="TextSearchWidget" name="search_box_"/>
+        <layout class="QHBoxLayout">
+         <item>
+          <widget class="TextSearchWidget" name="search_box_"/>
+         </item>
+         <item>
+          <widget class="ArrowIconComboBox" name="content_blas_filter_">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>---</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="ScaledTableView" name="blas_table_" native="true">
@@ -67,6 +84,12 @@
    <class>ScaledTableView</class>
    <extends>QTreeView</extends>
    <header>qt_common/custom_widgets/scaled_table_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ArrowIconComboBox</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

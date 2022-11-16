@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definitions to list camera controllers.
@@ -9,6 +9,7 @@
 
 #include "cad_camera_controller.h"
 #include "fps_camera_controller.h"
+#include "axis_free_camera_controller.h"
 
 namespace rra
 {
@@ -23,6 +24,9 @@ namespace rra
 
         controller                                                = new FPSController();
         controllers_[controller->GetName() + kControlStyleSuffix] = controller;
+
+        controller                                                = new AxisFreeController();
+        controllers_[controller->GetName() + kControlStyleSuffix] = controller;
     }
 
     CameraControllers::~CameraControllers()
@@ -36,10 +40,10 @@ namespace rra
     std::vector<std::string> CameraControllers::GetControllerNames() const
     {
         std::vector<std::string> names;
-        names.reserve(controllers_.size());
+        names.resize(controllers_.size());
         for (auto& i : controllers_)
         {
-            names.push_back(i.first);
+            names[i.second->GetComboBoxIndex()] = i.first;
         }
         return names;
     }

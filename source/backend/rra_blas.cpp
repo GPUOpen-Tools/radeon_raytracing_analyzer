@@ -164,25 +164,6 @@ RraErrorCode RraBlasGetBox32NodeCount(uint64_t blas_index, uint32_t* out_node_co
     return kRraOk;
 }
 
-RraErrorCode RraBlasGetHalfBox32NodeCount(uint64_t blas_index, uint32_t* out_node_count)
-{
-    RRA_ASSERT(data_set_.bvh_bundle.get() != nullptr);
-    if (data_set_.bvh_bundle.get() == nullptr)
-    {
-        return kRraErrorInvalidPointer;
-    }
-
-    const auto& blas = RraBlasGetBlasFromBlasIndex(blas_index);
-    if (blas == nullptr)
-    {
-        return kRraErrorInvalidPointer;
-    }
-
-    *out_node_count = blas->GetHeader().GetInteriorHalfFp32NodeCount();
-
-    return kRraOk;
-}
-
 RraErrorCode RraBlasGetMaxTreeDepth(uint64_t blas_index, uint32_t* out_tree_depth)
 {
     RRA_ASSERT(data_set_.bvh_bundle.get() != nullptr);
@@ -342,7 +323,7 @@ RraErrorCode RraBlasGetSurfaceAreaImpl(const rta::EncodedRtIp11BottomLevelBvh* b
 #endif  // DEBUG
 
         uint32_t tri_count{};
-        RraBlasGetNodeTriangleCount(blas->GetID(), triangle_node->GetTriangleId(), &tri_count);
+        RraBlasGetNodeTriangleCount(blas->GetID(), node_ptr->GetRawPointer(), &tri_count);
 
         *out_surface_area = RraBlasGetTriangleSurfaceArea(*triangle_node, tri_count);
         return kRraOk;
@@ -504,6 +485,47 @@ RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_ptr, uin
 #endif  // DEBUG
 
         *out_geometry_index = triangle_node->GetGeometryIndex();
+    }
+    else
+    {
+        // The given node Id doesn't refer to a triangle node.
+        // Don't output any geometry Id, and return an invalid child error code.
+        return kRraErrorInvalidChildNode;
+    }
+
+    return kRraOk;
+}
+
+RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t local_primitive_index, uint32_t* out_primitive_index)
+{
+    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    const dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    if (current_node->IsTriangleNode())
+    {
+        const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*current_node);
+
+#ifdef _DEBUG
+        const auto&    header_offsets = blas->GetHeader().GetBufferOffsets();
+        const uint32_t node_index     = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+
+        // Get the primitive index for this node index.
+        const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
+        const auto& tri_node       = triangle_nodes[node_index];
+
+        RRA_ASSERT(&tri_node == triangle_node);
+#endif  // DEBUG
+
+        // No way to exctract more than 2 primitive indexes as of yet.
+        RRA_ASSERT(local_primitive_index < 2);
+
+        *out_primitive_index =
+            triangle_node->GetPrimitiveIndex(local_primitive_index == 0 ? dxr::amd::NodeType::kAmdNodeTriangle0 : dxr::amd::NodeType::kAmdNodeTriangle1);
     }
     else
     {
@@ -715,48 +737,6 @@ RraErrorCode RraBlasGetNodeVertices(uint64_t blas_index, uint32_t node_ptr, stru
         {
             memcpy(&out_vertices[3], &verts[3], vertex_size);
         }
-    }
-
-    return kRraOk;
-}
-
-RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_primitive_index)
-{
-    const auto&                             bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
-    const rta::EncodedRtIp11BottomLevelBvh* blas              = dynamic_cast<rta::EncodedRtIp11BottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
-    if (blas == nullptr)
-    {
-        return kRraErrorInvalidPointer;
-    }
-
-    dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-
-    if (current_node == nullptr)
-    {
-        return kRraErrorInvalidPointer;
-    }
-
-    // The incoming node id should be a triangle node. If it's not, we can't extract primitive data.
-    if (current_node->IsTriangleNode())
-    {
-        const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*current_node);
-
-#ifdef _DEBUG
-        const auto&    header_offsets = blas->GetHeader().GetBufferOffsets();
-        const uint32_t node_index     = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
-
-        // Get the primitive index for this node index.
-        const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
-        const auto& tri_node       = triangle_nodes[node_index];
-
-        RRA_ASSERT(&tri_node == triangle_node);
-#endif  // DEBUG
-
-        (*out_primitive_index) = triangle_node->GetPrimitiveIndex(current_node->GetType());
-    }
-    else
-    {
-        return kRraErrorInvalidPointer;
     }
 
     return kRraOk;

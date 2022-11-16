@@ -70,6 +70,11 @@ public:
     /// @brief Hides the tlas specific widgets.
     void HideTLASWidgets();
 
+    /// @brief Hides or shows widgets that aren't needed for BLASes with procedural geometry.
+    ///
+    /// @param [in] hidden Shows non-procedural widgets if true, hides them if false.
+    void NonProceduralWidgetsHidden(bool hidden);
+
 signals:
     /// @brief A signal to notify for control style changes.
     void ControlStyleChanged();
@@ -113,6 +118,18 @@ private slots:
 
     /// @brief Adapts the traversal counter range to the view.
     void AdaptTraversalCounterRangeToView();
+
+    /// @brief Update the box sort heuristic label.
+    void UpdateBoxSortHeuristicLabel();
+
+    /// @brief Set Architecture to Navi2.
+    void SetArchitectureToNavi2();
+
+    /// @brief Set Architecture to Navi3.
+    void SetArchitectureToNavi3();
+
+    /// @brief Toggle the accept first hit flag.
+    void ToggleRayFlagsAcceptFirstHit();
 
     /// @brief Move the camera to (0, 0, 0).
     void MoveCameraToOrigin();
@@ -188,9 +205,10 @@ private:
     /// @brief Updates the orientation widgets.
     void UpdateOrientationWidgets();
 
-    Ui::ViewPane*   ui_               = nullptr;  ///< Pointer to the Qt UI design.
-    rra::ViewModel* model_            = nullptr;  ///< The model for this pane.
-    bool            reset_projection_ = false;    ///< Flag to indicate if the projection mode needs resetting on showEvent.
+    Ui::ViewPane*   ui_                       = nullptr;  ///< Pointer to the Qt UI design.
+    rra::ViewModel* model_                    = nullptr;  ///< The model for this pane.
+    bool            reset_projection_         = false;    ///< Flag to indicate if the projection mode needs resetting on showEvent.
+    bool            reset_camera_orientation_ = false;    ///< Flag to indicate if the camera orientation needs resetting on showEvent.
 
     static ViewPaneSignalHandler signal_handler;  ///< The singal handler for camera events.
 };

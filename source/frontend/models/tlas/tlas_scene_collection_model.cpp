@@ -15,7 +15,7 @@
 #include "public/rra_tlas.h"
 #include "public/rra_blas.h"
 #include "public/renderer_interface.h"
-#include "public/intersect_min_max.h"
+#include "public/intersect.h"
 
 #include "glm/glm/gtx/intersect.hpp"
 
@@ -74,7 +74,7 @@ namespace rra
         // Create a scene.
         Scene* tlas_scene = new Scene{};
 
-        // Construct a tree by using the blas_index
+        // Construct a tree by using the tlas_index.
         auto tlas_root_node = SceneNode::ConstructFromTlas(tlas_index);
 
         // Initialize the scene with the given node.
@@ -83,74 +83,11 @@ namespace rra
         return tlas_scene;
     }
 
-    RraErrorCode CastClosestHitRayOnBlas(uint64_t                        bvh_index,
-                                         uint32_t                        instance_node,
-                                         const glm::vec3&                origin,
-                                         const glm::vec3&                direction,
-                                         SceneCollectionModelClosestHit& scene_model_closest_hit)
+    bool TlasSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const
     {
-        uint32_t root_node = UINT32_MAX;
-        RRA_BUBBLE_ON_ERROR(RraBvhGetRootNodePtr(&root_node));
-
-        uint32_t              triangle_count;
-        std::vector<uint32_t> traverse_nodes = {root_node};
-        std::vector<uint32_t> swap_nodes;
-
-        // Memoized traversal of the tree.
-        while (!traverse_nodes.empty())
-        {
-            swap_nodes.clear();
-
-            for (size_t i = 0; i < traverse_nodes.size(); i++)
-            {
-                BoundingVolumeExtents extent = {};
-
-                RRA_BUBBLE_ON_ERROR(RraBlasGetBoundingVolumeExtents(bvh_index, traverse_nodes[i], &extent));
-                if (renderer::IntersectMinMax(
-                        origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z)))
-                {
-                    // Get the child nodes. If this is not a box node, the child count is 0.
-                    uint32_t child_node_count;
-                    RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(bvh_index, traverse_nodes[i], &child_node_count));
-                    std::vector<uint32_t> child_nodes(child_node_count);
-                    RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(bvh_index, traverse_nodes[i], child_nodes.data()));
-                    swap_nodes.insert(swap_nodes.end(), child_nodes.begin(), child_nodes.end());
-                }
-
-                // Get the triangle nodes. If this is not a triangle the triangle count is 0.
-                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangleCount(bvh_index, traverse_nodes[i], &triangle_count));
-                std::vector<TriangleVertices> triangles(triangle_count);
-                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangles(bvh_index, traverse_nodes[i], triangles.data()));
-
-                // Go over each triangle and test for intersection.
-                for (size_t k = 0; k < triangles.size(); k++)
-                {
-                    TriangleVertices triangle_vertices = triangles[k];
-                    glm::vec3        hit_output;
-
-                    glm::vec3 a = {triangle_vertices.a.x, triangle_vertices.a.y, triangle_vertices.a.z};
-                    glm::vec3 b = {triangle_vertices.b.x, triangle_vertices.b.y, triangle_vertices.b.z};
-                    glm::vec3 c = {triangle_vertices.c.x, triangle_vertices.c.y, triangle_vertices.c.z};
-
-                    if (glm::intersectLineTriangle(origin, direction, a, b, c, hit_output))
-                    {
-                        float distance = hit_output.x;  // GLM does not document this...
-                        if (distance > 0.0 && (scene_model_closest_hit.distance < 0.0f || distance < scene_model_closest_hit.distance))
-                        {
-                            scene_model_closest_hit.distance       = distance;
-                            scene_model_closest_hit.blas_index     = bvh_index;
-                            scene_model_closest_hit.instance_node  = instance_node;
-                            scene_model_closest_hit.triangle_node  = UINT32_MAX;
-                            scene_model_closest_hit.triangle_index = UINT32_MAX;
-                        }
-                    }
-                }
-            }
-
-            // Swap the old list with the new.
-            traverse_nodes = swap_nodes;
-        }
-        return kRraOk;
+        RRA_UNUSED(blas_index);
+        RRA_UNUSED(node_id);
+        return false;
     }
 
     RraErrorCode TlasSceneCollectionModel::CastClosestHitRayOnBvh(uint64_t                        bvh_index,
@@ -192,7 +129,8 @@ namespace rra
             glm::vec3 transformed_direction = glm::mat3(glm::transpose(transform)) * direction;
 
             // Trace
-            RRA_BUBBLE_ON_ERROR(CastClosestHitRayOnBlas(blas_index, hit_instances[i], transformed_origin, transformed_direction, scene_model_closest_hit));
+            CastClosestHitRayOnBlas(blas_index, hit_instances[i], transformed_origin, transformed_direction, scene_model_closest_hit);
+            scene_model_closest_hit.triangle_node = UINT32_MAX;
         }
 
         return kRraOk;
@@ -205,6 +143,13 @@ namespace rra
             delete scene_iter->second;
         }
         tlas_scenes_.clear();
+    }
+
+    bool TlasSceneCollectionModel::GetFusedInstancesEnabled(uint64_t bvh_index) const
+    {
+        bool is_enabled = false;
+        RraTlasGetFusedInstancesEnabled(bvh_index, &is_enabled);
+        return is_enabled;
     }
 
 }  // namespace rra

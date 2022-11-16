@@ -1,0 +1,108 @@
+//=============================================================================
+// Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation of a proxy filter that processes the instances
+/// tables.
+//=============================================================================
+
+#include "models/instances_proxy_model.h"
+
+#include <QTableView>
+
+#include "public/rra_assert.h"
+
+#include "models/instances_item_model.h"
+
+namespace rra
+{
+    InstancesProxyModel::InstancesProxyModel(QObject* parent)
+        : TableProxyModel(parent)
+    {
+    }
+
+    InstancesProxyModel::~InstancesProxyModel()
+    {
+    }
+
+    InstancesItemModel* InstancesProxyModel::InitializeAccelerationStructureTableModels(QTableView* view, int num_rows, int num_columns)
+    {
+        InstancesItemModel* model = new InstancesItemModel();
+        model->SetRowCount(num_rows);
+        model->SetColumnCount(num_columns);
+
+        setSourceModel(model);
+        SetFilterKeyColumns({
+            kInstancesColumnInstanceAddress,
+            kInstancesColumnInstanceOffset,
+            kInstancesColumnXPosition,
+            kInstancesColumnYPosition,
+            kInstancesColumnZPosition,
+            kInstancesColumnM11,
+            kInstancesColumnM12,
+            kInstancesColumnM13,
+            kInstancesColumnM21,
+            kInstancesColumnM22,
+            kInstancesColumnM23,
+            kInstancesColumnM31,
+            kInstancesColumnM32,
+            kInstancesColumnM33,
+        });
+
+        view->setModel(this);
+
+        return model;
+    }
+
+    bool InstancesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
+    {
+        if (FilterSearchString(source_row, source_parent) == false)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    bool InstancesProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
+    {
+        int left_column  = left.column();
+        int right_column = right.column();
+        if (left_column == right_column)
+        {
+            switch (left_column)
+            {
+            case kInstancesColumnInstanceIndex:
+            case kInstancesColumnInstanceAddress:
+            case kInstancesColumnInstanceOffset:
+            {
+                const uint64_t left_data  = left.data(Qt::UserRole).toULongLong();
+                const uint64_t right_data = right.data(Qt::UserRole).toULongLong();
+                return left_data < right_data;
+            }
+
+            case kInstancesColumnXPosition:
+            case kInstancesColumnYPosition:
+            case kInstancesColumnZPosition:
+            case kInstancesColumnM11:
+            case kInstancesColumnM12:
+            case kInstancesColumnM13:
+            case kInstancesColumnM21:
+            case kInstancesColumnM22:
+            case kInstancesColumnM23:
+            case kInstancesColumnM31:
+            case kInstancesColumnM32:
+            case kInstancesColumnM33:
+            {
+                const float left_data  = left.data(Qt::UserRole).toFloat();
+                const float right_data = right.data(Qt::UserRole).toFloat();
+                return left_data < right_data;
+            }
+
+            default:
+                break;
+            }
+        }
+
+        return QSortFilterProxyModel::lessThan(left, right);
+    }
+}  // namespace rra

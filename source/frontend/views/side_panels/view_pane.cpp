@@ -21,6 +21,7 @@
 #include "settings/settings.h"
 
 #include "public/heatmap.h"
+#include "public/rra_asic_info.h"
 
 static const int kTraversalCounterDefaultMinValue = 0;
 static const int kTraversalCounterDefaultMaxValue = 100;
@@ -66,6 +67,10 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_rendering_mode_traversal_->Initialize(false, rra::kCheckboxEnableColor);
 
     ui_->traversal_continuous_update_->Initialize(false, rra::kCheckboxEnableColor);
+
+    ui_->content_architecture_navi_2_->Initialize(true, rra::kCheckboxEnableColor);
+    ui_->content_architecture_navi_3_->Initialize(false, rra::kCheckboxEnableColor);
+    ui_->content_ray_flags_accept_first_hit_->Initialize(false, rra::kCheckboxEnableColor);
 
     // Initialize the traversal counter slider.
     ui_->traversal_counter_slider_->setCursor(Qt::PointingHandCursor);
@@ -145,6 +150,8 @@ ViewPane::ViewPane(QWidget* parent)
     connect(ui_->camera_to_origin_button_, SIGNAL(clicked(bool)), this, SLOT(MoveCameraToOrigin()));
     connect(ui_->traversal_continuous_update_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleTraversalCounterContinuousUpdate);
 
+    connect(ui_->content_ray_flags_accept_first_hit_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsAcceptFirstHit);
+
     connect(ui_->content_camera_position_x_, SIGNAL(valueChanged(double)), this, SLOT(CameraPositionChangedX(double)));
     connect(ui_->content_camera_position_y_, SIGNAL(valueChanged(double)), this, SLOT(CameraPositionChangedY(double)));
     connect(ui_->content_camera_position_z_, SIGNAL(valueChanged(double)), this, SLOT(CameraPositionChangedZ(double)));
@@ -168,6 +175,10 @@ ViewPane::ViewPane(QWidget* parent)
     connect(ui_->content_control_style_up_axis_x_, &ColoredRadioButton::Clicked, this, &ViewPane::SetUpAxisAsX);
     connect(ui_->content_control_style_up_axis_y_, &ColoredRadioButton::Clicked, this, &ViewPane::SetUpAxisAsY);
     connect(ui_->content_control_style_up_axis_z_, &ColoredRadioButton::Clicked, this, &ViewPane::SetUpAxisAsZ);
+
+    ui_->content_architecture_label_->hide();
+    ui_->content_architecture_navi_2_->hide();
+    ui_->content_architecture_navi_3_->hide();
 
     connect(ui_->content_rendering_mode_geometry_, &ColoredRadioButton::Clicked, this, &ViewPane::ConfigureForGeometryRenderingLayout);
     connect(ui_->content_rendering_mode_traversal_, &ColoredRadioButton::Clicked, this, &ViewPane::ConfigureForTraversalRenderingLayout);
@@ -214,13 +225,30 @@ ViewPane::~ViewPane()
 
 void ViewPane::OnTraceOpen()
 {
+    // Note: The renderer/camera is not fully initialized at this point. To set renderer/camera state
+    //       on trace open, set a flag here then do the initialization in showEvent().
+
     // Reset the UI when a trace is loaded.
+
+    bool is_navi_3 = false;
+    RraAsicInfoIsDeviceNavi3(&is_navi_3);
+    if (is_navi_3)
+    {
+        model_->SetArchitectureToNavi3();
+    }
+    else
+    {
+        model_->SetArchitectureToNavi2();
+    }
+
     ui_->content_movement_speed_->setMaximum(rra::kMovementSliderMaximum);
     ui_->traversal_counter_slider_->setMinimum(0);
     ui_->traversal_counter_slider_->SetSpan(kTraversalCounterDefaultMinValue, kTraversalCounterDefaultMaxValue);
     ui_->traversal_counter_slider_->setEnabled(true);
     ui_->traversal_adapt_to_view_->setEnabled(true);
     ui_->traversal_continuous_update_->setChecked(false);
+    ui_->content_ray_flags_accept_first_hit_->setChecked(false);
+    UpdateBoxSortHeuristicLabel();
 
     ConfigureForGeometryRenderingLayout();
     ui_->content_render_bvh_->setChecked(true);
@@ -228,17 +256,12 @@ void ViewPane::OnTraceOpen()
 
     model_->SetControlStyle(kControlStyleDefaultIndex);
 
+    reset_camera_orientation_ = true;
+
     // See if the projection mode needs resetting. Do the actual reset in showEvent
     // since the UI will be set up at that point.
     int projection_mode = ui_->content_projection_mode_->CurrentRow();
-    if (projection_mode != kProjectionModeDefaultIndex)
-    {
-        reset_projection_ = true;
-    }
-    else
-    {
-        reset_projection_ = false;
-    }
+    reset_projection_   = projection_mode != kProjectionModeDefaultIndex;
 
     SetTraversalCounterRange(kTraversalCounterDefaultMinValue, kTraversalCounterDefaultMaxValue);
 }
@@ -251,6 +274,14 @@ void ViewPane::showEvent(QShowEvent* event)
     {
         ui_->content_projection_mode_->SetSelectedRow(kProjectionModeDefaultIndex);
         reset_projection_ = false;
+    }
+
+    if (reset_camera_orientation_)
+    {
+        model_->SetInvertVertical(false);
+        model_->SetInvertHorizontal(false);
+        SetUpAxisAsY();
+        reset_camera_orientation_ = false;
     }
 
     int control_style_index = model_->GetCurrentControllerIndex();
@@ -316,6 +347,39 @@ void ViewPane::SetTraversalCounterRange(int min_value, int max_value)
 void ViewPane::AdaptTraversalCounterRangeToView()
 {
     model_->AdaptTraversalCounterRangeToView([=](uint32_t min, uint32_t max) { ui_->traversal_counter_slider_->SetSpan(min, max); });
+}
+
+void ViewPane::UpdateBoxSortHeuristicLabel()
+{
+    ui_->content_box_sort_heuristic_value_->setText("Box sort heuristic: " + model_->GetBoxSortHeuristicName());
+}
+
+void ViewPane::SetArchitectureToNavi2()
+{
+    model_->SetArchitectureToNavi2();
+    UpdateBoxSortHeuristicLabel();
+    emit signal_handler.CameraParametersChanged(false);
+}
+
+void ViewPane::SetArchitectureToNavi3()
+{
+    model_->SetArchitectureToNavi3();
+    UpdateBoxSortHeuristicLabel();
+    emit signal_handler.CameraParametersChanged(false);
+}
+
+void ViewPane::ToggleRayFlagsAcceptFirstHit()
+{
+    if (ui_->content_ray_flags_accept_first_hit_->isChecked())
+    {
+        model_->EnableRayFlagsAcceptFirstHit();
+    }
+    else
+    {
+        model_->DisableRayFlagsAcceptFirstHit();
+    }
+    UpdateBoxSortHeuristicLabel();
+    emit signal_handler.CameraParametersChanged(false);
 }
 
 void ViewPane::MoveCameraToOrigin()
@@ -451,6 +515,16 @@ void ViewPane::SetControlStyle(int index)
             ui_->content_projection_mode_->setHidden(true);
             controller->GetCamera()->SetOrthographic(false);
         }
+
+        bool hide_up_axis_ui = !controller->SupportsUpAxis();
+        ui_->content_control_style_up_axis_label_->setHidden(hide_up_axis_ui);
+        ui_->content_control_style_up_axis_x_->setHidden(hide_up_axis_ui);
+        ui_->content_control_style_up_axis_y_->setHidden(hide_up_axis_ui);
+        ui_->content_control_style_up_axis_z_->setHidden(hide_up_axis_ui);
+        ui_->content_control_style_invert_vertical_->setHidden(hide_up_axis_ui);
+        ui_->content_control_style_invert_horizontal_->setText(hide_up_axis_ui ? "Invert" : "Invert horizontal");
+
+        controller->ControlStyleChanged();
     }
 }
 
@@ -535,4 +609,10 @@ void ViewPane::ToggleHotkeyLayout()
 void ViewPane::HideTLASWidgets()
 {
     ui_->content_render_instance_transform_->hide();
+}
+
+void ViewPane::NonProceduralWidgetsHidden(bool hidden)
+{
+    ui_->content_render_geometry_->setHidden(hidden);
+    ui_->content_wireframe_overlay_->setHidden(hidden);
 }

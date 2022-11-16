@@ -575,7 +575,7 @@ void DoubleSliderHeatmapWidget::mousePressEvent(QMouseEvent* event)
     // Neither handle was hit, so find the closest one, and then execute a mouseMoveEvent also.
 
     int new_position = PixelPosToRangeValue(Pick(event->pos()) - offset_pos_);
-    if (new_position < 0.5 * (lower_pos_ + upper_pos_))
+    if (new_position < 0.5f * (lower_pos_ + upper_pos_))
     {
         lower_pressed_control_ = QStyle::SC_SliderHandle;
         position_              = lower_pos_;
@@ -723,14 +723,15 @@ void DoubleSliderHeatmapWidget::paintEvent(QPaintEvent* event)
     const QPoint center_point = QRect(lower_handle_rect.center(), upper_handle_rect.center()).center();
     QRect        span_rect;
 
+    auto scaled_factor = ScalingManager::Get().Scaled(1.0);
     if (orientation() == Qt::Horizontal)
     {
-        auto heatmap_half_height = height() / 4;
+        auto heatmap_half_height = static_cast<int>(height() / (4 * scaled_factor));
         span_rect                = QRect(QPoint(min_value, center_point.y() - heatmap_half_height), QPoint(max_value, center_point.y() + heatmap_half_height));
     }
     else
     {
-        auto heatmap_half_width = width() / 4;
+        auto heatmap_half_width = static_cast<int>(width()  / (4 * scaled_factor));
         span_rect               = QRect(QPoint(center_point.x() - heatmap_half_width, min_value), QPoint(center_point.x() + heatmap_half_width, max_value));
     }
 

@@ -19,6 +19,7 @@
 #include "constants.h"
 #include "util/string_util.h"
 #include "settings/settings.h"
+#include "public/rra_api_info.h"
 
 namespace rra
 {
@@ -316,23 +317,53 @@ namespace rra
                 case kBlasListColumnAddress:
                     return "The base address of this BLAS";
                 case kBlasListColumnAllowUpdate:
-                    return "A build flag used to build the BLAS";
+                    if (RraApiInfoIsVulkan())
+                    {
+                        return "Presence of the VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR acceleration structure flag";
+                    }
+                    else
+                    {
+                        return "Presence of the D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE acceleration structure flag";
+                    }
                 case kBlasListColumnAllowCompaction:
-                    return "A build flag used to build the BLAS";
+                    if (RraApiInfoIsVulkan())
+                    {
+                        return "Presence of the VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR acceleration structure flag";
+                    }
+                    else
+                    {
+                        return "Presence of the D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION acceleration structure flag";
+                    }
                 case kBlasListColumnLowMemory:
-                    return "A build flag used to build the BLAS";
+                    if (RraApiInfoIsVulkan())
+                    {
+                        return "Presence of the VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR acceleration structure flag";
+                    }
+                    else
+                    {
+                        return "Presence of the D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY acceleration structure flag";
+                    }
                 case kBlasListColumnBuildType:
-                    return "The build flags specifying whether to prefer fast build or fast trace";
+                    if (RraApiInfoIsVulkan())
+                    {
+                        return "Presence of either the VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR or "
+                               "VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR flag";
+                    }
+                    else
+                    {
+                        return "Presence of either the D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE or "
+                               "D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD flag";
+                    }
                 case kBlasListColumnInstanceCount:
                     return "The number of instances of this BLAS used in the scene";
                 case kBlasListColumnNodeCount:
-                    return "The total number of tree nodes in this BLAS";
+                    return "The total (sum of box and triangle nodes) number of nodes in this BLAS.";
                 case kBlasListColumnBoxCount:
                     return "The total number of box (internal) nodes in this BLAS";
                 case kBlasListColumnBox32Count:
-                    return "The number of 32-bit box nodes in this BLAS";
+                    return "The number of box nodes with 32-bit floating point precision bounding boxes in this BLAS";
                 case kBlasListColumnBox16Count:
-                    return "The number of 16-bit box nodes in this BLAS";
+                    return "The number of box nodes with 16-bit floating point precision bounding boxes in this BLAS";
                 case kBlasListColumnTriangleNodeCount:
                     return "The total number of triangle nodes in this BLAS";
                 case kBlasListColumnProceduralNodeCount:
@@ -340,15 +371,15 @@ namespace rra
                 case kBlasListColumnMemoryUsage:
                     return "The amount of memory that this BLAS uses";
                 case kBlasListColumnRootSAH:
-                    return "The root surface area heuristic value for this BLAS";
+                    return "The surface area heuristic of the BLAS root node";
                 case kBlasListColumnMinSAH:
-                    return "The minimum surface area heuristic value for this BLAS";
+                    return "The minimum surface area heuristic of all triangle nodes in the BLAS";
                 case kBlasListColumnMeanSAH:
-                    return "The average surface area heuristic value for this BLAS";
+                    return "The average surface area heuristic of all triangle nodes in the BLAS";
                 case kBlasListColumnMaxDepth:
-                    return "The maximum depth of a triangle (leaf) node in this BLAS";
+                    return "The maximum depth of all triangle nodes in this BLAS";
                 case kBlasListColumnAvgDepth:
-                    return "The average depth of a triangle (leaf) node in this BLAS";
+                    return "The average depth of all triangle nodes in this BLAS";
                 case kBlasListColumnBlasIndex:
                     return "The internal BLAS index";
                 default:

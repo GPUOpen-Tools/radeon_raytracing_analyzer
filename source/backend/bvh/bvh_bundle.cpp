@@ -132,25 +132,28 @@ namespace rta
         return empty_placeholder_;
     }
 
-    /// @brief Load a "RawAccelStruc" chunk.
+    /// @brief Load a "RawAccelStruct" chunk.
     ///
-    /// @param [in] chunk_file   The chunk file to load from.
-    /// @param [in] chunk_index  The chunk index in the chunk file.
-    /// @param [in] chunk_header Reference to the chunk header data.
-    /// @param [in] import_option Flag indicating which sections of the chunk to load/discard.
+    /// @param [in]  chunk_file        The chunk file to load from.
+    /// @param [in]  chunk_index       The chunk index in the chunk file.
+    /// @param [in]  chunk_header      Reference to the chunk header data.
+    /// @param [in]  chunk_identifier  The BVH chunk name.
+    /// @param [in]  import_option     Flag indicating which sections of the chunk to load/discard.
+    /// @param [out] bvh               The loaded BVH data.
     ///
     /// @return The BVH object loaded in if successful or nullptr if error.
     static std::unique_ptr<IBvh> LoadRtIp11RawAccelStrucAtChunkFileIndex(rdf::ChunkFile&                      chunk_file,
                                                                          const std::int32_t                   chunk_index,
                                                                          const RawAccelStructRdfChunkHeader&  chunk_header,
+                                                                         const char* const                    chunk_identifier,
                                                                          const BvhBundleReadOption            import_option,
                                                                          std::unique_ptr<IEncodedRtIp11Bvh>&& bvh)
     {
-        const std::uint32_t version       = chunk_file.GetChunkVersion(IEncodedRtIp11Bvh::kChunkIdentifier, chunk_index);
+        const std::uint32_t version       = chunk_file.GetChunkVersion(chunk_identifier, chunk_index);
         std::uint32_t       major_version = version >> 16;
         if (major_version <= GPURT_ACCEL_STRUCT_MAJOR_VERSION)
         {
-            if (bvh->LoadRawAccelStrucFromFile(chunk_file, chunk_index, chunk_header, import_option) == true)
+            if (bvh->LoadRawAccelStrucFromFile(chunk_file, chunk_index, chunk_header, chunk_identifier, import_option) == true)
             {
                 return std::move(bvh);
             }
@@ -172,7 +175,11 @@ namespace rta
         {
             try
             {
-                chunk_file.ContainsChunk(identifier);
+                bool result = chunk_file.ContainsChunk(identifier);
+                if (result == false)
+                {
+                    return result;
+                }
             }
             catch (...)
             {
@@ -195,7 +202,16 @@ namespace rta
                                                                              RraErrorCode*             io_error_code)
     {
         // Check if all expected identifiers are contained in the chunk file
-        if (!IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kChunkIdentifier}, chunk_file))
+        const char* bvh_identifier = nullptr;
+        if (IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kAccelChunkIdentifier1}, chunk_file))
+        {
+            bvh_identifier = IEncodedRtIp11Bvh::kAccelChunkIdentifier1;
+        }
+        else if (IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kAccelChunkIdentifier2}, chunk_file))
+        {
+            bvh_identifier = IEncodedRtIp11Bvh::kAccelChunkIdentifier2;
+        }
+        else
         {
             *io_error_code = kRraErrorNoASChunks;
             return nullptr;
@@ -204,7 +220,6 @@ namespace rta
         std::vector<std::unique_ptr<IBvh>> top_level_bvhs;
         std::vector<std::unique_ptr<IBvh>> bottom_level_bvhs;
 
-        const auto bvh_identifier  = IEncodedRtIp11Bvh::kChunkIdentifier;
         const auto bvh_chunk_count = chunk_file.GetChunkCount(bvh_identifier);
 
         std::unordered_map<GpuVirtualAddress, std::uint64_t> tlas_map;
@@ -233,8 +248,8 @@ namespace rta
                 // Call the load function here, passing in a reference to the header as a parameter.
                 if (header.flags.blas == 1)
                 {
-                    bottom_level_bvhs.emplace_back(
-                        LoadRtIp11RawAccelStrucAtChunkFileIndex(chunk_file, ci, header, import_option, std::make_unique<EncodedRtIp11BottomLevelBvh>()));
+                    bottom_level_bvhs.emplace_back(LoadRtIp11RawAccelStrucAtChunkFileIndex(
+                        chunk_file, ci, header, bvh_identifier, import_option, std::make_unique<EncodedRtIp11BottomLevelBvh>()));
                     if (bottom_level_bvhs.back() == nullptr)
                     {
                         *io_error_code = kRraErrorMalformedData;
@@ -249,8 +264,8 @@ namespace rta
                 }
                 else
                 {
-                    top_level_bvhs.emplace_back(
-                        LoadRtIp11RawAccelStrucAtChunkFileIndex(chunk_file, ci, header, import_option, std::make_unique<EncodedRtIp11TopLevelBvh>()));
+                    top_level_bvhs.emplace_back(LoadRtIp11RawAccelStrucAtChunkFileIndex(
+                        chunk_file, ci, header, bvh_identifier, import_option, std::make_unique<EncodedRtIp11TopLevelBvh>()));
                     if (top_level_bvhs.back() == nullptr)
                     {
                         *io_error_code = kRraErrorMalformedData;

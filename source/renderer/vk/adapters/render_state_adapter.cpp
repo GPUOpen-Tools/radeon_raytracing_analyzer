@@ -21,6 +21,40 @@ namespace rra
 {
     namespace renderer
     {
+        static const char* kTraversalCounterModeName_TraversalLoopCount        = "Color traversal counters by loop count";
+        static const char* kTraversalCounterModeDescription_TraversalLoopCount = "The number of iterations during traversal to get the closest hit.";
+        static const char* kTraversalCounterModeName_InstanceHit               = "Color traversal counters by instance hit";
+        static const char* kTraversalCounterModeDescription_InstanceHit        = "The count of intersections on instances.";
+        static const char* kTraversalCounterModeName_BoxVolumeHit              = "Color traversal counters by box volume hit";
+        static const char* kTraversalCounterModeDescription_BoxVolumeHit = "The count of intersections on box volumes. Box volumes contain smaller volumes.";
+        static const char* kTraversalCounterModeName_BoxVolumeMiss       = "Color traversal counters by box volume miss";
+        static const char* kTraversalCounterModeDescription_BoxVolumeMiss =
+            "The count of intersections misses on box volumes. Box volumes contain smaller volumes.";
+        static const char* kTraversalCounterModeName_BoxVolumeTest = "Color traversal counters by box volume test";
+        static const char* kTraversalCounterModeDescription_BoxVolumeTest =
+            "The count of intersections tests performed on box volumes. Box volumes contain smaller volumes.";
+        static const char* kTraversalCounterModeName_TriangleHit         = "Color traversal counters by triangle hit";
+        static const char* kTraversalCounterModeDescription_TriangleHit  = "The count of intersections on triangles.";
+        static const char* kTraversalCounterModeName_TriangleMiss        = "Color traversal counters by triangle miss";
+        static const char* kTraversalCounterModeDescription_TriangleMiss = "The count of intersection misses on triangles.";
+        static const char* kTraversalCounterModeName_TriangleTest        = "Color traversal counters by triangle test";
+        static const char* kTraversalCounterModeDescription_TriangleTest = "The count of intersection tests performed on triangles.";
+
+        /// Declaration for BVH coloring modes.
+        static const std::vector<TraversalCounterModeInfo> kAvailableTraversalCounterModes = {
+            {TraversalCounterMode::TraversalLoopCount,
+             BvhTypeFlags::All,
+             kTraversalCounterModeName_TraversalLoopCount,
+             kTraversalCounterModeDescription_TraversalLoopCount},
+            {TraversalCounterMode::InstanceHit, BvhTypeFlags::TopLevel, kTraversalCounterModeName_InstanceHit, kTraversalCounterModeDescription_InstanceHit},
+            {TraversalCounterMode::BoxVolumeHit, BvhTypeFlags::All, kTraversalCounterModeName_BoxVolumeHit, kTraversalCounterModeDescription_BoxVolumeHit},
+            {TraversalCounterMode::BoxVolumeMiss, BvhTypeFlags::All, kTraversalCounterModeName_BoxVolumeMiss, kTraversalCounterModeDescription_BoxVolumeMiss},
+            {TraversalCounterMode::BoxVolumeTest, BvhTypeFlags::All, kTraversalCounterModeName_BoxVolumeTest, kTraversalCounterModeDescription_BoxVolumeTest},
+            {TraversalCounterMode::TriangleHit, BvhTypeFlags::All, kTraversalCounterModeName_TriangleHit, kTraversalCounterModeDescription_TriangleHit},
+            {TraversalCounterMode::TriangleMiss, BvhTypeFlags::All, kTraversalCounterModeName_TriangleMiss, kTraversalCounterModeDescription_TriangleMiss},
+            {TraversalCounterMode::TriangleTest, BvhTypeFlags::All, kTraversalCounterModeName_TriangleTest, kTraversalCounterModeDescription_TriangleTest},
+        };
+
         static const char* kGeometryColoringModeName_BlasAverageSAH        = "Color geometry by average SAH (BLAS)";
         static const char* kGeometryColoringModeDescription_BlasAverageSAH = "Shows the average surface area heuristic of all triangles in a BLAS.";
         static const char* kGeometryColoringModeName_TriangleSAH           = "Color geometry by SAH (Triangle)";
@@ -29,12 +63,17 @@ namespace rra
         static const char* kGeometryColoringModeDescription_BlasMinSAH     = "Shows the minimum surface area heuristic of all triangles in a BLAS.";
         static const char* kGeometryColoringModeName_InstanceMask          = "Color geometry by mask (Instance)";
         static const char* kGeometryColoringModeDescription_InstanceMask   = "Each combination of instance mask flags is assigned a unique color.";
-        static const char* kGeometryColoringModeName_Opacity               = "Color geometry by opacity (Geometry)";
+        static const char* kGeometryColoringModeName_FinalOpacity          = "Color geometry by final opacity (Geometry)";
+        static const char* kGeometryColoringModeDescription_FinalOpacity =
+            "The final opacity as a function of instance and geometry flags. Colors defined in Themes and colors pane under 'Opacity coloring'.";
+        static const char* kGeometryColoringModeName_Opacity = "Color geometry by opacity (Geometry)";
         static const char* kGeometryColoringModeDescription_Opacity =
             "A color showing the presence of the opacity flag. Colors defined in Themes and colors pane under 'Opacity coloring'.";
-        static const char* kGeometryColoringModeName_GeometryIndex              = "Color geometry by geometry index (Geometry)";
-        static const char* kGeometryColoringModeDescription_GeometryIndex       = "A color for each geometry index within a BLAS.";
-        static const char* kGeometryColoringModeName_PreferFastBuildOrTraceFlag = "Color geometry by fast build/trace flag (BLAS)";
+        static const char* kGeometryColoringModeName_InstanceForceOpaqueOrNoOpaque        = "Color geometry by force opaque / no opaque flag (Instance)";
+        static const char* kGeometryColoringModeDescription_InstanceForceOpaqueOrNoOpaque = "The instance force opaque / no opaque flag.";
+        static const char* kGeometryColoringModeName_GeometryIndex                        = "Color geometry by geometry index (Geometry)";
+        static const char* kGeometryColoringModeDescription_GeometryIndex                 = "A color for each geometry index within a BLAS.";
+        static const char* kGeometryColoringModeName_PreferFastBuildOrTraceFlag           = "Color geometry by fast build/trace flag (BLAS)";
         static const char* kGeometryColoringModeDescription_PreferFastBuildOrTraceFlag =
             "The fast build/trace flag. Colors defined in Themes and colors pane under 'Build type coloring'.";
         static const char* kGeometryColoringModeName_AllowUpdateFlag = "Color geometry by allow update flag (BLAS)";
@@ -46,26 +85,29 @@ namespace rra
         static const char* kGeometryColoringModeName_LowMemoryFlag = "Color geometry by low memory flag (BLAS)";
         static const char* kGeometryColoringModeDescription_LowMemoryFlag =
             "The low memory flag. Colors defined in Themes and colors pane under 'Build flag coloring'.";
-        static const char* kGeometryColoringModeName_InstanceFacingCullDisable            = "Color geometry by facing cull disable flag (Instance)";
-        static const char* kGeometryColoringModeDescription_InstanceFacingCullDisable     = "The instance facing cull disable flag.";
-        static const char* kGeometryColoringModeName_InstanceFlipFacing                   = "Color geometry by flip facing flag (Instance)";
-        static const char* kGeometryColoringModeDescription_InstanceFlipFacing            = "The instance flip facing flag.";
-        static const char* kGeometryColoringModeName_InstanceForceOpaqueOrNoOpaque        = "Color geometry by force opaque / no opaque flag (Instance)";
-        static const char* kGeometryColoringModeDescription_InstanceForceOpaqueOrNoOpaque = "The instance force opaque / no opaque flag.";
-        static const char* kGeometryColoringModeName_TreeLevel                            = "Color geometry by tree level (Triangle)";
-        static const char* kGeometryColoringModeDescription_TreeLevel         = "Tree level displays the triangle's depth within the BVH as a heatmap.";
-        static const char* kGeometryColoringModeName_BlasMaxDepth             = "Color geometry by max tree depth (BLAS)";
-        static const char* kGeometryColoringModeDescription_BlasMaxDepth      = "A heatmap showing which BLAS have the largest BVH depth.";
-        static const char* kGeometryColoringModeName_BlasAverageDepth         = "Color geometry by average tree depth (BLAS)";
-        static const char* kGeometryColoringModeDescription_BlasAverageDepth  = "A heatmap showing which BLAS have the largest average BVH depth.";
-        static const char* kGeometryColoringModeName_BlasInstanceId           = "Color geometry by unique color (BLAS)";
-        static const char* kGeometryColoringModeDescription_BlasInstanceId    = "A color for each unique BLAS.";
-        static const char* kGeometryColoringModeName_InstanceIndex            = "Color geometry by unique color (Instance)";
-        static const char* kGeometryColoringModeDescription_InstanceIndex     = "Each instance is assigned a unique color.";
-        static const char* kGeometryColoringModeName_BlasInstanceCount        = "Color geometry by instance count (BLAS)";
-        static const char* kGeometryColoringModeDescription_BlasInstanceCount = "A heatmap showing which BLAS are most commonly instanced.";
-        static const char* kGeometryColoringModeName_BlasTriangleCount        = "Color geometry by triangle count (BLAS)";
-        static const char* kGeometryColoringModeDescription_BlasTriangleCount = "A heatmap showing which BLAS contain the highest triangle count.";
+        static const char* kGeometryColoringModeName_InstanceFacingCullDisable        = "Color geometry by facing cull disable flag (Instance)";
+        static const char* kGeometryColoringModeDescription_InstanceFacingCullDisable = "The instance facing cull disable flag.";
+        static const char* kGeometryColoringModeName_InstanceFlipFacing               = "Color geometry by flip facing flag (Instance)";
+        static const char* kGeometryColoringModeDescription_InstanceFlipFacing        = "The instance flip facing flag.";
+        static const char* kGeometryColoringModeName_TreeLevel                        = "Color geometry by tree level (Triangle)";
+        static const char* kGeometryColoringModeDescription_TreeLevel                 = "Tree level displays the triangle's depth within the BVH as a heatmap.";
+        static const char* kGeometryColoringModeName_BlasMaxDepth                     = "Color geometry by max tree depth (BLAS)";
+        static const char* kGeometryColoringModeDescription_BlasMaxDepth              = "A heatmap showing which BLAS have the largest BVH depth.";
+        static const char* kGeometryColoringModeName_BlasAverageDepth                 = "Color geometry by average tree depth (BLAS)";
+        static const char* kGeometryColoringModeDescription_BlasAverageDepth          = "A heatmap showing which BLAS have the largest average BVH depth.";
+        static const char* kGeometryColoringModeName_BlasInstanceId                   = "Color geometry by unique color (BLAS)";
+        static const char* kGeometryColoringModeDescription_BlasInstanceId            = "A color for each unique BLAS.";
+        static const char* kGeometryColoringModeName_InstanceIndex                    = "Color geometry by unique color (Instance)";
+        static const char* kGeometryColoringModeDescription_InstanceIndex             = "Each instance is assigned a unique color.";
+        static const char* kGeometryColoringModeName_BlasInstanceCount                = "Color geometry by instance count (BLAS)";
+        static const char* kGeometryColoringModeDescription_BlasInstanceCount         = "A heatmap showing which BLAS are most commonly instanced.";
+        static const char* kGeometryColoringModeName_BlasTriangleCount                = "Color geometry by triangle count (BLAS)";
+        static const char* kGeometryColoringModeDescription_BlasTriangleCount         = "A heatmap showing which BLAS contain the highest triangle count.";
+        static const char* kGeometryColoringModeName_InstanceRebraiding               = "Color geometry by rebraiding (Instance)";
+        static const char* kGeometryColoringModeDescription_InstanceRebraiding =
+            "A color indicating whether or not an instance has been rebraided by the driver.";
+        static const char* kGeometryColoringModeName_TriangleSplitting        = "Color geometry by triangle splitting (Triangle)";
+        static const char* kGeometryColoringModeDescription_TriangleSplitting = "A color indicating whether or not a triangle has been split by the driver.";
         static const char* kGeometryColoringModeName_Lit                      = "Color geometry by lighting";
         static const char* kGeometryColoringModeDescription_Lit               = "Directionally lit shading.";
         static const char* kGeometryColoringModeName_Technical                = "Color geometry by technical drawing";
@@ -92,7 +134,15 @@ namespace rra
              BvhTypeFlags::TopLevel,
              kGeometryColoringModeName_InstanceMask,
              kGeometryColoringModeDescription_InstanceMask},
+            {GeometryColoringMode::kFinalOpacity,
+             BvhTypeFlags::TopLevel,
+             kGeometryColoringModeName_FinalOpacity,
+             kGeometryColoringModeDescription_FinalOpacity},
             {GeometryColoringMode::kOpacity, BvhTypeFlags::All, kGeometryColoringModeName_Opacity, kGeometryColoringModeDescription_Opacity},
+            {GeometryColoringMode::kInstanceForceOpaqueOrNoOpaqueBits,
+             BvhTypeFlags::TopLevel,
+             kGeometryColoringModeName_InstanceForceOpaqueOrNoOpaque,
+             kGeometryColoringModeDescription_InstanceForceOpaqueOrNoOpaque},
             {GeometryColoringMode::kGeometryIndex, BvhTypeFlags::All, kGeometryColoringModeName_GeometryIndex, kGeometryColoringModeDescription_GeometryIndex},
             {GeometryColoringMode::kFastBuildOrTraceFlag,
              BvhTypeFlags::TopLevel,
@@ -118,10 +168,6 @@ namespace rra
              BvhTypeFlags::TopLevel,
              kGeometryColoringModeName_InstanceFlipFacing,
              kGeometryColoringModeDescription_InstanceFlipFacing},
-            {GeometryColoringMode::kInstanceForceOpaqueOrNoOpaqueBits,
-             BvhTypeFlags::TopLevel,
-             kGeometryColoringModeName_InstanceForceOpaqueOrNoOpaque,
-             kGeometryColoringModeDescription_InstanceForceOpaqueOrNoOpaque},
             {GeometryColoringMode::kTreeLevel, BvhTypeFlags::All, kGeometryColoringModeName_TreeLevel, kGeometryColoringModeDescription_TreeLevel},
             {GeometryColoringMode::kBlasMaxDepth,
              BvhTypeFlags::TopLevel,
@@ -147,6 +193,15 @@ namespace rra
              BvhTypeFlags::TopLevel,
              kGeometryColoringModeName_BlasTriangleCount,
              kGeometryColoringModeDescription_BlasTriangleCount},
+            {GeometryColoringMode::kInstanceRebraiding,
+             BvhTypeFlags::TopLevel,
+             kGeometryColoringModeName_InstanceRebraiding,
+             kGeometryColoringModeDescription_InstanceRebraiding},
+            {GeometryColoringMode::kTriangleSplitting,
+             BvhTypeFlags::All,
+             kGeometryColoringModeName_TriangleSplitting,
+             kGeometryColoringModeDescription_TriangleSplitting},
+
             {GeometryColoringMode::kLit, BvhTypeFlags::All, kGeometryColoringModeName_Lit, kGeometryColoringModeDescription_Lit},
             {GeometryColoringMode::kTechnical, BvhTypeFlags::All, kGeometryColoringModeName_Technical, kGeometryColoringModeDescription_Technical},
         };
@@ -303,6 +358,17 @@ namespace rra
             }
         }
 
+        void RenderStateAdapter::GetAvailableTraversalCounterModes(BvhTypeFlags type, std::vector<TraversalCounterModeInfo>& counter_modes) const
+        {
+            for (const auto& mode_info : kAvailableTraversalCounterModes)
+            {
+                if ((mode_info.viewer_availability & type) == type)
+                {
+                    counter_modes.push_back(mode_info);
+                }
+            }
+        }
+
         int RenderStateAdapter::GetCullingMode() const
         {
             return mesh_render_module_->GetRenderState().culling_mode;
@@ -389,6 +455,11 @@ namespace rra
             return bounding_volume_module_->IsEnabled();
         }
 
+        bool RenderStateAdapter::GetRenderInstancePretransform()
+        {
+            return selection_render_module_->IsTransformRenderingEnabled();
+        }
+
         void RenderStateAdapter::SetRenderInstancePretransform(bool render_instance_pretransform)
         {
             if (render_instance_pretransform)
@@ -399,7 +470,7 @@ namespace rra
             {
                 selection_render_module_->DisableTransformRendering();
             }
-            bounding_volume_module_->GetRendererInterface()->MarkAsDirty();
+            selection_render_module_->GetRendererInterface()->MarkAsDirty();
         }
 
         void RenderStateAdapter::SetHeatmapData(HeatmapData heatmap_data)
@@ -417,6 +488,63 @@ namespace rra
             {
                 heatmap_update_callbacks_.push_back(heatmap_update_callback);
             }
+        }
+
+        void RenderStateAdapter::SetArchitectureToNavi2()
+        {
+            using_navi_3_ = false;
+            UpdateRayParameters();
+        }
+
+        void RenderStateAdapter::SetArchitectureToNavi3()
+        {
+            using_navi_3_ = true;
+            UpdateRayParameters();
+        }
+
+        bool RenderStateAdapter::IsUsingNavi3()
+        {
+            return using_navi_3_;
+        }
+
+        void RenderStateAdapter::SetRayFlagAcceptFirstHit(bool accept_first_hit)
+        {
+            vulkan_renderer_->GetSceneUbo().traversal_accept_first_hit = accept_first_hit ? 1 : 0;
+            UpdateRayParameters();
+        }
+
+        uint32_t RenderStateAdapter::GetBoxSortHeuristic()
+        {
+            return vulkan_renderer_->GetSceneUbo().traversal_box_sort_heuristic;
+        }
+
+        void RenderStateAdapter::UpdateRayParameters()
+        {
+            // Referencing from GPURT
+            if (IsUsingNavi3())
+            {
+                if (vulkan_renderer_->GetSceneUbo().traversal_accept_first_hit)
+                {
+                    vulkan_renderer_->GetSceneUbo().traversal_box_sort_heuristic = kBoxSortHeuristicLargest;
+                }
+                else
+                {
+                    vulkan_renderer_->GetSceneUbo().traversal_box_sort_heuristic = kBoxSortHeuristicMidPoint;
+                }
+            }
+            else
+            {
+                if (vulkan_renderer_->GetSceneUbo().traversal_accept_first_hit)
+                {
+                    // TODO: This value may be kBoxSortHeuristicDisabled under some circumstances. Check GPURT.
+                    vulkan_renderer_->GetSceneUbo().traversal_box_sort_heuristic = kBoxSortHeuristicClosest;
+                }
+                else
+                {
+                    vulkan_renderer_->GetSceneUbo().traversal_box_sort_heuristic = kBoxSortHeuristicClosest;
+                }
+            }
+            vulkan_renderer_->MarkAsDirty();
         }
 
     }  // namespace renderer

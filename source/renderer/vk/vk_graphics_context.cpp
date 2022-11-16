@@ -46,14 +46,9 @@ namespace rra
             return geometry_instructions_[blas_index];
         }
 
-        VkTraversalTree VkGraphicsContext::GetBlasTraversalTree() const
+        std::vector<VkTraversalTree> VkGraphicsContext::GetBlases() const
         {
-            return traversal_tree_;
-        }
-
-        uint32_t VkGraphicsContext::GetBlasTraversalTreeRootVolumeIndex(uint32_t blas_index) const
-        {
-            return traversal_tree_blas_offsets_[blas_index];
+            return blases_;
         }
 
         Device& VkGraphicsContext::GetDevice()
@@ -113,10 +108,12 @@ namespace rra
             if (initialized_)
             {
                 device_.GPUFlush();
-                device_.DestroyBuffer(geometry_buffer_, geometry_buffer_allocation_);
 
-                device_.DestroyBuffer(traversal_tree_.vertex_buffer, traversal_tree_.vertex_allocation);
-                device_.DestroyBuffer(traversal_tree_.volume_buffer, traversal_tree_.volume_allocation);
+                for (auto& blas : blases_)
+                {
+                    device_.DestroyBuffer(blas.vertex_buffer, blas.vertex_allocation);
+                    device_.DestroyBuffer(blas.volume_buffer, blas.volume_allocation);
+                }
 
                 device_.OnDestroy();
 
@@ -153,15 +150,7 @@ namespace rra
         {
             PRE_RENDER_CHECK_HEALTH();
 
-            traversal_tree_blas_offsets_ = info.traversal_tree_blas_structure_offsets;
-            VkTraversalTree vk_tree;
-
-            VkBuffer      volume_staging_buffer     = VK_NULL_HANDLE;
-            VmaAllocation volume_staging_allocation = VK_NULL_HANDLE;
-
-            VkBuffer      triangle_staging_buffer     = VK_NULL_HANDLE;
-            VmaAllocation triangle_staging_allocation = VK_NULL_HANDLE;
-
+            // Command setup
             VkResult result;
 
             VkCommandPool   command_pool;
@@ -185,58 +174,93 @@ namespace rra
             result                              = vkBeginCommandBuffer(command_buffer, &begin_info);
             PRE_RENDER_CHECK_RESULT(result, "Failed to begin global upload command buffer recording.");
 
+            std::vector<VkBuffer>      staging_buffers;
+            std::vector<VmaAllocation> staging_allocations;
+
+            for (size_t i = 0; i < info.acceleration_structures.size(); i++)
             {
-                auto buffer_size = info.blas_tree.volumes.size() * sizeof(TraversalVolume);
-
                 PRE_RENDER_CHECK_HEALTH();
-                device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                     VMA_MEMORY_USAGE_CPU_ONLY,
-                                     volume_staging_buffer,
-                                     volume_staging_allocation,
-                                     info.blas_tree.volumes.data(),
-                                     buffer_size);
 
-                PRE_RENDER_CHECK_HEALTH();
-                device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                     VMA_MEMORY_USAGE_GPU_ONLY,
-                                     vk_tree.volume_buffer,
-                                     vk_tree.volume_allocation,
-                                     nullptr,
-                                     buffer_size);
+                VkTraversalTree vk_tree;
+                auto            cpu_side = info.acceleration_structures[i];
 
-                SetObjectName(device_.GetDevice(), VK_OBJECT_TYPE_BUFFER, (uint64_t)volume_staging_buffer, "volumeStagingBufferContext");
-                SetObjectName(device_.GetDevice(), VK_OBJECT_TYPE_BUFFER, (uint64_t)vk_tree.volume_buffer, "volumeBufferContext");
+                VkBuffer      volume_staging_buffer     = VK_NULL_HANDLE;
+                VmaAllocation volume_staging_allocation = VK_NULL_HANDLE;
 
-                VkBufferCopy copy_region = {};
-                copy_region.size         = buffer_size;
-                vkCmdCopyBuffer(command_buffer, volume_staging_buffer, vk_tree.volume_buffer, 1, &copy_region);
-            }
+                VkBuffer      triangle_staging_buffer     = VK_NULL_HANDLE;
+                VmaAllocation triangle_staging_allocation = VK_NULL_HANDLE;
 
-            {
-                auto buffer_size = info.blas_tree.vertices.size() * sizeof(RraVertex);
+                // We create a blank triangle since Vulkan does not like the 0 sized buffers and
+                // we need valid buffers for a descriptor slot that holds multiple buffers.
+                if (cpu_side.vertices.empty())
+                {
+                    cpu_side.vertices.resize(3);
+                }
 
-                PRE_RENDER_CHECK_HEALTH();
-                device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                     VMA_MEMORY_USAGE_CPU_ONLY,
-                                     triangle_staging_buffer,
-                                     triangle_staging_allocation,
-                                     info.blas_tree.vertices.data(),
-                                     buffer_size);
+                {
+                    // Upload volumes.
+                    auto buffer_size = cpu_side.volumes.size() * sizeof(TraversalVolume);
 
-                PRE_RENDER_CHECK_HEALTH();
-                device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                     VMA_MEMORY_USAGE_GPU_ONLY,
-                                     vk_tree.vertex_buffer,
-                                     vk_tree.vertex_allocation,
-                                     nullptr,
-                                     buffer_size);
+                    PRE_RENDER_CHECK_HEALTH();
+                    device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                         VMA_MEMORY_USAGE_CPU_ONLY,
+                                         volume_staging_buffer,
+                                         volume_staging_allocation,
+                                         cpu_side.volumes.data(),
+                                         buffer_size);
 
-                SetObjectName(device_.GetDevice(), VK_OBJECT_TYPE_BUFFER, (uint64_t)triangle_staging_buffer, "triangleStagingBufferContext");
-                SetObjectName(device_.GetDevice(), VK_OBJECT_TYPE_BUFFER, (uint64_t)vk_tree.vertex_buffer, "triangleBufferContext");
+                    PRE_RENDER_CHECK_HEALTH();
+                    device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                         VMA_MEMORY_USAGE_GPU_ONLY,
+                                         vk_tree.volume_buffer,
+                                         vk_tree.volume_allocation,
+                                         nullptr,
+                                         buffer_size);
 
-                VkBufferCopy copy_region = {};
-                copy_region.size         = buffer_size;
-                vkCmdCopyBuffer(command_buffer, triangle_staging_buffer, vk_tree.vertex_buffer, 1, &copy_region);
+                    VkBufferCopy copy_region = {};
+                    copy_region.size         = buffer_size;
+                    vkCmdCopyBuffer(command_buffer, volume_staging_buffer, vk_tree.volume_buffer, 1, &copy_region);
+                }
+                {
+                    // Upload triangles.
+                    auto buffer_size = cpu_side.vertices.size() * sizeof(RraVertex);
+
+                    PRE_RENDER_CHECK_HEALTH();
+                    device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                         VMA_MEMORY_USAGE_CPU_ONLY,
+                                         triangle_staging_buffer,
+                                         triangle_staging_allocation,
+                                         cpu_side.vertices.data(),
+                                         buffer_size);
+
+                    PRE_RENDER_CHECK_HEALTH();
+                    device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                         VMA_MEMORY_USAGE_GPU_ONLY,
+                                         vk_tree.vertex_buffer,
+                                         vk_tree.vertex_allocation,
+                                         nullptr,
+                                         buffer_size);
+
+                    VkBufferCopy copy_region = {};
+                    copy_region.size         = buffer_size;
+                    vkCmdCopyBuffer(command_buffer, triangle_staging_buffer, vk_tree.vertex_buffer, 1, &copy_region);
+                }
+
+                // Create draw instructions for rasterization pipelines.
+                BlasDrawInstruction geometry_instruction = {};
+                geometry_instruction.vertex_index        = 0;
+                geometry_instruction.vertex_count        = static_cast<uint32_t>(cpu_side.vertices.size());
+                geometry_instruction.vertex_buffer       = vk_tree.vertex_buffer;
+                geometry_instructions_.push_back(geometry_instruction);
+
+                // Add structures to internal list.
+                blases_.push_back(vk_tree);
+
+                // Add staging to list for deallocation.
+                staging_buffers.push_back(triangle_staging_buffer);
+                staging_buffers.push_back(volume_staging_buffer);
+                staging_allocations.push_back(triangle_staging_allocation);
+                staging_allocations.push_back(volume_staging_allocation);
             }
 
             result = vkEndCommandBuffer(command_buffer);
@@ -254,21 +278,10 @@ namespace rra
 
             vkDestroyCommandPool(device_.GetDevice(), command_pool, nullptr);
 
-            PRE_RENDER_CHECK_HEALTH();
-            device_.DestroyBuffer(volume_staging_buffer, volume_staging_allocation);
-
-            PRE_RENDER_CHECK_HEALTH();
-            device_.DestroyBuffer(triangle_staging_buffer, triangle_staging_allocation);
-
-            traversal_tree_ = vk_tree;
-
-            for (size_t i = 0; i < info.traversal_tree_blas_triangle_offsets.size(); i++)
+            for (size_t i = 0; i < staging_buffers.size(); i++)
             {
-                BlasDrawInstruction geometry_instruction = {};
-                geometry_instruction.vertex_index        = info.traversal_tree_blas_triangle_offsets[i];
-                geometry_instruction.vertex_count        = info.traversal_tree_blas_triangle_count[i];
-                geometry_instruction.vertex_buffer       = vk_tree.vertex_buffer;
-                geometry_instructions_.push_back(geometry_instruction);
+                PRE_RENDER_CHECK_HEALTH();
+                device_.DestroyBuffer(staging_buffers[i], staging_allocations[i]);
             }
 
             return true;

@@ -58,7 +58,9 @@ namespace rra
         static const QString kDeleteRecentTraceTextNoAS =
             "\nThere are no acceleration structures present in the trace file. "
             "Please ensure that the application being traced has ray tracing enabled "
-            "and ray tracing is taking place at the time of capture.\n";
+            "and ray tracing is taking place at the time of capture. "
+            "Also ensure that acceleration structures are not destroyed, cleared, or "
+            "reused in the same frame they are created in.\n";
         static const QString kDeleteRecentTraceTextMalformedData =
             "\nThe trace file contains malformed data. If RRA captures are required, "
             "please ensure that raytracing buffers are not reused immediately after "

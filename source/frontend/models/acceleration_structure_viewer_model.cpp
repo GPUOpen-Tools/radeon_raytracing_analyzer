@@ -20,7 +20,7 @@
 #include "public/camera.h"
 #include "public/rra_blas.h"
 #include "public/rra_print.h"
-#include "public/intersect_min_max.h"
+#include "public/intersect.h"
 
 #include "constants.h"
 #include "custom_widgets/scaled_check_box.h"
@@ -166,7 +166,7 @@ namespace rra
         uint64_t node_count = 0;
         if (AccelerationStructureGetTotalNodeCount(index, &node_count) == kRraOk)
         {
-            auto scene = scene_collection_model_->GetSceneByIndex(index);
+            last_clicked_node_scene_ = scene_collection_model_->GetSceneByIndex(index);
 
             auto delegate_iter = item_delegate_map_.find(index);
             if (delegate_iter != item_delegate_map_.end() && delegate_iter->second)
@@ -175,12 +175,22 @@ namespace rra
             }
 
             auto func                 = [&, index]() { RefreshUI(index); };
-            auto delegate             = new AccelerationStructureTreeViewItemDelegate(scene, func);
+            auto delegate             = new AccelerationStructureTreeViewItemDelegate(last_clicked_node_scene_, func);
             item_delegate_map_[index] = delegate;
 
             tree_view_->setItemDelegate(delegate);
             tree_view_model_->InitializeModel(node_count, index, AccelerationStructureGetChildNodeFunction());
         }
+    }
+
+    float GetNearDistance(BoundingVolumeExtents scene_volume)
+    {
+        float x               = scene_volume.max_x - scene_volume.min_x;
+        float y               = scene_volume.max_y - scene_volume.min_y;
+        float z               = scene_volume.max_z - scene_volume.min_z;
+        float diagonal_length = std::sqrt(x * x + y * y + z * z);
+
+        return 0.01f * diagonal_length;
     }
 
     void AccelerationStructureViewerModel::PopulateScene(renderer::RendererInterface* renderer, uint64_t index)
@@ -193,10 +203,12 @@ namespace rra
             if (renderer != nullptr)
             {
                 // Set the scene info callback in the renderer so the renderer can acces up-to-date info about the scene.
-                Scene* bvh_scene   = scene_collection_model_->GetSceneByIndex(index);
-                auto&  node_colors = GetSceneNodeColors();
+                Scene* bvh_scene               = scene_collection_model_->GetSceneByIndex(index);
+                auto&  node_colors             = GetSceneNodeColors();
+                bool   fused_instances_enabled = scene_collection_model_->GetFusedInstancesEnabled(index);
                 renderer->SetSceneInfoCallback(
-                    [bvh_scene, &node_colors](renderer::RendererSceneInfo& info, renderer::Camera* camera, bool frustum_culling, bool force_camera_update) {
+                    [bvh_scene, &node_colors, fused_instances_enabled](
+                        renderer::RendererSceneInfo& info, renderer::Camera* camera, bool frustum_culling, bool force_camera_update) {
                         info.scene_iteration                       = bvh_scene->GetSceneIteration();
                         info.depth_range_lower_bound               = bvh_scene->GetDepthRangeLowerBound();
                         info.depth_range_upper_bound               = bvh_scene->GetDepthRangeUpperBound();
@@ -255,7 +267,9 @@ namespace rra
                             }
                             else
                             {
-                                float closest_point_distance = 3.0f;
+                                BoundingVolumeExtents volume;
+                                bvh_scene->GetSceneBoundingVolume(volume);
+                                float closest_point_distance = GetNearDistance(volume);
                                 info.instance_map            = bvh_scene->GetInstanceMap();
                                 info.closest_point_to_camera = camera->GetPosition() + glm::vec3(closest_point_distance, 0.0f, 0.0f);
                             }
@@ -265,6 +279,8 @@ namespace rra
 
                         info.last_view_proj = camera->GetViewProjection();
                         info.last_iteration = info.scene_iteration;
+
+                        info.fused_instances_enabled = fused_instances_enabled;
                     });
             }
         }
@@ -276,23 +292,14 @@ namespace rra
         RRA_ASSERT(RraBvhGetTotalBlasCount(&blas_count) == kRraOk);
 
         renderer::GraphicsContextSceneInfo info{};
+        info.acceleration_structures.resize(blas_count);
 
         for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
         {
             auto scene_root = SceneNode::ConstructFromBlas(static_cast<uint32_t>(blas_index));
 
-            // Get the triangle offset before the new triangles are added.
-            auto triangle_offset = info.blas_tree.vertices.size();
-
             // Add to the tree using the scene root.
-            auto structure_offset = scene_root->AddToTraversalTree(info.blas_tree);
-            info.traversal_tree_blas_structure_offsets.push_back(structure_offset);
-
-            // Find how many triangles were added.
-            auto triangle_count = info.blas_tree.vertices.size() - triangle_offset;
-
-            info.traversal_tree_blas_triangle_offsets.push_back(static_cast<uint32_t>(triangle_offset));
-            info.traversal_tree_blas_triangle_count.push_back(static_cast<uint32_t>(triangle_count));
+            scene_root->AddToTraversalTree(info.acceleration_structures[blas_index]);
 
             delete scene_root;
         }
@@ -306,6 +313,38 @@ namespace rra
         {
             uint32_t node_id = GetNodeIdFromModelIndex(selected_node_index_, tlas_index, is_tlas_);
             return RraBvhIsInstanceNode(node_id);
+        }
+        return false;
+    }
+
+    bool AccelerationStructureViewerModel::IsTriangleNode(uint64_t tlas_index) const
+    {
+        if (selected_node_index_.isValid())
+        {
+            uint32_t node_id = GetNodeIdFromModelIndex(selected_node_index_, tlas_index, is_tlas_);
+            return RraBvhIsTriangleNode(node_id);
+        }
+        return false;
+    }
+
+    bool AccelerationStructureViewerModel::IsRebraidedNode(uint64_t tlas_index) const
+    {
+        if (IsInstanceNode(tlas_index))
+        {
+            uint32_t   node_id = GetNodeIdFromModelIndex(selected_node_index_, tlas_index, is_tlas_);
+            SceneNode* node    = last_clicked_node_scene_->GetNodeById(node_id);
+            return last_clicked_node_scene_->IsInstanceRebraided(node->GetInstance()->instance_index);
+        }
+        return false;
+    }
+
+    bool AccelerationStructureViewerModel::IsTriangleSplit(uint64_t blas_index) const
+    {
+        if (IsTriangleNode(blas_index))
+        {
+            uint32_t   node_id = GetNodeIdFromModelIndex(selected_node_index_, blas_index, is_tlas_);
+            SceneNode* node    = last_clicked_node_scene_->GetNodeById(node_id);
+            return last_clicked_node_scene_->IsTriangleSplit(node->GetGeometryIndex(), node->GetPrimitiveIndex());
         }
         return false;
     }
@@ -352,6 +391,16 @@ namespace rra
     void AccelerationStructureViewerModel::SetMultiSelect(bool multi_select)
     {
         Scene::SetMultiSelect(multi_select);
+    }
+
+    void AccelerationStructureViewerModel::SetCameraController(rra::ViewerIO* controller)
+    {
+        camera_controller_ = controller;
+    }
+
+    rra::ViewerIO* AccelerationStructureViewerModel::GetCameraController() const
+    {
+        return camera_controller_;
     }
 
     void AccelerationStructureViewerModel::RefreshUI(uint64_t index)
@@ -448,6 +497,11 @@ namespace rra
         const QModelIndex                       proxy_model_index = tree_view_proxy_model_->mapToSource(model_index);
         rra::AccelerationStructureTreeViewItem* item              = static_cast<rra::AccelerationStructureTreeViewItem*>(proxy_model_index.internalPointer());
         RRA_ASSERT(item != nullptr);
+        if (!item)
+        {
+            return 0;
+        }
+
         QVariant node_data = item->Data(proxy_model_index.column(), Qt::UserRole, is_tlas, index);
         return node_data.toUInt();
     }
@@ -457,7 +511,28 @@ namespace rra
         const QModelIndex                       proxy_model_index = tree_view_proxy_model_->mapToSource(model_index);
         rra::AccelerationStructureTreeViewItem* item              = static_cast<rra::AccelerationStructureTreeViewItem*>(proxy_model_index.internalPointer());
         RRA_ASSERT(item != nullptr);
+        if (!item)
+        {
+            return false;
+        }
+
         return item->IsNode();
+    }
+
+    void AccelerationStructureViewerModel::ToggleInstanceTransformWireframe()
+    {
+        if (render_state_adapter_ != nullptr)
+        {
+            if (render_state_adapter_->GetRenderInstancePretransform())
+            {
+                render_state_adapter_->SetRenderInstancePretransform(false);
+            }
+            else
+            {
+                render_state_adapter_->SetRenderInstancePretransform(true);
+            }
+            emit MessageManager::Get().RenderStateChanged();
+        }
     }
 
     void AccelerationStructureViewerModel::ToggleBVHWireframe()

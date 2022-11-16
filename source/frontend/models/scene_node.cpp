@@ -11,9 +11,10 @@
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
 #include "scene_node.h"
+#include "scene.h"
 #include "public/shared.h"
 
-#include "public/intersect_min_max.h"
+#include "public/intersect.h"
 
 // We can't use std::max or glm::max since the windows macro ends up overriding the max keyword.
 // So we underfine max for this file only.
@@ -155,10 +156,13 @@ namespace rra
         return true;
     }
 
-    void SceneNode::AppendFrustumCulledInstanceMap(renderer::InstanceMap& instance_map, renderer::FrustumInfo& frustum_info) const
+    void SceneNode::AppendFrustumCulledInstanceMap(renderer::InstanceMap& instance_map,
+                                                   std::vector<bool>&     rebraid_duplicates,
+                                                   const Scene*           scene,
+                                                   renderer::FrustumInfo& frustum_info) const
     {
         // Skip if marked as not visible.
-        if (!visible_)
+        if (!(visible_ && enabled_))
         {
             return;
         }
@@ -173,38 +177,52 @@ namespace rra
                     child_node->bounding_volume_, frustum_info.camera_position, frustum_info.camera_fov, frustum_info.fov_threshold_ratio) &&
                 BoundingVolumeExtentsInsidePlanes(child_node->bounding_volume_, culling_planes))
             {
-                child_node->AppendFrustumCulledInstanceMap(instance_map, frustum_info);
+                child_node->AppendFrustumCulledInstanceMap(instance_map, rebraid_duplicates, scene, frustum_info);
             }
         }
 
         // Check for instances.
         for (auto& instance : instances_)
         {
-            if (!BoundingVolumeExtentFovCull(
-                    instance.bounding_volume, frustum_info.camera_position, frustum_info.camera_fov, frustum_info.fov_threshold_ratio) &&
-                BoundingVolumeExtentsInsidePlanes(instance.bounding_volume, culling_planes))
+            // If we've added one of this instances rebraid siblings already, don't add this one.
+            // Just checking if this SceneNode is equal to the first rebraid sibling is not enough, since then the BLAS will be culled
+            // if only the first rebraid sibling is out of the frustum. So we must check if any rebraid siblings are in the frustum,
+            // but use rebraid_duplicates to avoid rendering duplicates.
+            if (!rebraid_duplicates[instance.instance_index])
             {
-                instance_map[instance.blas_index].push_back(instance);
+                rebraid_duplicates[instance.instance_index] = true;
+
+                if (!BoundingVolumeExtentFovCull(bounding_volume_, frustum_info.camera_position, frustum_info.camera_fov, frustum_info.fov_threshold_ratio) &&
+                    BoundingVolumeExtentsInsidePlanes(bounding_volume_, culling_planes))
+                {
+                    AppendMergedInstanceToInstanceMap(instance, instance_map, scene);
+                }
             }
         }
     }
 
-    void SceneNode::AppendInstanceMap(renderer::InstanceMap& instance_map) const
+    void SceneNode::AppendInstanceMap(renderer::InstanceMap& instance_map, const Scene* scene) const
     {
         // Skip if marked as not visible.
-        if (!visible_)
+        if (!(visible_ && enabled_))
         {
             return;
         }
 
         for (auto child_node : child_nodes_)
         {
-            child_node->AppendInstanceMap(instance_map);
+            child_node->AppendInstanceMap(instance_map, scene);
         }
 
         for (auto& instance : instances_)
         {
-            instance_map[instance.blas_index].push_back(instance);
+            // Since we don't have to worry about culling here, it is enough to just check that this SceneNode
+            // is equal to the first rebraid sibling to avoid duplicates.
+            auto sibling_nodes = scene->GetRebraidedInstances(instance.instance_index);
+            if (!sibling_nodes.empty() && sibling_nodes[0] == this)
+            {
+                AppendMergedInstanceToInstanceMap(instance, instance_map, scene);
+            }
         }
     }
 
@@ -246,20 +264,15 @@ namespace rra
                 RraBlasGetNodeTriangles(blas_index, node_id, triangles.data());
 
                 // Retrieve the geometry index associated with the current triangle node.
-                uint32_t geometry_index = 0;
-                RraBlasGetGeometryIndex(blas_index, node_id, &geometry_index);
+                RraBlasGetGeometryIndex(blas_index, node_id, &node->geometry_index_);
 
                 uint32_t geometry_flags = 0;
-                RraBlasGetGeometryFlags(blas_index, geometry_index, &geometry_flags);
+                RraBlasGetGeometryFlags(blas_index, node->geometry_index_, &geometry_flags);
 
                 // Extract the opacity flag.
                 bool is_opaque = (geometry_flags & GeometryFlags::kOpaque) == GeometryFlags::kOpaque;
 
-                if (RraBvhIsTriangleNode(node_id))
-                {
-                    RraBlasGetPrimitiveIndex(blas_index, node_id, &(node->primitive_index_));
-                    RraBlasGetGeometryIndex(blas_index, node_id, &(node->geometry_index_));
-                }
+                RraBlasGetPrimitiveIndex(blas_index, node_id, 0, &node->primitive_index_);
 
                 // Step over each triangle and extract data used to populate the vertex buffer.
                 for (size_t triangle_index = 0; triangle_index < triangles.size(); triangle_index++)
@@ -290,16 +303,17 @@ namespace rra
                     RRA_UNUSED(average_epo);
                     RRA_UNUSED(max_epo);
 
-                    // We pack geometry index, depth, and opaque into one uint32_t.
-                    uint32_t geometry_index_depth_opaque{};
-                    geometry_index_depth_opaque |= geometry_index << 16;  // Bits 31-16 are geometry index.
-                    geometry_index_depth_opaque |= depth << 1;            // Bits 15-1 are depth.
-                    geometry_index_depth_opaque |= (uint32_t)is_opaque;   // Bit 0 is opaque.
+                    // We pack geometry index, depth, split, and opaque into one uint32_t.
+                    uint32_t geometry_index_depth_split_opaque{};
+                    geometry_index_depth_split_opaque |= node->geometry_index_ << 16;  // Bits 31-16 are geometry index.
+                    geometry_index_depth_split_opaque |= depth << 2;                   // Bits 15-2 are depth.
+                    geometry_index_depth_split_opaque |= 0 << 1;                       // Bit 1 is split. We write to this in PopulateSplitVertexAttribute().
+                    geometry_index_depth_split_opaque |= (uint32_t)is_opaque;          // Bit 0 is opaque.
 
                     // Triangle SAH is negative initially to indicate deselected triangles.
-                    renderer::RraVertex v0 = {p0, -triangle_sah, compact_normal, geometry_index_depth_opaque, node_id};
-                    renderer::RraVertex v1 = {p1, -triangle_sah, compact_normal, geometry_index_depth_opaque, node_id};
-                    renderer::RraVertex v2 = {p2, -triangle_sah, compact_normal, geometry_index_depth_opaque, node_id};
+                    renderer::RraVertex v0 = {p0, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node_id};
+                    renderer::RraVertex v1 = {p1, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node_id};
+                    renderer::RraVertex v2 = {p2, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node_id};
 
                     // Add 3 new triangle vertices to the output vector.
                     node->vertices_.push_back(v0);
@@ -332,14 +346,33 @@ namespace rra
         return node;
     }
 
+    void SceneNode::AppendMergedInstanceToInstanceMap(renderer::Instance instance, renderer::InstanceMap& instance_map, const Scene* scene) const
+    {
+        auto sibling_nodes = scene->GetRebraidedInstances(instance.instance_index);
+
+        bool selected = false;
+        for (auto sibling_node : sibling_nodes)
+        {
+            selected |= sibling_node->selected_;
+        }
+        instance.selected = selected;
+        instance_map[instance.blas_index].push_back(instance);
+    }
+
     SceneNode* SceneNode::ConstructFromBlas(uint32_t blas_index)
     {
         uint32_t root_node_index = UINT32_MAX;
         RraBvhGetRootNodePtr(&root_node_index);
 
         auto node = ConstructFromBlasNode(blas_index, root_node_index, 0);
+        PopulateSplitVertexAttribute(node);
 
         return node;
+    }
+
+    uint64_t GetGeometryPrimitiveIndexKey(uint32_t geometry_index, uint32_t primitive_index)
+    {
+        return (static_cast<uint64_t>(geometry_index) << 32) | static_cast<uint64_t>(primitive_index);
     }
 
     SceneNode* SceneNode::ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t node_id, uint32_t depth)
@@ -377,6 +410,8 @@ namespace rra
             RraBlasGetAverageSurfaceAreaHeuristic(instance.blas_index, root_node, true, &instance.average_triangle_sah);
             RraBlasGetMinimumSurfaceAreaHeuristic(instance.blas_index, root_node, true, &instance.min_triangle_sah);
 
+            RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_id, &instance.instance_unique_index);
+
             RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_id, &instance.instance_index);
 
             RraBlasGetBuildFlags(instance.blas_index, reinterpret_cast<VkBuildAccelerationStructureFlagBitsKHR*>(&instance.build_flags));
@@ -413,13 +448,14 @@ namespace rra
         return ConstructFromTlasBoxNode(tlas_index, root_node_index, 0);
     }
 
-    void SceneNode::ResetSelection()
+    void SceneNode::ResetSelection(std::unordered_set<uint32_t>& selected_node_ids)
     {
         selected_ = false;
+        selected_node_ids.erase(node_id_);
 
         for (auto child_node : child_nodes_)
         {
-            child_node->ResetSelection();
+            child_node->ResetSelection(selected_node_ids);
         }
 
         for (auto& instance : instances_)
@@ -434,7 +470,23 @@ namespace rra
         }
     }
 
-    void SceneNode::ApplyNodeSelection()
+    void SceneNode::ResetSelectionNonRecursive()
+    {
+        selected_ = false;
+
+        for (auto& instance : instances_)
+        {
+            instance.selected = false;
+        }
+
+        for (auto& vertex : vertices_)
+        {
+            // Unselect.
+            vertex.triangle_sah_and_selected = -std::abs(vertex.triangle_sah_and_selected);
+        }
+    }
+
+    void SceneNode::ApplyNodeSelection(std::unordered_set<uint32_t>& selected_node_ids)
     {
         if (!visible_)
         {
@@ -442,10 +494,11 @@ namespace rra
         }
 
         selected_ = true;
+        selected_node_ids.insert(node_id_);
 
         for (auto child_node : child_nodes_)
         {
-            child_node->ApplyNodeSelection();
+            child_node->ApplyNodeSelection(selected_node_ids);
         }
 
         for (auto& instance : instances_)
@@ -474,7 +527,7 @@ namespace rra
         }
     }
 
-    void SceneNode::Enable()
+    void SceneNode::Enable(Scene* scene)
     {
         enabled_ = true;
         if (!visible_)
@@ -483,45 +536,106 @@ namespace rra
         }
         for (auto child_node : child_nodes_)
         {
-            child_node->Enable();
+            child_node->Enable(scene);
+        }
+
+        // Enable rebraided siblings.
+        auto instance = GetInstance();
+        if (instance && scene)
+        {
+            for (auto sibling : scene->GetRebraidedInstances(instance->instance_index))
+            {
+                sibling->Enable(nullptr);
+            }
+        }
+        // Enable split triangle siblings.
+        if (!GetTriangles().empty() && scene)
+        {
+            for (auto sibling : scene->GetSplitTriangles(geometry_index_, primitive_index_))
+            {
+                sibling->Enable(nullptr);
+            }
         }
     }
 
-    void SceneNode::Disable()
+    void SceneNode::Disable(Scene* scene)
     {
+        if (!enabled_)
+        {
+            return;
+        }
+
         enabled_ = false;
         for (auto child_node : child_nodes_)
         {
-            child_node->Disable();
+            child_node->Disable(scene);
+        }
+
+        // Disable rebraided siblings.
+        auto instance = GetInstance();
+        if (instance && scene)
+        {
+            for (auto sibling : scene->GetRebraidedInstances(instance->instance_index))
+            {
+                sibling->Disable(nullptr);
+            }
+        }
+        // Disable split triangle siblings.
+        if (!GetTriangles().empty() && scene)
+        {
+            for (auto sibling : scene->GetSplitTriangles(geometry_index_, primitive_index_))
+            {
+                sibling->Disable(nullptr);
+            }
         }
     }
 
-    void SceneNode::SetVisible(bool visible)
+    void SceneNode::SetVisible(bool visible, Scene* scene)
     {
         visible_ = visible;
         if (visible_)
         {
             for (auto child_node : child_nodes_)
             {
-                child_node->Enable();
+                child_node->Enable(scene);
             }
         }
         else
         {
             for (auto child_node : child_nodes_)
             {
-                child_node->Disable();
+                child_node->Disable(scene);
             }
         }
     }
 
-    void SceneNode::SetAllChildrenAsVisible()
+    void SceneNode::ShowParentChain()
     {
-        visible_ = true;
+        if (visible_)
+        {
+            return;
+        }
+
+        SetVisible(true, nullptr);
+        if (parent_)
+        {
+            parent_->ShowParentChain();
+        }
+    }
+
+    void SceneNode::SetAllChildrenAsVisible(std::unordered_set<uint32_t>& selected_node_ids)
+    {
+        if (!visible_)
+        {
+            visible_ = true;
+            selected_node_ids.insert(node_id_);
+            ApplyNodeSelection(selected_node_ids);
+        }
+
         enabled_ = true;
         for (auto child_node : child_nodes_)
         {
-            child_node->SetAllChildrenAsVisible();
+            child_node->SetAllChildrenAsVisible(selected_node_ids);
         }
     }
 
@@ -578,10 +692,10 @@ namespace rra
             return;
         }
 
-        if (renderer::IntersectMinMax(ray_origin,
-                                      ray_direction,
-                                      glm::vec3(bounding_volume_.min_x, bounding_volume_.min_y, bounding_volume_.min_z),
-                                      glm::vec3(bounding_volume_.max_x, bounding_volume_.max_y, bounding_volume_.max_z)))
+        if (renderer::IntersectAABB(ray_origin,
+                                    ray_direction,
+                                    glm::vec3(bounding_volume_.min_x, bounding_volume_.min_y, bounding_volume_.min_z),
+                                    glm::vec3(bounding_volume_.max_x, bounding_volume_.max_y, bounding_volume_.max_z)))
         {
             intersected_nodes.push_back(this);
             for (auto child : child_nodes_)
@@ -594,6 +708,16 @@ namespace rra
     std::vector<renderer::Instance> SceneNode::GetInstances() const
     {
         return instances_;
+    }
+
+    renderer::Instance* SceneNode::GetInstance()
+    {
+        if (instances_.empty())
+        {
+            return nullptr;
+        }
+
+        return &instances_[0];
     }
 
     std::vector<SceneTriangle> SceneNode::GetTriangles() const
@@ -628,6 +752,11 @@ namespace rra
 
     void SceneNode::AppendBoundingVolumesTo(renderer::BoundingVolumeList& volume_list, uint32_t lower_bound, uint32_t upper_bound) const
     {
+        if (depth_ > upper_bound)
+        {
+            return;
+        }
+
         if (visible_)
         {
             for (auto child : child_nodes_)
@@ -635,7 +764,7 @@ namespace rra
                 child->AppendBoundingVolumesTo(volume_list, lower_bound, upper_bound);
             }
 
-            if (depth_ >= lower_bound && depth_ <= upper_bound)
+            if (depth_ >= lower_bound)
             {
                 renderer::BoundingVolumeInstance bvi;
                 bvi.min = {bounding_volume_.min_x, bounding_volume_.min_y, bounding_volume_.min_z, depth_};
@@ -720,7 +849,7 @@ namespace rra
                 ci.transform         = instance.transform;
                 ci.inverse_transform = glm::inverse(instance.transform);
                 ci.selected          = IsSelected() ? 1 : 0;
-                ci.blas_id           = static_cast<uint32_t>(instance.blas_index);
+                ci.blas_index        = static_cast<uint32_t>(instance.blas_index);
                 ci.geometry_index    = 0;
                 ci.flags             = instance.flags;
 
@@ -768,5 +897,46 @@ namespace rra
 
         traversal_tree.volumes[current_index] = traversal_volume;
         return current_index;
+    }
+
+    void SceneNode::PopulateSplitVertexAttribute(SceneNode* root)
+    {
+        std::unordered_map<uint64_t, uint32_t> primitive_index_counts;
+        root->GetPrimitiveIndexCounts(primitive_index_counts);
+        root->PopulateSplitVertexAttribute(primitive_index_counts);
+    }
+
+    void SceneNode::GetPrimitiveIndexCounts(std::unordered_map<uint64_t, uint32_t>& tri_split_counts)
+    {
+        if (!vertices_.empty())
+        {
+            auto& count = tri_split_counts[GetGeometryPrimitiveIndexKey(geometry_index_, primitive_index_)];
+            count++;
+        }
+
+        for (SceneNode* child : child_nodes_)
+        {
+            child->GetPrimitiveIndexCounts(tri_split_counts);
+        }
+    }
+
+    void SceneNode::PopulateSplitVertexAttribute(const std::unordered_map<uint64_t, uint32_t>& tri_split_counts)
+    {
+        if (!vertices_.empty())
+        {
+            auto itr = tri_split_counts.find(GetGeometryPrimitiveIndexKey(geometry_index_, primitive_index_));
+            if (itr != tri_split_counts.end() && itr->second > 1)
+            {
+                for (auto& vertex : vertices_)
+                {
+                    vertex.geometry_index_depth_split_opaque |= 1 << 1;
+                }
+            }
+        }
+
+        for (SceneNode* child : child_nodes_)
+        {
+            child->PopulateSplitVertexAttribute(tri_split_counts);
+        }
     }
 }  // namespace rra

@@ -492,7 +492,7 @@ namespace rra
 
             VkDescriptorPoolSize descriptor_pool_size_storage_buffer = {};
             descriptor_pool_size_storage_buffer.type                 = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            descriptor_pool_size_storage_buffer.descriptorCount      = 6 * swapchain_size;
+            descriptor_pool_size_storage_buffer.descriptorCount = (6 + 2 * static_cast<uint32_t>(GetVkGraphicsContext()->GetBlases().size())) * swapchain_size;
 
             std::vector<VkDescriptorPoolSize> pool_sizes = {
                 descriptor_pool_size_uniform_buffer,
@@ -558,17 +558,19 @@ namespace rra
             scene_layout_binding_3.binding                      = 13;
             scene_layout_binding_3.descriptorCount              = 1;
 
+            auto blases = GetVkGraphicsContext()->GetBlases();
+
             VkDescriptorSetLayoutBinding scene_layout_binding_4 = {};
             scene_layout_binding_4.descriptorType               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             scene_layout_binding_4.stageFlags                   = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
             scene_layout_binding_4.binding                      = 14;
-            scene_layout_binding_4.descriptorCount              = 1;
+            scene_layout_binding_4.descriptorCount              = static_cast<uint32_t>(blases.size());
 
             VkDescriptorSetLayoutBinding scene_layout_binding_5 = {};
             scene_layout_binding_5.descriptorType               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             scene_layout_binding_5.stageFlags                   = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
             scene_layout_binding_5.binding                      = 15;
-            scene_layout_binding_5.descriptorCount              = 1;
+            scene_layout_binding_5.descriptorCount              = static_cast<uint32_t>(blases.size());
 
             VkDescriptorSetLayoutBinding scene_layout_binding_6 = {};
             scene_layout_binding_6.descriptorType               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -659,35 +661,51 @@ namespace rra
             write_descriptor_3.pBufferInfo          = &instance_info;
             write_descriptor_3.descriptorCount      = 1;
 
-            auto vk_tree = GetVkGraphicsContext()->GetBlasTraversalTree();
+            auto blases = GetVkGraphicsContext()->GetBlases();
+
+            std::vector<VkDescriptorBufferInfo> blas_volumes_info;
+            blas_volumes_info.reserve(blases.size());
 
             // Binding 4 : Volume Storage for blasses
-            VkDescriptorBufferInfo blas_volume_info = {};
-            blas_volume_info.buffer                 = vk_tree.volume_buffer;
-            blas_volume_info.offset                 = 0;
-            blas_volume_info.range                  = VK_WHOLE_SIZE;
+            for (auto& blas : blases)
+            {
+                VkDescriptorBufferInfo blas_volume_info = {};
+                blas_volume_info.buffer                 = blas.volume_buffer;
+                blas_volume_info.offset                 = 0;
+                blas_volume_info.range                  = VK_WHOLE_SIZE;
+
+                blas_volumes_info.push_back(blas_volume_info);
+            }
 
             VkWriteDescriptorSet write_descriptor_4 = {};
             write_descriptor_4.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_4.dstSet               = traversal_descriptor_sets_[frame_id];
             write_descriptor_4.descriptorType       = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             write_descriptor_4.dstBinding           = 14;
-            write_descriptor_4.pBufferInfo          = &blas_volume_info;
-            write_descriptor_4.descriptorCount      = 1;
+            write_descriptor_4.pBufferInfo          = blas_volumes_info.data();
+            write_descriptor_4.descriptorCount      = static_cast<uint32_t>(blas_volumes_info.size());
+
+            std::vector<VkDescriptorBufferInfo> blas_vertices_info;
+            blas_vertices_info.reserve(blases.size());
 
             // Binding 5 : Vertex Storage for blasses
-            VkDescriptorBufferInfo blas_vertex_info = {};
-            blas_vertex_info.buffer                 = vk_tree.vertex_buffer;
-            blas_vertex_info.offset                 = 0;
-            blas_vertex_info.range                  = VK_WHOLE_SIZE;
+            for (auto& blas : blases)
+            {
+                VkDescriptorBufferInfo blas_vertex_info = {};
+                blas_vertex_info.buffer                 = blas.vertex_buffer;
+                blas_vertex_info.offset                 = 0;
+                blas_vertex_info.range                  = VK_WHOLE_SIZE;
+
+                blas_vertices_info.push_back(blas_vertex_info);
+            }
 
             VkWriteDescriptorSet write_descriptor_5 = {};
             write_descriptor_5.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_5.dstSet               = traversal_descriptor_sets_[frame_id];
             write_descriptor_5.descriptorType       = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             write_descriptor_5.dstBinding           = 15;
-            write_descriptor_5.pBufferInfo          = &blas_vertex_info;
-            write_descriptor_5.descriptorCount      = 1;
+            write_descriptor_5.pBufferInfo          = blas_vertices_info.data();
+            write_descriptor_5.descriptorCount      = static_cast<uint32_t>(blas_vertices_info.size());
 
             write_descriptor_sets = {write_descriptor_2, write_descriptor_3, write_descriptor_4, write_descriptor_5};
 
@@ -704,10 +722,6 @@ namespace rra
         {
             // Generate CPU side traversal information.
             auto& traversal_tree = context->scene_info->traversal_tree;
-            for (auto& instance : traversal_tree.instances)
-            {
-                instance.blas_id = GetVkGraphicsContext()->GetBlasTraversalTreeRootVolumeIndex(instance.blas_id);
-            }
 
             empty_scene_ = traversal_tree.volumes.empty();
 
@@ -816,8 +830,8 @@ namespace rra
                 buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
                 buffer_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
                 buffer_barrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
-                buffer_barrier.srcQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
-                buffer_barrier.dstQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
+                buffer_barrier.srcQueueFamilyIndex = context_->device->GetGraphicsQueueFamilyIndex();
+                buffer_barrier.dstQueueFamilyIndex = context_->device->GetGraphicsQueueFamilyIndex();
                 buffer_barrier.buffer              = vertex_buffer;
                 buffer_barrier.offset              = 0;
                 buffer_barrier.size                = VK_WHOLE_SIZE;

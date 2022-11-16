@@ -6,7 +6,7 @@
 //=============================================================================
 
 #include "viewer_io.h"
-#include "../models/side_panels/view_model.h"
+#include "models/side_panels/view_model.h"
 
 #include <sstream>
 
@@ -145,7 +145,7 @@ namespace rra
         glm::vec3 euler = {};
         if (up_axis == ViewerIOUpAxis::kUpAxisX)
         {
-            euler = {sign + 180.0f, 90.0f, 90.0f};
+            euler = {sign + 180.0f, 180.0f, 90.0f};
         }
         else if (up_axis == ViewerIOUpAxis::kUpAxisY)
         {
@@ -153,8 +153,27 @@ namespace rra
         }
         else if (up_axis == ViewerIOUpAxis::kUpAxisZ)
         {
-            euler = {90.0f + sign, 0.0f, 0.0f};
+            euler = {90.0f + sign, 90.0f, 0.0f};
         }
+
+        euler += glm::vec3(-45.0f, 45.0f, 0.0f);
+
+        if (flip_horizontal)
+        {
+            if (up_axis == ViewerIOUpAxis::kUpAxisX)
+            {
+                euler.y += 90.0f;
+            }
+            else if (up_axis == ViewerIOUpAxis::kUpAxisY)
+            {
+                euler.y -= 90.0f;
+            }
+            else if (up_axis == ViewerIOUpAxis::kUpAxisZ)
+            {
+                euler.y += 90.0f;
+            }
+        }
+
         return euler;
     }
 
@@ -506,6 +525,16 @@ namespace rra
         ResetArcRadius();
         camera->SetArcRadius(arc_radius_);
         camera->Translate(-camera->GetPosition());
+    }
+
+    void ViewerIO::FocusOnSelection()
+    {
+        should_focus_on_selection_ = true;
+    }
+
+    void ViewerIO::ControlStyleChanged()
+    {
+        // By default, do nothing.
     }
 
     bool ViewerIO::MouseMovedWithinDelta() const

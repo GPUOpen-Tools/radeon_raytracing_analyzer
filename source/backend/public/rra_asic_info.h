@@ -29,6 +29,13 @@ const char* RraAsicInfoGetDeviceName();
 /// @return kRraOk if successful or error code if not.
 RraErrorCode RraAsicInfoGetDeviceID(int32_t* device_id);
 
+/// @brief Check if the device belongs to Navi 3 family.
+///
+/// @param [out] A variable to receive true or false value.
+///
+/// @return kRraOk if successful or error code if not.
+RraErrorCode RraAsicInfoIsDeviceNavi3(bool* out_is_navi_3);
+
 /// @brief Get the device revision ID.
 ///
 /// @param [out] A variable to receive the device revision ID.

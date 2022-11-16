@@ -25,7 +25,6 @@ TlasPropertiesPane::TlasPropertiesPane(QWidget* parent)
     model_->InitializeModel(ui_->content_num_box_nodes_, rra::kTlasPropertiesNumBoxNodes, "text");
     model_->InitializeModel(ui_->content_num_box16_nodes_, rra::kTlasPropertiesNumBox16Nodes, "text");
     model_->InitializeModel(ui_->content_num_box32_nodes_, rra::kTlasPropertiesNumBox32Nodes, "text");
-    model_->InitializeModel(ui_->content_num_half_box32_nodes_, rra::kTlasPropertiesNumHalfBox32Nodes, "text");
     model_->InitializeModel(ui_->content_num_instances_, rra::kTlasPropertiesNumInstanceNodes, "text");
     model_->InitializeModel(ui_->content_num_blases_, rra::kTlasPropertiesNumBlases, "text");
     model_->InitializeModel(ui_->content_num_triangles_, rra::kTlasPropertiesNumTriangles, "text");

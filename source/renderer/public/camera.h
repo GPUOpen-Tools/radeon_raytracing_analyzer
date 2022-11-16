@@ -192,21 +192,6 @@ namespace rra
             /// @param [in] rotation The camera rotation specified using euler angles.
             void SetEulerRotation(glm::vec3 rotation);
 
-            /// @brief Pitch the camera by the given angle.
-            ///
-            /// @param [in] angle The angle to pitch by.
-            void Pitch(float angle);
-
-            /// @brief Yaw the camera by the given angle.
-            ///
-            /// @param [in] angle The angle to yaw by.
-            void Yaw(float angle);
-
-            /// @brief Roll the camera by the given angle.
-            ///
-            /// @param [in] angle The angle to roll by.
-            void Roll(float angle);
-
             /// @brief Set the controller of this camera.
             ///
             /// @param [in] camera_controller The controller to bind to this camera.

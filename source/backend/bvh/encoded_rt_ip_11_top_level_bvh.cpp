@@ -49,9 +49,10 @@ namespace rta
     bool EncodedRtIp11TopLevelBvh::LoadRawAccelStrucFromFile(rdf::ChunkFile&                     chunk_file,
                                                              const std::uint64_t                 chunk_index,
                                                              const RawAccelStructRdfChunkHeader& chunk_header,
+                                                             const char*                         chunk_identifier,
                                                              const BvhBundleReadOption           import_option)
     {
-        const auto identifier     = IEncodedRtIp11Bvh::kChunkIdentifier;
+        const auto identifier     = chunk_identifier;
         const auto data_size      = chunk_file.GetChunkDataSize(identifier, static_cast<uint32_t>(chunk_index));
         const bool skip_meta_data = static_cast<std::uint8_t>(import_option) & static_cast<std::uint8_t>(BvhBundleReadOption::kNoMetaData);
 
@@ -134,7 +135,7 @@ namespace rta
                 uint32_t                meta_data_size = instance_node.GetExtraData().GetBottomLevelBvhMetaDataSize();
                 const GpuVirtualAddress old_reference  = address - meta_data_size;
 
-                const auto& it = reference_map.find(old_reference);
+                const auto it = reference_map.find(old_reference);
                 if (it != reference_map.end())
                 {
                     const auto new_relative_reference = it->second;
@@ -275,7 +276,7 @@ namespace rta
         {
             // If there are instances referencing the missing blas index, ignore it as a valid BLAS.
             uint64_t missing_blas_index = 0;
-            auto iter = instance_list_.find(missing_blas_index);
+            auto     iter               = instance_list_.find(missing_blas_index);
             if (iter != instance_list_.end())
             {
                 return size - 1;

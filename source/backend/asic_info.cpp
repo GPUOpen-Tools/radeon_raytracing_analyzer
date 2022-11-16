@@ -46,7 +46,6 @@ namespace rra
         uint64_t payload_size = chunk_file.GetChunkDataSize(identifier);
 
         std::vector<std::uint8_t> header(header_size);
-        std::vector<std::uint8_t> payload(payload_size);
 
         if (header_size > 0)
         {
@@ -55,7 +54,7 @@ namespace rra
 
         if (payload_size > 0)
         {
-            chunk_file.ReadChunkDataToBuffer(identifier, this);
+            chunk_file.ReadChunkDataToBuffer(identifier, &chunk_data_);
         }
 
         chunk_data_valid_ = true;
@@ -207,6 +206,16 @@ namespace rra
             return kRraErrorMalformedData;
         }
         *out_bus_width = chunk_data_.vram_bus_width;
+        return kRraOk;
+    }
+
+    RraErrorCode AsicInfo::GetGfxIpLevelMajor(uint16_t* out_gfx_ip_level)
+    {
+        if (!chunk_data_valid_)
+        {
+            return kRraErrorMalformedData;
+        }
+        *out_gfx_ip_level = chunk_data_.gfx_ip_level.major;
         return kRraOk;
     }
 

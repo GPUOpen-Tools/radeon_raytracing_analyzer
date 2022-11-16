@@ -41,6 +41,14 @@ public:
     /// @param [in] event The event.
     virtual void contextMenuEvent(QContextMenuEvent* event) Q_DECL_OVERRIDE;
 
+protected:
+    /// @brief Override the widget event handler.
+    ///
+    /// @param [in] event The event data.
+    ///
+    /// \returns True if the event was recognized and handled, and false otherwise.
+    bool event(QEvent* event) Q_DECL_OVERRIDE;
+
 private:
     rra::AccelerationStructureViewerModel* model_             = nullptr;  ///< The viewer model.
     uint64_t                               current_bvh_index_ = 0;        ///< The current bvh index.

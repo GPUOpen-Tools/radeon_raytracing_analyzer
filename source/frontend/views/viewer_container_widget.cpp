@@ -49,8 +49,9 @@ void ViewerContainerWidget::SetRendererAdapters(const rra::renderer::RendererAda
     if (render_state_adapter != nullptr)
     {
         std::vector<rra::renderer::GeometryColoringModeInfo> coloring_modes;
-        model_->SetRendererAdapter(render_state_adapter, bvh_type, coloring_modes);
-        UpdateColoringModes(coloring_modes);
+        std::vector<rra::renderer::TraversalCounterModeInfo> traversal_modes;
+        model_->SetRendererAdapter(render_state_adapter, bvh_type, coloring_modes, traversal_modes);
+        UpdateRenderingModes(coloring_modes, traversal_modes);
     }
 }
 
@@ -98,12 +99,13 @@ void ViewerContainerWidget::SetBVHColoringMode()
 void ViewerContainerWidget::SetTraversalCounterMode()
 {
     int                                 row        = ui_->content_traversal_counter_mode_->CurrentRow();
-    rra::renderer::TraversalCounterMode mode_value = rra::renderer::kAvailableTraversalCounterModes[row].value;
+    rra::renderer::TraversalCounterMode mode_value = filtered_traversal_modes_[row].value;
 
     model_->SetTraversalCounterMode(static_cast<int>(mode_value));
 }
 
-void ViewerContainerWidget::UpdateColoringModes(const std::vector<rra::renderer::GeometryColoringModeInfo>& coloring_modes)
+void ViewerContainerWidget::UpdateRenderingModes(const std::vector<rra::renderer::GeometryColoringModeInfo>& coloring_modes,
+                                                const std::vector<rra::renderer::TraversalCounterModeInfo>& traversal_modes)
 {
     // Construct a vector of the name of each coloring mode.
     std::vector<std::string> coloring_mode_names;
@@ -144,8 +146,9 @@ void ViewerContainerWidget::UpdateColoringModes(const std::vector<rra::renderer:
     // Initialize Traversal counter modes.
     // Construct a vector of the name of each counter mode.
     std::vector<std::string> traversal_counter_mode_names;
-    for (const auto& info : rra::renderer::kAvailableTraversalCounterModes)
+    for (const auto& info : traversal_modes)
     {
+        filtered_traversal_modes_.push_back(info);
         traversal_counter_mode_names.push_back(info.name);
     }
 
@@ -153,10 +156,10 @@ void ViewerContainerWidget::UpdateColoringModes(const std::vector<rra::renderer:
     rra::widget_util::RePopulateComboBox(ui_->content_traversal_counter_mode_, traversal_counter_mode_names);
 
     // Set a tooltip for each item with a description of the bvh coloring mode.
-    for (int mode_index = 0; mode_index < rra::renderer::kAvailableTraversalCounterModes.size(); ++mode_index)
+    for (int mode_index = 0; mode_index < traversal_counter_mode_names.size(); ++mode_index)
     {
-        auto coloring_mode_item = ui_->content_traversal_counter_mode_->FindItem(mode_index);
-        coloring_mode_item->setToolTip(rra::renderer::kAvailableTraversalCounterModes[mode_index].description.c_str());
+        auto traversal_mode_item = ui_->content_traversal_counter_mode_->FindItem(mode_index);
+        traversal_mode_item->setToolTip(traversal_modes[mode_index].description.c_str());
     }
 
     // Initialize Heatmap modes.

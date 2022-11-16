@@ -94,6 +94,23 @@ namespace rra
         return QSize(string_width + margin_width, hint.height());
     }
 
+    /// @brief Toggle visibility of node and its children.
+    /// 
+    /// @param scene The scene containing the node.
+    /// @param node The node to toggle.
+    void ToggleNodeSelection(Scene* scene, SceneNode* node)
+    {
+        node->SetVisible(!node->IsVisible(), scene);
+        if (!node->IsVisible())
+        {
+            node->ResetSelection(scene->GetSelectedNodeIDs());
+        }
+        else
+        {
+            node->ApplyNodeSelection(scene->GetSelectedNodeIDs());
+        }
+    }
+
     bool AccelerationStructureTreeViewItemDelegate::editorEvent(QEvent*                     event,
                                                                 QAbstractItemModel*         model,
                                                                 const QStyleOptionViewItem& option,
@@ -112,14 +129,26 @@ namespace rra
                 auto node = scene_->GetNodeById(item_data.node_id);
                 if (node && node->IsEnabled())
                 {
-                    node->SetVisible(!node->IsVisible());
-                    if (!node->IsVisible())
+                    auto instance = node->GetInstance();
+                    // Select rebraided nodes in lockstep.
+                    if (instance)
                     {
-                        node->ResetSelection();
+                        for (auto sibling : scene_->GetRebraidedInstances(instance->instance_index))
+                        {
+                            ToggleNodeSelection(scene_, sibling);
+                        }
+                    }
+                    // Select split triangles in lockstep.
+                    else if (!node->GetTriangles().empty())
+                    {
+                        for (auto sibling : scene_->GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex()))
+                        {
+                            ToggleNodeSelection(scene_, sibling);
+                        }
                     }
                     else
                     {
-                        node->ApplyNodeSelection();
+                        ToggleNodeSelection(scene_, node);
                     }
 
                     scene_->IncrementSceneIteration();

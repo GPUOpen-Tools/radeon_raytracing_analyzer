@@ -17,8 +17,7 @@
 #include <string>
 #include <sstream>
 
-#include "public/intersect_min_max.h"
-#include "glm/glm/gtx/intersect.hpp"
+#include "public/intersect.h"
 
 namespace rra
 {
@@ -68,7 +67,8 @@ namespace rra
     {
         renderer::InstanceMap instance_map;
 
-        root_node_->AppendFrustumCulledInstanceMap(instance_map, frustum_info);
+        std::vector<bool> rebraid_duplicates(rebraid_siblings_.size()); // Only needed during appending frustum culled instances.
+        root_node_->AppendFrustumCulledInstanceMap(instance_map, rebraid_duplicates, this, frustum_info);
 
         float min_distance = std::numeric_limits<float>::infinity();
 
@@ -105,12 +105,18 @@ namespace rra
     {
         renderer::InstanceMap instance_map;
 
+        // If this is a BLAS scene there are no instances, so return empty map.
+        if (!custom_triangles_.empty())
+        {
+            return instance_map;
+        }
+
         if (!cached_instance_map_.empty())
         {
             return cached_instance_map_;
         }
 
-        root_node_->AppendInstanceMap(instance_map);
+        root_node_->AppendInstanceMap(instance_map, this);
 
         cached_instance_map_ = instance_map;
         return instance_map;
@@ -136,11 +142,50 @@ namespace rra
         return selected_volume_instances_;
     }
 
+    const std::vector<SceneNode*>& Scene::GetRebraidedInstances(uint32_t instance_index) const
+    {
+        return rebraid_siblings_[instance_index];
+    }
+
+    bool Scene::IsInstanceRebraided(uint32_t instance_index) const
+    {
+        return GetRebraidedInstances(instance_index).size() > 1;
+    }
+
+    const std::vector<SceneNode*>& Scene::GetSplitTriangles(uint32_t geometry_index, uint32_t primitive_index) const
+    {
+        auto itr = split_triangle_siblings_.find(GetGeometryPrimitiveIndexKey(geometry_index, primitive_index));
+        return itr->second;
+    }
+
+    bool Scene::IsTriangleSplit(uint32_t goemetry_index, uint32_t primitive_index) const
+    {
+        return GetSplitTriangles(goemetry_index, primitive_index).size() > 1;
+    }
+
+    std::unordered_set<uint32_t>& Scene::GetSelectedNodeIDs()
+    {
+        return selected_node_ids_;
+    }
+
     void Scene::PopulateSceneInfo()
     {
         scene_stats_.max_instance_count = ComputeMaxInstanceCount();
         scene_stats_.max_triangle_count = ComputeMaxTriangleCount();
         scene_stats_.max_tree_depth     = ComputeMaxTreeDepth();
+        PopulateRebraidMap();
+        PopulateSplitTrianglesMap();
+
+        // We set rebraided member later than other instance members since this must be done
+        // after the rebraid map has been created.
+        for (auto& it : nodes_)
+        {
+            if (it.second && it.second->GetInstance())
+            {
+                renderer::Instance* instance = it.second->GetInstance();
+                instance->rebraided          = IsInstanceRebraided(instance->instance_index);
+            }
+        }
 
         renderer::InstanceMap instance_map;
         root_node_->AppendInstancesTo(instance_map);
@@ -162,48 +207,25 @@ namespace rra
         }
     }
 
-    void Scene::UpdateCustomTriangles()
+    void Scene::RebuildCustomTriangles()
     {
         custom_triangles_.clear();
+        custom_triangle_map_.clear();
         custom_triangles_.reserve((size_t)scene_stats_.max_triangle_count * 3);
-
-        std::map<uint32_t, std::map<uint32_t, std::vector<SceneTriangle>>> geometry_primitives;
-        std::map<uint32_t, std::map<uint32_t, bool>>                       selected_geometry_primitives;
 
         for (const auto& id_node : nodes_)
         {
-            auto node           = id_node.second;
-            if (node != nullptr)
+            auto node = id_node.second;
+            // The last condition prevents overdrawing for split triangles.
+            if (node && !node->GetTriangles().empty() && node->IsVisible() && node->IsEnabled() &&
+                GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0] == node)
             {
-                auto node_triangles = node->GetTriangles();
-                if (!node_triangles.empty() && node->IsVisible() && node->IsEnabled())
-                {
-                    geometry_primitives[node->GetGeometryIndex()][node->GetPrimitiveIndex()] = node_triangles;
-                    selected_geometry_primitives[node->GetGeometryIndex()][node->GetPrimitiveIndex()] |= node->IsSelected();
-                }
-            }
-        }
-
-        for (const auto& geometry_primitive : geometry_primitives)
-        {
-            for (const auto& primitive_triangle : geometry_primitive.second)
-            {
-                for (const auto& triangle : primitive_triangle.second)
+                custom_triangle_map_[node->GetId()] = (uint32_t)custom_triangles_.size();
+                for (const auto& triangle : node->GetTriangles())
                 {
                     custom_triangles_.push_back(triangle.a);
                     custom_triangles_.push_back(triangle.b);
                     custom_triangles_.push_back(triangle.c);
-
-                    if (selected_geometry_primitives[geometry_primitive.first][primitive_triangle.first])
-                    {
-                        // Select these three vertices.
-                        auto& a = custom_triangles_[custom_triangles_.size() - 1].triangle_sah_and_selected;
-                        auto& b = custom_triangles_[custom_triangles_.size() - 2].triangle_sah_and_selected;
-                        auto& c = custom_triangles_[custom_triangles_.size() - 3].triangle_sah_and_selected;
-                        a = std::abs(a);
-                        b = std::abs(b);
-                        c = std::abs(c);
-                    }
                 }
             }
         }
@@ -212,7 +234,6 @@ namespace rra
     void Scene::UpdateBoundingVolumes()
     {
         bounding_volume_list_.clear();
-        bounding_volume_list_.reserve(nodes_.size());
         root_node_->AppendBoundingVolumesTo(bounding_volume_list_, depth_range_lower_bound_, depth_range_upper_bound_);
     }
 
@@ -281,26 +302,86 @@ namespace rra
         uint32_t root_node;
         RraBvhGetRootNodePtr(&root_node);
 
-        for (auto& iter : nodes_)
+        for (uint32_t node_id : selected_node_ids_)
         {
-            if (iter.second && iter.second->IsSelected())
+            for (auto& instance : GetNodeById(node_id)->GetInstances())
             {
-                for (auto& instance : iter.second->GetInstances())
-                {
-                    renderer::SelectedVolumeInstance selected_volume = {};
-                    RraBlasGetBoundingVolumeExtents(instance.blas_index, root_node, &selection_extents);
+                renderer::SelectedVolumeInstance selected_volume = {};
+                RraBlasGetBoundingVolumeExtents(instance.blas_index, root_node, &selection_extents);
 
-                    selected_volume.min          = {selection_extents.min_x, selection_extents.min_y, selection_extents.min_z};
-                    selected_volume.max          = {selection_extents.max_x, selection_extents.max_y, selection_extents.max_z};
-                    selected_volume.is_transform = true;
-                    selected_volume.transform    = instance.transform;
+                selected_volume.min          = {selection_extents.min_x, selection_extents.min_y, selection_extents.min_z};
+                selected_volume.max          = {selection_extents.max_x, selection_extents.max_y, selection_extents.max_z};
+                selected_volume.is_transform = true;
+                selected_volume.transform    = instance.transform;
 
-                    substrate_instances.push_back(selected_volume);
-                }
+                substrate_instances.push_back(selected_volume);
             }
         }
 
         selected_volume_instances_.insert(selected_volume_instances_.end(), substrate_instances.begin(), substrate_instances.end());
+    }
+
+    void Scene::PopulateRebraidMap()
+    {
+        // Get maximum index. This will not be equal to nodes_.size() - 1 when rebraiding is enabled.
+        uint32_t max_index{};
+        for (auto& node : nodes_)
+        {
+            renderer::Instance* instance = node.second->GetInstance();
+            if (!instance)
+            {
+                continue;
+            }
+
+            if (instance->instance_index > max_index)
+            {
+                max_index = instance->instance_index;
+            }
+        }
+
+        rebraid_siblings_.resize((size_t)max_index + 1);
+        for (auto& node : nodes_)
+        {
+            const auto& instances = node.second->GetInstances();
+            if (instances.empty())
+            {
+                continue;
+            }
+
+            rebraid_siblings_[instances[0].instance_index].push_back(node.second);
+        }
+
+        // Sort.
+        for (auto& siblings : rebraid_siblings_)
+        {
+            if (siblings.size() > 1)
+            {
+                std::sort(siblings.begin(), siblings.end(), [](SceneNode* a, SceneNode* b) { return a->GetId() < b->GetId(); });
+            }
+        }
+    }
+
+    void Scene::PopulateSplitTrianglesMap()
+    {
+        for (auto& node : nodes_)
+        {
+            if (node.second->GetTriangles().empty())
+            {
+                continue;
+            }
+
+            uint64_t key = GetGeometryPrimitiveIndexKey(node.second->GetGeometryIndex(), node.second->GetPrimitiveIndex());
+            split_triangle_siblings_[key].push_back(node.second);
+        }
+
+        // Sort.
+        for (auto& siblings : split_triangle_siblings_)
+        {
+            if (siblings.second.size() > 1)
+            {
+                std::sort(siblings.second.begin(), siblings.second.end(), [](SceneNode* a, SceneNode* b) { return a->GetId() < b->GetId(); });
+            }
+        }
     }
 
     bool TraverseAddBoundingVolumesForBlas(uint64_t                      blas_index,
@@ -352,21 +433,86 @@ namespace rra
 
     uint32_t Scene::GetArbitrarySelectedNodeId() const
     {
-        for (auto node_iter : nodes_)
+        if (!selected_node_ids_.empty())
         {
-            if (node_iter.second && node_iter.second->IsSelected())
-            {
-                return node_iter.first;
-            }
+            return *selected_node_ids_.begin();
         }
         return 0;
     }
 
+    void Scene::UpdateCustomTriangleSelection(const std::unordered_set<uint32_t>& old_selection)
+    {
+        // Deselect old triangles.
+        for (uint32_t node_id : old_selection)
+        {
+            auto node = GetNodeById(node_id);
+
+            // We only draw the first of the split triangles, so deselect that one.
+            node = node->GetTriangles().size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
+
+            if (!node->IsEnabled())
+            {
+                continue;
+            }
+
+            uint32_t num_triangles{(uint32_t)node->GetTriangles().size()};
+            uint32_t custom_tri_idx = custom_triangle_map_[node->GetId()];
+
+            for (uint32_t i = 0; i < num_triangles; ++i)
+            {
+                auto& a = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 0].triangle_sah_and_selected;
+                auto& b = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 1].triangle_sah_and_selected;
+                auto& c = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 2].triangle_sah_and_selected;
+                a       = -std::abs(a);
+                b       = -std::abs(b);
+                c       = -std::abs(c);
+            }
+        }
+
+        // Select new triangles.
+        for (uint32_t node_id : selected_node_ids_)
+        {
+            auto node = GetNodeById(node_id);
+
+            // We only draw the first of the split triangles, so select that one.
+            node = node->GetTriangles().size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
+
+            if (!node->IsEnabled())
+            {
+                continue;
+            }
+
+            uint32_t num_triangles{(uint32_t)node->GetTriangles().size()};
+
+            if (!num_triangles)
+            {
+                continue;
+            }
+
+            uint32_t custom_tri_idx = custom_triangle_map_[node->GetId()];
+            for (uint32_t i = 0; i < num_triangles; ++i)
+            {
+                auto& a = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 0].triangle_sah_and_selected;
+                auto& b = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 1].triangle_sah_and_selected;
+                auto& c = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 2].triangle_sah_and_selected;
+                a       = std::abs(a);
+                b       = std::abs(b);
+                c       = std::abs(c);
+            }
+        }
+    }
+
     void Scene::SetSceneSelection(uint32_t node_id)
     {
+        auto old_selection{selected_node_ids_};
+
         if (!multi_select_)
         {
-            root_node_->ResetSelection();
+            for (uint32_t id : selected_node_ids_)
+            {
+                GetNodeById(id)->ResetSelectionNonRecursive();
+            }
+            selected_node_ids_.clear();
         }
 
         auto node = GetNodeById(node_id);
@@ -374,7 +520,7 @@ namespace rra
         {
             if (node->IsSelected() && multi_select_)
             {
-                node->ResetSelection();
+                node->ResetSelection(selected_node_ids_);
 
                 // Tree view and 3D view get out of synch when most_recent_selected_node_id_
                 // references an unselected node during multiselect. So don't let that happen.
@@ -386,32 +532,29 @@ namespace rra
             else
             {
                 most_recent_selected_node_id_ = node->GetId();
-                node->ApplyNodeSelection();
+                node->ApplyNodeSelection(selected_node_ids_);
             }
         }
 
-        IncrementSceneIteration();
+        IncrementSceneIteration(false);
+        UpdateCustomTriangleSelection(old_selection);
     }
 
     void Scene::ResetSceneSelection()
     {
+        auto old_selection{selected_node_ids_};
         if (root_node_)
         {
-            root_node_->ResetSelection();
+            root_node_->ResetSelection(selected_node_ids_);
         }
-        IncrementSceneIteration();
+        selected_node_ids_.clear();
+        IncrementSceneIteration(false);
+        UpdateCustomTriangleSelection(old_selection);
     }
 
     bool Scene::HasSelection() const
     {
-        for (const auto& node_iter : nodes_)
-        {
-            if (node_iter.second && node_iter.second->IsSelected())
-            {
-                return true;
-            }
-        }
-        return false;
+        return !selected_node_ids_.empty();
     }
 
     uint32_t Scene::GetMostRecentSelectedNodeId() const
@@ -458,11 +601,15 @@ namespace rra
         return scene_iteration_;
     }
 
-    void Scene::IncrementSceneIteration()
+    void Scene::IncrementSceneIteration(bool rebuild_custom_triangles)
     {
         scene_iteration_++;
 
-        UpdateCustomTriangles();
+        // Expensive, so we prefer updating the selection rather than rebuilding.
+        if (rebuild_custom_triangles)
+        {
+            RebuildCustomTriangles();
+        }
 
         UpdateBoundingVolumes();
 
@@ -484,7 +631,7 @@ namespace rra
         auto node = GetNodeById(node_id);
         if (node)
         {
-            node->Enable();
+            node->Enable(this);
             IncrementSceneIteration();
         }
     }
@@ -494,7 +641,7 @@ namespace rra
         auto node = GetNodeById(node_id);
         if (node)
         {
-            node->Disable();
+            node->Disable(this);
             IncrementSceneIteration();
         }
     }
@@ -578,7 +725,7 @@ namespace rra
                 BoundingVolumeExtents extent = {};
 
                 RRA_BUBBLE_ON_ERROR(RraBlasGetBoundingVolumeExtents(bvh_index, traverse_nodes[i], &extent));
-                if (renderer::IntersectMinMax(
+                if (renderer::IntersectAABB(
                         origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z)))
                 {
                     // Get the child nodes. If this is not a box node, the child count is 0.
@@ -598,18 +745,17 @@ namespace rra
                 for (size_t k = 0; k < triangles.size(); k++)
                 {
                     TriangleVertices triangle_vertices = triangles[k];
-                    glm::vec3        hit_output;
+                    float            hit_distance;
 
                     glm::vec3 a = {triangle_vertices.a.x, triangle_vertices.a.y, triangle_vertices.a.z};
                     glm::vec3 b = {triangle_vertices.b.x, triangle_vertices.b.y, triangle_vertices.b.z};
                     glm::vec3 c = {triangle_vertices.c.x, triangle_vertices.c.y, triangle_vertices.c.z};
 
-                    if (glm::intersectLineTriangle(origin, direction, a, b, c, hit_output))
+                    if (renderer::IntersectTriangle(origin, direction, a, b, c, &hit_distance))
                     {
-                        float distance = hit_output.x;  // GLM does not document this...
-                        if (distance > 0.0 && (scene_closest_hit.distance < 0.0f || distance < scene_closest_hit.distance))
+                        if (hit_distance > 0.0 && (scene_closest_hit.distance < 0.0f || hit_distance < scene_closest_hit.distance))
                         {
-                            scene_closest_hit.distance = distance;
+                            scene_closest_hit.distance = hit_distance;
                             scene_closest_hit.node     = node;
                         }
                     }
@@ -628,15 +774,14 @@ namespace rra
                                      const glm::vec3& direction,
                                      SceneClosestHit& scene_closest_hit)
     {
-        glm::vec3 hit_output;
+        float hit_distance;
 
-        if (glm::intersectLineTriangle(
-                origin, direction, glm::vec3(triangle.a.position), glm::vec3(triangle.b.position), glm::vec3(triangle.c.position), hit_output))
+        if (renderer::IntersectTriangle(
+                origin, direction, glm::vec3(triangle.a.position), glm::vec3(triangle.b.position), glm::vec3(triangle.c.position), &hit_distance))
         {
-            float distance = hit_output.x;  // GLM does not document this...
-            if (distance > 0.0 && (scene_closest_hit.distance < 0.0f || distance < scene_closest_hit.distance))
+            if (hit_distance > 0.0 && (scene_closest_hit.distance < 0.0f || hit_distance < scene_closest_hit.distance))
             {
-                scene_closest_hit.distance = distance;
+                scene_closest_hit.distance = hit_distance;
                 scene_closest_hit.node     = node;
             }
         }
@@ -650,40 +795,12 @@ namespace rra
         {
             options["Show everything"] = [&]() { ShowAllNodes(); };
 
-            options["Show selection only"] = [&]() {
-                std::vector<SceneNode*> top_level_nodes;
-                for (const auto& node_iter : nodes_)
-                {
-                    if (node_iter.second)
-                    {
-                        if (!node_iter.second->IsSelected())
-                        {
-                            node_iter.second->SetVisible(false);
-                        }
-                        else
-                        {
-                            auto parent = node_iter.second->GetParent();
-                            if (parent && !parent->IsSelected())
-                            {
-                                top_level_nodes.push_back(node_iter.second);
-                            }
-                        }
-                    }
-                }
-                for (auto node : top_level_nodes)
-                {
-                    for (auto path_node : node->GetPath())
-                    {
-                        path_node->SetVisible(true);
-                    }
-                }
-                IncrementSceneIteration();
-            };
+            options["Show selection only"] = [&]() { ShowSelectionOnly(); };
 
             options["Deselect all"] = [&]() { ResetSceneSelection(); };
 
             options["Select all visible"] = [&]() {
-                root_node_->ApplyNodeSelection();
+                root_node_->ApplyNodeSelection(selected_node_ids_);
                 most_recent_selected_node_id_ = root_node_->GetId();
                 IncrementSceneIteration();
             };
@@ -728,15 +845,15 @@ namespace rra
                     if (scene_closest_hit.node->IsSelected())
                     {
                         options["Remove " + std::string(node_name) + " under mouse from selection (" + node_display_name + ")"] = [&, scene_closest_hit]() {
-                            scene_closest_hit.node->ResetSelection();
-                            IncrementSceneIteration();
+                            scene_closest_hit.node->ResetSelection(selected_node_ids_);
+                            IncrementSceneIteration(false);
                         };
                     }
                     else
                     {
                         options["Add " + std::string(node_name) + " under mouse to selection (" + node_display_name + ")"] = [&, scene_closest_hit]() {
-                            scene_closest_hit.node->ApplyNodeSelection();
-                            IncrementSceneIteration();
+                            scene_closest_hit.node->ApplyNodeSelection(selected_node_ids_);
+                            IncrementSceneIteration(false);
                         };
                     }
                 }
@@ -751,25 +868,26 @@ namespace rra
                 {
                     for (auto path_node : most_recent_node->GetPath())
                     {
-                        path_node->SetVisible(true);
+                        path_node->SetVisible(true, this);
                     }
 
-                    most_recent_node->SetVisible(true);
-                    most_recent_node->ApplyNodeSelection();
+                    most_recent_node->SetVisible(true, this);
+                    most_recent_node->ApplyNodeSelection(selected_node_ids_);
 
-                    for (const auto& node_iter : nodes_)
+                    for (uint32_t id : selected_node_ids_)
                     {
-                        if (node_iter.second && node_iter.second->IsSelected())
+                        auto node = GetNodeById(id);
+                        if (node)
                         {
-                            auto parent = node_iter.second->GetParent();
+                            auto parent = node->GetParent();
                             if (parent && !parent->IsSelected())
                             {
                                 // Is a top level selected node.
-                                node_iter.second->SetAllChildrenAsVisible();
+                                node->SetAllChildrenAsVisible(selected_node_ids_);
                             }
                         }
                     }
-                    IncrementSceneIteration();
+                    IncrementSceneIteration(false);
                 }
             };
         }
@@ -779,13 +897,36 @@ namespace rra
 
     void Scene::HideSelectedNodes()
     {
-        for (const auto& node_iter : nodes_)
+        for (uint32_t id : selected_node_ids_)
         {
-            if (node_iter.second && node_iter.second->IsSelected())
+            auto node     = GetNodeById(id);
+            auto instance = node->GetInstance();
+
+            if (node)
             {
-                node_iter.second->SetVisible(false);
+                // If instance is rebraided, hide all rebraided siblings.
+                if (instance)
+                {
+                    for (auto sibling : GetRebraidedInstances(instance->instance_index))
+                    {
+                        sibling->SetVisible(false, this);
+                    }
+                }
+                // If triangle node is split, hide all split sibling nodes.
+                else if (!node->GetTriangles().empty())
+                {
+                    for (auto sibling : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex()))
+                    {
+                        sibling->SetVisible(false, this);
+                    }
+                }
+                else
+                {
+                    node->SetVisible(false, this);
+                }
             }
         }
+        selected_node_ids_.clear();
         IncrementSceneIteration();
     }
 
@@ -793,9 +934,46 @@ namespace rra
     {
         if (root_node_)
         {
-            root_node_->SetAllChildrenAsVisible();
+            root_node_->SetAllChildrenAsVisible(selected_node_ids_);
             IncrementSceneIteration();
         }
+    }
+
+    void Scene::ShowSelectionOnly()
+    {
+        // Initially hide all nodes.
+        for (auto& node : nodes_)
+        {
+            node.second->SetVisible(false, this);
+        }
+
+        for (uint32_t id : selected_node_ids_)
+        {
+            auto node     = GetNodeById(id);
+            auto instance = node->GetInstance();
+
+            // Show all rebraiding siblings if we're showing at least one.
+            if (instance)
+            {
+                for (auto sibling : GetRebraidedInstances(instance->instance_index))
+                {
+                    sibling->ShowParentChain();
+                }
+            }
+            // Show all split triangle siblings if we're showing at least one.
+            else if (!node->GetTriangles().empty())
+            {
+                for (auto sibling : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex()))
+                {
+                    sibling->ShowParentChain();
+                }
+            }
+            else
+            {
+                node->ShowParentChain();
+            }
+        }
+        IncrementSceneIteration();
     }
 
     renderer::TraversalTree Scene::GenerateTraversalTree()

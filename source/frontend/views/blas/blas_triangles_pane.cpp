@@ -192,7 +192,7 @@ void BlasTrianglesPane::ScrollToSelectedTriangle()
         {
             // Get the model index of the name column since column 0 (compare ID) is hidden and scrollTo
             // doesn't appear to scroll on hidden columns.
-            QModelIndex model_index = model_->GetProxyModel()->index(item_list[0].row(), rra::kBlasTrianglesColumnTriangleAddress);
+            QModelIndex model_index = model_->GetProxyModel()->index(item_list[0].row(), rra::kBlasTrianglesColumnNodeAddress);
             ui_->triangles_table_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
             return;
         }

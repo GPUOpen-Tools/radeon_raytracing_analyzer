@@ -237,7 +237,9 @@ namespace rra
             // Must be called after camera processes inputs to have up to date frustum culling.
             if (update_scene_info_ != nullptr)
             {
-                update_scene_info_(scene_info_, &camera_, (bool)FRUSTUM_CULLING_ENABLE, (bool)FORCE_FRUSTUM_CULLING_UPDATES);
+                // Frustum culling checks only for instance nodes, so it's wasted computation in the BLAS pane. So disable it for the BLAS pane.
+                bool frustum_culling{!scene_info_.custom_triangles || scene_info_.custom_triangles->empty() ? (bool)FRUSTUM_CULLING_ENABLE : false};
+                update_scene_info_(scene_info_, &camera_, frustum_culling, (bool)FORCE_FRUSTUM_CULLING_UPDATES);
             }
 
             HandleSceneChanged();
@@ -376,6 +378,8 @@ namespace rra
 
             scene_uniform_buffer_.screen_width  = width_;
             scene_uniform_buffer_.screen_height = height_;
+
+            scene_uniform_buffer_.count_as_fused_instances = scene_info_.fused_instances_enabled ? 1 : 0;
 
             device_.WriteToBuffer(scene_ubos_[frame_to_update].allocation, &scene_uniform_buffer_, sizeof(scene_uniform_buffer_));
         }

@@ -76,13 +76,16 @@ private slots:
     /// @brief A slot handled when the underlying model reports that available coloring modes been updated.
     ///
     /// @param [in] coloring_modes A reference to a vector of coloring mode info.
-    void UpdateColoringModes(const std::vector<rra::renderer::GeometryColoringModeInfo>& coloring_modes);
+    /// @param [in] traversal_modes A reference to a vector of traversal counter mode info.
+    void UpdateRenderingModes(const std::vector<rra::renderer::GeometryColoringModeInfo>& coloring_modes,
+                              const std::vector<rra::renderer::TraversalCounterModeInfo>& traversal_modes);
 
 private:
-    Ui::ViewerContainerWidget*                           ui_    = nullptr;       ///< Pointer to the Qt UI design.
-    rra::ViewerContainerModel*                           model_ = nullptr;       ///< The model backing the view.
-    std::vector<rra::renderer::GeometryColoringModeInfo> filtered_color_modes_;  ///< The coloring modes available to the viewer.
-    std::vector<rra::renderer::HeatmapGenerator>         heatmap_generators_;    ///< The heatmap modes available at update.
+    Ui::ViewerContainerWidget*                           ui_    = nullptr;           ///< Pointer to the Qt UI design.
+    rra::ViewerContainerModel*                           model_ = nullptr;           ///< The model backing the view.
+    std::vector<rra::renderer::GeometryColoringModeInfo> filtered_color_modes_;      ///< The coloring modes available to the viewer.
+    std::vector<rra::renderer::TraversalCounterModeInfo> filtered_traversal_modes_;  ///< The traversal counter modes available to the viewer.
+    std::vector<rra::renderer::HeatmapGenerator>         heatmap_generators_;        ///< The heatmap modes available at update.
 };
 
 #endif  // RRA_VIEWS_VIEWER_CONTAINER_WIDGET_H_

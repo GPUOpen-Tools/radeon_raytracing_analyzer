@@ -26,7 +26,6 @@ BlasPropertiesPane::BlasPropertiesPane(QWidget* parent)
     model_->InitializeModel(ui_->content_num_box_nodes_, rra::kBlasPropertiesNumBoxNodes, "text");
     model_->InitializeModel(ui_->content_num_box16_nodes_, rra::kBlasPropertiesNumBox16Nodes, "text");
     model_->InitializeModel(ui_->content_num_box32_nodes_, rra::kBlasPropertiesNumBox32Nodes, "text");
-    model_->InitializeModel(ui_->content_num_half_box32_nodes_, rra::kBlasPropertiesNumHalfBox32Nodes, "text");
     model_->InitializeModel(ui_->content_num_triangle_nodes_, rra::kBlasPropertiesNumTriangleNodes, "text");
     model_->InitializeModel(ui_->content_num_procedural_nodes_, rra::kBlasPropertiesNumProceduralNodes, "text");
     model_->InitializeModel(ui_->content_num_triangles_, rra::kBlasPropertiesNumTriangles, "text");

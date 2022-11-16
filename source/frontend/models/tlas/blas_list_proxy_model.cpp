@@ -15,9 +15,15 @@
 #include "public/rra_assert.h"
 
 #include "models/tlas/blas_list_item_model.h"
+#include "util/string_util.h"
 
 namespace rra
 {
+    static constexpr int kAllowUpdateCol     = 1;
+    static constexpr int kAllowCompactionCol = 2;
+    static constexpr int kLowMemoryCol       = 3;
+    static constexpr int kBuildTypeCol       = 4;
+
     BlasListProxyModel::BlasListProxyModel(QObject* parent)
         : TableProxyModel(parent)
     {
@@ -60,13 +66,68 @@ namespace rra
         return model;
     }
 
+    void BlasListProxyModel::SetFilterByAllowUpdate(bool filter)
+    {
+        filter_by_allow_update_ = filter;
+    }
+
+    void BlasListProxyModel::SetFilterByAllowCompaction(bool filter)
+    {
+        filter_by_allow_compaction_ = filter;
+    }
+
+    void BlasListProxyModel::SetFilterByLowMemory(bool filter)
+    {
+        filter_by_low_memory_ = filter;
+    }
+
+    void BlasListProxyModel::SetFilterByFastBuild(bool filter)
+    {
+        filter_by_fast_build_ = filter;
+    }
+
+    void BlasListProxyModel::SetFilterByFastTrace(bool filter)
+    {
+        filter_by_fast_trace_ = filter;
+    }
+
     bool BlasListProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
     {
-        if (FilterSearchString(source_row, source_parent) == false)
+        QString fast_build_str = rra::string_util::GetBuildTypeString(VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR);
+        QString fast_trace_str = rra::string_util::GetBuildTypeString(VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+
+        // If no flags are selected we will show everything instead of showing nothing.
+        bool use_flag_filter =
+            filter_by_allow_update_ || filter_by_allow_compaction_ || filter_by_low_memory_ || filter_by_fast_build_ || filter_by_fast_trace_;
+
+        if (use_flag_filter)
         {
-            return false;
+            if (filter_by_allow_update_ &&
+                sourceModel()->index(source_row, kAllowUpdateCol, source_parent).data(Qt::CheckStateRole).value<Qt::CheckState>() == Qt::Unchecked)
+            {
+                return false;
+            }
+            if (filter_by_allow_compaction_ &&
+                sourceModel()->index(source_row, kAllowCompactionCol, source_parent).data(Qt::CheckStateRole).value<Qt::CheckState>() == Qt::Unchecked)
+            {
+                return false;
+            }
+            if (filter_by_low_memory_ &&
+                sourceModel()->index(source_row, kLowMemoryCol, source_parent).data(Qt::CheckStateRole).value<Qt::CheckState>() == Qt::Unchecked)
+            {
+                return false;
+            }
+            if (filter_by_fast_build_ && sourceModel()->index(source_row, kBuildTypeCol, source_parent).data().value<QString>() != fast_build_str)
+            {
+                return false;
+            }
+            if (filter_by_fast_trace_ && sourceModel()->index(source_row, kBuildTypeCol, source_parent).data().value<QString>() != fast_trace_str)
+            {
+                return false;
+            }
         }
-        return true;
+
+        return FilterSearchString(source_row, source_parent);
     }
 
     bool BlasListProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const

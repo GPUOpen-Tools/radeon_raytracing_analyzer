@@ -42,29 +42,14 @@ namespace rta
         }
     }
 
-    static std::uint32_t CalculateWorstCaseMemorySizeInteriorHalfNodeCount(const std::uint32_t primitive_count, const std::uint32_t branching_factor)
-    {
-        assert(branching_factor >= 2);
-        assert(branching_factor <= 4);
-        if (branching_factor > 4)
-        {
-            //            throw std::runtime_error("Half box nodes are not supported for BVHs with branching factor > 4.");
-        }
-
-        return std::max(primitive_count / 2, 1u);
-    }
-
     static std::uint64_t CalculateRequiredInteriorNodeBufferSize(const std::uint32_t                          primitive_count,
                                                                  const dxr::amd::BottomLevelFp16Mode          bottom_level_fp16_mode,
-                                                                 const bool                                   half_fp32_box_nodes_enabled,
                                                                  const dxr::amd::AccelerationStructureBvhType bvh_type,
                                                                  const std::uint32_t                          branching_factor)
     {
         const auto box_node_per_interior_node_count = rta::ComputeBoxNodePerInteriorNodeCount(branching_factor);
 
-        const auto worst_case_interior_node_count = (half_fp32_box_nodes_enabled)
-                                                        ? CalculateWorstCaseMemorySizeInteriorHalfNodeCount(primitive_count, branching_factor)
-                                                        : CalculateWorstCaseMemorySizeInteriorNodeCount(primitive_count, branching_factor);
+        const auto worst_case_interior_node_count = CalculateWorstCaseMemorySizeInteriorNodeCount(primitive_count, branching_factor);
 
         std::int32_t fp32_interior_node_count = 0;
         std::int32_t fp16_interior_node_count = 0;
@@ -159,17 +144,6 @@ namespace rta
         SetInteriorFp32NodeCountImpl(interior_node_count);
     }
 
-    std::uint32_t IRtIp11AccelerationStructureHeader::GetInteriorHalfFp32NodeCount() const
-    {
-        return GetInteriorHalfFp32NodeCountImpl();
-    }
-
-    void IRtIp11AccelerationStructureHeader::SetInteriorHalfFp32NodeCount(const std::uint32_t interior_node_count)
-    {
-        assert(IsHalfBoxNodeSupported());
-        SetInteriorHalfFp32NodeCountImpl(interior_node_count);
-    }
-
     std::uint32_t IRtIp11AccelerationStructureHeader::GetInteriorFp16NodeCount() const
     {
         return GetInteriorFp16NodeCountImpl();
@@ -187,7 +161,7 @@ namespace rta
 
     std::uint32_t IRtIp11AccelerationStructureHeader::GetInteriorNodeCount() const
     {
-        return GetInteriorFp16NodeCount() + GetInteriorFp32NodeCount() + GetInteriorHalfFp32NodeCount();
+        return GetInteriorFp16NodeCount() + GetInteriorFp32NodeCount();
     }
 
     std::uint64_t IRtIp11AccelerationStructureHeader::CalculateInteriorNodeBufferSize() const
@@ -243,15 +217,21 @@ namespace rta
         return IsValidImpl();
     }
 
-    bool IRtIp11AccelerationStructureHeader::IsHalfBoxNodeEnabled() const
+#ifdef __cplusplus
+    // Miscellaneous packed fields describing the acceleration structure and the build method.
+    union AccelStructHeaderInfo2
     {
-        return IsHalfBoxNodeEnabledImpl();
-    }
+        struct
+        {
+            std::uint32_t compacted : 1;  // This BVH has been compacted
+            std::uint32_t reserved : 31;  // Unused bits
+        };
 
-    bool IRtIp11AccelerationStructureHeader::IsHalfBoxNodeSupported() const
-    {
-        return IsHalfBoxNodeSupportedImpl();
-    }
+        std::uint32_t u32All;
+    };
+#else
+    typedef uint32 AccelStructHeaderInfo2;
+#endif
 
     VulkanUniversalIdentifier::VulkanUniversalIdentifier(const std::uint32_t gfx_ip, const std::uint32_t build_time_hash)
         : gfx_ip_(gfx_ip)
@@ -277,8 +257,12 @@ namespace rta
         std::uint32_t                      leaf_node_count;                  ///< Number of leaf nodes (instances for tlas, geometry for blas).
         RayTracingBinaryVersion            driver_gpu_rt_interface_version;  ///< GpuRT version.
         VulkanUniversalIdentifier          universal_identifier;             ///< Vulkan-specific universal identifier.
-        std::uint32_t                      interior_half_fp32_node_count;    ///< Number of half float32 box interior nodes.
-        std::array<std::uint32_t, 13>      padding;                          ///< Padding for 128-byte alignment.
+        std::uint32_t                      reserved;                         ///< Reserved for future expansion.
+        std::uint32_t                      fp32_root_bounding_box[6];        ///< Root bounding box for bottom level acceleration structures.
+        AccelStructHeaderInfo2             info2;
+        std::uint32_t                      node_flags;               ///< Bottom level acceleration structure node flags.
+        std::uint32_t                      compacted_size_in_bytes;  ///< Total compacted size of the accel struct.
+        std::uint32_t                      num_child_prims[4];       ///< Number of primitives for 4 children for rebraid.
     };
 
     static_assert(sizeof(DxrAccelerationStructureHeader) == dxr::amd::kAccelerationStructureHeaderSize,
@@ -315,10 +299,6 @@ namespace rta
 
         void SetInteriorFp32NodeCountImpl(const std::uint32_t interior_node_count);
 
-        std::uint32_t GetInteriorHalfFp32NodeCountImpl() const override;
-
-        void SetInteriorHalfFp32NodeCountImpl(const std::uint32_t interior_node_count) override;
-
         std::uint32_t GetInteriorFp16NodeCountImpl() const;
 
         void SetInteriorFp16NodeCountImpl(const std::uint32_t interior_node_count);
@@ -346,10 +326,6 @@ namespace rta
                                 const RayTracingBinaryVersion& rt_binary_header_version = kSupportedRayTracingBinaryHeaderVersion);
 
         bool IsValidImpl() const override;
-
-        bool IsHalfBoxNodeEnabledImpl() const;
-
-        bool IsHalfBoxNodeSupportedImpl() const;
 
     private:
         DxrAccelerationStructureHeader                             header_     = {};
@@ -416,16 +392,6 @@ namespace rta
         header_.interior_fp32_node_count = interior_node_count;
     }
 
-    std::uint32_t DxrRtIp11AccelerationStructureHeader::GetInteriorHalfFp32NodeCountImpl() const
-    {
-        return (header_.driver_gpu_rt_interface_version >= RayTracingBinaryVersion(11, 1)) ? header_.interior_half_fp32_node_count : 0;
-    }
-
-    void DxrRtIp11AccelerationStructureHeader::SetInteriorHalfFp32NodeCountImpl(const std::uint32_t interior_node_count)
-    {
-        header_.interior_half_fp32_node_count = interior_node_count;
-    }
-
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetInteriorFp16NodeCountImpl() const
     {
         return header_.interior_fp16_node_count;
@@ -454,17 +420,13 @@ namespace rta
     std::uint64_t DxrRtIp11AccelerationStructureHeader::CalculateInteriorNodeBufferSizeImpl() const
     {
         return static_cast<std::uint64_t>(header_.interior_fp16_node_count) * dxr::amd::kFp16BoxNodeSize +
-               static_cast<std::uint64_t>(header_.interior_fp32_node_count) * dxr::amd::kFp32BoxNodeSize +
-               static_cast<std::uint64_t>(header_.interior_half_fp32_node_count) * dxr::amd::kFp32HalfBoxNodeSize;
+               static_cast<std::uint64_t>(header_.interior_fp32_node_count) * dxr::amd::kFp32BoxNodeSize;
     }
 
     std::uint64_t DxrRtIp11AccelerationStructureHeader::CalculateWorstCaseInteriorNodeBufferSizeImpl(const std::uint32_t branching_factor) const
     {
-        return CalculateRequiredInteriorNodeBufferSize(GetPrimitiveCount(),
-                                                       ToDxrBottomLevelFp16Mode(build_info_->GetBottomLevelFp16Mode()),
-                                                       header_.interior_half_fp32_node_count > 0,
-                                                       ToDxrBvhType(build_info_->GetBvhType()),
-                                                       branching_factor);
+        return CalculateRequiredInteriorNodeBufferSize(
+            GetPrimitiveCount(), ToDxrBottomLevelFp16Mode(build_info_->GetBottomLevelFp16Mode()), ToDxrBvhType(build_info_->GetBvhType()), branching_factor);
     }
 
     std::uint64_t DxrRtIp11AccelerationStructureHeader::CalculateLeafNodeBufferSizeImpl() const
@@ -578,7 +540,7 @@ namespace rta
             return false;
         }
         // Check if there is any root node defined in this header.
-        const bool has_root_node = (header_.interior_fp32_node_count > 0) || (header_.interior_half_fp32_node_count > 0);
+        const bool has_root_node = (header_.interior_fp32_node_count > 0);
 
         // If there are any active primitives in this BVH, make sure that the root node is allocated for this
         // BVH. Otherwise, it's invalid.
@@ -616,16 +578,6 @@ namespace rta
         }
 
         return true;
-    }
-
-    bool DxrRtIp11AccelerationStructureHeader::IsHalfBoxNodeEnabledImpl() const
-    {
-        return (header_.interior_half_fp32_node_count > 0);
-    }
-
-    bool DxrRtIp11AccelerationStructureHeader::IsHalfBoxNodeSupportedImpl() const
-    {
-        return GetGpuRtDriverInterfaceVersion() > RayTracingBinaryVersion(11, 1);
     }
 
 }  // namespace rta

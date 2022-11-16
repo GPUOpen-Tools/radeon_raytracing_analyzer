@@ -366,6 +366,10 @@ namespace rra
     static RraErrorCode CalcBlasSAH(rta::EncodedRtIp11BottomLevelBvh* blas)
     {
         RRA_ASSERT(blas != nullptr);
+        if (!blas)
+        {
+            return kRraErrorInvalidPointer;
+        }
 
         if (blas->IsEmpty())
         {

@@ -101,14 +101,14 @@ namespace rta
     {
         assert(node_pointer.IsFp32BoxNode());
         return reinterpret_cast<const dxr::amd::Float32BoxNode*>(
-            &interior_nodes_[node_pointer.GetByteOffset() - header_->GetBufferOffsets().interior_nodes + offset * dxr::amd::kFp32BoxNodeSize]);
+            &interior_nodes_[node_pointer.GetByteOffset() - (size_t)header_->GetBufferOffsets().interior_nodes + offset * dxr::amd::kFp32BoxNodeSize]);
     }
 
     const dxr::amd::Float16BoxNode* IEncodedRtIp11Bvh::GetFloat16Box(const dxr::amd::NodePointer node_pointer, const int offset) const
     {
         assert(node_pointer.IsFp16BoxNode());
         return reinterpret_cast<const dxr::amd::Float16BoxNode*>(
-            &interior_nodes_[node_pointer.GetByteOffset() - header_->GetBufferOffsets().interior_nodes + offset * dxr::amd::kFp16BoxNodeSize]);
+            &interior_nodes_[node_pointer.GetByteOffset() - (size_t)header_->GetBufferOffsets().interior_nodes + offset * dxr::amd::kFp16BoxNodeSize]);
     }
 
     const dxr::amd::InstanceNode* IEncodedRtIp11Bvh::GetInstanceNode(const dxr::amd::NodePointer node_pointer, const int offset) const
@@ -136,7 +136,7 @@ namespace rta
         {
             auto bvh = static_cast<const EncodedRtIp11BottomLevelBvh*>(this);
             return reinterpret_cast<const dxr::amd::TriangleNode*>(
-                &bvh->GetLeafNodesData()[node_pointer.GetByteOffset() + offset * dxr::amd::kLeafNodeSize - header_->GetBufferOffsets().leaf_nodes]);
+                &bvh->GetLeafNodesData()[node_pointer.GetByteOffset() + (size_t)offset * dxr::amd::kLeafNodeSize - header_->GetBufferOffsets().leaf_nodes]);
         }
         else
         {
@@ -153,7 +153,7 @@ namespace rta
         {
             auto bvh = static_cast<const EncodedRtIp11BottomLevelBvh*>(this);
             return reinterpret_cast<const dxr::amd::ProceduralNode*>(
-                &bvh->GetLeafNodesData()[node_pointer.GetByteOffset() + offset * dxr::amd::kLeafNodeSize - header_->GetBufferOffsets().leaf_nodes]);
+                &bvh->GetLeafNodesData()[node_pointer.GetByteOffset() + (size_t)offset * dxr::amd::kLeafNodeSize - header_->GetBufferOffsets().leaf_nodes]);
         }
         else
         {
@@ -161,34 +161,6 @@ namespace rta
             assert(false);
             return nullptr;
         }
-    }
-
-    const bool IEncodedRtIp11Bvh::IsHalfBoxNode(const dxr::amd::NodePointer nodePointer) const
-    {
-        // If there is no half box node stored in this BVH, then there is no half box node.
-        if (!header_->IsHalfBoxNodeEnabled())
-        {
-            return false;
-        }
-
-        // Overlapping is just possible if the box consumes 128 B.
-        if (!nodePointer.IsFp32BoxNode())
-        {
-            return false;
-        }
-
-        const auto box_node    = GetFloat32Box(nodePointer);
-        const auto child_nodes = box_node->GetChildren();
-        // Half box nodes must have two valid child node pointers.
-        if (box_node->GetValidChildCount() != 2)
-        {
-            return false;
-        }
-
-        // A half box node is defined as a node that only stores two leaf node pointers at the beginning
-        // of the child pointers array, and just uses the first two AABBs of all the bounding boxes.
-        // The remaining two child node pointers are invalid.
-        return (child_nodes[0].IsLeafNode() && child_nodes[1].IsLeafNode() && child_nodes[2].IsInvalid() && child_nodes[3].IsInvalid());
     }
 
     bool IEncodedRtIp11Bvh::IsCompactedImpl() const

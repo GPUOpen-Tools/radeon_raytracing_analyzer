@@ -13,6 +13,8 @@
 #include <QContextMenuEvent>
 #include <QApplication>
 
+#include "io/viewer_io.h"
+
 AccelerationStructureTreeView::AccelerationStructureTreeView(QWidget* parent)
     : ScaledTreeView(parent)
 {
@@ -48,7 +50,10 @@ void AccelerationStructureTreeView::contextMenuEvent(QContextMenuEvent* event)
     rra::SceneContextMenuRequest request = {};
     request.location                     = rra::SceneContextMenuLocation::kSceneContextMenuLocationTreeView;
 
-    auto context_options = model_->GetSceneContextOptions(current_bvh_index_, request);
+    auto context_options   = model_->GetSceneContextOptions(current_bvh_index_, request);
+    auto camera_controller = model_->GetCameraController();
+
+    context_options["Focus on selection"] = [=]() { camera_controller->FocusOnSelection(); };
 
     for (const auto& option_action : context_options)
     {
@@ -63,4 +68,28 @@ void AccelerationStructureTreeView::contextMenuEvent(QContextMenuEvent* event)
     {
         context_options[action->text().toStdString()]();
     }
+}
+
+bool AccelerationStructureTreeView::event(QEvent* event)
+{
+    QKeyEvent* key_event{};
+
+    switch (event->type())
+    {
+    case QEvent::Enter:
+        break;
+    case QEvent::KeyPress:
+        key_event = static_cast<QKeyEvent*>(event);
+        if (key_event->key() == Qt::Key_F)
+        {
+            model_->GetCameraController()->FocusOnSelection();
+        }
+        break;
+    case QEvent::KeyRelease:
+        break;
+    default:
+        break;
+    }
+
+    return QWidget::event(event);
 }

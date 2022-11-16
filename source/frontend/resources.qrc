@@ -13,6 +13,7 @@
     <file>../assets/stop_128x128.png</file>
     <file>../assets/third_party/ionicons/search_icon.png</file>
     <file>../assets/third_party/ionicons/wand.svg</file>
+    <file>../assets/third_party/ionicons/information-circle-outline.svg</file>
     <file>../assets/third_party/ionicons/refresh-outline.svg</file>
     <file>../assets/acceleration_structure_overview.svg</file>
     <file>stylesheet.qss</file>

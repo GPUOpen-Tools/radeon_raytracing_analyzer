@@ -32,7 +32,6 @@ namespace rra
         SetModelData(kTlasPropertiesNumBoxNodes, "-");
         SetModelData(kTlasPropertiesNumBox16Nodes, "-");
         SetModelData(kTlasPropertiesNumBox32Nodes, "-");
-        SetModelData(kTlasPropertiesNumHalfBox32Nodes, "-");
         SetModelData(kTlasPropertiesNumInstanceNodes, "-");
         SetModelData(kTlasPropertiesNumBlases, "-");
         SetModelData(kTlasPropertiesNumTriangles, "-");
@@ -77,12 +76,6 @@ namespace rra
         if (RraTlasGetBox32NodeCount(tlas_index, &box32_node_count) == kRraOk)
         {
             SetModelData(kTlasPropertiesNumBox32Nodes, rra::string_util::LocalizedValue(box32_node_count));
-        }
-
-        uint32_t half_box32_node_count = 0;
-        if (RraTlasGetHalfBox32NodeCount(tlas_index, &half_box32_node_count) == kRraOk)
-        {
-            SetModelData(kTlasPropertiesNumHalfBox32Nodes, rra::string_util::LocalizedValue(half_box32_node_count));
         }
 
         uint64_t instance_node_count = 0;

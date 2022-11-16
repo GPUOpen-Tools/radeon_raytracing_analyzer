@@ -45,7 +45,7 @@ namespace rra
             for (size_t i = 0; i < heatmap_data.size(); i++)
             {
                 const float kPi   = 3.14159265358979323846f;
-                double      level = float(i) / float(heatmap_data.size() - 1) * (kPi * 0.5f);
+                float       level = float(i) / float(heatmap_data.size() - 1) * (kPi * 0.5f);
                 float       r     = glm::clamp(float(sin(level)), 0.0f, 1.0f);
                 float       g     = glm::clamp(float(sin(level * 2.0f)), 0.0f, 1.0f);
                 float       b     = glm::clamp(float(cos(level)), 0.0f, 1.0f);

@@ -89,6 +89,12 @@ namespace rra
         /// @return The memory in bytes.
         uint64_t GetTotalTraceMemory() const;
 
+        /// @brief Whether or not any TLASes in the trace use rebraiding.
+        bool RebraidingEnabled();
+
+        /// @brief Whether or not any TLASes in the trace use fused instances.
+        bool FusedInstancesEnabled();
+
         /// @brief Is the specified TLAS empty.
         ///
         /// @param [i] tlas_index The index of the TLAS to query.

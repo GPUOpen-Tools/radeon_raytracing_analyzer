@@ -214,32 +214,6 @@
             </widget>
            </item>
            <item row="5" column="0">
-            <widget class="ScaledLabel" name="label_num_half_box32_nodes_">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Number of Half-box32 nodes:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="ScaledLabel" name="content_num_half_box32_nodes_">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>-</string>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="0">
             <widget class="ScaledLabel" name="label_num_instances_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -252,7 +226,7 @@
              </property>
             </widget>
            </item>
-           <item row="6" column="1">
+           <item row="5" column="1">
             <widget class="ScaledLabel" name="content_num_instances_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -265,7 +239,7 @@
              </property>
             </widget>
            </item>
-           <item row="7" column="0">
+           <item row="6" column="0">
             <widget class="ScaledLabel" name="label_num_blases_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -278,7 +252,7 @@
              </property>
             </widget>
            </item>
-           <item row="7" column="1">
+           <item row="6" column="1">
             <widget class="ScaledLabel" name="content_num_blases_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -291,7 +265,7 @@
              </property>
             </widget>
            </item>
-           <item row="8" column="0">
+           <item row="7" column="0">
             <widget class="ScaledLabel" name="label_num_triangles_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -304,7 +278,7 @@
              </property>
             </widget>
            </item>
-           <item row="8" column="1">
+           <item row="7" column="1">
             <widget class="ScaledLabel" name="content_num_triangles_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -317,7 +291,7 @@
              </property>
             </widget>
            </item>
-           <item row="9" column="0">
+           <item row="8" column="0">
             <spacer name="vertical_spacer_table_1_">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -333,7 +307,7 @@
              </property>
             </spacer>
            </item>
-           <item row="10" column="0">
+           <item row="9" column="0">
             <widget class="ScaledLabel" name="label_title_build_flags_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -353,7 +327,7 @@
              </property>
             </widget>
            </item>
-           <item row="11" column="0">
+           <item row="10" column="0">
             <widget class="ScaledLabel" name="label_allow_update_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -366,7 +340,7 @@
              </property>
             </widget>
            </item>
-           <item row="11" column="1">
+           <item row="10" column="1">
             <widget class="ReadOnlyCheckBox" name="content_allow_update_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -376,7 +350,7 @@
              </property>
             </widget>
            </item>
-           <item row="12" column="0">
+           <item row="11" column="0">
             <widget class="ScaledLabel" name="label_allow_compaction_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -389,7 +363,7 @@
              </property>
             </widget>
            </item>
-           <item row="12" column="1">
+           <item row="11" column="1">
             <widget class="ReadOnlyCheckBox" name="content_allow_compaction_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -399,7 +373,7 @@
              </property>
             </widget>
            </item>
-           <item row="13" column="0">
+           <item row="12" column="0">
             <widget class="ScaledLabel" name="label_low_memory_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -412,7 +386,7 @@
              </property>
             </widget>
            </item>
-           <item row="13" column="1">
+           <item row="12" column="1">
             <widget class="ReadOnlyCheckBox" name="content_low_memory_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -422,7 +396,7 @@
              </property>
             </widget>
            </item>
-           <item row="14" column="0">
+           <item row="13" column="0">
             <widget class="ScaledLabel" name="label_build_type_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -435,7 +409,7 @@
              </property>
             </widget>
            </item>
-           <item row="14" column="1">
+           <item row="13" column="1">
             <widget class="ScaledLabel" name="content_build_type_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -448,7 +422,7 @@
              </property>
             </widget>
            </item>
-           <item row="15" column="0">
+           <item row="14" column="0">
             <spacer name="vertical_spacer_table_2_">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -464,7 +438,7 @@
              </property>
             </spacer>
            </item>
-           <item row="16" column="0">
+           <item row="15" column="0">
             <widget class="ScaledLabel" name="label_title_memory_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -484,7 +458,7 @@
              </property>
             </widget>
            </item>
-           <item row="17" column="0">
+           <item row="16" column="0">
             <widget class="ScaledLabel" name="label_memory_tlas_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -497,7 +471,7 @@
              </property>
             </widget>
            </item>
-           <item row="17" column="1">
+           <item row="16" column="1">
             <widget class="ScaledLabel" name="content_memory_tlas_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -510,7 +484,7 @@
              </property>
             </widget>
            </item>
-           <item row="18" column="0">
+           <item row="17" column="0">
             <widget class="ScaledLabel" name="label_memory_total_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -523,7 +497,7 @@
              </property>
             </widget>
            </item>
-           <item row="18" column="1">
+           <item row="17" column="1">
             <widget class="ScaledLabel" name="content_memory_total_">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">

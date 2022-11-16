@@ -60,13 +60,13 @@ private slots:
     /// @param new_limit The new slider speed limit of the camera.
     void MovementSpeedLimitChanged(int new_limit);
 
-    /// @brief Slot to handle what happens when frustum cull ratio is changed.
+    /// @brief Slot to handle what happens when small object culling is changed.
     ///
-    /// @param new_ratio The new frustum cull ratio.
-    void FrustumCullRatioIsChanged(double new_ratio);
+    /// @param value The value set for the slider.
+    void SmallObjectCullingIsChanged(int value);
 
     /// @brief Slot to handle what happens when decimal precision is changed.
-    /// 
+    ///
     /// @param new_precision The new decimal precision.
     void DecimalPrecisionChanged(int new_precision);
 

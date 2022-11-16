@@ -100,8 +100,9 @@ namespace rta
     class IEncodedRtIp11Bvh : public IBvh
     {
     public:
-        // Global identifier of tlas dump in chunk files.
-        static constexpr const char* kChunkIdentifier = "RawAccelStruc";
+        // Global identifier of acceleration structure data in chunk files.
+        static constexpr const char* kAccelChunkIdentifier1 = "RawAccelStruc";
+        static constexpr const char* kAccelChunkIdentifier2 = "RawAccelStruct";
 
         /// @brief Definition for minimum file size.
         static constexpr std::uint32_t kMinimumFileSize = dxr::amd::kMetaDataAlignment + dxr::amd::kAccelerationStructureHeaderSize;
@@ -181,15 +182,17 @@ namespace rta
 
         /// @brief Load the BVH data from a file.
         ///
-        /// @param [in] chunk_file    A Reference to a ChunkFile object which describes the file chunk being loaded.
-        /// @param [in] chunk_index   The index of the chunk in the file.
-        /// @param [in] header        The raw acceleration structure header.
-        /// @param [in] import_option Flag indicating which sections of the chunk to load/discard.
+        /// @param [in] chunk_file        A Reference to a ChunkFile object which describes the file chunk being loaded.
+        /// @param [in] chunk_index       The index of the chunk in the file.
+        /// @param [in] header            The raw acceleration structure header.
+        /// @param [in] chunk_identifier  The BVH chunk name.
+        /// @param [in] import_option     Flag indicating which sections of the chunk to load/discard.
         ///
         /// @return true if the BVH data loaded successfully, false if not.
         virtual bool LoadRawAccelStrucFromFile(rdf::ChunkFile&                     chunk_file,
                                                const std::uint64_t                 chunk_index,
                                                const RawAccelStructRdfChunkHeader& header,
+                                               const char* const                   chunk_identifier,
                                                const BvhBundleReadOption           import_option) = 0;
 
         /// @brief Replace all absolute references with relative references.
@@ -291,13 +294,6 @@ namespace rta
         /// @param node_pointer The node pointer.
         /// @param offset       Defines which node should be returned. Offset 0 => the one referenced by node_pointer, 1 => the node behind the node with offset 0.
         const dxr::amd::ProceduralNode* GetProceduralNode(const dxr::amd::NodePointer node_pointer, const int offset = 0) const;
-
-        /// @brief Is the node a half box node.
-        ///
-        /// @param node_pointer The node pointer.
-        ///
-        /// @return true if the node is a half box node, false otherwise.
-        const bool IsHalfBoxNode(const dxr::amd::NodePointer node_pointer) const;
 
     protected:
         /// @brief Scan the tree to get the maximum and average tree depths.

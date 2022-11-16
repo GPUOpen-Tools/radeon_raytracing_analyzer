@@ -5,6 +5,22 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/source/renderer/
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
 project(RRA)
 
+# Define version information
+set(RRA_MAJOR_VERSION 1)
+set(RRA_MINOR_VERSION 1)
+if (NOT RRA_BUGFIX_NUMBER)
+    set(RRA_BUGFIX_NUMBER 0)
+endif ()
+if (NOT RRA_BUILD_NUMBER)
+    set(RRA_BUILD_NUMBER 0)
+endif ()
+string(TIMESTAMP DATE "\"%m/%d/%Y\"")
+string(TIMESTAMP YEAR "%Y")
+string(TIMESTAMP YEAR_STRING "\"%Y\"")
+
+configure_file("${CMAKE_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_SOURCE_DIR}/Buildinfo.properties")
+configure_file("${CMAKE_SOURCE_DIR}/source/frontend/version.h.in" "${CMAKE_SOURCE_DIR}/source/frontend/version.h")
+
 option(RDF_ENABLE_CXX_BINDINGS "Allow usage of C++ interface for RDF library" ON)
 option(RDF_STATIC              "Build RDF as a static library" OFF)
 
@@ -19,7 +35,7 @@ IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
 ENDIF()
 
 set (CMAKE_DEBUG_POSTFIX -d)
-set (CMAKE_RELEASE_POSTFIX )
+set (CMAKE_RELEASE_POSTFIX)
 
 IF(WIN32)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../release)
@@ -50,7 +66,7 @@ IF(WIN32)
     add_link_options(/STACK:16777216)
 ELSEIF(UNIX)
     # Use -Wno-missing-field-initializers for CentOS compiler warning
-    add_compile_options(-D_LINUX -Wno-missing-field-initializers -Wno-ignored-qualifiers)
+    add_compile_options(-D_LINUX -Wno-missing-field-initializers -Wno-ignored-qualifiers -mno-avx2)
     # Allow executable to be double clicked.
     add_link_options(-no-pie)
     # Use _DEBUG on Unix for Debug Builds (defined automatically on Windows)
@@ -121,18 +137,13 @@ ENDIF(WIN32)
 # This is evaluated at project build time - not at CMake generation time
 set(BUILD_ROOT $<$<CONFIG:debug>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}>$<$<CONFIG:release>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}>)
 
-# Define the option to pass to the sphinx documentation job
-set(SPHINX_OPTION public)
-
-find_program(SPHINX_EXECUTABLE sphinx-build)
-if(NOT SPHINX_EXECUTABLE)
-  message(FATAL_ERROR "SPHINX_EXECUTABLE (sphinx-build) is not found!")
-endif()
+set(DOCS_OUTPUT_DIR ${BUILD_ROOT})
 
 # group sphinx source files into a sphinx folder
 file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_SOURCE_DIR}/documentation/source/*.rst)
 set (SPHINX_DOC_MAIN ${CMAKE_SOURCE_DIR}/documentation/source/conf.py)
-source_group("sphinx" FILES ${SPHINX_DOC_FILES} ${SPHINX_DOC_MAIN})
+set (ALL_SPHINX_FILES ${SPHINX_DOC_FILES} ${SPHINX_DOC_MAIN})
+source_group("sphinx" FILES ${ALL_SPHINX_FILES})
 
 # group release documents into a release_docs folder
 set (RELEASE_DOCS_IN_ROOT
@@ -144,33 +155,43 @@ set (RELEASE_DOCS_IN_ROOT
 set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
 source_group("release_docs" FILES ${RELEASE_DOCS})
 
-# hang the sphinx build on the conf.py file and specify a dummy output ("sphinx_output")
-# this ensures the sphinx docs are built everytime you ask to build the Documentation target
-# Sphinx has proper dependency checking, so this works as expected.
-# Once built, clean up any unneeded files.
-add_custom_target(Documentation SOURCES ${SPHINX_DOC_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
-add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
-    COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
-    COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${BUILD_ROOT}/docs/help/rra/html/. -t ${SPHINX_OPTION}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${BUILD_ROOT}/docs/help/rra/html/.doctrees
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/blas_instance_list.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/blas_list.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/blas_properties.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/blas_viewer.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/capture.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/overview.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/settings.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/tlas_instance_list.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/tlas_properties.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/tlas_viewer.html
-    COMMAND ${CMAKE_COMMAND} -E remove ${BUILD_ROOT}/docs/help/rra/html/triangle_list.html
-)
+find_program(SPHINX_EXECUTABLE sphinx-build)
+if(SPHINX_EXECUTABLE)
+    # Define the option to pass to the sphinx documentation job
+    set(SPHINX_OPTION public)
+
+    # hang the sphinx build on the conf.py file and specify a dummy output ("sphinx_output")
+    # this ensures the sphinx docs are built everytime you ask to build the Documentation target
+    # Sphinx has proper dependency checking, so this works as expected.
+    # Once built, clean up any unneeded files.
+    add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
+    add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
+        COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
+        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/docs/help/rra/html/. -t ${SPHINX_OPTION}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/docs/help/rra/html/.doctrees
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/blas_instance_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/blas_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/blas_properties.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/blas_viewer.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/capture.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/overview.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/settings.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/tlas_instance_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/tlas_properties.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/tlas_viewer.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/triangle_list.html
+    )
+else()
+    message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
+    # If the sphinx binary isn't found, then just create the Documentation project with only the release docs in it.
+    add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS})
+endif()
 
 add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "copying Documentation to output directory"
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_ROOT}/docs
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${BUILD_ROOT}/.
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/docs
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${DOCS_OUTPUT_DIR}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_ROOT}/samples
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/landscape.rra  ${BUILD_ROOT}/samples/sample_trace.rra
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/landscape.rra  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rra
 )

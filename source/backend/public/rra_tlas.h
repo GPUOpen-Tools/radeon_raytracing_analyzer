@@ -141,14 +141,6 @@ RraErrorCode RraTlasGetBox16NodeCount(uint64_t tlas_index, uint32_t* out_node_co
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetBox32NodeCount(uint64_t tlas_index, uint32_t* out_node_count);
 
-/// @brief Get the number of half box-32 nodes for the tlas_index given.
-///
-/// @param [in]  tlas_index     The index of the TLAS to use.
-/// @param [out] out_node_count A pointer to receive the half box-32 node count of the BLAS.
-///
-/// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetHalfBox32NodeCount(uint64_t tlas_index, uint32_t* out_node_count);
-
 /// @brief Get the instance node count for a TLAS.
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
@@ -204,12 +196,25 @@ RraErrorCode RraTlasGetBlasIndexFromInstanceNode(uint64_t tlas_index, uint32_t n
 
 /// @brief Get the Instance index, given a TLAS index and an instance node pointer.
 ///
+/// These instances are shared among instances generated for rebraiding.
+///
 /// @param [in]  tlas_index          The index of the TLAS to use.
 /// @param [in]  node_ptr            The node pointer of the instance node.
 /// @param [out] out_instance_index  A pointer to receive the instance index.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_instance_index);
+
+/// @brief Get the unique Instance index, given a TLAS index and an instance node pointer.
+///
+/// This index is unique even among instances generated from rebraiding.
+///
+/// @param [in]  tlas_index          The index of the TLAS to use.
+/// @param [in]  node_ptr            The node pointer of the instance node.
+/// @param [out] out_instance_index  A pointer to receive the unique instance index.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_instance_index);
 
 /// @brief Get the bounding volume extents of a given node.
 ///
@@ -322,6 +327,14 @@ RraErrorCode RraTlasGetInactiveInstancesCount(uint64_t tlas_index, uint64_t* ina
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetBuildFlags(uint64_t tlas_index, VkBuildAccelerationStructureFlagBitsKHR* out_flags);
 
+/// @brief Query whether or not rebraiding was used to build this TLAS.
+///
+/// @param [in] tlas_index The index of the TLAS to use.
+/// @param [out] out_enabled True if enabled, false otherwise.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetRebraidingEnabled(uint64_t tlas_index, bool* out_enabled);
+
 /// @brief Retrieve the instance flags.
 ///
 /// @param [in] tlas_index	The index of the TLAS to use.
@@ -330,6 +343,14 @@ RraErrorCode RraTlasGetBuildFlags(uint64_t tlas_index, VkBuildAccelerationStruct
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetInstanceFlags(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_flags);
+
+/// @brief Query whether or not fused instances was used to build this TLAS.
+///
+/// @param [in] tlas_index The index of the TLAS to use.
+/// @param [out] out_enabled True if enabled, false otherwise.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetFusedInstancesEnabled(uint64_t tlas_index, bool* out_enabled);
 
 #ifdef __cplusplus
 }

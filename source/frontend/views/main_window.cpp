@@ -349,9 +349,11 @@ void MainWindow::CreateActions()
     }
 
     help_action_ = new QAction(tr("Help"), this);
+    help_action_->setShortcut(Qt::CTRL | Qt::Key_F1);
     connect(help_action_, &QAction::triggered, this, &MainWindow::OpenHelp);
 
     about_action_ = new QAction(tr("About Radeon Raytracing Analyzer"), this);
+    about_action_->setShortcut(Qt::CTRL | Qt::Key_F2);
     connect(about_action_, &QAction::triggered, this, &MainWindow::OpenAboutPane);
 }
 

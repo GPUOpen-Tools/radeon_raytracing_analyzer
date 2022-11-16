@@ -62,6 +62,13 @@ namespace rra
         return blas_scene;
     }
 
+    bool BlasSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const
+    {
+        Scene*     scene = GetSceneByIndex(blas_index);
+        SceneNode* node  = scene->GetNodeById(node_id);
+        return !(node->IsEnabled() && node->IsVisible());
+    }
+
     Scene* BlasSceneCollectionModel::GetSceneByIndex(uint64_t bvh_index) const
     {
         Scene* result = nullptr;
@@ -104,37 +111,7 @@ namespace rra
                                                                   const glm::vec3&                direction,
                                                                   SceneCollectionModelClosestHit& scene_model_closest_hit) const
     {
-        scene_model_closest_hit.distance = -1.0f;
-
-        auto scene = GetSceneByIndex(bvh_index);
-        if (scene)
-        {
-            auto scene_nodes = scene->CastRay(origin, direction);
-            for (auto node : scene_nodes)
-            {
-                auto triangles = node->GetTriangles();
-                for (size_t i = 0; i < triangles.size(); i++)
-                {
-                    const auto& triangle = triangles[i];
-                    glm::vec3   hit_output;
-
-                    if (glm::intersectLineTriangle(
-                            origin, direction, glm::vec3(triangle.a.position), glm::vec3(triangle.b.position), glm::vec3(triangle.c.position), hit_output))
-                    {
-                        float distance = hit_output.x;  // GLM does not document this...
-                        if (distance > 0.0 && (scene_model_closest_hit.distance < 0.0f || distance < scene_model_closest_hit.distance))
-                        {
-                            scene_model_closest_hit.distance       = distance;
-                            scene_model_closest_hit.blas_index     = bvh_index;
-                            scene_model_closest_hit.instance_node  = 0;
-                            scene_model_closest_hit.triangle_node  = node->GetId();
-                            scene_model_closest_hit.triangle_index = static_cast<uint32_t>(i);
-                        }
-                    }
-                }
-            }
-        }
-
+        CastClosestHitRayOnBlas(bvh_index, 0, origin, direction, scene_model_closest_hit);
         return kRraOk;
     }
 
@@ -146,4 +123,11 @@ namespace rra
         }
         blas_scenes_.clear();
     }
+
+    bool BlasSceneCollectionModel::GetFusedInstancesEnabled(uint64_t bvh_index) const
+    {
+        RRA_UNUSED(bvh_index);
+        return false;
+    }
+
 }  // namespace rra

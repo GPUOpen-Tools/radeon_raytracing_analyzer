@@ -34,7 +34,6 @@ namespace rra
         SetModelData(kBlasPropertiesNumBoxNodes, "-");
         SetModelData(kBlasPropertiesNumBox16Nodes, "-");
         SetModelData(kBlasPropertiesNumBox32Nodes, "-");
-        SetModelData(kBlasPropertiesNumHalfBox32Nodes, "-");
         SetModelData(kBlasPropertiesNumTriangleNodes, "-");
         SetModelData(kBlasPropertiesNumProceduralNodes, "-");
         SetModelData(kBlasPropertiesNumTriangles, "-");
@@ -85,12 +84,6 @@ namespace rra
         if (RraBlasGetBox32NodeCount(blas_index, &box32_count) == kRraOk)
         {
             SetModelData(kBlasPropertiesNumBox32Nodes, rra::string_util::LocalizedValue(box32_count));
-        }
-
-        uint32_t half_box32_count = 0;
-        if (RraBlasGetHalfBox32NodeCount(blas_index, &half_box32_count) == kRraOk)
-        {
-            SetModelData(kBlasPropertiesNumHalfBox32Nodes, rra::string_util::LocalizedValue(half_box32_count));
         }
 
         uint32_t triangle_node_count = 0;

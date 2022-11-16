@@ -22,7 +22,6 @@ namespace rra
         kTlasPropertiesNumBoxNodes,
         kTlasPropertiesNumBox16Nodes,
         kTlasPropertiesNumBox32Nodes,
-        kTlasPropertiesNumHalfBox32Nodes,
         kTlasPropertiesNumInstanceNodes,
         kTlasPropertiesNumBlases,
         kTlasPropertiesNumTriangles,

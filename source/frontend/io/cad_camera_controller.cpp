@@ -10,12 +10,12 @@
 
 #include <QMouseEvent>
 
-#include "../models/side_panels/view_model.h"
+#include "models/side_panels/view_model.h"
 
 namespace rra
 {
-    static const std::string kCADName                      = "CAD";
-    static const float       kArcRadiusMin                 = 0.1f;
+    static const std::string kCADName      = "CAD";
+    static const float       kArcRadiusMin = 0.00001f;
 
     CADController::CADController()
     {
@@ -105,10 +105,12 @@ namespace rra
         auto                  has_volume = viewer_model_->GetSceneCollectionModel()->GetSceneBounds(viewer_bvh_index_, volume);
         if (has_volume)
         {
-            euler_angles_ = GetCameraOrientation().GetDefaultEuler();
+            float diagonal = glm::length(glm::vec3{volume.max_x - volume.min_x, volume.max_y - volume.min_y, volume.max_z - volume.min_z});
+            euler_angles_  = GetCameraOrientation().GetDefaultEuler();
             camera->SetEulerRotation(GetCameraOrientation().MapEuler(euler_angles_));
+            camera->SetRotationMatrix(GetCameraOrientation().GetReflectionMatrix() * camera->GetRotationMatrix());
             camera->SetFieldOfView(renderer::kDefaultCameraFieldOfView);
-            camera->SetMovementSpeed(kDefaultMovementSpeedMultiplier * view_model_->GetMovementSpeedLimit());
+            camera->SetMovementSpeed(kDefaultSpeedDiagonalMultiplier * diagonal);
             auto radius = FocusCameraOnVolume(camera, volume);
             camera->SetFarClip(radius * kViewerIOFarPlaneMultiplier);
             updated_ = true;
@@ -122,7 +124,7 @@ namespace rra
 
     void CADController::ResetArcRadius()
     {
-        auto cam = GetCamera();
+        auto  cam        = GetCamera();
         float new_radius = 1.0f;
         cam->SetArcCenterPosition(cam->GetPosition() + new_radius * cam->GetForward());
         arc_radius_ = new_radius;
@@ -180,9 +182,19 @@ namespace rra
         return true;
     }
 
+    bool CADController::SupportsUpAxis() const
+    {
+        return true;
+    }
+
+    uint32_t CADController::GetComboBoxIndex() const
+    {
+        return 0;
+    }
+
     void CADController::ProcessUserInputs()
     {
-        auto camera = GetCamera();
+        auto camera           = GetCamera();
         auto elapsed_time_end = std::chrono::steady_clock::now();
         auto delta_time       = std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed_time_end - elapsed_time_start_).count() / 1e9f;
         delta_time            = glm::min(delta_time, 0.1F);

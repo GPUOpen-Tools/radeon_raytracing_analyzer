@@ -12,7 +12,6 @@
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
-#include "models/blas/blas_viewer_model.h"
 #include "views/widget_util.h"
 
 static const int kSplitterWidth = 300;
@@ -39,9 +38,10 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     ui_->splitter_->setSizes(splitter_sizes);
 
     SetTableParams(ui_->extents_table_);
-    SetTableParams(ui_->geometry_flags_table_);
-    SetTableParams(ui_->vertex_table_);
-    ui_->geometry_flags_table_->horizontalHeader()->setStretchLastSection(true);
+    SetTableParams(ui_->geometry_flags_table_1_);
+    SetTableParams(ui_->vertex_table_1_);
+    SetTableParams(ui_->vertex_table_2_);
+    ui_->geometry_flags_table_1_->horizontalHeader()->setStretchLastSection(true);
 
     derived_model_                    = new rra::BlasViewerModel(ui_->blas_tree_);
     model_                            = derived_model_;
@@ -51,17 +51,21 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
 
     // Initialize tables.
     model_->InitializeExtentsTableModel(ui_->extents_table_);
-    derived_model_->InitializeFlagsTableModel(ui_->geometry_flags_table_);
-    derived_model_->InitializeVertexTableModel(ui_->vertex_table_);
+    derived_model_->InitializeFlagsTableModel(ui_->geometry_flags_table_1_);
+    derived_model_->InitializeVertexTableModels(ui_->vertex_table_1_, ui_->vertex_table_2_);
 
     model_->InitializeModel(ui_->content_node_address_, rra::kBlasStatsAddress, "text");
     model_->InitializeModel(ui_->content_node_type_, rra::kBlasStatsType, "text");
     model_->InitializeModel(ui_->content_current_sah_, rra::kBlasStatsCurrentSAH, "text");
     model_->InitializeModel(ui_->content_subtree_min_, rra::kBlasStatsSAHSubTreeMax, "text");
     model_->InitializeModel(ui_->content_subtree_mean_, rra::kBlasStatsSAHSubTreeMean, "text");
-    model_->InitializeModel(ui_->content_primitive_index_, rra::kBlasStatsPrimitiveIndex, "text");
-    model_->InitializeModel(ui_->content_geometry_index_, rra::kBlasStatsGeometryIndex, "text");
+    model_->InitializeModel(ui_->content_primitive_index_1_, rra::kBlasStatsPrimitiveIndexTriangle1, "text");
+    model_->InitializeModel(ui_->content_primitive_index_2_, rra::kBlasStatsPrimitiveIndexTriangle2, "text");
+    model_->InitializeModel(ui_->content_geometry_index_1_, rra::kBlasStatsGeometryIndex, "text");
     model_->InitializeModel(ui_->content_parent_blas_, rra::kBlasStatsParent, "text");
+
+    ui_->triangle_split_info_->setCursor(Qt::PointingHandCursor);
+    ui_->triangle_split_info_->hide();
 
     connect(acceleration_structure_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &BlasViewerPane::UpdateSelectedBlas);
     connect(ui_->blas_tree_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &BlasViewerPane::TreeNodeChanged);
@@ -85,11 +89,12 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     ui_->side_panel_container_->MarkAsBLAS();
 
     flag_table_delegate_ = new FlagTableItemDelegate();
-    ui_->geometry_flags_table_->setItemDelegate(flag_table_delegate_);
+    ui_->geometry_flags_table_1_->setItemDelegate(flag_table_delegate_);
 }
 
 BlasViewerPane::~BlasViewerPane()
 {
+    delete flag_table_delegate_;
 }
 
 void BlasViewerPane::OnTraceClose()
@@ -125,6 +130,9 @@ void BlasViewerPane::showEvent(QShowEvent* event)
 void BlasViewerPane::SetBlasSelection(uint64_t blas_index)
 {
     last_selected_as_id_ = blas_index;
+
+    uint32_t procedural_node_count = derived_model_->GetProceduralNodeCount(blas_index);
+    ui_->side_panel_container_->MarkProceduralGeometry(procedural_node_count > 0);
 }
 
 void BlasViewerPane::UpdateTreeDepths(int min_value, int max_value)
@@ -141,8 +149,8 @@ void BlasViewerPane::UpdateTreeDepths(int min_value, int max_value)
 
 void BlasViewerPane::OnScaleFactorChanged()
 {
-    int height = ui_->geometry_flags_table_->verticalHeader()->minimumSectionSize();
-    ui_->geometry_flags_table_->setMaximumHeight(2 * height);
+    int height = ui_->geometry_flags_table_1_->verticalHeader()->minimumSectionSize();
+    ui_->geometry_flags_table_1_->setMaximumHeight(2 * height);
 }
 
 void BlasViewerPane::UpdateWidgets(const QModelIndex& index)
@@ -154,6 +162,8 @@ void BlasViewerPane::UpdateWidgets(const QModelIndex& index)
 
     ui_->common_group_->setVisible(common_valid);
     ui_->triangle_group_->setVisible(model_->SelectedNodeIsLeaf());
+    ui_->triangle_information_2_->setVisible(derived_model_->SelectedNodeHasSecondTriangle());
+    ui_->triangle_split_group_->setVisible(model_->IsTriangleSplit(last_selected_as_id_));
 
     // Subtrees are redundant for leaf nodes.
     ui_->label_subtree_max_->setVisible(!model_->SelectedNodeIsLeaf());
@@ -205,10 +215,71 @@ void BlasViewerPane::SelectLeafNode(const bool navigate_to_triangles_pane)
         // Select the selected triangle in the Triangles pane.
         emit rra::MessageManager::Get().TriangleViewerSelected(node_id);
 
+        rra::SceneNode* node = scene->GetNodeById(node_id);
+        UpdateTriangleSplitUI(scene, last_selected_as_id_, node->GetGeometryIndex(), node->GetPrimitiveIndex(), node_id);
+
         if (navigate_to_triangles_pane)
         {
             // Switch to the triangles pane.
             emit rra::MessageManager::Get().PaneSwitchRequested(rra::kPaneIdBlasTriangles);
+        }
+    }
+}
+
+void BlasViewerPane::UpdateTriangleSplitUI(rra::Scene* scene, uint32_t blas_index, uint32_t geometry_index, uint32_t primitive_index, uint32_t node_id)
+{
+    if (derived_model_->SelectedNodeIsLeaf())
+    {
+        if (scene->IsTriangleSplit(geometry_index, primitive_index))
+        {
+            const auto& split_siblings = scene->GetSplitTriangles(geometry_index, primitive_index);
+
+            // Delete previous buttons.
+            for (ScaledPushButton* button : split_triangle_sibling_buttons_)
+            {
+                ui_->split_triangle_siblings_list_->removeWidget(button);
+                delete button;
+            }
+            split_triangle_sibling_buttons_.clear();
+
+            uint32_t           row{0};
+            uint32_t           col{0};
+            constexpr uint32_t col_count{2};
+            for (rra::SceneNode* sibling : split_siblings)
+            {
+                ScaledPushButton* rebraid_sibling_button = new ScaledPushButton();
+                split_triangle_sibling_buttons_.push_back(rebraid_sibling_button);
+                rebraid_sibling_button->setText(model_->AddressString(blas_index, sibling->GetId()));
+                rebraid_sibling_button->setObjectName(QString::fromUtf8("rebraid_button_"));
+                QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+                sizePolicy.setHorizontalStretch(0);
+                sizePolicy.setVerticalStretch(0);
+                sizePolicy.setHeightForWidth(rebraid_sibling_button->sizePolicy().hasHeightForWidth());
+                rebraid_sibling_button->setSizePolicy(sizePolicy);
+
+                if (sibling->GetId() != node_id)
+                {
+                    rebraid_sibling_button->setCursor(Qt::PointingHandCursor);
+
+                    QModelIndex sibling_model_index = derived_model_->GetModelIndexForNode(sibling->GetId());
+                    connect(rebraid_sibling_button, &ScaledPushButton::clicked, this, [=]() {
+                        ui_->blas_tree_->selectionModel()->reset();
+                        ui_->blas_tree_->selectionModel()->setCurrentIndex(sibling_model_index, QItemSelectionModel::Select);
+                    });
+                }
+                else
+                {
+                    rebraid_sibling_button->setDisabled(true);
+                }
+
+                ui_->split_triangle_siblings_list_->addWidget(rebraid_sibling_button, row, col);
+
+                if (++col == col_count)
+                {
+                    col = 0;
+                    ++row;
+                }
+            }
         }
     }
 }
@@ -227,6 +298,9 @@ void BlasViewerPane::SelectTriangle(uint32_t triangle_node_id)
             selected_index = model_->GetModelIndexForNode(scene->GetMostRecentSelectedNodeId());
             SelectTreeItem(ui_->blas_tree_, selected_index);
         }
+
+        rra::SceneNode* node = scene->GetNodeById(triangle_node_id);
+        UpdateTriangleSplitUI(scene, last_selected_as_id_, node->GetGeometryIndex(), node->GetPrimitiveIndex(), triangle_node_id);
     }
 }
 

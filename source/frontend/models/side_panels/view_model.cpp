@@ -114,15 +114,38 @@ namespace rra
 
     int32_t ViewModel::MovementSpeedValueToSliderValue(float movement_speed)
     {
-        float numerator               = std::log(movement_speed / movement_speed_maximum_);
-        float denominator             = -std::log(movement_speed_minimum_ / movement_speed_maximum_);
-        float normalized_slider_value = (numerator / denominator) + 1.0f;
+        float numerator   = std::log(movement_speed / movement_speed_maximum_);
+        float denominator = -std::log(movement_speed_minimum_ / movement_speed_maximum_);
+
+        // Limit slider to its maximum length (in the case where it's been reduced in the settings).
+        float normalized_slider_value = std::min((numerator / denominator) + 1.0f, 1.0f);
         return (int32_t)(normalized_slider_value * kMovementSliderMaximum);
     }
 
     float ViewModel::GetMovementSpeedLimit()
     {
         return movement_speed_maximum_;
+    }
+
+    QString ViewModel::GetBoxSortHeuristicName()
+    {
+        if (render_state_adapter_)
+        {
+            if (render_state_adapter_->GetBoxSortHeuristic() == kBoxSortHeuristicClosest)
+            {
+                return "closest";
+            }
+            else if (render_state_adapter_->GetBoxSortHeuristic() == kBoxSortHeuristicMidPoint)
+            {
+                return "middle point";
+            }
+            else if (render_state_adapter_->GetBoxSortHeuristic() == kBoxSortHeuristicLargest)
+            {
+                return "largest";
+            }
+        }
+
+        return "-";
     }
 
     ViewModel::ViewModel()
@@ -141,6 +164,7 @@ namespace rra
         view_state_adapter_   = GetAdapter<ViewStateAdapter*>(adapters, RendererAdapterType::kRendererAdapterTypeView);
         render_state_adapter_ = GetAdapter<RenderStateAdapter*>(adapters, RendererAdapterType::kRendererAdapterTypeRenderState);
         render_state_adapter_->AddHeatmapUpdateCallback(heatmap_update_callback_);
+        render_state_adapter_->SetArchitectureToNavi3();
 
         view_state_adapter_->SetCameraController(camera_controllers_.GetControllerByName(camera_controllers_.GetControllerNames()[0]));
         Update();
@@ -150,6 +174,7 @@ namespace rra
     {
         if (render_state_adapter_ != nullptr)
         {
+            SetModelData(kSidePaneViewRenderInstanceTransforms, render_state_adapter_->GetRenderInstancePretransform());
             SetModelData(kSidePaneViewRenderBVH, render_state_adapter_->GetRenderBoundingVolumes());
             SetModelData(kSidePaneViewRenderGeometry, render_state_adapter_->GetRenderGeometry());
             SetModelData(kSidePaneViewWireframeOverlay, render_state_adapter_->GetRenderWireframe());
@@ -176,7 +201,15 @@ namespace rra
 
             SetModelData(kSidePaneViewFieldOfViewSlider, SliderRangeConverter::FieldOfViewValueToSliderValue(fov));
             SetModelData(kSidePaneViewNearPlaneSlider, SliderRangeConverter::NearPlaneValueToSliderValue(view_state_adapter_->GetNearPlaneMultiplier()));
-            SetModelData(kSidePaneViewMovementSpeedSlider, MovementSpeedValueToSliderValue(view_state_adapter_->GetMovementSpeed()));
+            float current_movement_speed = view_state_adapter_->GetMovementSpeed();
+            if (current_movement_speed > movement_speed_maximum_)
+            {
+                view_state_adapter_->SetMovementSpeed(movement_speed_maximum_);
+            }
+
+            float slider_value = MovementSpeedValueToSliderValue(view_state_adapter_->GetMovementSpeed());
+            SetModelData(kSidePaneViewMovementSpeedSlider, slider_value);
+            SetModelData(kSidePaneViewMovementSpeed, QString::number(MovementSpeedValueFromSlider(slider_value), kQtFloatFormat, 0));
         }
 
         UpdateCameraTransformUI();
@@ -418,6 +451,16 @@ namespace rra
         return index != old_index;
     }
 
+    void ViewModel::SetInvertVertical(bool enabled)
+    {
+        camera_controls_.orientation.flip_vertical = enabled;
+    }
+
+    void ViewModel::SetInvertHorizontal(bool enabled)
+    {
+        camera_controls_.orientation.flip_horizontal = enabled;
+    }
+
     void ViewModel::ToggleInvertVertical()
     {
         camera_controls_.orientation.flip_vertical = !camera_controls_.orientation.flip_vertical;
@@ -446,6 +489,32 @@ namespace rra
     void ViewModel::SetUpAxisAsZ()
     {
         camera_controls_.orientation.up_axis = ViewerIOUpAxis::kUpAxisZ;
+    }
+
+    void ViewModel::SetArchitectureToNavi2()
+    {
+        if (render_state_adapter_)
+        {
+            render_state_adapter_->SetArchitectureToNavi2();
+        }
+    }
+
+    void ViewModel::SetArchitectureToNavi3()
+    {
+        if (render_state_adapter_)
+        {
+            render_state_adapter_->SetArchitectureToNavi3();
+        }
+    }
+
+    void ViewModel::EnableRayFlagsAcceptFirstHit()
+    {
+        render_state_adapter_->SetRayFlagAcceptFirstHit(true);
+    }
+
+    void ViewModel::DisableRayFlagsAcceptFirstHit()
+    {
+        render_state_adapter_->SetRayFlagAcceptFirstHit(false);
     }
 
     void ViewModel::SetOrthographic(bool ortho)

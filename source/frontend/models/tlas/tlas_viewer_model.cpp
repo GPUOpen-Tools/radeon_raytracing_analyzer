@@ -36,6 +36,7 @@ namespace rra
     TlasViewerModel::~TlasViewerModel()
     {
         delete position_table_model_;
+        delete transform_table_model_;
     }
 
     void TlasViewerModel::InitializeTransformTableModel(ScaledTableView* table_view)
@@ -94,7 +95,17 @@ namespace rra
     {
         uint32_t instance_index = 0;
         uint32_t node_id        = GetNodeIdFromModelIndex(model_index, tlas_index, kIsTlasModel);
-        if (RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_id, &instance_index) != kRraOk)
+        if (RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_id, &instance_index) != kRraOk)
+        {
+            return UINT32_MAX;
+        }
+        return instance_index;
+    }
+
+    uint32_t TlasViewerModel::GetInstanceUniqueIndexFromNode(int tlas_index, const uint32_t node_id) const
+    {
+        uint32_t instance_index = 0;
+        if (RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_id, &instance_index) != kRraOk)
         {
             return UINT32_MAX;
         }
@@ -125,32 +136,17 @@ namespace rra
         AccelerationStructureViewerModel::SetSelectedNodeIndex(model_index);
         uint32_t node_id = GetNodeIdFromModelIndex(model_index, tlas_index, kIsTlasModel);
 
+        std::string node_type{RraBvhGetNodeName(node_id)};
+
+        if (IsRebraidedNode(tlas_index))
+        {
+            node_type += " (rebraided)";
+        }
+
         // Show Node name and base address.
-        SetModelData(kTlasStatsType, RraBvhGetNodeName(node_id));
+        SetModelData(kTlasStatsType, node_type.c_str());
 
-        uint64_t           node_address = 0;
-        RraErrorCode       error_code   = kRraErrorInvalidPointer;
-        TreeviewNodeIDType node_type    = rra::Settings::Get().GetTreeviewNodeIdType();
-
-        switch (node_type)
-        {
-        case kTreeviewNodeIDTypeVirtualAddress:
-            error_code = RraTlasGetNodeBaseAddress(tlas_index, node_id, &node_address);
-            break;
-
-        case kTreeviewNodeIDTypeOffset:
-            error_code = RraBvhGetNodeOffset(node_id, &node_address);
-            break;
-
-        default:
-            break;
-        }
-
-        if (error_code == kRraOk)
-        {
-            QString address_string = "0x" + QString("%1").arg(node_address, 0, 16);
-            SetModelData(kTlasStatsAddress, address_string);
-        }
+        SetModelData(kTlasStatsAddress, AddressString(tlas_index, node_id));
 
         // Show instance node info.
         uint64_t blas_address   = 0;
@@ -166,6 +162,10 @@ namespace rra
 
             QString address_string = "0x" + QString("%1").arg(blas_address, 0, 16);
             SetModelData(kTlasStatsBlasAddress, address_string);
+
+            uint32_t instance_index{};
+            RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_id, &instance_index);
+            SetModelData(kTlasStatsInstanceIndex, QString::number(instance_index));
 
             uint32_t instance_id{};
             RraTlasGetInstanceNodeID(tlas_index, node_id, &instance_id);
@@ -202,6 +202,7 @@ namespace rra
         {
             SetModelData(kTlasStatsBlasAddress, "");
             SetModelData(kTlasStatsParent, "");
+            SetModelData(kTlasStatsInstanceIndex, "");
             SetModelData(kTlasStatsInstanceId, "");
             SetModelData(kTlasStatsInstanceMask, "");
             SetModelData(kTlasStatsInstanceHitGroupIndex, "");
@@ -264,8 +265,8 @@ namespace rra
     {
         uint32_t node_id = GetNodeIdFromModelIndex(model_index, index, kIsTlasModel);
 
-        Scene* current_scene_info_ = scene_collection_model_->GetSceneByIndex(index);
-        current_scene_info_->SetSceneSelection(node_id);
+        Scene* scene = scene_collection_model_->GetSceneByIndex(index);
+        scene->SetSceneSelection(node_id);
     }
 
     bool TlasViewerModel::SelectedNodeIsLeaf() const
@@ -286,12 +287,35 @@ namespace rra
         }
     }
 
+    QString TlasViewerModel::AddressString(uint64_t bvh_index, uint32_t node_id) const
+    {
+        TreeviewNodeIDType node_type    = rra::Settings::Get().GetTreeviewNodeIdType();
+        uint64_t           node_address = 0;
+
+        switch (node_type)
+        {
+        case kTreeviewNodeIDTypeVirtualAddress:
+            RraTlasGetNodeBaseAddress(bvh_index, node_id, &node_address);
+            break;
+
+        case kTreeviewNodeIDTypeOffset:
+            RraBvhGetNodeOffset(node_id, &node_address);
+            break;
+
+        default:
+            break;
+        }
+
+        return "0x" + QString("%1").arg(node_address, 0, 16);
+    }
+
     void TlasViewerModel::ResetModelValues(bool reset_scene)
     {
         SetModelData(kTlasStatsType, "No node selected.");
         SetModelData(kTlasStatsAddress, "");
         SetModelData(kTlasStatsBlasAddress, "-");
         SetModelData(kTlasStatsParent, "-");
+        SetModelData(kTlasStatsInstanceIndex, "-");
         SetModelData(kTlasStatsInstanceId, "-");
         SetModelData(kTlasStatsInstanceMask, "-");
         SetModelData(kTlasStatsInstanceHitGroupIndex, "-");

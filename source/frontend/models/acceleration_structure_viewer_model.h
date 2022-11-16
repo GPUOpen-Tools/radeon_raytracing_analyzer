@@ -26,6 +26,8 @@
 
 namespace rra
 {
+    class ViewerIO;
+
     /// @brief Get the scene info needed for creating the graphics context.
     /// @return Scene info needed by graphics context.
     renderer::GraphicsContextSceneInfo GetGraphicsContextSceneInfo();
@@ -124,6 +126,14 @@ namespace rra
         /// @param [in] index       The index of the acceleration structure selected (from the combo box).
         virtual void SetSceneSelection(const QModelIndex& model_index, uint64_t index) = 0;
 
+        /// @brief Get the address in a format to be displayed by the UI.
+        ///
+        /// @param tlas_index The index of the current BVH.
+        /// @param node_id The ID of the selected node.
+        ///
+        /// @return A string ready to be displayed by the UI.
+        virtual QString AddressString(uint64_t bvh_index, uint32_t node_id) const = 0;
+
         /// @brief Clear the current scene object selection.
         ///
         /// @param [in] index       The index of the acceleration structure selected (from the combo box).
@@ -188,6 +198,9 @@ namespace rra
         /// @returns The all-scenes model.
         SceneCollectionModel* GetSceneCollectionModel() const;
 
+        /// @brief Toggle the instance transform wireframe rendering.
+        void ToggleInstanceTransformWireframe();
+
         /// @brief Toggle the BVH wireframe rendering.
         void ToggleBVHWireframe();
 
@@ -214,6 +227,27 @@ namespace rra
         ///
         /// @return true if model index is an instance node, false if not.
         bool IsInstanceNode(uint64_t tlas_index) const;
+
+        /// @brief Is the selected model index a valid triangle node.
+        ///
+        /// @param [in] index  The index of the BLAS selected (from the combo box).
+        ///
+        /// @return true if model index is an triangle node, false if not.
+        bool IsTriangleNode(uint64_t blas_index) const;
+
+        /// @brief Is the selected model index a rebraided instance node.
+        ///
+        /// @param [in] index The index of the TLAS selected (from the combo box).
+        ///
+        /// @return true if model index is a rebraided instance node, false if not.
+        bool IsRebraidedNode(uint64_t tlas_index) const;
+
+        /// @brief Is the selected model index a split triangle node.
+        ///
+        /// @param [in] index The index of the TLAS selected (from the combo box).
+        ///
+        /// @return true if model index is a split triangle node, false if not.
+        bool IsTriangleSplit(uint64_t tlas_index) const;
 
         /// @brief Get the current options avaiable for the selection in the given scene.
         ///
@@ -244,6 +278,16 @@ namespace rra
         ///
         /// @param multi_select True if multiselect should be enabled.
         void SetMultiSelect(bool multi_select);
+
+        /// @brief Sets the camera controller.
+        ///
+        /// @param controller The camera controller.
+        void SetCameraController(rra::ViewerIO* controller);
+
+        /// @brief Get the camera controller.
+        ///
+        /// @returns The camera controller.
+        rra::ViewerIO* GetCameraController() const;
 
     public slots:
         /// @brief Slot to handle what happens when the user clicks on a the collapse/expand button.
@@ -282,12 +326,14 @@ namespace rra
         /// @param [in] bounding_volume_extents The extents bounding volume.
         void PopulateExtentsTable(const BoundingVolumeExtents& bounding_volume_extents);
 
-        std::unordered_map<uint64_t, uint64_t> as_index_to_row_index_map_;           ///< A mapping of acceleration structure index to combo box index.
-        SceneCollectionModel*                  scene_collection_model_   = nullptr;  ///< The scene model.
-        rra::renderer::RenderStateAdapter*     render_state_adapter_     = nullptr;  ///< The adapter used to toggle mesh render states.
+        std::unordered_map<uint64_t, uint64_t> as_index_to_row_index_map_;          ///< A mapping of acceleration structure index to combo box index.
+        SceneCollectionModel*                  scene_collection_model_  = nullptr;  ///< The scene model.
+        rra::renderer::RenderStateAdapter*     render_state_adapter_    = nullptr;  ///< The adapter used to toggle mesh render states.
+        Scene*                                 last_clicked_node_scene_ = nullptr;  ///< The last scene in which a node was clicked.
 
     private:
         AccelerationStructureTreeViewModel* tree_view_model_       = nullptr;  ///< The model for the acceleration structure tree view.
+        rra::ViewerIO*                      camera_controller_     = nullptr;  ///< The active camera controller.
         TreeViewProxyModel*                 tree_view_proxy_model_ = nullptr;  ///< The treeview proxy model, used for text search filtering.
         QStandardItemModel*                 extents_table_model_   = nullptr;  ///< Model associated with the extents table.
         QModelIndex     selected_node_index_;  ///< The model index for the selected node in the treeview (can be invalid - nothing selected).

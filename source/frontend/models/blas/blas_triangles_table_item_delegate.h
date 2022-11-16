@@ -37,6 +37,18 @@ public:
     ///
     /// @return true if a vec3 is in the specified cell, false if not.
     virtual bool Vec3At(int row, int column) const override;
+
+    /// @brief Test if there is a checkbox at the given row and column.
+    ///
+    /// Called from the paint function to use a custom painter to draw checkboxes.
+    /// This function can be overriden in derived classes to specify rows and
+    /// columns containing checkboxes. By default, no checkboxes are present.
+    ///
+    /// @param [in] row     The row to check.
+    /// @param [in] column  The column to check.
+    ///
+    /// @return true if a checkbox is in the specified cell, false if not.
+    bool CheckboxAt(int row, int column) const;
 };
 
 #endif  // RRA_MODELS_TRIANGLES_TABLE_ITEM_DELEGATE_H_

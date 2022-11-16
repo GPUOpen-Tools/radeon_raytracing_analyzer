@@ -117,7 +117,7 @@
            <string>Traversal counter</string>
           </property>
           <property name="toolTip">
-           <string>Show heatmap revealing ray tracing performance costs of scene.</string>
+           <string>Show heatmap of the number of intersection tests needed by the primary ray.</string>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">button_group_rendering_modes_</string>
@@ -143,6 +143,139 @@
         <item>
          <widget class="QFrame" name="traversal_counter_controls_container_">
           <layout class="QVBoxLayout" name="vertical_layout_traversal_counter_controls_container_">
+           <item>
+            <layout class="QGridLayout">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <property name="spacing">
+              <number>8</number>
+             </property>
+             <item row="1" column="0">
+              <widget class="ScaledLabel" name="content_architecture_label_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Architecture</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <layout class="QVBoxLayout" name="content_architecture_layout_">
+               <item>
+                <widget class="ColoredRadioButton" name="content_architecture_navi_2_">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Navi 2</string>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">button_group_architecture_</string>
+                 </attribute>
+                </widget>
+               </item>
+               <item>
+                <widget class="ColoredRadioButton" name="content_architecture_navi_3_">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Navi 3</string>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">button_group_architecture_</string>
+                 </attribute>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="3" column="0">
+              <widget class="ScaledLabel" name="content_ray_flags_label_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Ray flags</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <layout class="QVBoxLayout" name="content_box_sort_heuristic_layout_user_facing_">
+               <item>
+                <widget class="ColoredCheckbox" name="content_ray_flags_accept_first_hit_">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Accept first hit</string>
+                 </property>
+                 <property name="toolTip">
+                  <string>The ray will terminate on the first triangle that it hits. Commonly used for shadow rays.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="5" column="0">
+              <widget class="ScaledLabel" name="content_box_sort_heuristic_value_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>How box nodes are sorted during traversal. Dependent on ray flags and system configuration.</string>
+               </property>
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="horizontal_spacer_box_sort_heuristic_">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Expanding</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>5</width>
+               <height>10</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
            <item>
             <layout class="QHBoxLayout" name="horizontal_layout_2_">
              <property name="spacing">
@@ -303,7 +436,7 @@
                 <string>Continuous update</string>
                </property>
                <property name="toolTip">
-                <string>Continuously updates the range of the traversal counter</string>
+                <string>Continuously fit the traversal counter range to the minimum and maximum pixel values visible</string>
                </property>
               </widget>
              </item>
@@ -335,7 +468,7 @@
                 <string></string>
                </property>
                <property name="toolTip">
-                <string>Changes the range of the traversal counters to fit what you are seeing. Pressing "C" offers the same functionality.</string>
+                <string>Fit the traversal counter range to the minimum and maximum pixel values visible. Pressing "C" offers the same functionality.</string>
                </property>
                <property name="icon">
                 <iconset resource="../../resources.qrc">

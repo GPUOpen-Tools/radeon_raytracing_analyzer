@@ -35,61 +35,86 @@ namespace rra
 
     BlasViewerModel::~BlasViewerModel()
     {
-        delete vertex_table_model_;
-        delete flags_table_model_;
+        delete vertex_table_model_triangle_1_;
+        delete vertex_table_model_triangle_2_;
+        delete geometry_flags_table_model_;
     }
 
-    void BlasViewerModel::InitializeVertexTableModel(ScaledTableView* table_view)
+    void BlasViewerModel::InitializeVertexTableModels(ScaledTableView* table_view_triangle_1, ScaledTableView* table_view_triangle_2)
     {
-        vertex_table_model_ = new QStandardItemModel(4, 4);
+        {
+            vertex_table_model_triangle_1_ = new QStandardItemModel(3, 4);
 
-        QStandardItem* vertex = new QStandardItem("Vertex");
-        vertex->setTextAlignment(Qt::AlignLeft);
-        vertex_table_model_->setHorizontalHeaderItem(0, vertex);
-        QStandardItem* x = new QStandardItem("X");
-        x->setTextAlignment(Qt::AlignRight);
-        vertex_table_model_->setHorizontalHeaderItem(1, x);
-        QStandardItem* y = new QStandardItem("Y");
-        y->setTextAlignment(Qt::AlignRight);
-        vertex_table_model_->setHorizontalHeaderItem(2, y);
-        QStandardItem* z = new QStandardItem("Z");
-        z->setTextAlignment(Qt::AlignRight);
-        vertex_table_model_->setHorizontalHeaderItem(3, z);
+            QStandardItem* vertex = new QStandardItem("Triangle");
+            vertex->setTextAlignment(Qt::AlignLeft);
+            vertex_table_model_triangle_1_->setHorizontalHeaderItem(0, vertex);
+            QStandardItem* x = new QStandardItem("X");
+            x->setTextAlignment(Qt::AlignRight);
+            vertex_table_model_triangle_1_->setHorizontalHeaderItem(1, x);
+            QStandardItem* y = new QStandardItem("Y");
+            y->setTextAlignment(Qt::AlignRight);
+            vertex_table_model_triangle_1_->setHorizontalHeaderItem(2, y);
+            QStandardItem* z = new QStandardItem("Z");
+            z->setTextAlignment(Qt::AlignRight);
+            vertex_table_model_triangle_1_->setHorizontalHeaderItem(3, z);
 
-        table_view->setModel(vertex_table_model_);
+            table_view_triangle_1->setModel(vertex_table_model_triangle_1_);
 
-        widget_util::SetTableModelData(vertex_table_model_, "Vertex 0", 0, 0);
-        widget_util::SetTableModelData(vertex_table_model_, "Vertex 1", 1, 0);
-        widget_util::SetTableModelData(vertex_table_model_, "Vertex 2", 2, 0);
-        widget_util::SetTableModelData(vertex_table_model_, "Vertex 3", 3, 0);
+            widget_util::SetTableModelData(vertex_table_model_triangle_1_, "Vertex 0", 0, 0);
+            widget_util::SetTableModelData(vertex_table_model_triangle_1_, "Vertex 1", 1, 0);
+            widget_util::SetTableModelData(vertex_table_model_triangle_1_, "Vertex 2", 2, 0);
+        }
+
+        {
+            vertex_table_model_triangle_2_ = new QStandardItemModel(3, 4);
+
+            QStandardItem* vertex = new QStandardItem("Triangle");
+            vertex->setTextAlignment(Qt::AlignLeft);
+            vertex_table_model_triangle_2_->setHorizontalHeaderItem(0, vertex);
+            QStandardItem* x = new QStandardItem("X");
+            x->setTextAlignment(Qt::AlignRight);
+            vertex_table_model_triangle_2_->setHorizontalHeaderItem(1, x);
+            QStandardItem* y = new QStandardItem("Y");
+            y->setTextAlignment(Qt::AlignRight);
+            vertex_table_model_triangle_2_->setHorizontalHeaderItem(2, y);
+            QStandardItem* z = new QStandardItem("Z");
+            z->setTextAlignment(Qt::AlignRight);
+            vertex_table_model_triangle_2_->setHorizontalHeaderItem(3, z);
+
+            table_view_triangle_2->setModel(vertex_table_model_triangle_2_);
+
+            widget_util::SetTableModelData(vertex_table_model_triangle_2_, "Vertex 0", 0, 0);
+            widget_util::SetTableModelData(vertex_table_model_triangle_2_, "Vertex 1", 1, 0);
+            widget_util::SetTableModelData(vertex_table_model_triangle_2_, "Vertex 2", 2, 0);
+        }
     }
 
     void BlasViewerModel::InitializeFlagsTableModel(ScaledTableView* table_view)
     {
-        flags_table_model_ = new FlagsTableItemModel();
-        flags_table_model_->SetRowCount(2);
-        flags_table_model_->SetColumnCount(2);
+        geometry_flags_table_model_ = new FlagsTableItemModel();
+        geometry_flags_table_model_->SetRowCount(2);
+        geometry_flags_table_model_->SetColumnCount(2);
 
-        table_view->setModel(flags_table_model_);
+        table_view->setModel(geometry_flags_table_model_);
 
-        flags_table_model_->SetRowFlagName(0, "Opaque");
-        flags_table_model_->SetRowFlagName(1, "No duplicate any hit invocation");
+        geometry_flags_table_model_->SetRowFlagName(0, "Opaque");
+        geometry_flags_table_model_->SetRowFlagName(1, "No duplicate any hit invocation");
 
-        flags_table_model_->Initialize(table_view);
+        geometry_flags_table_model_->Initialize(table_view);
 
         table_view->GetHeaderView()->setVisible(false);
     }
 
-    void BlasViewerModel::PopulateFlagsTable(uint32_t flags)
+    void BlasViewerModel::PopulateFlagsTable(FlagsTableItemModel* flags_table, uint32_t flags)
     {
         bool opaque                          = flags & VK_GEOMETRY_OPAQUE_BIT_KHR;
         bool no_duplicate_any_hit_invocation = flags & VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
 
-        flags_table_model_->SetRowChecked(0, opaque);
-        flags_table_model_->SetRowChecked(1, no_duplicate_any_hit_invocation);
+        flags_table->SetRowChecked(0, opaque);
+        flags_table->SetRowChecked(1, no_duplicate_any_hit_invocation);
 
         // The table will not be updated without this.
-        flags_table_model_->dataChanged(QModelIndex(), QModelIndex());
+        flags_table->dataChanged(QModelIndex(), QModelIndex());
     }
 
     RraErrorCode BlasViewerModel::AccelerationStructureGetCount(uint64_t* out_count) const
@@ -120,32 +145,17 @@ namespace rra
     void BlasViewerModel::UpdateStatistics(uint64_t blas_index, uint32_t node_id)
     {
         // Show node name and base address.
-        SetModelData(kBlasStatsType, RraBvhGetNodeName(node_id));
-
-        uint64_t           node_address      = 0;
-        RraErrorCode       error_code        = kRraErrorInvalidPointer;
-        TreeviewNodeIDType node_type         = rra::Settings::Get().GetTreeviewNodeIdType();
-        int                decimal_precision = rra::Settings::Get().GetDecimalPrecision();
-
-        switch (node_type)
+        std::string node_name = RraBvhGetNodeName(node_id);
+        if (IsTriangleSplit(blas_index))
         {
-        case kTreeviewNodeIDTypeVirtualAddress:
-            error_code = RraBlasGetNodeBaseAddress(blas_index, node_id, &node_address);
-            break;
-
-        case kTreeviewNodeIDTypeOffset:
-            error_code = RraBvhGetNodeOffset(node_id, &node_address);
-            break;
-
-        default:
-            break;
+            node_name += " (split)";
         }
 
-        if (error_code == kRraOk)
-        {
-            QString address_string = "0x" + QString("%1").arg(node_address, 0, 16);
-            SetModelData(kBlasStatsAddress, address_string);
-        }
+        SetModelData(kBlasStatsType, node_name.c_str());
+
+        int decimal_precision = rra::Settings::Get().GetDecimalPrecision();
+
+        SetModelData(kBlasStatsAddress, AddressString(blas_index, node_id));
 
         // Show surface area and bounding box extents.
         BoundingVolumeExtents bounding_volume_extents;
@@ -153,6 +163,9 @@ namespace rra
         {
             PopulateExtentsTable(bounding_volume_extents);
         }
+
+        // Reset value just in case not a leaf node.
+        last_selected_node_has_second_tri_ = false;
 
         // Show vertex data.
         if (SelectedNodeIsLeaf())
@@ -163,29 +176,53 @@ namespace rra
             std::vector<VertexPosition> verts(vertex_count);
             RraBlasGetNodeVertices(blas_index, node_id, verts.data());
 
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[0].x, 0, 1, Qt::AlignRight);
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[0].y, 0, 2, Qt::AlignRight);
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[0].z, 0, 3, Qt::AlignRight);
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[1].x, 1, 1, Qt::AlignRight);
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[1].y, 1, 2, Qt::AlignRight);
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[1].z, 1, 3, Qt::AlignRight);
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[2].x, 2, 1, Qt::AlignRight);
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[2].y, 2, 2, Qt::AlignRight);
-            widget_util::SetTableModelDecimalData(vertex_table_model_, verts[2].z, 2, 3, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[0].x, 0, 1, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[0].y, 0, 2, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[0].z, 0, 3, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[1].x, 1, 1, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[1].y, 1, 2, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[1].z, 1, 3, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[2].x, 2, 1, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[2].y, 2, 2, Qt::AlignRight);
+            widget_util::SetTableModelDecimalData(vertex_table_model_triangle_1_, verts[2].z, 2, 3, Qt::AlignRight);
+
+            uint32_t primitive_index{};
+            if (RraBlasGetPrimitiveIndex(blas_index, node_id, 0, &primitive_index) == kRraOk)
+            {
+                SetModelData(kBlasStatsPrimitiveIndexTriangle1, QString::number(primitive_index));
+            }
 
             if (tri_count == 2)
             {
-                widget_util::SetTableModelData(vertex_table_model_, "Vertex 3", 3, 0);
-                widget_util::SetTableModelDecimalData(vertex_table_model_, verts[3].x, 3, 1, Qt::AlignRight);
-                widget_util::SetTableModelDecimalData(vertex_table_model_, verts[3].y, 3, 2, Qt::AlignRight);
-                widget_util::SetTableModelDecimalData(vertex_table_model_, verts[3].z, 3, 3, Qt::AlignRight);
+                last_selected_node_has_second_tri_ = true;
+
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[1].x, 0, 1, Qt::AlignRight);
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[1].y, 0, 2, Qt::AlignRight);
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[1].z, 0, 3, Qt::AlignRight);
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[2].x, 1, 1, Qt::AlignRight);
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[2].y, 1, 2, Qt::AlignRight);
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[2].z, 1, 3, Qt::AlignRight);
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[3].x, 2, 1, Qt::AlignRight);
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[3].y, 2, 2, Qt::AlignRight);
+                widget_util::SetTableModelDecimalData(vertex_table_model_triangle_2_, verts[3].z, 2, 3, Qt::AlignRight);
+
+                if (RraBlasGetPrimitiveIndex(blas_index, node_id, 1, &primitive_index) == kRraOk)
+                {
+                    SetModelData(kBlasStatsPrimitiveIndexTriangle2, QString::number(primitive_index));
+                }
             }
-            else
+
+            uint32_t geometry_index{};
+            if (RraBlasGetGeometryIndex(blas_index, node_id, &geometry_index) == kRraOk)
             {
-                widget_util::SetTableModelData(vertex_table_model_, "", 3, 0);
-                widget_util::SetTableModelData(vertex_table_model_, "", 3, 1);
-                widget_util::SetTableModelData(vertex_table_model_, "", 3, 2);
-                widget_util::SetTableModelData(vertex_table_model_, "", 3, 3);
+                // Show geometry flag here.
+                SetModelData(kBlasStatsGeometryIndex, QString::number(geometry_index));
+
+                uint32_t geometry_flags{};
+                if (RraBlasGetGeometryFlags(blas_index, geometry_index, &geometry_flags) == kRraOk)
+                {
+                    PopulateFlagsTable(geometry_flags_table_model_, geometry_flags);
+                }
             }
         }
         uint64_t parent_address{};
@@ -200,25 +237,6 @@ namespace rra
             SetModelData(kBlasStatsCurrentSAH,
                          QString::number(surface_area_heuristic, kQtFloatFormat, decimal_precision),
                          QString::number(surface_area_heuristic, kQtFloatFormat, kQtTooltipFloatPrecision));
-        }
-
-        uint32_t primitive_index{};
-        if (RraBlasGetPrimitiveIndex(blas_index, node_id, &primitive_index) == kRraOk)
-        {
-            SetModelData(kBlasStatsPrimitiveIndex, QString::number(primitive_index));
-        }
-
-        uint32_t geometry_index{};
-        if (RraBlasGetGeometryIndex(blas_index, node_id, &geometry_index) == kRraOk)
-        {
-            // Show geometry flag here.
-            SetModelData(kBlasStatsGeometryIndex, QString::number(geometry_index));
-
-            uint32_t geometry_flags{};
-            if (RraBlasGetGeometryFlags(blas_index, geometry_index, &geometry_flags) == kRraOk)
-            {
-                PopulateFlagsTable(geometry_flags);
-            }
         }
 
         // Show SAH max and average.
@@ -288,6 +306,40 @@ namespace rra
         {
             last_selected_node_is_tri_ = false;
         }
+    }
+
+    QString BlasViewerModel::AddressString(uint64_t bvh_index, uint32_t node_id) const
+    {
+        TreeviewNodeIDType node_type    = rra::Settings::Get().GetTreeviewNodeIdType();
+        uint64_t           node_address = 0;
+
+        switch (node_type)
+        {
+        case kTreeviewNodeIDTypeVirtualAddress:
+            RraBlasGetNodeBaseAddress(bvh_index, node_id, &node_address);
+            break;
+
+        case kTreeviewNodeIDTypeOffset:
+            RraBvhGetNodeOffset(node_id, &node_address);
+            break;
+
+        default:
+            break;
+        }
+
+        return "0x" + QString("%1").arg(node_address, 0, 16);
+    }
+
+    uint32_t BlasViewerModel::GetProceduralNodeCount(uint64_t blas_index) const
+    {
+        uint32_t node_count{};
+        RraBlasGetProceduralNodeCount(blas_index, &node_count);
+        return node_count;
+    }
+
+    bool BlasViewerModel::SelectedNodeHasSecondTriangle() const
+    {
+        return last_selected_node_has_second_tri_;
     }
 
     void BlasViewerModel::ResetModelValues(bool reset_scene)

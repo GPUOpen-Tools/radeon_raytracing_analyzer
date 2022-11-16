@@ -25,7 +25,8 @@ namespace rra
         kBlasStatsCurrentSAH,
         kBlasStatsSAHSubTreeMax,
         kBlasStatsSAHSubTreeMean,
-        kBlasStatsPrimitiveIndex,
+        kBlasStatsPrimitiveIndexTriangle1,
+        kBlasStatsPrimitiveIndexTriangle2,
         kBlasStatsGeometryIndex,
         kBlasStatsParent,
 
@@ -43,10 +44,11 @@ namespace rra
         /// @brief Destructor.
         virtual ~BlasViewerModel();
 
-        /// @brief Initialize the vertex table model, used by the vertex table in the BLAS viewer left-side pane.
+        /// @brief Initialize the vertex tables model, used by the vertex tables in the BLAS viewer left-side pane.
         ///
-        /// @param [in] table_view  The table view widget.
-        void InitializeVertexTableModel(ScaledTableView* table_view);
+        /// @param [in] table_view_triangle_1  The table view widget.
+        /// @param [in] table_view_triangle_2  The table view widget.
+        void InitializeVertexTableModels(ScaledTableView* table_view_triangle_1, ScaledTableView* table_view_triangle_2);
 
         /// @brief Initialize the geometry flags table model.
         ///
@@ -55,8 +57,9 @@ namespace rra
 
         /// @brief Populate the flags table.
         ///
-        /// @param [in] flags The flags to display in the table.
-        void PopulateFlagsTable(uint32_t flags);
+        /// @param [in] flags_table The flags table to populate.
+        /// @param [in] flags       The flags to display in the table.
+        void PopulateFlagsTable(FlagsTableItemModel* flags_table, uint32_t flags);
 
         /// @brief Get the number of BLAS's in the loaded trace.
         ///
@@ -113,16 +116,35 @@ namespace rra
         /// @param [in] index       The index of the acceleration structure selected (from the combo box).
         virtual void SetSceneSelection(const QModelIndex& model_index, uint64_t index) override;
 
-        /// @brief Get whether the selected node is an instance.
+        /// @brief Get whether the selected node is a triangle node.
         ///
-        /// @returns True if selected node is an instance, false otherwise.
+        /// @returns True if selected node is a triangle node, false otherwise.
         virtual bool SelectedNodeIsLeaf() const override;
 
         /// @brief Update internal state tracking whether the last selected node is a leaf node.
         ///
-        /// param [in] model_index The instance node model index.
-        /// param [in] index The BVH index.
+        /// @param [in] model_index The instance node model index.
+        /// @param [in] index The BVH index.
         virtual void UpdateLastSelectedNodeIsLeaf(const QModelIndex& model_index, uint64_t index) override;
+
+        /// @brief Get the address in a format to be displayed by the UI.
+        ///
+        /// @param tlas_index The index of the current BVH.
+        /// @param node_id The ID of the selected node.
+        ///
+        /// @return A string ready to be displayed by the UI.
+        virtual QString AddressString(uint64_t bvh_index, uint32_t node_id) const override;
+
+        /// @brief Get the number of procedural nodes in this BLAS.
+        ///
+        /// @param [in] The index of the BLAS to get the procedural node count of.
+        /// @returns The number of procedural nodes in the BLAS.
+        uint32_t GetProceduralNodeCount(uint64_t blas_index) const;
+
+        /// @brief Check if the current node has a second triangle.
+        ///
+        /// @returns True if the current node has a second triangle.
+        bool SelectedNodeHasSecondTriangle() const;
 
     private:
         /// @brief Update the statistics for the selected BLAS node.
@@ -131,9 +153,11 @@ namespace rra
         /// @param [in] node_id         The selected node in the BLAS.
         void UpdateStatistics(uint64_t blas_index, uint32_t node_id);
 
-        bool                 last_selected_node_is_tri_ = false;    ///< True if last selected node is triangle node.
-        QStandardItemModel*  vertex_table_model_        = nullptr;  ///< Model associated with the transform table.
-        FlagsTableItemModel* flags_table_model_         = nullptr;  ///< Model associated with the flags table.
+        bool                 last_selected_node_is_tri_         = false;    ///< True if last selected node is triangle node.
+        bool                 last_selected_node_has_second_tri_ = false;    ///< True if last selected node has second triangle.
+        QStandardItemModel*  vertex_table_model_triangle_1_     = nullptr;  ///< Model associated with the vertex table for triangle 1.
+        QStandardItemModel*  vertex_table_model_triangle_2_     = nullptr;  ///< Model associated with the vertex table for triangle 2.
+        FlagsTableItemModel* geometry_flags_table_model_        = nullptr;  ///< Model associated with the geometry flags table.
     };
 }  // namespace rra
 

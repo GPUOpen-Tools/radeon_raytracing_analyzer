@@ -44,15 +44,17 @@ namespace rta
 
         /// @brief Load the BVH data from a file.
         ///
-        /// @param [in] chunk_file    A Reference to a ChunkFile object which describes the file chunk being loaded.
-        /// @param [in] chunk_index   The index of the chunk in the file.
-        /// @param [in] header        The raw acceleration structure header.
-        /// @param [in] import_option Flag indicating which sections of the chunk to load/discard.
+        /// @param [in] chunk_file        A Reference to a ChunkFile object which describes the file chunk being loaded.
+        /// @param [in] chunk_index       The index of the chunk in the file.
+        /// @param [in] header            The raw acceleration structure header.
+        /// @param [in} chunk_identifier  The BVH chunk name.
+        /// @param [in] import_option     Flag indicating which sections of the chunk to load/discard.
         ///
         /// @return true if the BVH data loaded successfully, false if not.
         bool LoadRawAccelStrucFromFile(rdf::ChunkFile&                     chunk_file,
                                        const std::uint64_t                 chunk_index,
                                        const RawAccelStructRdfChunkHeader& header,
+                                       const char* const                   chunk_identifier,
                                        const BvhBundleReadOption           import_option) override;
 
         /// @brief Replace all absolute references with relative references.

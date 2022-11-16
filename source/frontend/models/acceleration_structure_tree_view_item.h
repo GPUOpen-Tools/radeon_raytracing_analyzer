@@ -100,9 +100,9 @@ namespace rra
         QVariant Data(int column, int role, bool is_tlas, uint64_t as_index) const;
 
     private:
-        QList<AccelerationStructureTreeViewItem*> child_items_;     ///< A list of child items for this item.
-        AccelerationStructureTreeViewItem*        parent_item_;     ///< A pointer to the parent item.
-        uint32_t                                  node_data_;       ///< The encoded data contained in this item for column 0.
+        QList<AccelerationStructureTreeViewItem*> child_items_{};   ///< A list of child items for this item.
+        AccelerationStructureTreeViewItem*        parent_item_{};   ///< A pointer to the parent item.
+        uint32_t                                  node_data_{};     ///< The encoded data contained in this item for column 0.
         bool                                      is_node_ = true;  ///< The indicator to describe if this item is not a node.
     };
 }  // namespace rra

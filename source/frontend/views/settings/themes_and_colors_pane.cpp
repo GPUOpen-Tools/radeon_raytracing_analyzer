@@ -36,7 +36,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
     button_group_.addButton(ui_->button_geometry_selected_, kSettingThemesAndColorsGeometrySelected);
     button_group_.addButton(ui_->button_background_1_, kSettingThemesAndColorsBackground1);
     button_group_.addButton(ui_->button_background_2_, kSettingThemesAndColorsBackground2);
-    button_group_.addButton(ui_->button_transparent_, kSettingThemesAndColorsTransparent);
+    button_group_.addButton(ui_->button_non_opaque_, kSettingThemesAndColorsNonOpaque);
     button_group_.addButton(ui_->button_opaque_, kSettingThemesAndColorsOpaque);
     button_group_.addButton(ui_->button_positive_, kSettingThemesAndColorsPositive);
     button_group_.addButton(ui_->button_negative_, kSettingThemesAndColorsNegative);
@@ -217,7 +217,7 @@ void ThemesAndColorsPane::SetSettingsPaletteId(int button_id, int palette_id)
     case kSettingThemesAndColorsGeometrySelected:
     case kSettingThemesAndColorsBackground1:
     case kSettingThemesAndColorsBackground2:
-    case kSettingThemesAndColorsTransparent:
+    case kSettingThemesAndColorsNonOpaque:
     case kSettingThemesAndColorsOpaque:
     case kSettingThemesAndColorsPositive:
     case kSettingThemesAndColorsNegative:
@@ -253,7 +253,7 @@ int ThemesAndColorsPane::GetSettingsPaletteId(int button_id) const
     case kSettingThemesAndColorsGeometrySelected:
     case kSettingThemesAndColorsBackground1:
     case kSettingThemesAndColorsBackground2:
-    case kSettingThemesAndColorsTransparent:
+    case kSettingThemesAndColorsNonOpaque:
     case kSettingThemesAndColorsOpaque:
     case kSettingThemesAndColorsPositive:
     case kSettingThemesAndColorsNegative:

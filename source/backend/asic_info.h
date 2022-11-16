@@ -110,6 +110,13 @@ namespace rra
         /// @return kRraOk if successful or error code if not.
         RraErrorCode GetVideoMemoryBusWidth(int32_t* out_bus_width) const;
 
+        /// @brief Get the Gfx ip level major.
+        ///
+        /// @param [out] A variable to receive the gfx ip level major.
+        ///
+        /// @return kRraOk if successful or error code if not.
+        RraErrorCode GetGfxIpLevelMajor(uint16_t* out_gfx_ip_level);
+
         /// @brief enum of GPU types.
         enum class TraceGpuType : uint32_t
         {

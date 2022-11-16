@@ -10,7 +10,7 @@
 
 #include <QMouseEvent>
 
-#include "../models/side_panels/view_model.h"
+#include "models/side_panels/view_model.h"
 
 namespace rra
 {
@@ -102,11 +102,13 @@ namespace rra
         auto                  has_volume = viewer_model_->GetSceneCollectionModel()->GetSceneBounds(viewer_bvh_index_, volume);
         if (has_volume)
         {
+            float diagonal = glm::length(glm::vec3{volume.max_x - volume.min_x, volume.max_y - volume.min_y, volume.max_z - volume.min_z});
             euler_angles_ = GetCameraOrientation().GetDefaultEuler();
             arc_radius_   = 0.0f;
             camera->SetEulerRotation(GetCameraOrientation().MapEuler(euler_angles_));
+            camera->SetRotationMatrix(GetCameraOrientation().GetReflectionMatrix() * camera->GetRotationMatrix());
             camera->SetFieldOfView(renderer::kDefaultCameraFieldOfView);
-            camera->SetMovementSpeed(kDefaultMovementSpeedMultiplier * view_model_->GetMovementSpeedLimit());
+            camera->SetMovementSpeed(kDefaultSpeedDiagonalMultiplier * diagonal);
             auto radius = FocusCameraOnVolume(camera, volume);
             camera->SetFarClip(radius * kViewerIOFarPlaneMultiplier);
             updated_ = true;
@@ -172,6 +174,16 @@ namespace rra
     bool FPSController::SupportsOrthographicProjection() const
     {
         return false;
+    }
+
+    bool FPSController::SupportsUpAxis() const
+    {
+        return true;
+    }
+
+    uint32_t FPSController::GetComboBoxIndex() const
+    {
+        return 1;
     }
 
     void FPSController::ProcessUserInputs()

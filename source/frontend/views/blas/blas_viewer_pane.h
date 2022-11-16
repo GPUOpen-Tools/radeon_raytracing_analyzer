@@ -96,9 +96,19 @@ private:
     /// @param [in] navigate_to_triangles_pane  If true, navigate to the Triangles pane.
     void SelectLeafNode(const bool navigate_to_triangles_pane);
 
-    Ui::BlasViewerPane*    ui_;                   ///< Pointer to the Qt UI design.
-    rra::BlasViewerModel*  derived_model_;        ///< Pointer to the model. This is a copy of the model in the base class and is deleted there.
-    FlagTableItemDelegate* flag_table_delegate_;  ///< Delegate for drawing the geometry flags table.
+    /// @brief Show the buttons linking to the triangle node's siblings.
+    ///
+    /// @param [in] scene The current scene.
+    /// @param [in] blas_index The current BLAS index.
+    /// @param [in] geometry_index Geometry index of the selected triangle.
+    /// @param [in] primitive_index Primitive index of the selected triangle.
+    /// @param [in] node_id The ID of the selected node.
+    void UpdateTriangleSplitUI(rra::Scene* scene, uint32_t blas_index, uint32_t geometry_index, uint32_t primitive_index, uint32_t node_id);
+
+    Ui::BlasViewerPane*            ui_;                       ///< Pointer to the Qt UI design.
+    rra::BlasViewerModel*          derived_model_ = nullptr;  ///< Pointer to the model. This is a copy of the model in the base class and is deleted there.
+    FlagTableItemDelegate*         flag_table_delegate_ = nullptr;   ///< Delegate for drawing the geometry flags table.
+    std::vector<ScaledPushButton*> split_triangle_sibling_buttons_;  ///< The buttons to navigate to split triangle siblings for split triangles.
 };
 
 #endif  // RRA_VIEWS_BLAS_BLAS_VIEWER_PANE_H_

@@ -81,6 +81,16 @@ namespace rta
         /// @return The build flags.
         BvhBuildFlags GetBuildFlags() const;
 
+        /// @brief Get whether rebraiding was enabled for this BVH.
+        ///
+        /// @return True if rebraiding enabled, false otherwise.
+        bool GetRebraiding() const;
+
+        /// @brief Get the if this BVH construction was with triangle splitting.
+        ///
+        /// @return The triangle splitting flag.
+        std::uint32_t GetTriangleSplitting() const;
+
         /// @brief Load the data for this class from a buffer.
         ///
         /// @param [in] size The size of the buffer, in bytes.
@@ -91,6 +101,11 @@ namespace rta
         ///
         /// @param [in] buffer The buffer to save the data to.
         void SaveToBuffer(void* buffer) const;
+
+        /// @brief Get whether fused instances was enabled for this BVH.
+        ///
+        /// @return True if fused instances enabled, false otherwise.
+        bool GetFusedInstances() const;
 
     private:
         virtual void SetBvhTypeImpl(BvhType type) = 0;
@@ -108,6 +123,12 @@ namespace rta
         virtual void SetBuildFlagsImpl(const BvhBuildFlags flags) = 0;
 
         virtual BvhBuildFlags GetBuildFlagsImpl() const = 0;
+
+        virtual bool GetRebraidingImpl() const = 0;
+
+        virtual bool GetFusedInstancesImpl() const = 0;
+
+        virtual std::uint32_t GetTriangleSplittingImpl() const = 0;
 
         virtual void LoadFromBufferImpl(std::size_t size, void* buffer) = 0;
 

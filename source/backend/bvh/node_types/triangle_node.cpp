@@ -198,13 +198,13 @@ namespace dxr
 
             for (auto i = 0; i < 3; ++i)
             {
-                if (!std::isnan(triangle[i].x))
+                if (std::isnan(triangle[i].x))
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         bool TriangleNode::ContainsNaN(NodeType node_type) const

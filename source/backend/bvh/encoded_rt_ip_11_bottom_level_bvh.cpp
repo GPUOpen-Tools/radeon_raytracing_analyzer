@@ -96,9 +96,10 @@ namespace rta
     bool EncodedRtIp11BottomLevelBvh::LoadRawAccelStrucFromFile(rdf::ChunkFile&                     chunk_file,
                                                                 const std::uint64_t                 chunk_index,
                                                                 const RawAccelStructRdfChunkHeader& chunk_header,
+                                                                const char* const                   chunk_identifier,
                                                                 const BvhBundleReadOption           import_option)
     {
-        const auto identifier     = IEncodedRtIp11Bvh::kChunkIdentifier;
+        const auto identifier     = chunk_identifier;
         const auto data_size      = chunk_file.GetChunkDataSize(identifier, static_cast<uint32_t>(chunk_index));
         const bool skip_meta_data = static_cast<std::uint8_t>(import_option) & static_cast<std::uint8_t>(BvhBundleReadOption::kNoMetaData);
 
@@ -113,7 +114,7 @@ namespace rta
             memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, chunk_header.meta_header_size);
         }
 
-        if (buffer.size() < (dxr::amd::kAccelerationStructureHeaderSize + chunk_header.header_offset))
+        if (buffer.size() < ((size_t)dxr::amd::kAccelerationStructureHeaderSize + chunk_header.header_offset))
         {
             return false;
         }

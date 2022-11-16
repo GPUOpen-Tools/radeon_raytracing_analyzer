@@ -198,7 +198,7 @@ namespace rra
         scene_palette.selected_geometry_color               = QColorToGLM(GetColorValue(kSettingThemesAndColorsGeometrySelected));
         scene_palette.background1_color                     = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackground1));
         scene_palette.background2_color                     = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackground2));
-        scene_palette.transparent_color                     = QColorToGLM(GetColorValue(kSettingThemesAndColorsTransparent));
+        scene_palette.transparent_color                     = QColorToGLM(GetColorValue(kSettingThemesAndColorsNonOpaque));
         scene_palette.opaque_color                          = QColorToGLM(GetColorValue(kSettingThemesAndColorsOpaque));
         scene_palette.positive_color                        = QColorToGLM(GetColorValue(kSettingThemesAndColorsPositive));
         scene_palette.negative_color                        = QColorToGLM(GetColorValue(kSettingThemesAndColorsNegative));
@@ -250,7 +250,7 @@ namespace rra
         default_settings_[kSettingThemesAndColorsGeometrySelected]            = {"GeometrySelectedColor", "28"};
         default_settings_[kSettingThemesAndColorsBackground1]                 = {"Background1Color", "25"};
         default_settings_[kSettingThemesAndColorsBackground2]                 = {"Background2Color", "26"};
-        default_settings_[kSettingThemesAndColorsTransparent]                 = {"TransparentColor", "9"};
+        default_settings_[kSettingThemesAndColorsNonOpaque]                 = {"NonOpaqueColor", "29"};
         default_settings_[kSettingThemesAndColorsOpaque]                      = {"OpaqueColor", "30"};
         default_settings_[kSettingThemesAndColorsPositive]                    = {"PositiveColor", "30"};
         default_settings_[kSettingThemesAndColorsNegative]                    = {"NegativeColor", "29"};
@@ -259,8 +259,8 @@ namespace rra
         default_settings_[kSettingThemesAndColorsBuildAlgorithmFastTrace]     = {"BuildAlgorithmFastTrace", "30"};
         default_settings_[kSettingThemesAndColorsBuildAlgorithmBoth]          = {"BuildAlgorithmBoth", "9"};
         default_settings_[kSettingThemesAndColorsInstanceOpaqueNone]          = {"InstanceOpaqueNone", "25"};
-        default_settings_[kSettingThemesAndColorsInstanceOpaqueForceOpaque]   = {"InstanceOpaqueForceOpaque", "20"};
-        default_settings_[kSettingThemesAndColorsInstanceOpaqueForceNoOpaque] = {"InstanceOpaqueForceNoOpaque", "30"};
+        default_settings_[kSettingThemesAndColorsInstanceOpaqueForceOpaque]   = {"InstanceOpaqueForceOpaque", "30"};
+        default_settings_[kSettingThemesAndColorsInstanceOpaqueForceNoOpaque] = {"InstanceOpaqueForceNoOpaque", "20"};
         default_settings_[kSettingThemesAndColorsInstanceOpaqueBoth]          = {"InstanceOpaqueBoth", "9"};
 
         color_palette_ = new ColorPalette(default_settings_[kSettingThemesAndColorsPalette].value);
@@ -482,7 +482,7 @@ namespace rra
         SetToDefaultValue(kSettingThemesAndColorsGeometrySelected);
         SetToDefaultValue(kSettingThemesAndColorsBackground1);
         SetToDefaultValue(kSettingThemesAndColorsBackground2);
-        SetToDefaultValue(kSettingThemesAndColorsTransparent);
+        SetToDefaultValue(kSettingThemesAndColorsNonOpaque);
         SetToDefaultValue(kSettingThemesAndColorsOpaque);
         SetToDefaultValue(kSettingThemesAndColorsPositive);
         SetToDefaultValue(kSettingThemesAndColorsNegative);

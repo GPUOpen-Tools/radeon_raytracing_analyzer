@@ -78,8 +78,13 @@ struct SceneUBO
     int   traversal_counter_mode;
     int   traversal_counter_use_custom_min_max;
 
-    int wireframe_enabled;
+    int  wireframe_enabled;
     uint culling_mode;
+
+    uint traversal_box_sort_heuristic;
+    int  traversal_accept_first_hit;
+
+    int count_as_fused_instances;
 };
 
 /// @brief A vertex format for geometries.
@@ -87,13 +92,19 @@ struct SceneUBO
 /// Must follow alignment rules since it's used in an SSBO in TraversalShader.hlsl.
 struct RraVertex
 {
-    float3 position;                     ///< The position.
-    float  triangle_sah_and_selected;    ///< Absolute value is SAH, positive sign means selected.
-    float2 normal;                       ///< The normal.
-    uint   geometry_index_depth_opaque;  ///< Bits 31-16 are geometry index, 15-1 are depth, 0 is opaque.
-    uint   triangle_node;                ///< The triangle node.
+    float3 position;                           ///< The position.
+    float  triangle_sah_and_selected;          ///< Absolute value is SAH, positive sign means selected.
+    float2 normal;                             ///< The normal.
+    uint   geometry_index_depth_split_opaque;  ///< Bits 31-16 are geometry index, 15-2 are depth, 1 is split, 0 is opaque.
+    uint   triangle_node;                      ///< The triangle node.
 
 };
+
+// The node sort heuristic values.
+#define kBoxSortHeuristicClosest 1
+#define kBoxSortHeuristicMidPoint 2
+#define kBoxSortHeuristicLargest 3
+#define kBoxSortHeuristicDisableSorting 4
 
 // The RraVertex struct uses a vec2 for the normal to save space. We can infer the z component, but the sign is
 // lost, so we add this offset to the x component (since it's bounded to [-1, 1]) to indicate that z should be

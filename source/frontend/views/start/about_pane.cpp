@@ -118,7 +118,7 @@ void AboutPane::CheckForUpdates()
     if (check_for_updates_thread_ == nullptr)
     {
         check_for_updates_thread_ =
-            new UpdateCheck::ThreadController(this, PRODUCT_MAJOR_VERSION, PRODUCT_MINOR_VERSION, PRODUCT_BUGFIX_NUMBER, PRODUCT_BUILD_NUMBER);
+            new UpdateCheck::ThreadController(this, PRODUCT_MAJOR_VERSION, PRODUCT_MINOR_VERSION, PRODUCT_BUILD_NUMBER, PRODUCT_BUGFIX_NUMBER);
 
         // Build dialog to display and allow user to cancel the check if desired.
         if (check_for_updates_pending_dialog_ == nullptr)

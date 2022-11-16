@@ -61,13 +61,20 @@ namespace rra
         /// @param [out] scene_model_closest_hit The closest hit.
         ///
         /// @returns Will return 'kRraOk' when successful, or an error code in case of failure.
-        virtual RraErrorCode CastClosestHitRayOnBvh(uint64_t              bvh_index,
-                                                    const glm::vec3&      origin,
-                                                    const glm::vec3&      direction,
+        virtual RraErrorCode CastClosestHitRayOnBvh(uint64_t                        bvh_index,
+                                                    const glm::vec3&                origin,
+                                                    const glm::vec3&                direction,
                                                     SceneCollectionModelClosestHit& scene_model_closest_hit) const override;
 
         /// @brief Reset any values in the model to their default state.
         virtual void ResetModelValues() override;
+
+        /// @brief Check if fused instances are enabled.
+        ///
+        /// @param [in] bvh_index The index to check for fused instances.
+        ///
+        /// @returns True if fused instances are enabled.
+        virtual bool GetFusedInstancesEnabled(uint64_t bvh_index) const override;
 
     private:
         /// @brief Create a new scene populated from a single TLAS.
@@ -77,6 +84,15 @@ namespace rra
         ///
         /// @returns The new Scene instance.
         Scene* CreateRenderSceneForTLAS(renderer::RendererInterface* renderer, uint64_t tlas_index);
+
+    protected:
+        /// @brief During ray cast traversal, get whether this node should be skipped.
+        ///
+        /// @param blas_index The index of the BLAS containing the node.
+        /// @param node_id The node to query.
+        ///
+        /// @return true if node should be skipped, false otherwise.
+        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const override;
 
         std::map<uint64_t, Scene*> tlas_scenes_;  ///< A map of all loaded TLAS scenes.
     };

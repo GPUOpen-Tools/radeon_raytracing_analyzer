@@ -22,7 +22,6 @@ namespace rra
         kBlasPropertiesNumBoxNodes,
         kBlasPropertiesNumBox16Nodes,
         kBlasPropertiesNumBox32Nodes,
-        kBlasPropertiesNumHalfBox32Nodes,
         kBlasPropertiesNumTriangleNodes,
         kBlasPropertiesNumProceduralNodes,
         kBlasPropertiesNumTriangles,

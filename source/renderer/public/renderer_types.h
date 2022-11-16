@@ -82,24 +82,26 @@ namespace rra
             /// @brief Destructor.
             ~Instance() = default;
 
-            uint64_t              tlas_root_node;                ///< The parent TLAS node id.
-            uint64_t              blas_index;                    ///< The blas index for this instance.
-            uint32_t              build_flags;                   ///< The build flags of the referenced blas.
-            glm::mat4x4           transform;                     ///< The instance transform.
-            BoundingVolumeExtents bounding_volume;               ///< The axis aligned bounding volume.
-            uint32_t              bvh_start_instance_location;   ///< The BVH instance start location.
-            uint32_t              per_mesh_ubo_index;            ///< The instance UBO index.
-            uint32_t              instance_node;                 ///< The instance node.
-            uint32_t              instance_index;                ///< The instance index.
-            uint32_t              flags;                         ///< The instance flags.
-            uint32_t              depth;                         ///< The depth for this specific instance.
-            uint32_t              max_depth;                     ///< The max depth for this instance.
-            uint32_t              average_depth;                 ///< The average depth for this instance.
-            uint32_t              mask;                          ///< The instance mask. A mask of 0 means it's totally inactive.
-            float                 min_triangle_sah;              ///< The minimum triangle SAH in this instance.
-            float                 average_triangle_sah;          ///< The average triangle SAH in this instance.
-            bool                  selected;                      ///< The flag to indicate if this instance is selected.
-            bool                  use_custom_triangles = false;  ///< The flag to indicate that this instance should use custom triangles.
+            uint64_t              tlas_root_node{};               ///< The parent TLAS node id.
+            uint64_t              blas_index{};                   ///< The blas index for this instance.
+            uint32_t              build_flags{};                  ///< The build flags of the referenced blas.
+            glm::mat4x4           transform{};                    ///< The instance transform.
+            BoundingVolumeExtents bounding_volume{};              ///< The axis aligned bounding volume.
+            uint32_t              bvh_start_instance_location{};  ///< The BVH instance start location.
+            uint32_t              per_mesh_ubo_index{};           ///< The instance UBO index.
+            uint32_t              instance_node{};                ///< The instance node.
+            uint32_t              instance_unique_index{};        ///< The instance index which is unique even among rebraided instances.
+            uint32_t              instance_index{};               ///< The instance index which is shared by rebraided instances.
+            uint32_t              flags{};                        ///< The instance flags.
+            uint32_t              depth{};                        ///< The depth for this specific instance.
+            uint32_t              max_depth{};                    ///< The max depth for this instance.
+            uint32_t              average_depth{};                ///< The average depth for this instance.
+            uint32_t              mask{};                         ///< The instance mask. A mask of 0 means it's totally inactive.
+            float                 min_triangle_sah{};             ///< The minimum triangle SAH in this instance.
+            float                 average_triangle_sah{};         ///< The average triangle SAH in this instance.
+            bool                  selected             = false;   ///< The flag to indicate if this instance is selected.
+            bool                  use_custom_triangles = false;   ///< The flag to indicate that this instance should use custom triangles.
+            bool                  rebraided            = false;   ///< Whether or not this instance was rebraided by the driver.
         };
 
         /// @brief Map of a RenderMesh instance to the instancing data used to draw it.
@@ -139,6 +141,7 @@ namespace rra
             kBlasInstanceId,
             kGeometryIndex,
             kOpacity,
+            kFinalOpacity,
             kLit,
             kTechnical,
             kBlasAverageSAH,
@@ -158,6 +161,8 @@ namespace rra
             kInstanceFacingCullDisableBit,
             kInstanceFlipFacingBit,
             kInstanceForceOpaqueOrNoOpaqueBits,
+            kInstanceRebraiding,
+            kTriangleSplitting,
         };
 
         /// @brief Geometry color mode info structure.
@@ -200,9 +205,10 @@ namespace rra
         /// @brief Traversal counter mode info.
         struct TraversalCounterModeInfo
         {
-            TraversalCounterMode value;        ///< The counter mode value.
-            std::string          name;         ///< The counter mode name.
-            std::string          description;  ///< The counter mode description.
+            TraversalCounterMode value;                ///< The counter mode value.
+            BvhTypeFlags         viewer_availability;  ///< Which viewer type is the coloring mode available in?
+            std::string          name;                 ///< The counter mode name.
+            std::string          description;          ///< The counter mode description.
         };
 
         typedef SceneUBO SceneUniformBuffer;
@@ -224,6 +230,8 @@ namespace rra
             glm::vec4   wireframe_metadata;    ///< The wireframe metadata for the instance.
             uint32_t    build_flags;           ///< The build flags of the referenced blas.
             uint32_t    mask;                  ///< The instance mask flags.
+            uint32_t    rebraided;             ///< Whether or not this instance is rebraided.
+            uint32_t    selection_count;       ///< The number of selections on this instance index.
         };
 
         /// Traversal Rendering
@@ -272,7 +280,7 @@ namespace rra
         {
             glm::mat4 transform         = glm::mat4(1.0f);  ///< The transform of the instance.
             glm::mat4 inverse_transform = glm::mat4(1.0f);  ///< The inverse transform of the instance.
-            uint32_t  blas_id           = 0;                ///< The blas of this instance.
+            uint32_t  blas_index        = 0;                ///< The blas of this instance.
             uint32_t  geometry_index    = 0;                ///< The geometry inside the instance.
             uint32_t  selected          = 0;
             uint32_t  flags             = {};  ///< The instance flags to use in the traversal.
@@ -293,6 +301,10 @@ namespace rra
             uint32_t hit_flags;
             uint32_t instance_index;
             uint32_t triangle_index;
+            uint32_t blas_index;
+            uint32_t exit_properly;
+            uint32_t placeholder_2;
+            uint32_t placeholder_3;
         };
 
     }  // namespace renderer

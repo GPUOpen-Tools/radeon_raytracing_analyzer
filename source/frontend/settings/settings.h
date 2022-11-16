@@ -65,7 +65,7 @@ enum SettingID
     kSettingThemesAndColorsGeometrySelected,
     kSettingThemesAndColorsBackground1,
     kSettingThemesAndColorsBackground2,
-    kSettingThemesAndColorsTransparent,
+    kSettingThemesAndColorsNonOpaque,
     kSettingThemesAndColorsOpaque,
     kSettingThemesAndColorsPositive,
     kSettingThemesAndColorsNegative,

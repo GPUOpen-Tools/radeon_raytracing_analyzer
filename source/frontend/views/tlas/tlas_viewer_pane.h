@@ -9,6 +9,7 @@
 #define RRA_VIEWS_TLAS_TLAS_VIEWER_PANE_H_
 
 #include "ui_tlas_viewer_pane.h"
+#include <vector>
 
 #include "models/tlas/tlas_viewer_model.h"
 #include "views/acceleration_structure_viewer_pane.h"
@@ -107,12 +108,21 @@ private:
     /// @param [in] navigate_to_blas_pane  If true, navigate to the BLAS pane.
     void SelectBlasFromTree(const QModelIndex& index, const bool navigate_to_blas_pane);
 
+    /// @brief Show the buttons linking to the rebraided instance's siblings.
+    /// 
+    /// @param [in] scene The current scene.
+    /// @param [in] tlas_index The current TLAS index.
+    /// @param [in] instance_index Index of the selected instance.
+    /// @param [in] node_id The ID of the selected node.
+    void UpdateRebraidUI(rra::Scene* scene, uint32_t tlas_index, uint32_t instance_index, uint32_t node_id);
+
     /// @brief Handle the selection changed signal.
     void HandleSceneSelectionChanged();
 
-    Ui::TlasViewerPane*    ui_;                   ///< Pointer to the Qt UI design.
-    rra::TlasViewerModel*  derived_model_;        ///< Pointer to the model. This is a copy of the model in the base class and is deleted there.
-    FlagTableItemDelegate* flag_table_delegate_;  ///< Delegate for drawing the instance flags table.
+    Ui::TlasViewerPane*            ui_;                       ///< Pointer to the Qt UI design.
+    rra::TlasViewerModel*          derived_model_;            ///< Pointer to the model. This is a copy of the model in the base class and is deleted there.
+    FlagTableItemDelegate*         flag_table_delegate_;      ///< Delegate for drawing the instance flags table.
+    std::vector<ScaledPushButton*> rebraid_sibling_buttons_;  ///< The buttons to navigate to rebraid siblings for rebraided instances.
 };
 
 #endif  // RRA_VIEWS_TLAS_TLAS_VIEWER_PANE_H_

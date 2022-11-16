@@ -54,7 +54,10 @@ namespace rra
 
             size_t size     = strlen(name);
             char*  uni_name = (char*)malloc(size + 1);  // Yes, this will cause leaks!
-            strcpy_s(uni_name, size + 1, name);
+            if (uni_name)
+            {
+                strcpy_s(uni_name, size + 1, name);
+            }
 
             VkDebugUtilsObjectNameInfoEXT name_info = {};
             name_info.sType                         = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;

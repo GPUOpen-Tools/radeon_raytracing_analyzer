@@ -24,6 +24,7 @@ namespace rra
         kTlasStatsType,
         kTlasStatsBlasAddress,
         kTlasStatsParent,
+        kTlasStatsInstanceIndex,
         kTlasStatsInstanceId,
         kTlasStatsInstanceMask,
         kTlasStatsInstanceHitGroupIndex,
@@ -105,6 +106,14 @@ namespace rra
         /// @return The instance index.
         uint32_t GetInstanceIndex(int tlas_index, const QModelIndex& model_index) const;
 
+        /// @brief Get the unique instance index from the TLAS index and instance node id.
+        ///
+        /// @param [in] tlas_index   The index of the TLAS to use.
+        /// @param [in] node_id  The node id of an instance node.
+        ///
+        /// @return The unique instance index.
+        uint32_t GetInstanceUniqueIndexFromNode(int tlas_index, const uint32_t node_id) const;
+
         /// @brief Get the instance index from the TLAS index and instance node id.
         ///
         /// @param [in] tlas_index   The index of the TLAS to use.
@@ -160,6 +169,14 @@ namespace rra
         /// param [in] model_index The instance node model index.
         /// param [in] index The BVH index.
         virtual void UpdateLastSelectedNodeIsLeaf(const QModelIndex& model_index, uint64_t index) override;
+
+        /// @brief Get the address in a format to be displayed by the UI.
+        ///
+        /// @param tlas_index The index of the current BVH.
+        /// @param node_id The ID of the selected node.
+        ///
+        /// @return A string ready to be displayed by the UI.
+        virtual QString AddressString(uint64_t bvh_index, uint32_t node_id) const override;
 
     private:
         bool                 last_selected_node_is_instance_ = false;    ///< True if the last selected node is an instance node.

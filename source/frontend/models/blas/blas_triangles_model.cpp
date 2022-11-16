@@ -62,23 +62,14 @@ namespace rra
             SetModelData(kBlasTrianglesBaseAddress, address_string);
         }
 
-        uint32_t triangle_count = 0;
-        if (RraBlasGetTriangleNodeCount(blas_index, &triangle_count) != kRraOk)
-        {
-            return false;
-        }
-        table_model_->SetRowCount(triangle_count);
+        std::vector<BlasTrianglesStatistics> stats_list;
 
-        uint64_t rows_added = 0;
-
-        if (triangle_count > 0)
         {
             uint32_t root_node = UINT32_MAX;
             RRA_BUBBLE_ON_ERROR(RraBvhGetRootNodePtr(&root_node));
 
             std::deque<uint32_t> traversal_stack;
             traversal_stack.push_back(root_node);
-            uint32_t node_index = 0;
 
             // Traverse the tree and add all triangle nodes to the table.
             while (!traversal_stack.empty())
@@ -115,14 +106,17 @@ namespace rra
                         {
                             continue;
                         }
-                        if (RraBlasGetNodeTriangleCount(blas_index, child_node, &stats.triangle_count) != kRraOk)
-                        {
-                            continue;
-                        }
                         if (RraBlasGetGeometryIndex(blas_index, child_node, &stats.geometry_index) != kRraOk)
                         {
                             continue;
                         }
+                        uint32_t geometry_flags{};
+                        if (RraBlasGetGeometryFlags(blas_index, stats.geometry_index, &geometry_flags) != kRraOk)
+                        {
+                            continue;
+                        }
+                        stats.geometryFlagOpaque            = geometry_flags & VK_GEOMETRY_OPAQUE_BIT_KHR;
+                        stats.geometryFlagNoDuplicateAnyHit = geometry_flags & VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
                         if (RraBlasGetIsInactive(blas_index, child_node, &stats.is_inactive) != kRraOk)
                         {
                             continue;
@@ -136,7 +130,14 @@ namespace rra
                             continue;
                         }
 
-                        uint32_t                    vertex_count = (stats.triangle_count == 1 ? 3 : 4);
+                        uint32_t triangle_count;
+                        if (RraBlasGetNodeTriangleCount(blas_index, child_node, &triangle_count) != kRraOk)
+                        {
+                            continue;
+                        }
+
+                        const uint32_t vertex_count = (triangle_count == 1 ? 3 : 4);
+
                         std::vector<VertexPosition> verts(vertex_count);
                         if (RraBlasGetNodeVertices(blas_index, child_node, verts.data()) != kRraOk)
                         {
@@ -145,23 +146,42 @@ namespace rra
                         stats.vertex_0 = rra::renderer::float3(verts[0].x, verts[0].y, verts[0].z);
                         stats.vertex_1 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
                         stats.vertex_2 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
-                        if (vertex_count == 4)
+
+                        if (RraBlasGetPrimitiveIndex(blas_index, child_node, 0, &stats.primitive_index) != kRraOk)
                         {
-                            stats.vertex_3 = rra::renderer::float3(verts[3].x, verts[3].y, verts[3].z);
+                            continue;
                         }
 
-                        // Add triangle nodes to the table.
-                        table_model_->AddTriangleStructure(stats);
-                        rows_added++;
-                        node_index++;
+                        // Add this node and 0th index to the table.
+                        stats_list.push_back(stats);
+
+                        // Get the second triangle if node has more than one.
+                        RRA_ASSERT(triangle_count < 3);
+                        if (triangle_count == 2)
+                        {
+                            if (RraBlasGetPrimitiveIndex(blas_index, child_node, 1, &stats.primitive_index) != kRraOk)
+                            {
+                                continue;
+                            }
+
+                            stats.vertex_0 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
+                            stats.vertex_1 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
+                            stats.vertex_2 = rra::renderer::float3(verts[3].x, verts[3].y, verts[3].z);
+                            stats_list.push_back(stats);
+                        }
                     }
                 }
             }
         }
 
-        Q_ASSERT(rows_added == triangle_count);
+        table_model_->SetRowCount(static_cast<int>(stats_list.size()));
+        for (auto& stats : stats_list)
+        {
+            table_model_->AddTriangleStructure(stats);
+        }
+
         proxy_model_->invalidate();
-        return triangle_count > 0;
+        return !stats_list.empty();
     }
 
     void BlasTrianglesModel::InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns)
@@ -182,14 +202,14 @@ namespace rra
         uint64_t node_address = 0;
         if (RraBlasGetNodeBaseAddress(blas_index, triangle_node_id, &node_address) == kRraOk)
         {
-            return proxy_model_->FindModelIndex(node_address, kBlasTrianglesColumnTriangleAddress);
+            return proxy_model_->FindModelIndex(node_address, kBlasTrianglesColumnNodeAddress);
         }
         return QModelIndex();
     }
 
     uint32_t BlasTrianglesModel::GetNodeId(int row) const
     {
-        return proxy_model_->GetData(row, rra::kBlasTrianglesColumnVertex3);
+        return proxy_model_->GetData(row, rra::kBlasTrianglesColumnVertex1);
     }
 
     void BlasTrianglesModel::SearchTextChanged(const QString& filter)

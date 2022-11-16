@@ -9,6 +9,7 @@
 
 #include "managers/message_manager.h"
 #include "models/tlas/tlas_instances_model.h"
+#include "models/instance_list_table_item_delegate.h"
 #include "views/widget_util.h"
 
 TlasInstancesPane::TlasInstancesPane(QWidget* parent)
@@ -25,24 +26,24 @@ TlasInstancesPane::TlasInstancesPane(QWidget* parent)
     model_->InitializeModel(ui_->title_tlas_address_, rra::kTlasInstancesTlasBaseAddress, "text");
 
     // Initialize table.
-    model_->InitializeTableModel(ui_->instances_table_, 0, rra::kTlasInstancesColumnCount);
+    model_->InitializeTableModel(ui_->instances_table_, 0, rra::kInstancesColumnCount);
 
     connect(ui_->search_box_, &QLineEdit::textChanged, model_, &rra::TlasInstancesModel::SearchTextChanged);
     connect(ui_->instances_table_, &QAbstractItemView::doubleClicked, this, &TlasInstancesPane::GotoBlasInstanceFromTableSelect);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasSelected, this, &TlasInstancesPane::SetTlasIndex);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::InstanceSelected, this, &TlasInstancesPane::SetInstanceIndex);
 
-    table_delegate_ = new TableItemDelegate();
+    table_delegate_ = new InstanceListTableItemDelegate();
     ui_->instances_table_->setItemDelegate(table_delegate_);
 
     // Set up a connection between the blas list being sorted and making sure the selected blas is visible.
-    connect(model_->GetProxyModel(), &rra::TlasInstancesProxyModel::layoutChanged, this, &TlasInstancesPane::ScrollToSelectedInstance);
+    connect(model_->GetProxyModel(), &rra::InstancesProxyModel::layoutChanged, this, &TlasInstancesPane::ScrollToSelectedInstance);
 
     // This event filter allows us to override right click to deselect all rows instead of select one.
     ui_->instances_table_->viewport()->installEventFilter(this);
 
     // Hide the column that does the instance index mapping.
-    ui_->instances_table_->setColumnHidden(rra::kTlasInstancesColumnInstanceIndex, true);
+    ui_->instances_table_->setColumnHidden(rra::kInstancesColumnUniqueInstanceIndex, true);
 }
 
 TlasInstancesPane::~TlasInstancesPane()
@@ -190,7 +191,7 @@ void TlasInstancesPane::ScrollToSelectedInstance()
         {
             // Get the model index of the name column since column 0 (compare ID) is hidden and scrollTo
             // doesn't appear to scroll on hidden columns.
-            QModelIndex model_index = model_->GetProxyModel()->index(item_list[0].row(), rra::kTlasInstancesColumnInstanceAddress);
+            QModelIndex model_index = model_->GetProxyModel()->index(item_list[0].row(), rra::kInstancesColumnInstanceAddress);
             ui_->instances_table_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
             return;
         }

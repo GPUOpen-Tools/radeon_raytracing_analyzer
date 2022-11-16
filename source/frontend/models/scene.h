@@ -8,7 +8,8 @@
 #ifndef RRA_RENDERER_SCENE_H_
 #define RRA_RENDERER_SCENE_H_
 
-#include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <functional>
 
 #include "public/renderer_types.h"
@@ -130,6 +131,11 @@ namespace rra
         /// @returns Statistics about the scene.
         const SceneStatistics& GetSceneStatistics() const;
 
+        /// @brief Update the set of currently selected triangles.
+        ///
+        /// @param old_selection The triangles that were selected before selecting the new one.
+        void UpdateCustomTriangleSelection(const std::unordered_set<uint32_t>& old_selection);
+
         /// @brief Set the scene selection.
         ///
         /// @param [in] node_id The node id to select.
@@ -179,7 +185,7 @@ namespace rra
         uint64_t GetSceneIteration() const;
 
         /// @brief Iterates the scene, called when a change is made in the scene to notify downstream consumers.
-        void IncrementSceneIteration();
+        void IncrementSceneIteration(bool rebuild_custom_triangles = true);
 
         /// @brief Get total instance count for blas.
         ///
@@ -264,16 +270,54 @@ namespace rra
         /// @brief Makes all the nodes in the scene visible.
         void ShowAllNodes();
 
+        /// @brief Makes only the selected nodes visible.
+        void ShowSelectionOnly();
+
         /// @brief Sets whether or not selecting multiple instance nodes is enabled.
         /// @param multi_select True if multiselect should be enabled.
         static void SetMultiSelect(bool multi_select);
+
+        /// @brief If an instance is rebraided, get the instances that make up that rebraiding.
+        ///
+        /// Will return a vector with only one scene node if the specified instance is not rebraided.
+        ///
+        /// @param [in] instance_index The instance index to get the associated rebraided instances of.
+        /// @return Sibling rebraided instances.
+        const std::vector<SceneNode*>& GetRebraidedInstances(uint32_t instance_index) const;
+
+        /// @brief Query whether or not this instance is rebraided.
+        ///
+        /// @param [in] instance_index The instance index to query.
+        /// @return True if rebraided, false otherwise.
+        bool IsInstanceRebraided(uint32_t instance_index) const;
+
+        /// @brief If a triangle is split, get the nodes that make up that split triangle.
+        ///
+        /// Will return a vector with only one scene node if the specified triangle is not split.
+        ///
+        /// @param [in] geometry_index The geometry index of the triangle.
+        /// @param [in] primitive_index The primitive index of the triangle.
+        /// @return Sibling split triangle nodes.
+        const std::vector<SceneNode*>& GetSplitTriangles(uint32_t geometry_index, uint32_t primitive_index) const;
+
+        /// @brief Query whether or not this triangle is split.
+        ///
+        /// @param [in] geometry_index The geometry index of the triangle to query.
+        /// @param [in] primitive_index The primitive index of the triangle to query.
+        /// @return True if split, false otherwise.
+        bool IsTriangleSplit(uint32_t goemetry_index, uint32_t primitive_index) const;
+
+        /// @brief Get the set of the currently selected nodes.
+        ///
+        /// @return The set of currently selected node IDs.
+        std::unordered_set<uint32_t>& GetSelectedNodeIDs();
 
     private:
         /// @brief Populate the scene info values.
         void PopulateSceneInfo();
 
         /// @brief Update custom triangle list.
-        void UpdateCustomTriangles();
+        void RebuildCustomTriangles();
 
         /// @brief Update custom triangle list.
         void UpdateBoundingVolumes();
@@ -296,6 +340,12 @@ namespace rra
         /// @brief Populate the selected volume instances.
         void PopulateSelectedVolumeInstances();
 
+        /// @brief Populate the rebraid map with rebraided instances.
+        void PopulateRebraidMap();
+
+        /// @brief Populate the triangle split map with triangle nodes.
+        void PopulateSplitTrianglesMap();
+
         SceneNode*                                    root_node_ = nullptr;               ///< The root node of the scene.
         renderer::BoundingVolumeList                  bounding_volume_list_;              ///< A list of all the bounding volumes to display.
         std::vector<renderer::SelectedVolumeInstance> selected_volume_instances_;         ///< A list of all the selected volume instances to be rendered.
@@ -306,6 +356,13 @@ namespace rra
         uint32_t                                      most_recent_selected_node_id_ = 0;  ///< The most recent selected node id.
         static bool                                   multi_select_;                      ///< Allows multiple nodes to be selected if true.
         renderer::InstanceMap                         cached_instance_map_{};  ///< Saved instance map of all instances, used when frustum culling is disabled.
+        std::vector<std::vector<SceneNode*>> rebraid_siblings_{};  ///< The ith index contains all instances with index i, indicating they're rebraid siblings.
+        std::unordered_map<uint64_t, std::vector<SceneNode*>>
+            split_triangle_siblings_{};  ///< The key is a combination of geometry index and triangle index, and the value is all the siblings.
+
+        // Using a map instead of a vector since only the visible node IDs are included in the list.
+        std::unordered_map<uint32_t, uint32_t> custom_triangle_map_{};  ///< Contains pairs (node_id, custom_triangles_ index) of all visible triangle nodes.
+        std::unordered_set<uint32_t>           selected_node_ids_{};    ///< Set of all selected node IDs.
 
         uint32_t depth_range_lower_bound_ = 0;  ///< The lower bound for the depth range.
         uint32_t depth_range_upper_bound_ = 0;  ///< The upper bound for the depth range.

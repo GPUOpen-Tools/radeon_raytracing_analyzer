@@ -39,7 +39,7 @@ namespace rra
             app_info.applicationVersion = 1;
             app_info.pEngineName        = engine_name;
             app_info.engineVersion      = 1;
-            app_info.apiVersion         = VK_API_VERSION_1_1;
+            app_info.apiVersion         = VK_API_VERSION_1_2;
 
             // Attempt to create the instance.
             VkInstance new_instance = CreateInstance(app_info, instance_properties);

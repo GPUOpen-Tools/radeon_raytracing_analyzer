@@ -79,6 +79,8 @@ namespace rra
             const std::map<uint64_t, uint32_t>* instance_counts;          ///< Contains the pairs (blas_index, count).
             Camera*                             camera;                   ///< The camera.
             glm::mat4                           last_view_proj;           ///< The view projection matrix the camera used on the last frame.
+
+            bool fused_instances_enabled;  ///< The indicator for fused instances in traversal.
         };
 
         /// @brief Info about the scene that is needed at startup.
@@ -87,11 +89,7 @@ namespace rra
         /// struct that is populated early with the info the graphics context needs at creation.
         struct GraphicsContextSceneInfo
         {
-            // Give graphics context access to traversal tree.
-            TraversalTree         blas_tree;
-            std::vector<uint32_t> traversal_tree_blas_structure_offsets;  ///< The offsets of the traversal tree.
-            std::vector<uint32_t> traversal_tree_blas_triangle_offsets;   ///< The triangle offsets of the traversal tree.
-            std::vector<uint32_t> traversal_tree_blas_triangle_count;     ///< The triangle offsets of the traversal tree.
+            std::vector<TraversalTree> acceleration_structures;
         };
 
         /// @brief The RendererInterface class declaration.

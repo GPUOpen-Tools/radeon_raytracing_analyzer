@@ -290,6 +290,11 @@ namespace rra
             render_state_ = render_state_ & (~kRenderOutlineEnabled);
         }
 
+        bool SelectionRenderModule::IsTransformRenderingEnabled()
+        {
+            return render_state_ & kRenderTransformEnabled;
+        }
+
         void SelectionRenderModule::EnableTransformRendering()
         {
             render_state_ = render_state_ | kRenderTransformEnabled;

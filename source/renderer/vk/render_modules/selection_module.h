@@ -50,6 +50,11 @@ namespace rra
             /// @brief Disables outline rendering.
             void DisableOutlineRendering();
 
+            /// @brief Whether or not instance transform is being rendered.
+            /// 
+            /// @returns True if transform is being rendered, false if not.
+            bool IsTransformRenderingEnabled();
+
             /// @brief Enables substrate rendering.
             void EnableTransformRendering();
 

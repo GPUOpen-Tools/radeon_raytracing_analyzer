@@ -68,13 +68,43 @@ namespace rra
         return total_trace_memory_;
     }
 
+    bool SummaryModel::RebraidingEnabled()
+    {
+        uint64_t tlas_count = 0;
+        RraBvhGetTlasCount(&tlas_count);
+
+        bool rebraiding_enabled{false};
+        for (uint64_t tlas_index = 0; tlas_index < tlas_count; ++tlas_index)
+        {
+            bool tlas_rebraiding_enabled{};
+            RraTlasGetRebraidingEnabled(tlas_index, &tlas_rebraiding_enabled);
+            rebraiding_enabled |= tlas_rebraiding_enabled;
+        }
+
+        return rebraiding_enabled;
+    }
+
+    bool SummaryModel::FusedInstancesEnabled()
+    {
+        uint64_t tlas_count = 0;
+        RraBvhGetTlasCount(&tlas_count);
+
+        bool fused_instances_enabled{false};
+        for (uint64_t tlas_index = 0; tlas_index < tlas_count; ++tlas_index)
+        {
+            bool tlas_fused_instance_enabled{};
+            RraTlasGetFusedInstancesEnabled(tlas_index, &tlas_fused_instance_enabled);
+            fused_instances_enabled |= tlas_fused_instance_enabled;
+        }
+
+        return fused_instances_enabled;
+    }
+
     void SummaryModel::UpdateStatsTable()
     {
         widget_util::SetTableModelData(global_stats_table_model_, "Total TLASes", kGlobalStatsTableRowTlasCount, 0);
         widget_util::SetTableModelData(global_stats_table_model_, "Total BLASes", kGlobalStatsTableRowBlasCount, 0);
         widget_util::SetTableModelData(global_stats_table_model_, "Empty BLASes", kGlobalStatsTableRowBlasEmpty, 0);
-        widget_util::SetTableModelData(global_stats_table_model_, "Missing BLASes", kGlobalStatsTableRowBlasMissing, 0);
-        widget_util::SetTableModelData(global_stats_table_model_, "Inactive instances", kGlobalStatsTableRowInstanceInactive, 0);
 
         uint64_t tlas_count = 0;
         if (RraBvhGetTlasCount(&tlas_count) == kRraOk)
@@ -94,17 +124,44 @@ namespace rra
             widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(empty_blas_count), kGlobalStatsTableRowBlasEmpty, 1);
         }
 
-        uint64_t missing_blas_count = 0;
-        if (RraBvhGetMissingBlasCount(&missing_blas_count) == kRraOk)
+        // Calculate how many rows are needed.
+        int  last_row                = kGlobalStatsTableRowBlasMissing;
+        bool rebraid_enabled         = RebraidingEnabled();
+        bool fused_instances_enabled = FusedInstancesEnabled();
+
+        int extra_rows = 0;
+        if (!fused_instances_enabled)
         {
-            widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(missing_blas_count), kGlobalStatsTableRowBlasMissing, 1);
+            extra_rows++;
+        }
+        if (!rebraid_enabled)
+        {
+            extra_rows++;
+        }
+        global_stats_table_model_->setRowCount(last_row + extra_rows);
+
+        // Add the extra rows if necessary.
+        if (!fused_instances_enabled)
+        {
+            widget_util::SetTableModelData(global_stats_table_model_, "Missing BLASes", last_row, 0);
+
+            uint64_t missing_blas_count = 0;
+            if (RraBvhGetMissingBlasCount(&missing_blas_count) == kRraOk)
+            {
+                widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(missing_blas_count), last_row, 1);
+            }
+            last_row++;
         }
 
-        uint64_t inactive_instance_count = 0;
-        if (RraBvhGetInactiveInstancesCount(&inactive_instance_count) == kRraOk)
+        if (!rebraid_enabled)
         {
-            widget_util::SetTableModelData(
-                global_stats_table_model_, rra::string_util::LocalizedValue(inactive_instance_count), kGlobalStatsTableRowInstanceInactive, 1);
+            widget_util::SetTableModelData(global_stats_table_model_, "Inactive instances", last_row, 0);
+
+            uint64_t inactive_instance_count = 0;
+            if (RraBvhGetInactiveInstancesCount(&inactive_instance_count) == kRraOk)
+            {
+                widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(inactive_instance_count), last_row, 1);
+            }
         }
 
         if (RraBvhGetTotalTraceSizeInBytes(&total_trace_memory_) != kRraOk)

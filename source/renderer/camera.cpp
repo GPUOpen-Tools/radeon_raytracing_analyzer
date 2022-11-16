@@ -260,24 +260,6 @@ namespace rra
             UpdatePosition();
         }
 
-        void Camera::Pitch(float angle)
-        {
-            rotation_ = glm::rotate(rotation_, angle, glm::mat3(rotation_) / glm::vec3(1.0f, 0.0f, 0.0f));
-            UpdatePosition();
-        }
-
-        void Camera::Yaw(float angle)
-        {
-            rotation_ = glm::rotate(rotation_, angle, glm::mat3(rotation_) / glm::vec3(0.0f, 1.0f, 0.0f));
-            UpdatePosition();
-        }
-
-        void Camera::Roll(float angle)
-        {
-            rotation_ = glm::rotate(rotation_, angle, glm::mat3(rotation_) / glm::vec3(0.0f, 0.0f, 1.0f));
-            UpdatePosition();
-        }
-
         glm::vec3 Camera::GetPosition() const
         {
             return position_;

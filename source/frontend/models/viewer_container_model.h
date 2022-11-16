@@ -38,9 +38,11 @@ namespace rra
         /// @param [in] adapter The renderer adapter instance.
         /// @param [in] type A flag indicating the type of BVH viewer being controlled.
         /// @param [out] coloring_modes An array of coloring modes.
+        /// @param [out] traversal_modes An array of traveral counter modes.
         void SetRendererAdapter(rra::renderer::RendererAdapter*                  adapter,
                                 rra::renderer::BvhTypeFlags                      type,
-                                std::vector<renderer::GeometryColoringModeInfo>& coloring_modes);
+                                std::vector<renderer::GeometryColoringModeInfo>& coloring_modes,
+                                std::vector<renderer::TraversalCounterModeInfo>& traversal_modes);
 
         /// @brief Set the renderer geometry coloring mode.
         ///

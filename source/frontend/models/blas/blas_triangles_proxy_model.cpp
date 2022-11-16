@@ -33,17 +33,16 @@ namespace rra
 
         setSourceModel(model);
         SetFilterKeyColumns({
-            kBlasTrianglesColumnTriangleAddress,
-            kBlasTrianglesColumnTriangleOffset,
-            kBlasTrianglesColumnTriangleCount,
+            kBlasTrianglesColumnPrimitiveIndex,
+            kBlasTrianglesColumnNodeAddress,
+            kBlasTrianglesColumnNodeOffset,
             kBlasTrianglesColumnGeometryIndex,
-            kBlasTrianglesColumnIsInactive,
+            kBlasTrianglesColumnActive,
             kBlasTrianglesColumnTriangleSurfaceArea,
             kBlasTrianglesColumnSAH,
             kBlasTrianglesColumnVertex0,
             kBlasTrianglesColumnVertex1,
             kBlasTrianglesColumnVertex2,
-            kBlasTrianglesColumnVertex3,
         });
 
         view->setModel(this);
@@ -68,7 +67,6 @@ namespace rra
         case kBlasTrianglesColumnVertex0:
         case kBlasTrianglesColumnVertex1:
         case kBlasTrianglesColumnVertex2:
-        case kBlasTrianglesColumnVertex3:
             return;
 
         default:
@@ -84,15 +82,14 @@ namespace rra
         {
             switch (left_column)
             {
-            case kBlasTrianglesColumnTriangleAddress:
-            case kBlasTrianglesColumnTriangleOffset:
+            case kBlasTrianglesColumnNodeAddress:
+            case kBlasTrianglesColumnNodeOffset:
             {
                 const uint64_t left_data  = left.data(Qt::UserRole).toULongLong();
                 const uint64_t right_data = right.data(Qt::UserRole).toULongLong();
                 return left_data < right_data;
             }
-
-            case kBlasTrianglesColumnTriangleCount:
+            case kBlasTrianglesColumnPrimitiveIndex:
             case kBlasTrianglesColumnGeometryIndex:
             {
                 const uint32_t left_data  = left.data(Qt::UserRole).toUInt();
@@ -108,7 +105,7 @@ namespace rra
                 return left_data < right_data;
             }
 
-            case kBlasTrianglesColumnIsInactive:
+            case kBlasTrianglesColumnActive:
             {
                 const bool left_data  = left.data(Qt::UserRole).toBool();
                 const bool right_data = right.data(Qt::UserRole).toBool();

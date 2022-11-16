@@ -31,7 +31,21 @@ bool TrianglesTableItemDelegate::Vec3At(int row, int column) const
     case rra::kBlasTrianglesColumnVertex0:
     case rra::kBlasTrianglesColumnVertex1:
     case rra::kBlasTrianglesColumnVertex2:
-    case rra::kBlasTrianglesColumnVertex3:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+bool TrianglesTableItemDelegate::CheckboxAt(int row, int column) const
+{
+    Q_UNUSED(row);
+    switch (column)
+    {
+    case rra::kBlasTrianglesColumnGeometryFlagOpaque:
+    case rra::kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit:
+    case rra::kBlasTrianglesColumnActive:
         return true;
 
     default:

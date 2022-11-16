@@ -57,19 +57,10 @@ namespace rra
             /// @returns An instruction on how to draw the blas.
             BlasDrawInstruction GetBlasDrawInstruction(uint64_t blas_index);
 
-            /// @brief Get the uploaded traversal tree for a blas index.
-            ///
-            /// @param [in] blas_index The blas index.
+            /// @brief Get the uploaded traversal trees for a blases.
             ///
             /// @returns The loaded memory of the traversal tree.
-            VkTraversalTree GetBlasTraversalTree() const;
-
-            /// @brief Get the uploaded traversal tree volume offset for a blas indexes.
-            ///
-            /// @param [in] blas_index The blas index.
-            ///
-            /// @returns The index of the root volume.
-            uint32_t GetBlasTraversalTreeRootVolumeIndex(uint32_t blas_index) const;
+            std::vector<VkTraversalTree> GetBlases() const;
 
             /// @brief Get the device for this context.
             ///
@@ -111,14 +102,11 @@ namespace rra
             /// returns True on successful upload.
             bool CollectAndUploadTraversalTrees(const GraphicsContextSceneInfo& info);
 
-            Device                           device_;                                       ///< The renderer device.
-            WindowInfo                       window_info_;                                  ///< The window information.
-            std::vector<BlasDrawInstruction> geometry_instructions_;                        ///< Mapping from BLAS to a geometry address.
-            VkBuffer                         geometry_buffer_            = VK_NULL_HANDLE;  ///< A geometry buffer.
-            VmaAllocation                    geometry_buffer_allocation_ = VK_NULL_HANDLE;  ///< The allocation for the geometry buffer.
-            VkTraversalTree                  traversal_tree_;                               ///< The traversal tree.
-            std::vector<uint32_t>            traversal_tree_blas_offsets_;                  ///< The offsets of the traversal tree.
-            RendererSceneInfo*               scene_info_;                                   ///< Information needed to render the scene.
+            Device                           device_{};                 ///< The renderer device.
+            WindowInfo                       window_info_{};            ///< The window information.
+            std::vector<BlasDrawInstruction> geometry_instructions_{};  ///< Mapping from BLAS to a geometry address.
+            std::vector<VkTraversalTree>     blases_{};                 ///< The traversal tree.
+            RendererSceneInfo*               scene_info_{};             ///< Information needed to render the scene.
 
             /// We load our contents in a seperate thread so we can't show the error window and exit until we join main thread.
             bool error_window_primed_ = false;  /// A flag to track if the error window can be shown if the vulkan crashes after the loading has been complete.

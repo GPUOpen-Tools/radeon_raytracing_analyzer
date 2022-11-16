@@ -52,6 +52,8 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
 
     ui_->content_blas_address_->setCursor(Qt::PointingHandCursor);
     ui_->content_parent_->setCursor(Qt::PointingHandCursor);
+    ui_->rebraid_info_->setCursor(Qt::PointingHandCursor);
+    ui_->rebraid_info_->hide();
 
     // Initialize tables.
     model_->InitializeExtentsTableModel(ui_->extents_table_);
@@ -63,6 +65,7 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     model_->InitializeModel(ui_->content_node_type_, rra::kTlasStatsType, "text");
     model_->InitializeModel(ui_->content_blas_address_, rra::kTlasStatsBlasAddress, "text");
     model_->InitializeModel(ui_->content_parent_, rra::kTlasStatsParent, "text");
+    model_->InitializeModel(ui_->content_instance_index_, rra::kTlasStatsInstanceIndex, "text");
     model_->InitializeModel(ui_->content_instance_id_, rra::kTlasStatsInstanceId, "text");
     model_->InitializeModel(ui_->content_instance_mask_, rra::kTlasStatsInstanceMask, "text");
     model_->InitializeModel(ui_->content_instance_hit_group_index_, rra::kTlasStatsInstanceHitGroupIndex, "text");
@@ -171,9 +174,68 @@ void TlasViewerPane::SelectBlasFromTree(const QModelIndex& index, const bool nav
     }
 }
 
+void TlasViewerPane::UpdateRebraidUI(rra::Scene* scene, uint32_t tlas_index, uint32_t instance_index, uint32_t node_id)
+{
+    if (derived_model_->SelectedNodeIsLeaf())
+    {
+        if (scene->IsInstanceRebraided(instance_index))
+        {
+            const auto& rebraid_siblings = scene->GetRebraidedInstances(instance_index);
+
+            // Delete previous buttons.
+            for (ScaledPushButton* button : rebraid_sibling_buttons_)
+            {
+                ui_->rebraid_siblings_list_->removeWidget(button);
+                delete button;
+            }
+            rebraid_sibling_buttons_.clear();
+
+            uint32_t           row{0};
+            uint32_t           col{0};
+            constexpr uint32_t col_count{2};
+            for (rra::SceneNode* sibling : rebraid_siblings)
+            {
+                ScaledPushButton* rebraid_sibling_button = new ScaledPushButton();
+                rebraid_sibling_buttons_.push_back(rebraid_sibling_button);
+                rebraid_sibling_button->setText(model_->AddressString(tlas_index, sibling->GetId()));
+                rebraid_sibling_button->setObjectName(QString::fromUtf8("rebraid_button_"));
+                QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+                sizePolicy.setHorizontalStretch(0);
+                sizePolicy.setVerticalStretch(0);
+                sizePolicy.setHeightForWidth(rebraid_sibling_button->sizePolicy().hasHeightForWidth());
+                rebraid_sibling_button->setSizePolicy(sizePolicy);
+
+                if (sibling->GetId() != node_id)
+                {
+                    rebraid_sibling_button->setCursor(Qt::PointingHandCursor);
+
+                    QModelIndex sibling_model_index = derived_model_->GetModelIndexForNode(sibling->GetId());
+                    connect(rebraid_sibling_button, &ScaledPushButton::clicked, this, [=]() {
+                        ui_->tlas_tree_->selectionModel()->reset();
+                        ui_->tlas_tree_->selectionModel()->setCurrentIndex(sibling_model_index, QItemSelectionModel::Select);
+                        HandleSceneSelectionChanged();
+                    });
+                }
+                else
+                {
+                    rebraid_sibling_button->setDisabled(true);
+                }
+
+                ui_->rebraid_siblings_list_->addWidget(rebraid_sibling_button, row, col);
+
+                if (++col == col_count)
+                {
+                    col = 0;
+                    ++row;
+                }
+            }
+        }
+    }
+}
+
 void TlasViewerPane::HandleSceneSelectionChanged()
 {
-    this->UpdateSceneSelection(ui_->tlas_tree_);
+    UpdateSceneSelection(ui_->tlas_tree_);
 
     rra::TlasViewerModel* model = dynamic_cast<rra::TlasViewerModel*>(model_);
     RRA_ASSERT(model != nullptr);
@@ -182,14 +244,15 @@ void TlasViewerPane::HandleSceneSelectionChanged()
         uint64_t acceleration_structure_index = model_->FindAccelerationStructureIndex(acceleration_structure_combo_box_);
         if (acceleration_structure_index != UINT64_MAX)
         {
-            auto scene = model->GetSceneCollectionModel()->GetSceneByIndex(acceleration_structure_index);
+            auto     scene                 = model->GetSceneCollectionModel()->GetSceneByIndex(acceleration_structure_index);
+            auto     selection             = scene->GetMostRecentSelectedNodeId();
+            uint32_t unique_instance_index = model->GetInstanceUniqueIndexFromNode(acceleration_structure_index, selection);
+            uint32_t instance_index        = model->GetInstanceIndexFromNode(acceleration_structure_index, selection);
 
-            auto selection = scene->GetMostRecentSelectedNodeId();
-
-            uint32_t instance_index = model->GetInstanceIndexFromNode(acceleration_structure_index, selection);
+            UpdateRebraidUI(scene, acceleration_structure_index, instance_index, selection);
 
             // Emit a signal to update the selection list if TLAS.
-            emit rra::MessageManager::Get().InstanceSelected(instance_index);
+            emit rra::MessageManager::Get().InstanceSelected(unique_instance_index);
         }
     }
 }
@@ -259,6 +322,10 @@ void TlasViewerPane::UpdateWidgets(const QModelIndex& index)
 
     ui_->common_group_->setVisible(common_valid);
     ui_->instance_group_->setVisible(instance_valid);
+    if (model_)
+    {
+        ui_->rebraid_group_->setVisible(model_->IsRebraidedNode(last_selected_as_id_));
+    }
 }
 
 void TlasViewerPane::UpdateSelectedTlas()
@@ -301,6 +368,10 @@ void TlasViewerPane::SetBlasInstanceSelection(uint64_t tlas_index, uint64_t blas
 
             // Update the scene selection, which will select the instance in the viewport and the treeview.
             UpdateSceneSelection(ui_->tlas_tree_);
+
+            HandleSceneSelectionChanged();
+
+            emit rra::MessageManager::Get().BlasSelected(instance_info.blas_index);
         }
     }
 }

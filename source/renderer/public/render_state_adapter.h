@@ -23,41 +23,10 @@ namespace rra
         static const char* kBVHColoringModeName_TreeDepth         = "Color BVH by tree depth";
         static const char* kBVHColoringModeDescription_TreeDepth  = "Range of colors for each depth level in the tree.";
 
-        /// Decleration for BVH coloring modes.
-        static const std::vector<BVHColoringModeInfo> kAvailableBVHColoringModes = {
+        /// Declaration for BVH coloring modes.
+        static const std::vector<BVHColoringModeInfo> kAvailableBVHColoringModes{
             {BVHColoringMode::VolumeType, kBVHColoringModeName_VolumeType, kBVHColoringModeDescription_VolumeType},
             {BVHColoringMode::TreeDepth, kBVHColoringModeName_TreeDepth, kBVHColoringModeDescription_TreeDepth},
-        };
-
-        static const char* kTraversalCounterModeName_TraversalLoopCount        = "Color traversal counters by loop count";
-        static const char* kTraversalCounterModeDescription_TraversalLoopCount = "The number of iterations during traversal to get the closest hit.";
-        static const char* kTraversalCounterModeName_InstanceHit               = "Color traversal counters by instance hit";
-        static const char* kTraversalCounterModeDescription_InstanceHit        = "The count of intersections on instances.";
-        static const char* kTraversalCounterModeName_BoxVolumeHit              = "Color traversal counters by box volume hit";
-        static const char* kTraversalCounterModeDescription_BoxVolumeHit = "The count of intersections on box volumes. Box volumes contain smaller volumes.";
-        static const char* kTraversalCounterModeName_BoxVolumeMiss       = "Color traversal counters by box volume miss";
-        static const char* kTraversalCounterModeDescription_BoxVolumeMiss =
-            "The count of intersections misses on box volumes. Box volumes contain smaller volumes.";
-        static const char* kTraversalCounterModeName_BoxVolumeTest = "Color traversal counters by box volume test";
-        static const char* kTraversalCounterModeDescription_BoxVolumeTest =
-            "The count of intersections tests performed on box volumes. Box volumes contain smaller volumes.";
-        static const char* kTraversalCounterModeName_TriangleHit         = "Color traversal counters by triangle hit";
-        static const char* kTraversalCounterModeDescription_TriangleHit  = "The count of intersections on triangles.";
-        static const char* kTraversalCounterModeName_TriangleMiss        = "Color traversal counters by triangle miss";
-        static const char* kTraversalCounterModeDescription_TriangleMiss = "The count of intersection misses on triangles.";
-        static const char* kTraversalCounterModeName_TriangleTest        = "Color traversal counters by triangle test";
-        static const char* kTraversalCounterModeDescription_TriangleTest = "The count of intersection tests performed on triangles.";
-
-        /// Decleration for BVH coloring modes.
-        static const std::vector<TraversalCounterModeInfo> kAvailableTraversalCounterModes = {
-            {TraversalCounterMode::TraversalLoopCount, kTraversalCounterModeName_TraversalLoopCount, kTraversalCounterModeDescription_TraversalLoopCount},
-            {TraversalCounterMode::InstanceHit, kTraversalCounterModeName_InstanceHit, kTraversalCounterModeDescription_InstanceHit},
-            {TraversalCounterMode::BoxVolumeHit, kTraversalCounterModeName_BoxVolumeHit, kTraversalCounterModeDescription_BoxVolumeHit},
-            {TraversalCounterMode::BoxVolumeMiss, kTraversalCounterModeName_BoxVolumeMiss, kTraversalCounterModeDescription_BoxVolumeMiss},
-            {TraversalCounterMode::BoxVolumeTest, kTraversalCounterModeName_BoxVolumeTest, kTraversalCounterModeDescription_BoxVolumeTest},
-            {TraversalCounterMode::TriangleHit, kTraversalCounterModeName_TriangleHit, kTraversalCounterModeDescription_TriangleHit},
-            {TraversalCounterMode::TriangleMiss, kTraversalCounterModeName_TriangleMiss, kTraversalCounterModeDescription_TriangleMiss},
-            {TraversalCounterMode::TriangleTest, kTraversalCounterModeName_TriangleTest, kTraversalCounterModeDescription_TriangleTest},
         };
 
         class RendererVulkan;
@@ -135,6 +104,12 @@ namespace rra
             /// @param [out] coloring_modes A vector of coloring mode info to populate.
             void GetAvailableGeometryColoringModes(BvhTypeFlags type, std::vector<GeometryColoringModeInfo>& coloring_modes) const;
 
+            /// @brief Retrieve the list of available traversal counter modes for the given BVH type flags.
+            ///
+            /// @param [in] type Flags indicating the BVH types to retrieve valid traversal counter modes for.
+            /// @param [out] coloring_modes A vector of traversal counter mode info to populate.
+            void GetAvailableTraversalCounterModes(BvhTypeFlags type, std::vector<TraversalCounterModeInfo>& counter_modes) const;
+
             /// @brief Set the culling mode used for BLAS geometry.
             ///
             /// @param [in] culling_mode The culling mode.
@@ -191,6 +166,11 @@ namespace rra
             /// @returns True if the BVH geometry should be rendered, or false if not.
             bool GetRenderBoundingVolumes() const;
 
+            /// @brief Get whether or not the instance pretransform is rendered.
+            ///
+            /// @returns True if the instance pretransform should be rendered, or false if not.
+            bool GetRenderInstancePretransform();
+
             /// @brief Set whether or not to render instance pretransform.
             ///
             /// @param [in] render_bounding_volumes A flag indicating if the instance pretransform should be rendered or not.
@@ -206,6 +186,26 @@ namespace rra
             /// @param [in] heatmap_update_callback The heatmap update callback to add.
             void AddHeatmapUpdateCallback(std::function<void(rra::renderer::HeatmapData)> heatmap_update_callback);
 
+            /// @brief Set the current Architecture to navi 2.
+            void SetArchitectureToNavi2();
+
+            /// @brief Set the current Architecture to navi 3
+            void SetArchitectureToNavi3();
+
+            /// @brief Check if the current Architecture is Navi 3.
+            bool IsUsingNavi3();
+
+            /// @brief Set accept first hit ray flag.
+            void SetRayFlagAcceptFirstHit(bool accept_first_hit);
+
+            /// @brief Get the boxt sort heuristic value.
+            ///
+            /// @return The box sort heuristic currently in use depending on the view parameters.
+            uint32_t GetBoxSortHeuristic();
+
+            /// @brief Update ray parameters.
+            void UpdateRayParameters();
+
         private:
             RendererVulkan*                                              vulkan_renderer_         = nullptr;  ///< The renderer to alter the render state for.
             MeshRenderModule*                                            mesh_render_module_      = nullptr;  ///< The mesh render module instance.
@@ -213,8 +213,9 @@ namespace rra
             TraversalRenderModule*                                       traversal_render_module_ = nullptr;  ///< The traversal render volume instance.
             SelectionRenderModule*                                       selection_render_module_ = nullptr;  ///< The selection render volume instance.
             std::vector<std::function<void(rra::renderer::HeatmapData)>> heatmap_update_callbacks_;           ///< The heatmap update callbacks.
-            uint32_t traversal_counter_min_ = 0;  ///< The min traversal value to compare against to check if the renderer should re-render.
-            uint32_t traversal_counter_max_ = 0;  ///< The max traversal value to compare against to check if the renderer should re-render.
+            uint32_t traversal_counter_min_ = 0;      ///< The min traversal value to compare against to check if the renderer should re-render.
+            uint32_t traversal_counter_max_ = 0;      ///< The max traversal value to compare against to check if the renderer should re-render.
+            bool     using_navi_3_          = false;  ///< The flag to determine which Architecture to render for.
         };
     }  // namespace renderer
 }  // namespace rra

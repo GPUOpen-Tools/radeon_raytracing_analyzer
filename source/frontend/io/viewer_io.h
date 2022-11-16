@@ -225,6 +225,11 @@ namespace rra
         /// @returns True if orthographic projection is supported, false otherwise.
         virtual bool SupportsOrthographicProjection() const = 0;
 
+        /// @brief Whether or not this controller has support for setting an up axis.
+        ///
+        /// @returns True if an up axis is supported, false otherwise.
+        virtual bool SupportsUpAxis() const = 0;
+
         /// @brief Get the index of the the current scene.
         ///
         /// @return Index of scene.
@@ -240,6 +245,17 @@ namespace rra
 
         /// @brief Move the camera controller to (0, 0, 0).
         void MoveToOrigin();
+
+        /// @brief Focus on the selected objects.
+        void FocusOnSelection();
+
+        /// @brief Get the index determining the order this control style will appear in the combo box.
+        ///
+        /// @returns Index into the combo box.
+        virtual uint32_t GetComboBoxIndex() const = 0;
+
+        /// @brief Called when the user changes control styles.
+        virtual void ControlStyleChanged();
 
     private:
         /// @brief Whether the mouse moved a small enough distance between press and release to cast a ray.
@@ -270,17 +286,17 @@ namespace rra
         std::chrono::steady_clock::time_point elapsed_time_start_;               ///< Used to track elapsed time for processing user inputs.
         Qt::MouseButton last_mouse_button_pressed_ = Qt::MouseButton::NoButton;  ///< The last button press state to make decisions on mouse callbacks.
 
-        glm::vec3                         pan_distance_ = {};                  ///< The pan distance to track camera position.
-        AccelerationStructureViewerModel* viewer_model_ = nullptr;             ///< The viewer model to manipulate.
-        ViewModel*                        view_model_   = nullptr;             ///< The view model to update.
-        uint64_t                          viewer_bvh_index_ = 0;               ///< The bvh index to manipulate scene model.
-        ViewerIOOrientation               camera_orientation_        = {};     ///< The camera orientation.
-        glm::vec3                         euler_angles_              = {};     ///< The euler angles to track camera rotation.
-        float                             arc_radius_                = 0.0f;   ///< The arc radius to track camera anchor.
-        bool                              updated_                   = false;  ///< A flag to check if the contoller was updated.
-        bool                              should_focus_on_selection_ = false;  ///< A flag to keep determine if the controller should focus on selection.
-        QPoint                            last_mouse_position_       = {};     ///< The last mouse position to keep track of displacement.
-        QPoint                            mouse_press_position_      = {};     ///< Position the last time mouse was pressed down.
+        glm::vec3                         pan_distance_              = {};       ///< The pan distance to track camera position.
+        AccelerationStructureViewerModel* viewer_model_              = nullptr;  ///< The viewer model to manipulate.
+        ViewModel*                        view_model_                = nullptr;  ///< The view model to update.
+        uint64_t                          viewer_bvh_index_          = 0;        ///< The bvh index to manipulate scene model.
+        ViewerIOOrientation               camera_orientation_        = {};       ///< The camera orientation.
+        glm::vec3                         euler_angles_              = {};       ///< The euler angles to track camera rotation.
+        float                             arc_radius_                = 0.0f;     ///< The arc radius to track camera anchor.
+        bool                              updated_                   = false;    ///< A flag to check if the contoller was updated.
+        bool                              should_focus_on_selection_ = false;    ///< A flag to keep determine if the controller should focus on selection.
+        QPoint                            last_mouse_position_       = {};       ///< The last mouse position to keep track of displacement.
+        QPoint                            mouse_press_position_      = {};       ///< Position the last time mouse was pressed down.
         float                             mouse_move_delta_          = 3.0f;  ///< Maximum distance mouse can move between press and release for ray to be cast.
     };
 }  // namespace rra

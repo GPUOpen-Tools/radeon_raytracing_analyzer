@@ -172,7 +172,6 @@ namespace dxr
         constexpr std::uint32_t kInvalidNode                     = UINT32_MAX;
         constexpr std::uint32_t kInstanceNodeSize                = 128;
         constexpr std::uint32_t kFp32BoxNodeSize                 = 128;
-        constexpr std::uint32_t kFp32HalfBoxNodeSize             = kFp32BoxNodeSize / 2;
         constexpr std::uint32_t kFp16BoxNodeSize                 = 64;
         constexpr std::uint32_t kLeafNodeSize                    = 64;
         constexpr std::uint32_t kInstanceExtraDataSize           = 64;

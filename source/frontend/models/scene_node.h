@@ -8,10 +8,13 @@
 #ifndef RRA_RENDERER_SCENE_NODE_H_
 #define RRA_RENDERER_SCENE_NODE_H_
 
+#include <unordered_set>
 #include "public/renderer_types.h"
 
 namespace rra
 {
+    class Scene;
+
     /// @brief A list of a scene raw vertex data.
     typedef std::vector<renderer::RraVertex> VertexList;
 
@@ -22,6 +25,14 @@ namespace rra
         renderer::RraVertex b;
         renderer::RraVertex c;
     };
+
+    /// @brief Get the unique key for a primitive by geometry.
+    ///
+    /// @param geometry_index The geometry index.
+    /// @param primitive_index The primitive index.
+    ///
+    /// @return The unique key.
+    uint64_t GetGeometryPrimitiveIndexKey(uint32_t geometry_index, uint32_t primitive_index);
 
     /// @brief A tree structure to contain volume data and instances.
     class SceneNode
@@ -41,16 +52,19 @@ namespace rra
         /// @brief Recursively adds the render data of volumes that are in the given frustum.
         ///
         /// @param [out] instance_map A reference to instance map.
+        /// @param [inout] rebraid_duplicates The ith index states whether API instance with index i has had a rebraided sibling inserted already.
+        /// @param [in] scene A pointer to the scene that is requesting this from the node.
         /// @param [inout] frustum_info The information needed for the culling.
         ///
         /// Note: This function populates mutates the given frustum info struct.
         /// Specifically it populates the closest_distance_to_camera field for nearest plane calculation.
-        void AppendFrustumCulledInstanceMap(renderer::InstanceMap& instance_map, renderer::FrustumInfo& frustum_info) const;
+        void AppendFrustumCulledInstanceMap(renderer::InstanceMap& instance_map, std::vector<bool>& rebraid_duplicates, const Scene* scene, renderer::FrustumInfo& frustum_info) const;
 
         /// @brief Recursively adds the render data to the instance map.
         ///
         /// @param [out] instance_map A reference to instance map.
-        void AppendInstanceMap(renderer::InstanceMap& instance_map) const;
+        /// @param [in] scene A pointer to the scene that is requesting this from the node.
+        void AppendInstanceMap(renderer::InstanceMap& instance_map, const Scene* scene) const;
 
         /// @brief Recursively adds triangles (aligned vertices) to the given list.
         /// Note: Triangles in disabled branches are discarded.
@@ -76,11 +90,18 @@ namespace rra
         /// @param [out] volume The volume of the selection.
         void GetBoundingVolumeForSelection(BoundingVolumeExtents& volume) const;
 
+        /// @brief Reset selection and child nodes.
+        ///
+        /// @param [out] selected_node_ids The set of selected node IDs.
+        void ResetSelection(std::unordered_set<uint32_t>& selected_node_ids);
+
         /// @brief Reset selection.
-        void ResetSelection();
+        void ResetSelectionNonRecursive();
 
         /// @brief Apply node selection.
-        void ApplyNodeSelection();
+        ///
+        /// @param [out] selected_node_ids The set of selected node IDs.
+        void ApplyNodeSelection(std::unordered_set<uint32_t>& selected_node_ids);
 
         /// @brief Get the bounding volume of this node.
         ///
@@ -93,18 +114,28 @@ namespace rra
         void CollectNodes(std::map<uint32_t, SceneNode*>& nodes);
 
         /// @brief Enable the node.
-        void Enable();
+        ///
+        /// @param [in] scene The scene that this node belongs to.
+        void Enable(Scene* scene);
 
         /// @brief Disable the node.
-        void Disable();
+        ///
+        /// @param [in] scene The scene that this node belongs to.
+        void Disable(Scene* scene);
 
         /// @brief Set the visibility of the node.
         ///
         /// @param [in] visible The visibility to set.
-        void SetVisible(bool visible);
+        /// @param [in] scene The scene that this node belongs to.
+        void SetVisible(bool visible, Scene* scene);
+
+        /// @brief Set a node and all of its ancestors as visible.
+        void ShowParentChain();
 
         /// @brief Set the all the children under this node as visible.
-        void SetAllChildrenAsVisible();
+        ///
+        /// @param [out] selected_node_ids The set of selected node IDs.
+        void SetAllChildrenAsVisible(std::unordered_set<uint32_t>& selected_node_ids);
 
         /// @brief Check if the node is visible.
         ///
@@ -132,6 +163,14 @@ namespace rra
         ///
         /// @returns A list of instances.
         std::vector<renderer::Instance> GetInstances() const;
+
+        /// @brief Get the instance if there is one.
+        ///
+        /// The returned pointer should be used then immediately discarded. It's a pointer to an element
+        /// of a vector, which makes the pointer dangling when it's reallocated.
+        ///
+        /// @return Pointer to the instance if it exists, otherwise nullptr.
+        renderer::Instance* GetInstance();
 
         /// @brief Get triangles of this node.
         ///
@@ -183,6 +222,21 @@ namespace rra
         /// @returns The index address registered at the address buffer.
         uint32_t AddToTraversalTree(renderer::TraversalTree& traversal_tree);
 
+        /// @brief For each triangle vertex, write to a bit specifying if it's split or not.
+        ///
+        /// @param [out] root The root node of the BLAS.
+        static void PopulateSplitVertexAttribute(SceneNode* root);
+
+        /// @brief Get the count of each primitive index in a node subtree.
+        ///
+        /// @param [out] tri_split_counts The primitive index counts unique by geometry.
+        void GetPrimitiveIndexCounts(std::unordered_map<uint64_t, uint32_t>& tri_split_counts);
+
+        /// @brief For each triangle vertex, write to a bit specifying if it's split or not.
+        ///
+        /// @param [in] tri_split_counts The primitive index counts unique by geometry.
+        void PopulateSplitVertexAttribute(const std::unordered_map<uint64_t, uint32_t>& tri_split_counts);
+
     private:
         /// @brief Construct the tree structure from TLAS.
         ///
@@ -201,6 +255,15 @@ namespace rra
         ///
         /// @returns A scene node.
         static SceneNode* ConstructFromBlasNode(uint64_t blas_index, uint32_t node_id, uint32_t depth);
+
+        /// @brief Appends the merged instance to the instance map.
+        /// 
+        /// Caller must call this for only a single rebraid sibling per API instance.
+        ///
+        /// @param [in] instance The instance to append.
+        /// @param [inout] instance_map The instance map to append to.
+        /// @param [in] scene The scene to collect rebraid siblings from.
+        void AppendMergedInstanceToInstanceMap(renderer::Instance instance, renderer::InstanceMap& instance_map, const Scene* scene) const;
 
         SceneNode*                       parent_ = nullptr;         ///< The parent node.
         uint32_t                         node_id_;                  ///< The node id for this node.

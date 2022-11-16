@@ -15,10 +15,12 @@
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "models/blas/blas_instances_item_model.h"
+#include "models/instances_item_model.h"
 
 #include "public/rra_bvh.h"
 #include "public/rra_tlas.h"
+
+#include "../scene.h"
 
 namespace rra
 {
@@ -58,16 +60,16 @@ namespace rra
             return false;
         }
 
+        Scene scene;
+        scene.Initialize(SceneNode::ConstructFromTlas(tlas_index));
+
         // Get the total instance count to allocate.
         uint64_t total_instance_count = 0;
-        for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
+
+        auto blas_instance_counts = scene.GetBlasInstanceCounts();
+        for (auto it = blas_instance_counts->begin(); it != blas_instance_counts->end(); it++)
         {
-            uint64_t instance_count = 0;
-            if (RraTlasGetInstanceCount(tlas_index, blas_index, &instance_count) != kRraOk)
-            {
-                return false;
-            }
-            total_instance_count += instance_count;
+            total_instance_count += it->second;
         }
 
         if (total_instance_count == 0)
@@ -79,8 +81,8 @@ namespace rra
         table_model_->SetRowCount(total_instance_count);
 
         // Iterate over each blas and each instance to gather data.
-        TlasInstancesStatistics stats      = {};
-        uint64_t                rows_added = 0;
+        InstancesTableStatistics stats      = {};
+        uint64_t                 rows_added = 0;
 
         addressable_instance_index_.clear();
 
@@ -100,15 +102,35 @@ namespace rra
                     continue;
                 }
 
-                if (RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_ptr, &stats.instance_index))
+                if (RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_ptr, &stats.unique_instance_index))
                 {
                     continue;
                 }
+
+                uint32_t tlas_instance_index = 0;
+                if (RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_ptr, &tlas_instance_index))
+                {
+                    continue;
+                }
+                stats.instance_index = tlas_instance_index;
+
+                auto rebraid_siblings       = scene.GetRebraidedInstances(tlas_instance_index);
+                stats.rebraid_sibling_count = static_cast<uint32_t>(rebraid_siblings.size() - 1);
 
                 if (RraTlasGetNodeBaseAddress(tlas_index, node_ptr, &stats.instance_address) != kRraOk)
                 {
                     continue;
                 }
+
+                uint32_t instance_flags{};
+                if (RraTlasGetInstanceFlags(tlas_index, node_ptr, &instance_flags) != kRraOk)
+                {
+                    continue;
+                }
+                stats.cull_disable_flag = instance_flags & VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                stats.flip_facing_flag  = instance_flags & VK_GEOMETRY_INSTANCE_TRIANGLE_FLIP_FACING_BIT_KHR;
+                stats.force_opaque      = instance_flags & VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
+                stats.force_no_opaque   = instance_flags & VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR;
 
                 if (RraBvhGetNodeOffset(node_ptr, &stats.instance_offset) != kRraOk)
                 {
@@ -147,7 +169,7 @@ namespace rra
             proxy_model_ = nullptr;
         }
 
-        proxy_model_ = new TlasInstancesProxyModel();
+        proxy_model_ = new InstancesProxyModel();
         table_model_ = proxy_model_->InitializeAccelerationStructureTableModels(table_view, num_rows, num_columns);
         table_model_->Initialize(table_view);
     }
@@ -165,7 +187,7 @@ namespace rra
 
     QModelIndex TlasInstancesModel::GetTableModelIndex(uint64_t instance_index) const
     {
-        return proxy_model_->FindModelIndex(instance_index, kTlasInstancesColumnInstanceIndex);
+        return proxy_model_->FindModelIndex(instance_index, kInstancesColumnUniqueInstanceIndex);
     }
 
     void TlasInstancesModel::SearchTextChanged(const QString& filter)
@@ -179,7 +201,7 @@ namespace rra
         return addressable_instance_index_[instance_index];
     }
 
-    TlasInstancesProxyModel* TlasInstancesModel::GetProxyModel() const
+    InstancesProxyModel* TlasInstancesModel::GetProxyModel() const
     {
         return proxy_model_;
     }

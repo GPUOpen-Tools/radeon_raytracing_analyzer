@@ -54,13 +54,13 @@ namespace rra
         void Initialize(ScaledTableView* table_view);
 
         /// @brief Set the checkmark status of a row in the table.
-        /// 
+        ///
         /// @param [in] row     The row which will have its checkmark status set.
         /// @param [in] checked Whether the row should be checked or unchecked.
         void SetRowChecked(int row, bool checked);
 
         /// @brief Set the flag name of a row in the table.
-        /// 
+        ///
         /// @param [in] row       The row to set the flag name of.
         /// @param [in] flag_name The flag name.
         void SetRowFlagName(int row, QString flag_name);
@@ -76,13 +76,13 @@ namespace rra
     private:
         struct RowData
         {
-            bool    checked;
-            QString flag_name;
+            bool    checked{};
+            QString flag_name{};
         };
 
-        int                  num_rows_;     ///< The number of rows in the table.
-        int                  num_columns_;  ///< The number of columns in the table.
-        std::vector<RowData> row_data_;     ///> The data for each row of the table.
+        int                  num_rows_{};     ///< The number of rows in the table.
+        int                  num_columns_{};  ///< The number of columns in the table.
+        std::vector<RowData> row_data_{};     ///> The data for each row of the table.
     };
 }  // namespace rra
 

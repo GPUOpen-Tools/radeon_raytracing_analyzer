@@ -130,12 +130,46 @@ ColoredLegendGraphicsView
     font-size: 8pt;
 }
 
-ArrowIconComboBox
+ArrowIconWidget, ArrowIconComboBox
 {
     background: white;
     border: none;
     font-size: 9.75pt;
     text-align:left;
+}
+
+ListWidget
+{
+    font-size: 9.75pt;
+    text-align: left;
+    border: 1px solid gray;
+}
+
+ListWidget QCheckBox
+{
+    font-size: 9.75pt;
+    padding-left: 3px;
+}
+
+ListWidget QLabel
+{
+    font-size: 9.75pt;
+    padding-left: 3px;
+}
+
+ListWidget::item:hover
+{
+    background: rgb(214, 214, 214);
+}
+
+ListWidget::item:selected
+{
+    background: rgb(143, 193, 231);
+}
+
+ListWidget::item
+{
+    border-bottom: none;
 }
 
 TextSearchWidget
@@ -507,6 +541,25 @@ ScaledPushButton#content_parent_:disabled
     color: rgb(64, 64, 64);
 }
 
+ScaledPushButton#rebraid_button_
+{
+    font: bold;
+    font-size: 9pt;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#rebraid_button_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+ScaledPushButton#rebraid_button_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
 ExpandingScrollArea#side_panel_scroll_area_
 {
     border-style: none;
@@ -554,6 +607,18 @@ ScaledLabel#content_rendering_mode_label_
 ColoredRadioButton
 {
     font: 10pt;
+}
+
+QScrollArea#triangle_split_scroll_area_
+{
+    border-style: none;
+    background-color: white;
+}
+
+QWidget#split_triangle_siblings
+{
+    border-style: none;
+    background-color: white;
 }
 
 /*************************************/

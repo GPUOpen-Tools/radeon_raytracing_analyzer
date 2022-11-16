@@ -5,8 +5,12 @@ __pycache__/
 build/linux
 build/mac
 build/win
+cmake-build*/
+.idea/
 documentation/build
 documentation/source/_build
+source/frontend/version.h
+Buildinfo.properties
 external
 .vscode
 *.aps

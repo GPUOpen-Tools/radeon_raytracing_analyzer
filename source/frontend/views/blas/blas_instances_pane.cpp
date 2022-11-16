@@ -9,6 +9,7 @@
 
 #include "managers/message_manager.h"
 #include "models/blas/blas_instances_model.h"
+#include "models/instance_list_table_item_delegate.h"
 #include "views/widget_util.h"
 
 BlasInstancesPane::BlasInstancesPane(QWidget* parent)
@@ -27,7 +28,7 @@ BlasInstancesPane::BlasInstancesPane(QWidget* parent)
     model_->InitializeModel(ui_->title_blas_address_, rra::kBlasInstancesBaseAddress, "text");
 
     // Initialize table.
-    model_->InitializeTableModel(ui_->instances_table_, 0, rra::kBlasInstancesColumnCount);
+    model_->InitializeTableModel(ui_->instances_table_, 0, rra::kInstancesColumnCount);
 
     connect(ui_->search_box_, &QLineEdit::textChanged, model_, &rra::BlasInstancesModel::SearchTextChanged);
     connect(ui_->instances_table_, &QAbstractItemView::doubleClicked, this, &BlasInstancesPane::GotoBlasInstanceFromTableSelect);
@@ -35,17 +36,17 @@ BlasInstancesPane::BlasInstancesPane(QWidget* parent)
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasSelected, this, &BlasInstancesPane::SetTlasIndex);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::InstanceSelected, this, &BlasInstancesPane::SetInstanceIndex);
 
-    table_delegate_ = new TableItemDelegate();
+    table_delegate_ = new InstanceListTableItemDelegate();
     ui_->instances_table_->setItemDelegate(table_delegate_);
 
     // Set up a connection between the blas list being sorted and making sure the selected blas is visible.
-    connect(model_->GetProxyModel(), &rra::BlasInstancesProxyModel::layoutChanged, this, &BlasInstancesPane::ScrollToSelectedInstance);
+    connect(model_->GetProxyModel(), &rra::InstancesProxyModel::layoutChanged, this, &BlasInstancesPane::ScrollToSelectedInstance);
 
     // This event filter allows us to override right click to deselect all rows instead of select one.
     ui_->instances_table_->viewport()->installEventFilter(this);
 
     // Hide the column that does the instance index mapping.
-    ui_->instances_table_->setColumnHidden(rra::kBlasInstancesColumnInstanceIndex, true);
+    ui_->instances_table_->setColumnHidden(rra::kInstancesColumnUniqueInstanceIndex, true);
 }
 
 BlasInstancesPane::~BlasInstancesPane()
@@ -152,14 +153,18 @@ void BlasInstancesPane::GotoBlasInstanceFromTableSelect(const QModelIndex& index
 {
     if (index.isValid())
     {
-        int32_t instance_index = model_->GetInstanceIndex(index);
-        if (instance_index != -1)
+        int32_t instance_row = model_->GetInstanceIndex(index);
+        if (instance_row != -1)
         {
             // First, switch the pane so the UI is initialized.
             emit rra::MessageManager::Get().PaneSwitchRequested(rra::kPaneIdTlasViewer);
 
             // Emit a message indicating that a BLAS instance has been double-clicked.
-            emit rra::MessageManager::Get().InstancesTableDoubleClicked(tlas_index_, blas_index_, instance_index);
+            emit rra::MessageManager::Get().InstancesTableDoubleClicked(tlas_index_, blas_index_, instance_row);
+
+            // Get the instance index from the table corresponding to the row.
+            uint32_t instance_index = model_->GetProxyModel()->GetData(index.row(), rra::kInstancesColumnUniqueInstanceIndex);
+            emit rra::MessageManager::Get().InstanceSelected(instance_index);
         }
     }
 }
@@ -201,7 +206,7 @@ void BlasInstancesPane::ScrollToSelectedInstance()
         {
             // Get the model index of the name column since column 0 (compare ID) is hidden and scrollTo
             // doesn't appear to scroll on hidden columns.
-            QModelIndex model_index = model_->GetProxyModel()->index(item_list[0].row(), rra::kBlasInstancesColumnInstanceAddress);
+            QModelIndex model_index = model_->GetProxyModel()->index(item_list[0].row(), rra::kInstancesColumnInstanceAddress);
             ui_->instances_table_->scrollTo(model_index, QAbstractItemView::ScrollHint::PositionAtTop);
             return;
         }

@@ -8,6 +8,9 @@
 #include <QDebug>
 #include <QEvent>
 #include <QWheelEvent>
+#include <QScreen>
+#include <QtMath>
+#include <QApplication>
 
 #include "public/renderer_widget.h"
 #include "public/renderer_types.h"
@@ -167,7 +170,8 @@ bool RendererWidget::CreateDevice()
 
         if (result)
         {
-            ResizeSwapChain(width(), height());
+            const double ratio = QApplication::primaryScreen()->devicePixelRatio();
+            ResizeSwapChain(qCeil(width() * ratio), qCeil(height() * ratio));
         }
     }
 
@@ -225,7 +229,8 @@ void RendererWidget::UpdateSwapchainSize()
 {
     if (device_initialized_)
     {
-        ResizeSwapChain(width(), height());
+        const double ratio = QApplication::primaryScreen()->devicePixelRatio();
+        ResizeSwapChain(qCeil(width() * ratio), qCeil(height() * ratio));
     }
 }
 
@@ -255,8 +260,6 @@ bool RendererWidget::event(QEvent* event)
 {
     switch (event->type())
     {
-    // Workaround for https://bugreports.qt.io/browse/QTBUG-42183 to get key strokes.
-    // To make sure that we always have focus on the widget when we enter the rect area.
     case QEvent::Enter:
         break;
     case QEvent::FocusIn:

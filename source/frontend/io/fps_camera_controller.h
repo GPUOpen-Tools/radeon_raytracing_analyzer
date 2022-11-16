@@ -82,6 +82,16 @@ namespace rra
         /// @returns True if orthographic projection is supported, false otherwise.
         virtual bool SupportsOrthographicProjection() const override;
 
+        /// @brief Whether or not this controller has support for setting an up axis.
+        ///
+        /// @returns True if an up axis is supported, false otherwise.
+        virtual bool SupportsUpAxis() const override;
+
+        /// @brief Get the index determining the order this control style will appear in the combo box.
+        ///
+        /// @returns Index into the combo box.
+        virtual uint32_t GetComboBoxIndex() const override;
+
     private:
         float movement_speed_scroll_multiplier_ = 1.0f;  ///< The movement multiplier for the camera speed.
     };

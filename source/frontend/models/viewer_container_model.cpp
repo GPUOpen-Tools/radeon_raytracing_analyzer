@@ -20,10 +20,12 @@ namespace rra
 
     void ViewerContainerModel::SetRendererAdapter(rra::renderer::RendererAdapter*                  adapter,
                                                   rra::renderer::BvhTypeFlags                      type,
-                                                  std::vector<renderer::GeometryColoringModeInfo>& coloring_modes)
+                                                  std::vector<renderer::GeometryColoringModeInfo>& coloring_modes,
+                                                  std::vector<renderer::TraversalCounterModeInfo>& traversal_modes)
     {
         render_state_adapter_ = static_cast<rra::renderer::RenderStateAdapter*>(adapter);
         render_state_adapter_->GetAvailableGeometryColoringModes(type, coloring_modes);
+        render_state_adapter_->GetAvailableTraversalCounterModes(type, traversal_modes);
         render_state_adapter_->SetBVHColoringMode(0);
     }
 

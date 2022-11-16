@@ -39,8 +39,13 @@ public:
     /// @returns The view pane.
     ViewPane* GetViewPane() const;
 
-    /// @brief  Mark as BLAS.
+    /// @brief  Notify the side pane container that the BLAS viewer mode is active.
     void MarkAsBLAS();
+
+    /// @brief  Mark a BLAS as containing or not containing procedural primitives.
+    ///
+    /// @param [in] is_procedural True if procedural, false otherwise.
+    void MarkProceduralGeometry(bool is_procedural);
 
 private:
     /// @brief Update the side pane state.

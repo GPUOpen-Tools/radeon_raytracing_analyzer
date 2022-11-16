@@ -88,14 +88,6 @@ RraErrorCode RraBlasGetBox16NodeCount(uint64_t blas_index, uint32_t* out_node_co
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetBox32NodeCount(uint64_t blas_index, uint32_t* out_node_count);
 
-/// @brief Get the number of half box-32 nodes for the blas_index given.
-///
-/// @param [in]  blas_index     The index of the BLAS to use.
-/// @param [out] out_node_count A pointer to receive the half box-32 node count of the BLAS.
-///
-/// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetHalfBox32NodeCount(uint64_t blas_index, uint32_t* out_node_count);
-
 /// @brief Get the maximum tree depth for the blas_index given.
 ///
 /// @param [in]  blas_index     The index of the BLAS to use.
@@ -229,6 +221,16 @@ RraErrorCode RraBlasGetProceduralNodeCount(uint64_t blas_index, uint32_t* out_pr
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_geometry_index);
 
+/// @brief Retrieve the primitive index for the triangle node.
+///
+/// @param [in]  blas_index				The index of the BLAS to use.
+/// @param [in]  node_ptr				The node whose primitive index is to be found.
+/// @param [in]  local_primitive_index	The local primitive index within the given node.
+/// @param [out] out_primitive_index	The primitive index for the triangle node.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t local_primitive_index, uint32_t* out_primitive_index);
+
 /// @brief Retrieve the geometry flags for a triangle node.
 ///
 /// @param [in]  blas_index         The index of the BLAS to use.
@@ -273,15 +275,6 @@ RraErrorCode RraBlasGetNodeTriangles(uint64_t blas_index, uint32_t node_ptr, str
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetNodeVertices(uint64_t blas_index, uint32_t node_ptr, struct VertexPosition* out_vertices);
-
-/// @brief Retrieve the primitive index of a triangle node.
-///
-/// @param [in] blas_index The index of the BLAS to use.
-/// @param [in] node_ptr The node whose primitive index is to be found.
-/// @param [out] out_primitive_index The primitive index.
-///
-/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_primitive_index);
 
 /// @brief Retrieve the build flags used to build this BLAS.
 ///

@@ -38,6 +38,31 @@ namespace rra
         /// @return the model for the BLAS table model.
         BlasListItemModel* InitializeAccelerationStructureTableModels(QTableView* view, int num_rows, int num_columns);
 
+        /// @brief Set whether BLASes in the list should be hidden based on their allow update flag.
+        ///
+        /// @param filter If true, BLASes are only shown if they contain the allow update flag.
+        void SetFilterByAllowUpdate(bool filter);
+
+        /// @brief Set whether BLASes in the list should be hidden based on their allow compaction flag.
+        ///
+        /// @param filter If true, BLASes are only shown if they contain the allow compaction flag.
+        void SetFilterByAllowCompaction(bool filter);
+
+        /// @brief Set whether BLASes in the list should be hidden based on their low memory flag.
+        ///
+        /// @param filter If true, BLASes are only shown if they contain the low memory flag.
+        void SetFilterByLowMemory(bool filter);
+
+        /// @brief Set whether BLASes in the list should be hidden based on their fast build flag.
+        ///
+        /// @param filter If true, BLASes are only shown if they contain the fast build flag.
+        void SetFilterByFastBuild(bool filter);
+
+        /// @brief Set whether BLASes in the list should be hidden based on their fast trace flag.
+        ///
+        /// @param filter If true, BLASes are only shown if they contain the fast trace flag.
+        void SetFilterByFastTrace(bool filter);
+
     protected:
         /// @brief Make the filter run across multiple columns.
         ///
@@ -54,6 +79,13 @@ namespace rra
         ///
         /// @return true if left is less than right, false otherwise.
         virtual bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
+
+    private:
+        bool filter_by_allow_update_     = false;  ///< Hide BLASes in list if they don't have allow update flag.
+        bool filter_by_allow_compaction_ = false;  ///< Hide BLASes in list if they don't have allow compaction flag.
+        bool filter_by_low_memory_       = false;  ///< Hide BLASes in list if they don't have low memory flag.
+        bool filter_by_fast_build_       = false;  ///< Hide BLASes in list if they don't have fast build flag.
+        bool filter_by_fast_trace_       = false;  ///< Hide BLASes in list if they don't have fast trace flag.
     };
 }  // namespace rra
 

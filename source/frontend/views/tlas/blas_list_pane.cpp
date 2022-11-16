@@ -31,6 +31,9 @@ BlasListPane::BlasListPane(QWidget* parent)
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasSelected, this, &BlasListPane::SetTlasIndex);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::BlasSelected, this, &BlasListPane::SetBlasIndex);
 
+    ui_->content_blas_filter_->InitMultiSelect(this, "Filter by flag");
+    connect(ui_->content_blas_filter_, &ArrowIconComboBox::CheckboxChanged, this, &BlasListPane::BlasFilterComboBoxItemClicked);
+
     table_delegate_ = new BlasListTableItemDelegate();
     ui_->blas_table_->setItemDelegate(table_delegate_);
 
@@ -39,6 +42,11 @@ BlasListPane::BlasListPane(QWidget* parent)
 
     // This event filter allows us to override right click to deselect all rows instead of select one.
     ui_->blas_table_->viewport()->installEventFilter(this);
+
+    for (int i = 0; i < kBlasFiltersCount; i++)
+    {
+        AddBlasFilterItem(static_cast<BlasFilters>(i));
+    }
 
     ui_->blas_table_->setColumnHidden(rra::kBlasListColumnBlasIndex, true);
 }
@@ -113,6 +121,69 @@ void BlasListPane::OnTraceClose()
     data_valid_ = false;
     blas_index_ = UINT64_MAX;
     ui_->search_box_->setText("");
+}
+
+void BlasListPane::BlasFilterComboBoxItemClicked(QCheckBox* check_box)
+{
+    BlasFilters filter = {};
+
+    // Find the view.
+    for (BlasFilters i = {}; i < kBlasFiltersCount; i = BlasFilters(i + 1))
+    {
+        if (blas_filter_array_[i] == check_box)
+        {
+            filter = i;
+            break;
+        }
+    }
+
+    switch (filter)
+    {
+    case kAllowUpdate:
+        model_->GetProxyModel()->SetFilterByAllowUpdate(check_box->isChecked());
+        break;
+    case kAllowCompaction:
+        model_->GetProxyModel()->SetFilterByAllowCompaction(check_box->isChecked());
+        break;
+    case kLowMemory:
+        model_->GetProxyModel()->SetFilterByLowMemory(check_box->isChecked());
+        break;
+    case kBuildTypeFastBuild:
+        model_->GetProxyModel()->SetFilterByFastBuild(check_box->isChecked());
+        break;
+    case kBuildTypeFastTrace:
+        model_->GetProxyModel()->SetFilterByFastTrace(check_box->isChecked());
+        break;
+
+    default:
+        break;
+    }
+
+    model_->GetProxyModel()->invalidate();
+}
+
+void BlasListPane::AddBlasFilterItem(BlasFilters filter)
+{
+    switch (filter)
+    {
+    case kAllowUpdate:
+        blas_filter_array_[filter] = ui_->content_blas_filter_->AddCheckboxItem("Allow update", filter, false, false);
+        break;
+    case kAllowCompaction:
+        blas_filter_array_[filter] = ui_->content_blas_filter_->AddCheckboxItem("Allow compaction", filter, false, false);
+        break;
+    case kLowMemory:
+        blas_filter_array_[filter] = ui_->content_blas_filter_->AddCheckboxItem("Low memory", filter, false, false);
+        break;
+    case kBuildTypeFastBuild:
+        blas_filter_array_[filter] = ui_->content_blas_filter_->AddCheckboxItem("Fast build", filter, false, false);
+        break;
+    case kBuildTypeFastTrace:
+        blas_filter_array_[filter] = ui_->content_blas_filter_->AddCheckboxItem("Fast trace", filter, false, false);
+        break;
+    default:
+        Q_ASSERT(!"Invalid BLAS filter value");
+    }
 }
 
 bool BlasListPane::eventFilter(QObject* obj, QEvent* event)

@@ -54,9 +54,9 @@ namespace rra
             /// @returns True if the named device extension is supported, or false if it's not.
             bool IsExtensionPresent(const char* device_extension_name);
 
-            VkPhysicalDevice                   physical_device_;              ///< The physical device handle.
-            std::vector<const char*>           device_extension_names_;       ///< The set of device extensions to enable.
-            std::vector<VkExtensionProperties> device_extension_properties_;  ///< The set of device extension properties.
+            VkPhysicalDevice                   physical_device_{};              ///< The physical device handle.
+            std::vector<const char*>           device_extension_names_{};       ///< The set of device extensions to enable.
+            std::vector<VkExtensionProperties> device_extension_properties_{};  ///< The set of device extension properties.
         };
     }  // namespace renderer
 }  // namespace rra

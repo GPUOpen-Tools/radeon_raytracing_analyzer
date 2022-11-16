@@ -6,6 +6,7 @@
 //=============================================================================
 
 #include <vector>
+#include <unordered_map>
 
 #include <QCoreApplication>
 #include <type_traits>
@@ -619,7 +620,7 @@ namespace rra
 
             std::vector<VkVertexInputAttributeDescription> tree_level_attr{
                 VERTEX_ATTRIBUTE(0, position),
-                VERTEX_ATTRIBUTE(1, geometry_index_depth_opaque),
+                VERTEX_ATTRIBUTE(1, geometry_index_depth_split_opaque),
                 VERTEX_ATTRIBUTE(2, triangle_sah_and_selected),
 
                 INSTANCE_ATTRIBUTE_FOUR_SLOTS(3, instance_transform),
@@ -640,7 +641,7 @@ namespace rra
 
             std::vector<VkVertexInputAttributeDescription> geometry_index_attr{
                 VERTEX_ATTRIBUTE(0, position),
-                VERTEX_ATTRIBUTE(1, geometry_index_depth_opaque),
+                VERTEX_ATTRIBUTE(1, geometry_index_depth_split_opaque),
                 VERTEX_ATTRIBUTE(2, triangle_sah_and_selected),
 
                 INSTANCE_ATTRIBUTE_FOUR_SLOTS(3, instance_transform),
@@ -651,13 +652,24 @@ namespace rra
 
             std::vector<VkVertexInputAttributeDescription> opacity_attr{
                 VERTEX_ATTRIBUTE(0, position),
-                VERTEX_ATTRIBUTE(1, geometry_index_depth_opaque),
+                VERTEX_ATTRIBUTE(1, geometry_index_depth_split_opaque),
                 VERTEX_ATTRIBUTE(2, triangle_sah_and_selected),
 
                 INSTANCE_ATTRIBUTE_FOUR_SLOTS(3, instance_transform),
                 INSTANCE_ATTRIBUTE(7, wireframe_metadata),
             };
             InitializeGeometryColorPipeline("GeometryColorOpacity.vs.spv", "GeometryColorOpacity.ps.spv", opacity_attr, GeometryColoringMode::kOpacity);
+
+            std::vector<VkVertexInputAttributeDescription> final_opacity_attr{
+                VERTEX_ATTRIBUTE(0, position),
+                VERTEX_ATTRIBUTE(1, geometry_index_depth_split_opaque),
+
+                INSTANCE_ATTRIBUTE_FOUR_SLOTS(2, instance_transform),
+                INSTANCE_ATTRIBUTE(6, flags),
+                INSTANCE_ATTRIBUTE(7, wireframe_metadata),
+            };
+            InitializeGeometryColorPipeline(
+                "GeometryColorFinalOpacity.vs.spv", "GeometryColorFinalOpacity.ps.spv", final_opacity_attr, GeometryColoringMode::kFinalOpacity);
 
             std::vector<VkVertexInputAttributeDescription> instance_mask_attr{
                 VERTEX_ATTRIBUTE(0, position),
@@ -775,6 +787,27 @@ namespace rra
             };
             InitializeGeometryColorPipeline(
                 "GeometryColorInstanceIndex.vs.spv", "GeometryColorInstanceIndex.ps.spv", instance_index_attr, GeometryColoringMode::kInstanceIndex);
+
+            std::vector<VkVertexInputAttributeDescription> instance_rebraiding{
+                VERTEX_ATTRIBUTE(0, position),
+
+                INSTANCE_ATTRIBUTE_FOUR_SLOTS(1, instance_transform),
+                INSTANCE_ATTRIBUTE(5, rebraided),
+                INSTANCE_ATTRIBUTE(6, wireframe_metadata),
+            };
+            InitializeGeometryColorPipeline(
+                "GeometryColorRebraiding.vs.spv", "GeometryColorRebraiding.ps.spv", instance_rebraiding, GeometryColoringMode::kInstanceRebraiding);
+
+            std::vector<VkVertexInputAttributeDescription> triangle_splitting{
+                VERTEX_ATTRIBUTE(0, position),
+                VERTEX_ATTRIBUTE(1, geometry_index_depth_split_opaque),
+                VERTEX_ATTRIBUTE(2, triangle_sah_and_selected),
+
+                INSTANCE_ATTRIBUTE_FOUR_SLOTS(3, instance_transform),
+                INSTANCE_ATTRIBUTE(7, wireframe_metadata),
+            };
+            InitializeGeometryColorPipeline(
+                "GeometryColorTriangleSplitting.vs.spv", "GeometryColorTriangleSplitting.ps.spv", triangle_splitting, GeometryColoringMode::kTriangleSplitting);
 
             std::vector<VkVertexInputAttributeDescription> build_flags_attr{
                 VERTEX_ATTRIBUTE(0, position),
@@ -933,11 +966,9 @@ namespace rra
             // Clear the old render instructions.
             render_instructions_.clear();
 
-            // Forward allocation.
-            MeshInstanceData mesh_instance_data = {};
-
             // Pour the instances into one big buffer that will be uploaded to the device.
             std::vector<MeshInstanceData> mesh_info_buffer;
+            mesh_info_buffer.reserve(current_scene_info_->max_instance_count);
 
             for (auto& instance_iter : current_scene_info_->instance_map)
             {
@@ -950,15 +981,15 @@ namespace rra
                 std::vector<MeshInstanceData> temp_buffer;
                 temp_buffer.reserve(instance_transforms.size());
 
+                MeshInstanceData mesh_instance_data{};
+
                 for (uint32_t i = 0; i < instance_transforms.size(); i++)
                 {
-                    mesh_instance_data = {};  // Reset the instance data.
-
                     mesh_instance_data.instance_transform   = instance_transforms[i].transform;
-                    mesh_instance_data.instance_index       = instance_transforms[i].instance_index;
+                    mesh_instance_data.instance_index       = instance_transforms[i].instance_unique_index;
                     mesh_instance_data.instance_node        = instance_transforms[i].instance_node;
                     mesh_instance_data.instance_count       = instance_count_for_blas;
-                    mesh_instance_data.blas_index           = static_cast<uint32_t>(instance_iter.first);
+                    mesh_instance_data.blas_index           = instance_transforms[i].blas_index;
                     mesh_instance_data.triangle_count       = mesh.vertex_count / 3;
                     mesh_instance_data.flags                = instance_transforms[i].flags;
                     mesh_instance_data.max_depth            = instance_transforms[i].max_depth;
@@ -967,9 +998,14 @@ namespace rra
                     mesh_instance_data.min_triangle_sah     = instance_transforms[i].min_triangle_sah;
                     mesh_instance_data.average_triangle_sah = instance_transforms[i].average_triangle_sah;
                     mesh_instance_data.build_flags          = instance_transforms[i].build_flags;
-
+                    mesh_instance_data.rebraided            = instance_transforms[i].rebraided;
                     mesh_instance_data.wireframe_metadata =
                         GetWireframeColor(render_state_.render_wireframe, instance_transforms[i].selected, current_scene_info_);
+
+                    if (instance_transforms[i].selected)
+                    {
+                        mesh_instance_data.selection_count += 1;
+                    }
 
                     temp_buffer.push_back(mesh_instance_data);
                 }
@@ -990,7 +1026,7 @@ namespace rra
 
             if (custom_triangle_buffer.vertex_count > 0)
             {
-                mesh_instance_data = {};
+                MeshInstanceData mesh_instance_data = {};
 
                 mesh_instance_data.instance_transform = glm::mat4(1.0f);
                 mesh_instance_data.instance_index     = 0;

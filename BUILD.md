@@ -38,7 +38,7 @@ The Release and Debug builds of RRA will be available in the build/release and b
 
 ### Building on Ubuntu
 Required dependencies can be installed as follows:
-
+```bash
 sudo apt-get update
 sudo apt-get install build-essential python3 chrpath
 sudo apt-get install python3-pip
@@ -49,7 +49,7 @@ sudo apt-get install git-lfs
 sudo apt-get install python3-sphinx
 sudo apt-get install libxcb-xinerama0
 sudo apt-get install mesa-common-dev libglu1-mesa-dev
-
+```
 Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page here: https://www.qt.io/blog/qt-5.15.2-released
 As an alternative, the Qt 5.12.6 offline installer can be used here: https://download.qt.io/archive/qt/5.12/5.12.6/ (the .run file) and installed
 to ~/Qt/Qt5.12.6 (the default of ~/Qt5.12.6 will not work).
@@ -61,23 +61,24 @@ the libraries in the post build step. If needed, the XCB library files (libxcb*)
 Suite download found at https://gpuopen.com/tools/.
 
 Run the python pre_build.py in the build folder.
-
-$ python3 pre_build.py
-
+```bash
+python3 pre_build.py
+```
 Or run the pre_build.py script with the -qt option to specify another version of Qt (also use the --disable-extra-qt-lib-deploy flag since the XCB
 libraries aren't needed). For example:
-
-$ python3 pre_build.py --qt 5.12.6 --disable-extra-qt-lib-deploy
-
+```bash
+python3 pre_build.py --qt 5.12.6 --disable-extra-qt-lib-deploy
+```
 The pre_build.py script will construct the output folders and build the necessary makefiles.
 To build the release build, use:
-
-$ make -j5 -C linux/make/release
-
+```bash
+make -j5 -C linux/make/release
+```
 Similarly for the debug build, use:
-
-$ make -j5 -C linux/make/debug
-
+```bash
+make -j5 -C linux/make/debug
+```
 Alternatively, building can be done directly from the prebuild script with the --build option
-
-$ python3 pre_build.py --build
+```bash
+python3 pre_build.py --build
+```

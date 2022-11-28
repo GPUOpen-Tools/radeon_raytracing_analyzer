@@ -3,8 +3,9 @@
 ### Download Source code
 
 Clone the project radeon_raytracing_analyzer from github.com
-
+```bash
 git clone https://github.com/GPUOpen-Tools/radeon_raytracing_analyzer.git
+```
 
 ### Building on Windows
 As a preliminary step, make sure that you have the following installed on your system:

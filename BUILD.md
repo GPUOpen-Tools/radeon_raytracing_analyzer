@@ -13,14 +13,14 @@ As a preliminary step, make sure that you have the following installed on your s
 * Qt® 5 or above (5.15.2 is the default and recommended).
 * Visual Studio® 2015 or above (2019 is the default).
 
-Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page here: https://www.qt.io/blog/qt-5.15.2-released
-As an alternative, the Qt 5.12.6 offline installer can be used here: https://download.qt.io/archive/qt/5.12/5.12.6/
+Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page [here][qt-online].
+As an alternative, the Qt 5.12.6 offline installer can be used [here][qt-offline].
 Qt should be installed to the default location (C:\Qt\Qt5.xx.x).
 Be sure to select msvc2017/msvc2019 64-bit during Qt installation, depending on the compiler you decide to use.
 A reboot is required after Qt is installed.
 
-CMake can be downloaded from (https://cmake.org/download/).
-Python (V3.x) can be downloaded from (https://www.python.org/). To build the documentation from Visual Studio, the Sphinx Python Document Generator is needed.
+CMake can be downloaded from [here](https://cmake.org/download/).
+Python (V3.x) can be downloaded from [here](https://www.python.org/). To build the documentation from Visual Studio, the Sphinx Python Document Generator is needed.
 This can be installed once Python is installed, as follows:
 * Open a command prompt and navigate to the scripts folder in the python install folder. Then type these 2 commands:
 * pip install -U sphinx
@@ -50,15 +50,15 @@ sudo apt-get install python3-sphinx
 sudo apt-get install libxcb-xinerama0
 sudo apt-get install mesa-common-dev libglu1-mesa-dev
 ```
-Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page here: https://www.qt.io/blog/qt-5.15.2-released
-As an alternative, the Qt 5.12.6 offline installer can be used here: https://download.qt.io/archive/qt/5.12/5.12.6/ (the .run file) and installed
+Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page [here][qt-online].
+As an alternative, the Qt 5.12.6 offline installer can be used [here][qt-offline] (the .run file) and installed
 to ~/Qt/Qt5.12.6 (the default of ~/Qt5.12.6 will not work).
 
 XCB libraries are required for Qt v5.15.x (they are not needed for older Qt versions). By default, the CMake configuration will attempt to copy
 these files from the Qt lib folder. If these files are installed elsewhere on the system or an older version of Qt is being used to build RRA,
 the --disable-extra-qt-lib-deploy pre_build.py script argument may be used. This will prevent the build configuration scripts from attempting to copy
 the libraries in the post build step. If needed, the XCB library files (libxcb*) can be obtained from the /lib folder of the Radeon Developer Tool
-Suite download found at https://gpuopen.com/tools/.
+Suite download found [here](https://gpuopen.com/tools/).
 
 Run the python pre_build.py in the build folder.
 ```bash
@@ -82,3 +82,6 @@ Alternatively, building can be done directly from the prebuild script with the -
 ```bash
 python3 pre_build.py --build
 ```
+
+[qt-online]: https://www.qt.io/blog/qt-5.15.2-released
+[qt-offline]: https://download.qt.io/archive/qt/5.12/5.12.6/

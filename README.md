@@ -7,7 +7,7 @@ Game developers are responsible for creating the acceleration structures and so 
 and how they can affect performance.
 
 RRA allows the developer to visualize the bounding box hierarchies, and related scene geometries, via a standard rasterizer renderer or using
-a traveral counter view which will quickly hightlight areas of concern. Once identified, the developer can revisit their BVH generation strategy
+a traversal counter view which will quickly hightlight areas of concern. Once identified, the developer can revisit their BVH generation strategy
 to reduce performance bottlenecks.
 
 ## Getting Started

@@ -37,7 +37,6 @@ to reduce performance bottlenecks.
 ## Supported Operating Systems
 * Windows® 10
 * Windows® 11
-* Ubuntu 20.04 LTS (Vulkan only)
 * Ubuntu 22.04 LTS (Vulkan only)
 
 ## Build instructions

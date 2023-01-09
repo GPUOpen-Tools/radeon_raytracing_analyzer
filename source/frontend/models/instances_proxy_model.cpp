@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter that processes the instances
@@ -33,8 +33,15 @@ namespace rra
 
         setSourceModel(model);
         SetFilterKeyColumns({
+            kInstancesColumnInstanceIndex,
             kInstancesColumnInstanceAddress,
             kInstancesColumnInstanceOffset,
+            kInstancesColumnInstanceMask,
+            kInstancesColumnCullDisableFlag,
+            kInstancesColumnFlipFacingFlag,
+            kInstancesColumnForceOpaqueFlag,
+            kInstancesColumnForceNoOpaqueFlag,
+            kInstancesColumnRebraidSiblingCount,
             kInstancesColumnXPosition,
             kInstancesColumnYPosition,
             kInstancesColumnZPosition,
@@ -47,6 +54,7 @@ namespace rra
             kInstancesColumnM31,
             kInstancesColumnM32,
             kInstancesColumnM33,
+            kInstancesColumnUniqueInstanceIndex,
         });
 
         view->setModel(this);
@@ -71,7 +79,6 @@ namespace rra
         {
             switch (left_column)
             {
-            case kInstancesColumnInstanceIndex:
             case kInstancesColumnInstanceAddress:
             case kInstancesColumnInstanceOffset:
             {
@@ -95,6 +102,26 @@ namespace rra
             {
                 const float left_data  = left.data(Qt::UserRole).toFloat();
                 const float right_data = right.data(Qt::UserRole).toFloat();
+                return left_data < right_data;
+            }
+
+            case kInstancesColumnInstanceIndex:
+            case kInstancesColumnInstanceMask:
+            case kInstancesColumnRebraidSiblingCount:
+            case kInstancesColumnUniqueInstanceIndex:
+            {
+                const uint32_t left_data  = left.data(Qt::UserRole).toUInt();
+                const uint32_t right_data = right.data(Qt::UserRole).toUInt();
+                return left_data < right_data;
+            }
+
+            case kInstancesColumnCullDisableFlag:
+            case kInstancesColumnFlipFacingFlag:
+            case kInstancesColumnForceOpaqueFlag:
+            case kInstancesColumnForceNoOpaqueFlag:
+            {
+                const bool left_data  = left.data(Qt::UserRole).toBool();
+                const bool right_data = right.data(Qt::UserRole).toBool();
                 return left_data < right_data;
             }
 

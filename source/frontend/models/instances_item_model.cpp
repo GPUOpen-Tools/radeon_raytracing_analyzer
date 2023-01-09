@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the instances item model. Shared between TLAS
@@ -193,6 +193,14 @@ namespace rra
                 return QVariant::fromValue<qulonglong>((qulonglong)cache.instance_offset);
             case kInstancesColumnInstanceMask:
                 return QVariant::fromValue<quint32>(cache.instance_mask);
+            case kInstancesColumnCullDisableFlag:
+                return QVariant::fromValue<bool>(cache.cull_disable_flag);
+            case kInstancesColumnFlipFacingFlag:
+                return QVariant::fromValue<bool>(cache.flip_facing_flag);
+            case kInstancesColumnForceOpaqueFlag:
+                return QVariant::fromValue<bool>(cache.force_opaque);
+            case kInstancesColumnForceNoOpaqueFlag:
+                return QVariant::fromValue<bool>(cache.force_no_opaque);
             case kInstancesColumnRebraidSiblingCount:
                 return QVariant::fromValue<quint32>(cache.rebraid_sibling_count);
             case kInstancesColumnXPosition:

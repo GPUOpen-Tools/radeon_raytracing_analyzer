@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific base class implementation.
@@ -122,10 +122,10 @@ namespace rta
         }
         else
         {
+            RRA_UNUSED(offset);
+            RRA_ASSERT(offset != 0);
             auto    bvh = static_cast<const EncodedRtIp11TopLevelBvh*>(this);
-            int32_t id  = (node_pointer.GetByteOffset() + offset * dxr::amd::kInstanceNodeSize - header_->GetBufferOffsets().leaf_nodes) >> 7;
-            assert(id >= 0 && id < bvh->GetInstanceNodes().size());
-            return &bvh->GetInstanceNodes()[id];
+            return bvh->GetInstanceNode(&node_pointer);
         }
     }
 
@@ -161,6 +161,11 @@ namespace rta
             assert(false);
             return nullptr;
         }
+    }
+
+    const dxr::amd::NodePointer* IEncodedRtIp11Bvh::GetPrimitiveNodePointer(int32_t index) const
+    {
+        return &primitive_node_ptrs_[index];
     }
 
     bool IEncodedRtIp11Bvh::IsCompactedImpl() const

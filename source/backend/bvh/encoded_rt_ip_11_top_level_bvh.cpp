@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific top level acceleration structure
@@ -25,9 +25,45 @@ namespace rta
     {
     }
 
-    const std::vector<dxr::amd::InstanceNode>& EncodedRtIp11TopLevelBvh::GetInstanceNodes() const
+    std::int32_t EncodedRtIp11TopLevelBvh::GetInstanceNodeSize() const
     {
-        return instance_nodes_;
+        if (GetHeader().GetPostBuildInfo().GetFusedInstances() == true)
+        {
+            return dxr::amd::kFusedInstanceNodeSize;
+        }
+        else
+        {
+            return dxr::amd::kInstanceNodeSize;
+        }
+    }
+
+    const dxr::amd::InstanceNode* EncodedRtIp11TopLevelBvh::GetInstanceNode(const dxr::amd::NodePointer* node_ptr) const
+    {
+        const auto& header_offsets = GetHeader().GetBufferOffsets();
+        uint32_t    byte_offset    = node_ptr->GetByteOffset();
+        byte_offset -= header_offsets.leaf_nodes;
+
+        if (byte_offset >= instance_node_data_.size())
+        {
+            return nullptr;
+        }
+
+        return reinterpret_cast<const dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
+    }
+
+    int32_t EncodedRtIp11TopLevelBvh::GetInstanceIndex(const dxr::amd::NodePointer* node_ptr) const
+    {
+        const auto& header_offsets = GetHeader().GetBufferOffsets();
+        uint32_t    byte_offset    = node_ptr->GetByteOffset();
+        byte_offset -= header_offsets.leaf_nodes;
+
+        if (byte_offset >= instance_node_data_.size())
+        {
+            return -1;
+        }
+
+        uint32_t instance_node_size = GetInstanceNodeSize();
+        return byte_offset / instance_node_size;
     }
 
     bool EncodedRtIp11TopLevelBvh::HasBvhReferences() const
@@ -93,11 +129,12 @@ namespace rta
         auto rt_ip11_header = CreateRtIp11AccelerationStructureHeader();
         rt_ip11_header->LoadFromBuffer(dxr::amd::kAccelerationStructureHeaderSize, buffer.data() + chunk_header.header_offset);
 
-        instance_nodes_ = std::vector<dxr::amd::InstanceNode>(rt_ip11_header->GetPrimitiveCount());
-        buffer_stream.Read(dxr::amd::kInstanceNodeSize * instance_nodes_.size(), instance_nodes_.data());
+        int32_t num_instance_nodes = rt_ip11_header->GetPrimitiveCount();
+        instance_node_data_.resize(num_instance_nodes * GetInstanceNodeSize());
+        buffer_stream.Read(instance_node_data_.size(), instance_node_data_.data());
 
-        const auto prim_node_ptr_size = instance_nodes_.size() * sizeof(dxr::amd::NodePointer);
-        primitive_node_ptrs_.resize(instance_nodes_.size());
+        const auto prim_node_ptr_size = num_instance_nodes * sizeof(dxr::amd::NodePointer);
+        primitive_node_ptrs_.resize(prim_node_ptr_size);
         buffer_stream.Read(prim_node_ptr_size, primitive_node_ptrs_.data());
 
         buffer_stream.Close();
@@ -109,7 +146,7 @@ namespace rta
     {
         bool result = BuildInstanceList();
         ScanTreeDepth();
-        instance_surface_area_heuristic_.resize(instance_nodes_.size(), 0);
+        instance_surface_area_heuristic_.resize(header_->GetPrimitiveCount(), 0);
         return result;
     }
 
@@ -124,29 +161,31 @@ namespace rta
         else
         {
             // Fix up the instance node addresses.
-            for (auto& instance_node : instance_nodes_)
+            int32_t byte_offset = 0;
+            while (byte_offset < instance_node_data_.size())
             {
-                if (instance_node.IsInactive())
+                dxr::amd::InstanceNode* instance_node = reinterpret_cast<dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
+                if (!instance_node->IsInactive())
                 {
-                    continue;
+                    uint64_t                address        = instance_node->GetDesc().GetBottomLevelBvhGpuVa(dxr::InstanceDescType::kRaw);
+                    uint32_t                meta_data_size = instance_node->GetExtraData().GetBottomLevelBvhMetaDataSize();
+                    const GpuVirtualAddress old_reference  = address - meta_data_size;
+
+                    const auto it = reference_map.find(old_reference);
+                    if (it != reference_map.end())
+                    {
+                        const auto new_relative_reference = it->second;
+                        instance_node->GetDesc().SetBottomLevelBvhGpuVa(new_relative_reference << 3, dxr::InstanceDescType::kRaw);
+                    }
+                    else
+                    {
+                        missing_set.insert(old_reference);
+                        const auto new_relative_reference = 0;
+                        instance_node->GetDesc().SetBottomLevelBvhGpuVa(new_relative_reference << 3, dxr::InstanceDescType::kRaw);
+                    }
                 }
 
-                uint64_t                address        = instance_node.GetDesc().GetBottomLevelBvhGpuVa(dxr::InstanceDescType::kRaw);
-                uint32_t                meta_data_size = instance_node.GetExtraData().GetBottomLevelBvhMetaDataSize();
-                const GpuVirtualAddress old_reference  = address - meta_data_size;
-
-                const auto it = reference_map.find(old_reference);
-                if (it != reference_map.end())
-                {
-                    const auto new_relative_reference = it->second;
-                    instance_node.GetDesc().SetBottomLevelBvhGpuVa(new_relative_reference << 3, dxr::InstanceDescType::kRaw);
-                }
-                else
-                {
-                    missing_set.insert(old_reference);
-                    const auto new_relative_reference = 0;
-                    instance_node.GetDesc().SetBottomLevelBvhGpuVa(new_relative_reference << 3, dxr::InstanceDescType::kRaw);
-                }
+                byte_offset += GetInstanceNodeSize();
             }
         }
     }
@@ -184,18 +223,13 @@ namespace rta
             if (node_ptr.IsInstanceNode())
             {
                 auto byte_offset = node_ptr.GetByteOffset() - header_offsets.leaf_nodes;
-
-                uint32_t instance_node_size = sizeof(dxr::amd::InstanceNode);
-                uint32_t instance_index     = byte_offset / instance_node_size;
-
-                const auto& instance_nodes = GetInstanceNodes();
-                if (instance_index < instance_nodes.size())
+                if (byte_offset < instance_node_data_.size())
                 {
-                    const dxr::amd::InstanceNode* instance_node = &instance_nodes[instance_index];
-                    const auto&                   desc          = instance_node->GetDesc();
+                    const dxr::amd::InstanceNode* instance_node = reinterpret_cast<const dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
 
+                    const auto&           desc       = instance_node->GetDesc();
                     uint64_t              blas_index = desc.GetBottomLevelBvhGpuVa(dxr::InstanceDescType::kRaw) >> 3;
-                    uint32_t              address    = (instance_index * sizeof(dxr::amd::InstanceNode)) + header_offsets.leaf_nodes;
+                    uint32_t              address    = byte_offset + header_offsets.leaf_nodes;
                     dxr::amd::NodePointer new_node   = dxr::amd::NodePointer(dxr::amd::NodeType::kAmdNodeInstance, address);
 
                     if (instance_list_.find(blas_index) == instance_list_.end())
@@ -259,12 +293,16 @@ namespace rta
     uint64_t EncodedRtIp11TopLevelBvh::GetInactiveInstanceCountImpl() const
     {
         uint64_t inactive_count{0};
-        for (auto& instance_node : instance_nodes_)
+        int32_t  byte_offset = 0;
+        while (byte_offset < instance_node_data_.size())
         {
-            if (instance_node.IsInactive())
+            const dxr::amd::InstanceNode* instance_node = reinterpret_cast<const dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
+            if (instance_node->IsInactive())
             {
                 ++inactive_count;
             }
+
+            byte_offset += GetInstanceNodeSize();
         }
         return inactive_count;
     }
@@ -361,20 +399,16 @@ namespace rta
 
     float EncodedRtIp11TopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const
     {
-        const uint32_t byte_offset = node_ptr.GetByteOffset();
-        const uint32_t leaf_nodes  = GetHeader().GetBufferOffsets().leaf_nodes;
-        const uint32_t index       = (byte_offset - leaf_nodes) / sizeof(dxr::amd::InstanceNode);
-        assert(index < instance_nodes_.size());
+        const uint32_t index = GetInstanceIndex(&node_ptr);
+        assert(index != -1);
         assert(index < instance_surface_area_heuristic_.size());
         return instance_surface_area_heuristic_[index];
     }
 
     void EncodedRtIp11TopLevelBvh::SetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic)
     {
-        const uint32_t byte_offset = node_ptr.GetByteOffset();
-        const uint32_t leaf_nodes  = GetHeader().GetBufferOffsets().leaf_nodes;
-        const uint32_t index       = (byte_offset - leaf_nodes) / sizeof(dxr::amd::InstanceNode);
-        assert(index < instance_nodes_.size());
+        const uint32_t index = GetInstanceIndex(&node_ptr);
+        assert(index != -1);
         assert(index < instance_surface_area_heuristic_.size());
         instance_surface_area_heuristic_[index] = surface_area_heuristic;
     }

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific top level acceleration structure
@@ -28,10 +28,19 @@ namespace rta
         /// @brief Destructor.
         virtual ~EncodedRtIp11TopLevelBvh();
 
-        /// @brief Get the instance nodes.
+        /// @brief Get an instance node from an instance node pointer.
         ///
-        /// @return The instance nodes.
-        const std::vector<dxr::amd::InstanceNode>& GetInstanceNodes() const;
+        /// @param [in] node_ptr  The instance node pointer.
+        ///
+        /// @return Pointer to the instance node, or nullptr if instance node is invalid.
+        const dxr::amd::InstanceNode* GetInstanceNode(const dxr::amd::NodePointer* node_ptr) const;
+
+        /// @brief Get the index of an instance node from an instance node pointer.
+        ///
+        /// @param [in] node_ptr  The instance node pointer.
+        ///
+        /// @return The instance index, or -1 if the index is invalid.
+        int32_t GetInstanceIndex(const dxr::amd::NodePointer* node_ptr) const;
 
         /// @brief Does this BVH have references.
         ///
@@ -133,6 +142,13 @@ namespace rta
         void SetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic);
 
     private:
+        /// @brief Get the size of an instance node.
+        ///
+        /// This will be dependent on whether it's a fused instance or not.
+        ///
+        /// @return The instance node size, in bytes.
+        std::int32_t GetInstanceNodeSize() const;
+
         /// @brief Obtain the byte size of the encoded buffer.
         ///
         /// @param [in] import_option Flag indicating which sections of the chunk to load/discard.
@@ -150,8 +166,7 @@ namespace rta
         /// @return The number of inactive instances.
         virtual uint64_t GetInactiveInstanceCountImpl() const override;
 
-        std::vector<dxr::amd::InstanceNode>                              instance_nodes_      = {};  ///< The list of instance nodes.
-        std::vector<dxr::amd::NodePointer>                               primitive_node_ptrs_ = {};  ///< The list of primitive node pointers.
+        std::vector<std::uint8_t>                                        instance_node_data_  = {};  ///< The list of instance nodes.
         std::unordered_map<uint64_t, std::vector<dxr::amd::NodePointer>> instance_list_       = {};  ///< A map of BLAS index to list of instances of that BLAS.
         std::vector<float> instance_surface_area_heuristic_                                   = {};  ///< Surface area heuristic values for the instances.
     };

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Graphics Context functions.
@@ -34,7 +34,7 @@ namespace rra
             vk_graphics_context->SetWindowInfo(window_info);
         }
 
-        bool InitializeGraphicsContext(const GraphicsContextSceneInfo& info)
+        bool InitializeGraphicsContext(std::shared_ptr<GraphicsContextSceneInfo> info)
         {
             auto vk_graphics_context = rra::renderer::GetVkGraphicsContext();
             return vk_graphics_context->Initialize(info);

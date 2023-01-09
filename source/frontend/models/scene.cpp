@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Scene class.
@@ -246,7 +246,7 @@ namespace rra
         for (auto& iter : instance_map)
         {
             uint32_t triangle_count = 0;
-            RraBlasGetUniqueTriangleCount(iter.first, &triangle_count);
+            RraBlasGetTriangleNodeCount(iter.first, &triangle_count);
             current_max = std::max(triangle_count, current_max);
         }
 

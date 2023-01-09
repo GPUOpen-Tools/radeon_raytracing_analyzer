@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific bottom level acceleration structure
@@ -116,7 +116,6 @@ namespace rta
 
         std::vector<std::uint8_t>           leaf_nodes_                      = {};    ///< Leaf nodes (triangle, procedural).
         std::vector<dxr::amd::GeometryInfo> geom_infos_                      = {};    ///< Array of geometry info.
-        std::vector<dxr::amd::NodePointer>  primitive_node_ptrs_             = {};    ///< Pointer to the leaf nodes.
         std::vector<std::uint8_t>           sideband_data_                   = {};    ///< Sideband data for compression.
         std::vector<float>                  triangle_surface_area_heuristic_ = {};    ///< Surface area heuristic values for the triangles.
         float                               surface_area_heuristic_          = 0.0f;  ///< The precalculated Surface area heuristic for this BLAS.

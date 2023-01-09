@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for an instance node class.
@@ -14,6 +14,7 @@ namespace dxr
     static_assert(std::is_trivially_copyable<dxr::InstanceDesc>::value, "DXRInstanceDesc must be a trivially copyable class.");
 
     // Check if the size of structs is as expected.
+    static_assert(sizeof(amd::FusedInstanceNode) == amd::kFusedInstanceNodeSize, "FusedInstanceNode size does not match the required byte size.");
     static_assert(sizeof(amd::InstanceNode) == amd::kInstanceNodeSize, "InstanceNode does not have the expected byte size.");
     static_assert(sizeof(amd::InstanceExtraData) == amd::kInstanceExtraDataSize, "Size of InstanceExtraData does not match the expected byte size");
     static_assert(sizeof(InstanceDesc) == kInstanceDescSize, "Size of InstanceDesc does not match the expected byte size");

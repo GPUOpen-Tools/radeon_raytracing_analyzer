@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an instance node class.
@@ -9,6 +9,7 @@
 #define RRA_BACKEND_BVH_NODE_TYPES_INSTANCE_NODE_H_
 
 #include "bvh/node_pointer.h"
+#include "float32_box_node.h"
 
 namespace dxr
 {
@@ -125,7 +126,7 @@ namespace dxr
         /// @brief Pack two uint32_t integers to a single 64-bit address.
         ///
         /// Store the high and low bits in uint32_t member variables.
-        uint64_t  GetInstancePtr() const;
+        uint64_t GetInstancePtr() const;
 
         Matrix3x4 transform_ = {};  ///< Instance transform of geometry in blas.
         union                       ///< 24-bit instanceID and 8-bit mask.
@@ -185,7 +186,7 @@ namespace dxr
             const Matrix3x4& GetOriginalInstanceTransform() const;
 
         private:
-            std::uint32_t index_                         = 0;                                ///< Index of this instance.
+            std::uint32_t index_                         = 0;                                 ///< Index of this instance.
             NodePointer   bottom_level_bvh_node_pointer_ = {NodeType::kAmdNodeTriangle0, 0};  ///< The bottom level node pointer.
 
             std::uint32_t bottom_level_bvh_meta_data_size_ = 0;  ///< Size of blas meta data (important for addr computation of blas).
@@ -228,6 +229,13 @@ namespace dxr
         private:
             InstanceDesc      desc_;        ///< Description of instance (id, ...), and pointer to the header of the blas.
             InstanceExtraData extra_data_;  ///< Extra data: inverse transform, blas meta data size, blas pointer, ...
+        };
+
+        /// @brief General structure of a fused instance node for Tlas.
+        struct FusedInstanceNode
+        {
+            InstanceNode   instance_node          = {};     ///< The instance node data.
+            Float32BoxNode bottom_level_root_node = {};     ///< The bottom level root node data.
         };
 
     }  // namespace amd

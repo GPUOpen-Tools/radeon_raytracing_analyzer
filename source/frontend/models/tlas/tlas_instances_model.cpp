@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the TLAS instances model.
@@ -77,6 +77,20 @@ namespace rra
             // No instances in tlas, report it as such.
             return false;
         }
+
+#ifdef _DEBUG
+        uint64_t total_instances = 0;
+        for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
+        {
+            uint64_t instance_count = 0;
+            if (RraTlasGetInstanceCount(tlas_index, blas_index, &instance_count) != kRraOk)
+            {
+                return false;
+            }
+            total_instances += instance_count;
+        }
+        RRA_ASSERT(total_instances == total_instance_count);
+#endif
 
         table_model_->SetRowCount(total_instance_count);
 

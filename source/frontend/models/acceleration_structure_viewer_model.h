@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure viewer model base class.
@@ -30,7 +30,7 @@ namespace rra
 
     /// @brief Get the scene info needed for creating the graphics context.
     /// @return Scene info needed by graphics context.
-    renderer::GraphicsContextSceneInfo GetGraphicsContextSceneInfo();
+    std::shared_ptr<renderer::GraphicsContextSceneInfo> GetGraphicsContextSceneInfo();
 
     class AccelerationStructureViewerModel : public ModelViewMapper
     {

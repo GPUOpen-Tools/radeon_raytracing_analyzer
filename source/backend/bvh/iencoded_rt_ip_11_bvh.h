@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific base class definition.
@@ -295,6 +295,15 @@ namespace rta
         /// @param offset       Defines which node should be returned. Offset 0 => the one referenced by node_pointer, 1 => the node behind the node with offset 0.
         const dxr::amd::ProceduralNode* GetProceduralNode(const dxr::amd::NodePointer node_pointer, const int offset = 0) const;
 
+        /// @brief Get a primitive node pointer at the specified index.
+        ///
+        /// Used to access the primitive (leaf) node data.
+        ///
+        /// @param [in] index  The index of the node pointer.
+        ///
+        /// @return Pointer to the primitive node pointer.
+        const dxr::amd::NodePointer* GetPrimitiveNodePointer(int32_t index) const;
+
     protected:
         /// @brief Scan the tree to get the maximum and average tree depths.
         void ScanTreeDepth();
@@ -322,6 +331,7 @@ namespace rta
         dxr::amd::ParentBlock parent_data_ = {};          ///< Parent data containing the pointer to the parents of each node.
         std::unique_ptr<IRtIp11AccelerationStructureHeader> header_                     = nullptr;  ///< Actual header of the acceleration structure.
         std::vector<std::uint8_t>                           interior_nodes_             = {};       ///< Interior nodes in bvh, bboxes are either FP32 or FP16.
+        std::vector<dxr::amd::NodePointer>                  primitive_node_ptrs_        = {};       ///< Pointer to the leaf nodes.
         bool                                                is_compacted_               = false;    ///< States whether this BVH was compacted or not.
         std::vector<float>                                  box_surface_area_heuristic_ = {};  ///< Surface area heuristic values for the interior box nodes.
         uint32_t                                            max_tree_depth_             = 0;   ///< The maximum depth of the BVH tree.

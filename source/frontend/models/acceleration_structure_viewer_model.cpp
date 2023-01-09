@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure viewer model base class.
@@ -286,20 +286,20 @@ namespace rra
         }
     }
 
-    renderer::GraphicsContextSceneInfo GetGraphicsContextSceneInfo()
+    std::shared_ptr<renderer::GraphicsContextSceneInfo> GetGraphicsContextSceneInfo()
     {
         uint64_t blas_count = 0;
         RRA_ASSERT(RraBvhGetTotalBlasCount(&blas_count) == kRraOk);
 
-        renderer::GraphicsContextSceneInfo info{};
-        info.acceleration_structures.resize(blas_count);
+        auto info = std::make_shared<renderer::GraphicsContextSceneInfo>();
+        info->acceleration_structures.resize(blas_count);
 
         for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
         {
             auto scene_root = SceneNode::ConstructFromBlas(static_cast<uint32_t>(blas_index));
 
             // Add to the tree using the scene root.
-            scene_root->AddToTraversalTree(info.acceleration_structures[blas_index]);
+            scene_root->AddToTraversalTree(info->acceleration_structures[blas_index]);
 
             delete scene_root;
         }

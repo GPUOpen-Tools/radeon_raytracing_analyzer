@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the TLAS interface.
@@ -30,23 +30,12 @@ static RraErrorCode GetInstanceNodeFromInstancePointer(const rta::EncodedRtIp11T
         return kRraErrorInvalidPointer;
     }
 
-    const auto& header_offsets  = tlas->GetHeader().GetBufferOffsets();
-    uint32_t    instance_offset = node->GetByteOffset();
-
-    instance_offset -= header_offsets.leaf_nodes;
-
-    uint32_t instance_node_size = sizeof(dxr::amd::InstanceNode);
-    uint32_t instance_index     = instance_offset / instance_node_size;
-
-    const auto& instance_nodes = tlas->GetInstanceNodes();
-    if (instance_index >= instance_nodes.size())
+    const dxr::amd::InstanceNode* instance_node = tlas->GetInstanceNode(node);
+    if (instance_node == nullptr)
     {
         return kRraErrorIndexOutOfRange;
     }
-
-    // Use instance_index to get the instance node.
-    const dxr::amd::InstanceNode* instance_node = &instance_nodes[instance_index];
-    *out_instance_node                          = instance_node;
+    *out_instance_node = instance_node;
 
     return kRraOk;
 }
@@ -581,18 +570,10 @@ RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, 
     {
         return kRraErrorInvalidPointer;
     }
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
 
-    const auto&            header_offsets  = tlas->GetHeader().GetBufferOffsets();
-    dxr::amd::NodePointer* node            = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-    uint32_t               instance_offset = node->GetByteOffset();
-
-    instance_offset -= header_offsets.leaf_nodes;
-
-    uint32_t instance_node_size = sizeof(dxr::amd::InstanceNode);
-    uint32_t instance_index     = instance_offset / instance_node_size;
-
-    const auto& instance_nodes = tlas->GetInstanceNodes();
-    if (instance_index >= instance_nodes.size())
+    uint32_t instance_index     = tlas->GetInstanceIndex(node);
+    if (instance_index == -1)
     {
         return kRraErrorIndexOutOfRange;
     }

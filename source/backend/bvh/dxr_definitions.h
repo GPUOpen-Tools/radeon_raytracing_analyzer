@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the DXR helper functions and definitions.
@@ -66,7 +66,7 @@ namespace dxr
     // See https://microsoft.github.io/DirectX-Specs/d3d/Raytracing.html#d3d12_raytracing_instance_flags
     enum class InstanceFlags : std::uint32_t
     {
-        kFlagNone = 0,
+        kFlagNone                = 0,
         kFlagTriangleCullDisable = 0x1,
         kFlagTriangleCCW         = 0x2,
         kFlagForceOpaque         = 0x4,
@@ -81,7 +81,7 @@ namespace dxr
 
     enum class VertexBufferFormat : std::uint32_t
     {
-        kFormatUnknown    = 0,
+        kFormatUnknown = 0,
     };
 
     // Description of geometry: vertex and index buffer for meshes,
@@ -170,6 +170,7 @@ namespace dxr
 
         // Byte sizes for all structs contained in BVH4 dumps on RT IP 1.1.
         constexpr std::uint32_t kInvalidNode                     = UINT32_MAX;
+        constexpr std::uint32_t kFusedInstanceNodeSize           = 256;
         constexpr std::uint32_t kInstanceNodeSize                = 128;
         constexpr std::uint32_t kFp32BoxNodeSize                 = 128;
         constexpr std::uint32_t kFp16BoxNodeSize                 = 64;

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for graphics context for the Vulkan API.
@@ -11,6 +11,7 @@
 #include "framework/device.h"
 #include "public/renderer_interface.h"
 #include <map>
+#include <memory>
 
 namespace rra
 {
@@ -40,7 +41,7 @@ namespace rra
             /// @brief Initializes the Vulkan context and device.
             ///
             /// @returns True if the graphics context was initialized successfully, or false if a failure occurred.
-            bool Initialize(const GraphicsContextSceneInfo& info);
+            bool Initialize(std::shared_ptr<GraphicsContextSceneInfo> info);
 
             /// @brief Cleans up the context.
             void Cleanup();
@@ -100,7 +101,7 @@ namespace rra
             /// @brief Collects and uploads the traversal trees to the device.
             ///
             /// returns True on successful upload.
-            bool CollectAndUploadTraversalTrees(const GraphicsContextSceneInfo& info);
+            bool CollectAndUploadTraversalTrees(std::shared_ptr<GraphicsContextSceneInfo> info);
 
             Device                           device_{};                 ///< The renderer device.
             WindowInfo                       window_info_{};            ///< The window information.

@@ -73,4 +73,4 @@ CMake is a registered trademark of Kitware, Inc.
 Qt and the Qt logo are registered trademarks of the Qt Company Ltd and/or its subsidiaries worldwide.
 
 
-© 2022 Advanced Micro Devices, Inc. All rights reserved.
+© 2022-2023 Advanced Micro Devices, Inc. All rights reserved.

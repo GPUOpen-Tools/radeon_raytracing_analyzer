@@ -1,5 +1,22 @@
-Radeon Raytracing Analyzer V1.1 12/14/2022
-------------------------------------------
+Radeon Raytracing Analyzer V1.1.1 01/09/2023
+--------------------------------------------
+
+V1.1.1 Changes
+------------------------------------
+1) Add support for fused instances.
+
+Known Issues
+------------------------------------
+(1) When capturing raytracing applications, it is strongly recommended not to reuse buffers immediately after a DispatchRays() call, since the capture process can take quite a bit of time and this will lead to partially created BVH data being written out. This will show up in RRA as missing BLAS/TLAS data. The trace should still load but certain parts of the scene will be missing.
+(2) RRA is very memory-intensive, particularly for large scenes. To reduce the memory footprint as much as possible, please limit the number of concurrent instances of RRA. This will be dependent on the amount of video and system memory available, and in most uses-cases will not be an issue.
+(3) Radeon Developer Panel will NOT capture RRA traces from AMD multi-GPU configurations (e.g. two AMD GPUs). It will work with one AMD GPU and other non-AMD cards installed in the same machine. Please note that the primary monitor will need to be configured for the AMD GPU/monitor combination. For systems consisting of an AMD APU and AMD discrete GPU, capturing profiles should work, but an error may be logged in the Radeon Developer Panel regarding not being able to set peak clock mode. It is recommended that the GPU in the APU be disabled in the BIOS.
+(4) Radeon Developer Panel can only capture an RRA trace on a single AMD GPU at a time.
+(5) Radeon Developer Panel cannot capture RRA traces from non-AMD GPUs.
+(6) Unicode folders and filenames are currently not supported.
+(7) There is currently no default "Application 'up' axis" in the viewer panes. When loading or reloading RRA traces, orient your scene and press the "U" key to automatically set the up axis.
+
+Release Notes History
+------------------------------------
 
 V1.1 Changes
 ------------------------------------
@@ -17,19 +34,7 @@ V1.1 Changes
 7) Keyboard shortcuts added for all panes on the Welcome and Settings lists. Some keys have also been remapped to avoid conflict with the Adrenaline software. See the documentation or keyboard shortcuts pane for details.
 8) Bug/stability fixes.
 
-Known Issues
-------------------------------------
-(1) When capturing raytracing applications, it is strongly recommended not to reuse buffers immediately after a DispatchRays() call, since the capture process can take quite a bit of time and this will lead to partially created BVH data being written out. This will show up in RRA as missing BLAS/TLAS data. The trace should still load but certain parts of the scene will be missing.
-(2) RRA is very memory-intensive, particularly for large scenes. To reduce the memory footprint as much as possible, please limit the number of concurrent instances of RRA. This will be dependent on the amount of video and system memory available, and in most uses-cases will not be an issue.
-(3) Radeon Developer Panel will NOT capture RRA traces from AMD multi-GPU configurations (e.g. two AMD GPUs). It will work with one AMD GPU and other non-AMD cards installed in the same machine. Please note that the primary monitor will need to be configured for the AMD GPU/monitor combination. For systems consisting of an AMD APU and AMD discrete GPU, capturing profiles should work, but an error may be logged in the Radeon Developer Panel regarding not being able to set peak clock mode. It is recommended that the GPU in the APU be disabled in the BIOS.
-(4) Radeon Developer Panel can only capture an RRA trace on a single AMD GPU at a time.
-(5) Radeon Developer Panel cannot capture RRA traces from non-AMD GPUs.
-(6) Unicode folders and filenames are currently not supported.
-(7) There is currently no default "Application 'up' axis" in the viewer panes. When loading or reloading RRA traces, orient your scene and press the "U" key to automatically set the up axis.
-
-Release Notes History
-------------------------------------
-
 V1.0
 ------------------------------------
 This is the first public release of the Radeon Raytracing Analyzer.
+

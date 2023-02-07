@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 #include <map>
+#include <string>
 
 #include "public/shared.h"
 #include "public/rra_bvh.h"

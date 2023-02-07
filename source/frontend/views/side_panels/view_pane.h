@@ -131,6 +131,12 @@ private slots:
     /// @brief Toggle the accept first hit flag.
     void ToggleRayFlagsAcceptFirstHit();
 
+    /// @brief Toggle the cull back facing triangles flag.
+    void ToggleRayFlagsCullBackFacingTriangles();
+
+    /// @brief Toggle the cull front facing triangles flag.
+    void ToggleRayFlagsCullFrontFacingTriangles();
+
     /// @brief Move the camera to (0, 0, 0).
     void MoveCameraToOrigin();
 

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <QCoreApplication>
+#include <QFileInfo>
 #include "qt_common/utils/qt_util.h"
 
 #include "util_vulkan.h"
@@ -74,21 +75,18 @@ namespace rra
                         VkPipelineShaderStageCreateInfo& shader_stage_info)
         {
             // The shader binaries can be found in a 'shaders' directory living alongside the application executable.
-            std::string application_path = QCoreApplication::applicationDirPath().toStdString();
+            QString application_path = QCoreApplication::applicationDirPath();
 
-            std::string full_shader_path;
+            QString full_shader_path;
             full_shader_path.append(application_path);
             full_shader_path.append("/shaders/");
             full_shader_path.append(shader_file_path);
 
-            std::ifstream shader_source_stream(full_shader_path.c_str(), std::ios::binary | std::ios::in | std::ios::ate);
-
+            QFile shader_source_stream(full_shader_path);
             VkShaderModule shader_module = VK_NULL_HANDLE;
-
-            if (shader_source_stream.is_open())
+            if (shader_source_stream.open(QIODevice::ReadOnly))
             {
-                size_t size = shader_source_stream.tellg();
-                shader_source_stream.seekg(0, std::ios::beg);
+                qint64 size = shader_source_stream.size();
                 char* shader_code = new char[size];
                 shader_source_stream.read(shader_code, size);
                 shader_source_stream.close();

@@ -61,7 +61,7 @@ namespace rra
         kSidePaneViewNumWidgets,
     };
 
-    constexpr float kDefaultSpeedDiagonalMultiplier = 0.25f;      ///< The default speed is this multiple of the scene bounding volume diagonal.
+    constexpr float kDefaultSpeedDiagonalMultiplier = 0.25f;     ///< The default speed is this multiple of the scene bounding volume diagonal.
     constexpr float kMinimumMovementSpeedMultiplier = 0.00005f;  ///< The minimum movement speed is this multiple of the maximum movement speed.
     const int32_t   kMovementSliderMaximum          = 1000;      ///< The number of tick marks on the slider, essentially.
 
@@ -91,7 +91,7 @@ namespace rra
         /// @brief Get the culling modes supported by the view.
         ///
         /// @return A list of strings containing the culling modes.
-        std::vector<std::string>& GetCullingModes() const;
+        std::vector<std::string>& GetViewportCullingModes() const;
 
         /// @brief Enable/disable whether to render the geometry.
         ///
@@ -116,13 +116,16 @@ namespace rra
         /// @brief Set the renderer culling mode.
         ///
         /// @param [in] index An index selected in the combo box corresponding to the culling mode.
-        void SetCullingMode(int index);
+        void SetViewportCullingMode(int index);
 
         /// @brief Set the max traversal counter range.
         ///
         /// @param [in] min_value The minimum counter value.
         /// @param [in] max_value The maximum counter value.
         void SetTraversalCounterRange(uint32_t min_value, uint32_t max_value);
+
+        /// @brief Update the value render state adapter's value of the max traversal count setting.
+        void UpdateTraversalCounterMaximumFromSettings();
 
         /// @brief Enable/disable whether to render the traversal.
         ///
@@ -138,6 +141,12 @@ namespace rra
         ///
         /// @param [in] update_function The callback to use when the range has been acquired.
         void ToggleTraversalCounterContinuousUpdate(std::function<void(uint32_t min, uint32_t max)> update_function);
+
+        /// @brief Sets the histogram data update function to populate histogram from traversal counter.
+        /// 
+        /// @param [in] update_function The callback to use after the traversal shader runs to populate histogram.
+        /// @param [in] traversal_max_setting The maximum traversal count set in the settings.
+        void SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function, uint32_t traversal_max_setting);
 
         /// @brief Checks if the traversal counter continuous update is set.
         ///
@@ -239,6 +248,18 @@ namespace rra
 
         /// @brief Disable the accept first hit flag.
         void DisableRayFlagsAcceptFirstHit();
+
+        /// @brief Enable the cull back facing triangles flag.
+        void EnableRayCullBackFacingTriangles();
+
+        /// @brief Disable the cull back facing triangles flag.
+        void DisableRayCullBackFacingTriangles();
+
+        /// @brief Enable the cull front facing triangles flag.
+        void EnableRayCullFrontFacingTriangles();
+
+        /// @brief Disable the cull front facing triangles flag.
+        void DisableRayCullFrontFacingTriangles();
 
         /// @brief Set whether or not to use orthographic projection.
         ///

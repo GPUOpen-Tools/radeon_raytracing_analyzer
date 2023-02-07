@@ -496,6 +496,39 @@ RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_ptr, uin
     return kRraOk;
 }
 
+RraErrorCode RraBlasGetGeometryPrimitiveCount(uint64_t blas_index, uint32_t geometry_index, uint32_t* out_primitive_count)
+{
+    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    if (geometry_index > blas->GetGeometryInfos().size())
+    {
+        return kRraErrorIndexOutOfRange;
+    }
+
+    *out_primitive_count = blas->GetGeometryInfos()[geometry_index].GetPrimitiveCount();
+
+    return kRraOk;
+}
+
+RraErrorCode RraBlasGetGeometryCount(uint64_t blas_index, uint32_t* out_geometry_count)
+{
+    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    *out_geometry_count = (uint32_t)blas->GetGeometryInfos().size();
+
+    return kRraOk;
+}
+
 RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t local_primitive_index, uint32_t* out_primitive_index)
 {
     const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);

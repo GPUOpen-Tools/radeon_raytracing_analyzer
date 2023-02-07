@@ -65,6 +65,7 @@ namespace rra
         kBlasPaneViewer,
         kBlasPaneInstances,
         kBlasPaneTriangles,
+        kBlasPaneGeometries,
         kBlasPaneProperties,
 
         kBlasPaneCount,
@@ -109,6 +110,7 @@ namespace rra
         kPaneIdBlasViewer                = (kMainPaneBlas << kPaneShift) | kBlasPaneViewer,
         kPaneIdBlasInstances             = (kMainPaneBlas << kPaneShift) | kBlasPaneInstances,
         kPaneIdBlasTriangles             = (kMainPaneBlas << kPaneShift) | kBlasPaneTriangles,
+        kPaneIdBlasGeometries            = (kMainPaneBlas << kPaneShift) | kBlasPaneGeometries,
         kPaneIdBlasProperties            = (kMainPaneBlas << kPaneShift) | kBlasPaneProperties,
         kPaneIdSettingsGeneral           = (kMainPaneSettings << kPaneShift) | kSettingsPaneGeneral,
         kPaneIdSettingsThemesAndColors   = (kMainPaneSettings << kPaneShift) | kSettingsPaneThemesAndColors,
@@ -127,7 +129,8 @@ namespace rra
     static const int kGotoBlasViewerPane     = Qt::Key_A;
     static const int kGotoBlasInstancesPane  = Qt::Key_S;
     static const int kGotoBlasTrianglesPane  = Qt::Key_D;
-    static const int kGotoBlasPropertiesPane = Qt::Key_F;
+    static const int kGotoBlasGeometriesPane = Qt::Key_F;
+    static const int kGotoBlasPropertiesPane = Qt::Key_G;
 
     static const int kGotoWelcomePane           = Qt::Key_X;
     static const int kGotoRecentTracesPane      = Qt::Key_C;
@@ -164,7 +167,7 @@ namespace rra
         /// @param [in] pane the pane to jump to.
         ///
         /// @return The Navigation location.
-        const NavLocation* const SetupNextPane(rra::RRAPaneId pane);
+        NavLocation* SetupNextPane(rra::RRAPaneId pane);
 
         /// @brief Work out current pane from app state.
         ///

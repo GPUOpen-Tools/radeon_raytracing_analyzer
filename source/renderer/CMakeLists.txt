@@ -15,7 +15,7 @@ IF(UNIX AND NOT APPLE)
 ENDIF()
 
 # Locate the Vulkan headers from the external dependencies directory.
-include_directories(${CMAKE_SOURCE_DIR}/external/vulkan/include/)
+include_directories(${CMAKE_SOURCE_DIR}/external/third_party/vulkan/include/)
 
 find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
 
@@ -25,7 +25,7 @@ if(WIN32)
 elseif(LINUX)
     set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_XCB_KHR)
 endif()
-add_subdirectory(${CMAKE_SOURCE_DIR}/external/volk volk)
+add_subdirectory(${CMAKE_SOURCE_DIR}/external/third_party/volk volk)
 
 IF(WIN32)
     # Warnings as errors for Windows
@@ -34,7 +34,6 @@ ELSEIF(LINUX)
     # Remove warnings for Linux
     # TODO: Re-enable the Linux based warnings once we have a solution for VMA files. Windows side relies on pragma warning so it does not need to disable warnings.
     # add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-sign-compare -Wno-uninitialized)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     find_package(Threads REQUIRED)
 ENDIF(WIN32)
 

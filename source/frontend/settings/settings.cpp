@@ -233,6 +233,20 @@ namespace rra
         default_settings_[kSettingGeneralFrustumCullRatio]         = {"FrustumCullRatio", "0.0005"};
         default_settings_[kSettingGeneralDecimalPrecision]         = {"DecimalPrecision", "2"};
 
+        default_settings_[kSettingGeneralCullMode]                 = {"CullMode", "0"};
+        default_settings_[kSettingGeneralControlStyle]             = {"ControlStyle", "0"};
+        default_settings_[kSettingGeneralUpAxis]                   = {"UpAxis", "1"};
+        default_settings_[kSettingGeneralInvertVertical]           = {"InvertVertical", "False"};
+        default_settings_[kSettingGeneralInvertHorizontal]         = {"InvertHorizontal", "False"};
+        default_settings_[kSettingGeneralTLASBVHColoringMode]      = {"TLASBVHColoringMode", "0"};
+        default_settings_[kSettingGeneralBLASBVHColoringMode]      = {"BLASBVHColoringMode", "0"};
+        default_settings_[kSettingGeneralTLASGeometryColoringMode] = {"TLASGeometryColoringMode", "0"};
+        default_settings_[kSettingGeneralBLASGeometryColoringMode] = {"BLASGeometryColoringMode", "0"};
+        default_settings_[kSettingGeneralTLASHeatmapColor]         = {"TLASHeatmapColor", "0"};
+        default_settings_[kSettingGeneralBLASHeatmapColor]         = {"BLASHeatmapColor", "0"};
+        default_settings_[kSettingGeneralTLASTraversalCounterMode] = {"TLASTraversalCounterMode", "0"};
+        default_settings_[kSettingGeneralBLASTraversalCounterMode] = {"BLASTraversalCounterMode", "0"};
+
         default_settings_[kSettingThemesAndColorsPalette] = {"ColorPalette",
                                                              "#FFFFBA02,#FFFF8B00,#FFF76210,#FFE17F35,#FFDA3B01,#FFEF6950,#FFD03438,#FFFF4343,"
                                                              "#FFFF6062,#FFE81123,#FFEA015D,#FFC40052,#FFFF0080,#FFFF97FF,#FFFF4CFF,#FFDC00DD,"
@@ -250,7 +264,7 @@ namespace rra
         default_settings_[kSettingThemesAndColorsGeometrySelected]            = {"GeometrySelectedColor", "28"};
         default_settings_[kSettingThemesAndColorsBackground1]                 = {"Background1Color", "25"};
         default_settings_[kSettingThemesAndColorsBackground2]                 = {"Background2Color", "26"};
-        default_settings_[kSettingThemesAndColorsNonOpaque]                 = {"NonOpaqueColor", "29"};
+        default_settings_[kSettingThemesAndColorsNonOpaque]                   = {"NonOpaqueColor", "29"};
         default_settings_[kSettingThemesAndColorsOpaque]                      = {"OpaqueColor", "30"};
         default_settings_[kSettingThemesAndColorsPositive]                    = {"PositiveColor", "30"};
         default_settings_[kSettingThemesAndColorsNegative]                    = {"NegativeColor", "29"};
@@ -309,6 +323,23 @@ namespace rra
     void Settings::SetToDefaultValue(SettingID setting_id)
     {
         active_settings_[setting_id].value = default_settings_[setting_id].value;
+    }
+
+    void Settings::SetPersistentUIToDefault()
+    {
+        SetToDefaultValue(kSettingGeneralCullMode);
+        SetToDefaultValue(kSettingGeneralControlStyle);
+        SetToDefaultValue(kSettingGeneralUpAxis);           
+        SetToDefaultValue(kSettingGeneralInvertVertical);
+        SetToDefaultValue(kSettingGeneralInvertHorizontal);
+        SetToDefaultValue(kSettingGeneralTLASBVHColoringMode);
+        SetToDefaultValue(kSettingGeneralBLASBVHColoringMode);
+        SetToDefaultValue(kSettingGeneralTLASGeometryColoringMode);
+        SetToDefaultValue(kSettingGeneralBLASGeometryColoringMode);
+        SetToDefaultValue(kSettingGeneralTLASHeatmapColor);
+        SetToDefaultValue(kSettingGeneralBLASHeatmapColor);
+        SetToDefaultValue(kSettingGeneralTLASTraversalCounterMode);
+        SetToDefaultValue(kSettingGeneralBLASTraversalCounterMode);
     }
 
     void Settings::SetBoolValue(SettingID setting_id, const bool value)
@@ -555,6 +586,151 @@ namespace rra
     int Settings::GetDecimalPrecision()
     {
         return GetIntValue(kSettingGeneralDecimalPrecision);
+    }
+
+    // Viewer persistant settings. -------------------------------------
+
+    CullModeType Settings::GetCullMode() const
+    {
+        return static_cast<CullModeType>(GetIntValue(kSettingGeneralCullMode));
+    }
+
+    void Settings::SetCullMode(CullModeType cull_mode)
+    {
+        SetIntValue(kSettingGeneralCullMode, cull_mode);
+        SaveSettings();
+    }
+
+    ControlStyleType Settings::GetControlStyle() const
+    {
+        return static_cast<ControlStyleType>(GetIntValue(kSettingGeneralControlStyle));
+    }
+
+    void Settings::SetControlStyle(ControlStyleType control_style_type)
+    {
+        SetIntValue(kSettingGeneralControlStyle, control_style_type);
+        SaveSettings();
+    }
+
+    UpAxisType Settings::GetUpAxis() const
+    {
+        return static_cast<UpAxisType>(GetIntValue(kSettingGeneralUpAxis));
+    }
+
+    void Settings::SetUpAxis(UpAxisType up_axis)
+    {
+        SetIntValue(kSettingGeneralUpAxis, up_axis);
+        SaveSettings();
+    }
+
+    bool Settings::GetInvertVertical() const
+    {
+        return GetBoolValue(kSettingGeneralInvertVertical);
+    }
+
+    void Settings::SetInvertVertical(bool invert_vertical)
+    {
+        SetBoolValue(kSettingGeneralInvertVertical, invert_vertical);
+        SaveSettings();
+    }
+
+    bool Settings::GetInvertHorizontal() const
+    {
+        return GetBoolValue(kSettingGeneralInvertHorizontal);
+    }
+
+    void Settings::SetInvertHorizontal(bool invert_horizontal)
+    {
+        SetBoolValue(kSettingGeneralInvertHorizontal, invert_horizontal);
+        SaveSettings();
+    }
+
+    renderer::BVHColoringMode Settings::GetTLASBVHColoringMode() const
+    {
+        return static_cast<renderer::BVHColoringMode>(GetIntValue(kSettingGeneralTLASBVHColoringMode));
+    }
+
+    void Settings::SetTLASBVHColoringMode(renderer::BVHColoringMode coloring_mode)
+    {
+        SetIntValue(kSettingGeneralTLASBVHColoringMode, (int)coloring_mode);
+        SaveSettings();
+    }
+
+    renderer::BVHColoringMode Settings::GetBLASBVHColoringMode() const
+    {
+        return static_cast<renderer::BVHColoringMode>(GetIntValue(kSettingGeneralBLASBVHColoringMode));
+    }
+
+    void Settings::SetBLASBVHColoringMode(renderer::BVHColoringMode coloring_mode)
+    {
+        SetIntValue(kSettingGeneralBLASBVHColoringMode, (int)coloring_mode);
+        SaveSettings();
+    }
+
+    int Settings::GetTLASGeometryColoringMode() const
+    {
+        return GetIntValue(kSettingGeneralTLASGeometryColoringMode);
+    }
+
+    void Settings::SetTLASGeometryColoringMode(int coloring_mode)
+    {
+        SetIntValue(kSettingGeneralTLASGeometryColoringMode, coloring_mode);
+        SaveSettings();
+    }
+
+    int Settings::GetBLASGeometryColoringMode() const
+    {
+        return GetIntValue(kSettingGeneralBLASGeometryColoringMode);
+    }
+
+    void Settings::SetBLASGeometryColoringMode(int coloring_mode)
+    {
+        SetIntValue(kSettingGeneralBLASGeometryColoringMode, coloring_mode);
+        SaveSettings();
+    }
+
+    HeatmapColorType Settings::GetTLASHeatmapColor() const
+    {
+        return static_cast<HeatmapColorType>(GetIntValue(kSettingGeneralTLASHeatmapColor));
+    }
+
+    void Settings::SetTLASHeatmapColor(HeatmapColorType heatmap_color)
+    {
+        SetIntValue(kSettingGeneralTLASHeatmapColor, (int)heatmap_color);
+        SaveSettings();
+    }
+
+    HeatmapColorType Settings::GetBLASHeatmapColor() const
+    {
+        return static_cast<HeatmapColorType>(GetIntValue(kSettingGeneralBLASHeatmapColor));
+    }
+
+    void Settings::SetBLASHeatmapColor(HeatmapColorType heatmap_color)
+    {
+        SetIntValue(kSettingGeneralBLASHeatmapColor, (int)heatmap_color);
+        SaveSettings();
+    }
+
+    int Settings::GetTLASTraversalCounterMode() const
+    {
+        return GetIntValue(kSettingGeneralTLASTraversalCounterMode);
+    }
+
+    void Settings::SetTLASTraversalCounterMode(int traversal_counter_mode)
+    {
+        SetIntValue(kSettingGeneralTLASTraversalCounterMode, (int)traversal_counter_mode);
+        SaveSettings();
+    }
+
+    int Settings::GetBLASTraversalCounterMode() const
+    {
+        return GetIntValue(kSettingGeneralBLASTraversalCounterMode);
+    }
+
+    void Settings::SetBLASTraversalCounterMode(int traversal_counter_mode)
+    {
+        SetIntValue(kSettingGeneralBLASTraversalCounterMode, traversal_counter_mode);
+        SaveSettings();
     }
 
 }  // namespace rra

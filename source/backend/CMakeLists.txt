@@ -9,8 +9,8 @@ IF(WIN32)
     # Warnings as errors for Windows
     add_compile_options(/W4 /WX)
 ELSEIF(UNIX)
-    # Remove warnings for Linux in backend
-    add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-sign-compare -Wno-uninitialized -Wno-unused-function -Wno-class-memaccess)
+    # Remove warnings for Linux in backend. Unused function used by flags_util.h
+    add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-unused-function)
 ENDIF(WIN32)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
@@ -113,7 +113,7 @@ IF (WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 ELSEIF(UNIX)
     add_definitions(-DRDF_PLATFORM_UNIX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -mavx2 -mf16c")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -mavx2 -mf16c")
 ENDIF(WIN32)
 
 # specify output library name

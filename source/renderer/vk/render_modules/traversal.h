@@ -67,6 +67,13 @@ namespace rra
             /// @param [in] update_function The update function to call on the next update.
             void SetTraversalCounterContinuousUpdateFunction(std::function<void(uint32_t min, uint32_t max)> update_function);
 
+            /// @brief Queue histogram data updates.
+            ///
+            /// @param [in] update_function The update function to call on the next update.
+            /// @param [in] max_traversal_setting The maximum traversal count set in the settings.
+            void SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function,
+                                            uint32_t                                                              max_traversal_setting);
+
             /// @brief Checks if the traversal counter continuous update function is set.
             ///
             /// @returns True if the traversal counter continuous update function is set.
@@ -106,10 +113,13 @@ namespace rra
                 VmaAllocation allocation = VK_NULL_HANDLE;
             };
 
-            std::vector<Counter> counter_gpu_buffers_;          ///< Buffer guard for the counters in gpu.
-            std::vector<Counter> counter_cpu_buffers_;          ///< Buffer guard for the counters in cpu.
-            uint32_t             counter_gpu_buffer_size_ = 0;  ///< Counter buffer size.
-            uint32_t             counter_cpu_buffer_size_ = 0;  ///< Counter cpu side buffer size.
+            std::vector<Counter> counter_gpu_buffers_;            ///< Buffer guard for the counters in gpu.
+            std::vector<Counter> counter_cpu_buffers_;            ///< Buffer guard for the counters in cpu.
+            uint32_t             counter_gpu_buffer_size_   = 0;  ///< Counter buffer size.
+            uint32_t             counter_cpu_buffer_size_   = 0;  ///< Counter cpu side buffer size.
+            uint32_t             histogram_gpu_buffer_size_ = 0;  ///< Histogram data buffer size.
+
+            std::vector<Counter> histogram_gpu_buffers_;  ///< The frequency of each traversal count, for use with histogram.
 
             uint32_t last_offscreen_image_width_  = 0;  ///< The last offscreen image width.
             uint32_t last_offscreen_image_height_ = 0;  ///< The last offscreen image height.
@@ -119,6 +129,12 @@ namespace rra
 
             std::function<void(uint32_t min, uint32_t max)> traversal_counter_range_continuous_update_function_ =
                 nullptr;  ///< The update function to call for continuous updates.
+
+            uint32_t max_traversal_count_setting_{};  ///< Maximum traversal count value from the settings.
+            bool     traversal_count_setting_changed_{};
+
+            std::function<void(const std::vector<uint32_t>& data, uint32_t buffer_width, uint32_t buffer_height)> histogram_update_function_ =
+                nullptr;  ///< The update function to call for histogram data.
 
             /// @brief Creates the counter buffers.
             ///

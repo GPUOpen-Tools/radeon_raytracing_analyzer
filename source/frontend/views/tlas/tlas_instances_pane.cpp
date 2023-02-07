@@ -27,6 +27,7 @@ TlasInstancesPane::TlasInstancesPane(QWidget* parent)
 
     // Initialize table.
     model_->InitializeTableModel(ui_->instances_table_, 0, rra::kInstancesColumnCount);
+    ui_->instances_table_->setCursor(Qt::PointingHandCursor);
 
     connect(ui_->search_box_, &QLineEdit::textChanged, model_, &rra::TlasInstancesModel::SearchTextChanged);
     connect(ui_->instances_table_, &QAbstractItemView::doubleClicked, this, &TlasInstancesPane::GotoBlasInstanceFromTableSelect);

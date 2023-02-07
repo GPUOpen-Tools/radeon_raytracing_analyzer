@@ -10,6 +10,7 @@
 #include "public/rra_trace_loader.h"
 
 #include "managers/navigation_manager.h"
+#include "settings/settings.h"
 
 namespace rra
 {
@@ -59,7 +60,7 @@ namespace rra
         return previous_pane_;
     }
 
-    const NavLocation* const PaneManager::SetupNextPane(rra::RRAPaneId pane)
+    NavLocation* PaneManager::SetupNextPane(rra::RRAPaneId pane)
     {
         rra::MainPanes main_pane = GetMainPaneFromPane(pane);
 
@@ -224,6 +225,8 @@ namespace rra
 
     void PaneManager::OnTraceOpen()
     {
+        Settings::Get().SetPersistentUIToDefault();
+
         for (auto it = panes_.begin(); it != panes_.end(); ++it)
         {
             if ((*it) != nullptr)
@@ -243,4 +246,5 @@ namespace rra
             }
         }
     }
+
 }  // namespace rra

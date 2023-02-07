@@ -73,16 +73,18 @@ struct SceneUBO
     int screen_width;
     int screen_height;
 
+    uint  max_traversal_count_setting;
     float max_traversal_count_limit;
     float min_traversal_count_limit;
     int   traversal_counter_mode;
     int   traversal_counter_use_custom_min_max;
 
     int  wireframe_enabled;
-    uint culling_mode;
 
     uint traversal_box_sort_heuristic;
     int  traversal_accept_first_hit;
+    int  traversal_cull_back_facing_triangles;
+    int  traversal_cull_front_facing_triangles;
 
     int count_as_fused_instances;
 };

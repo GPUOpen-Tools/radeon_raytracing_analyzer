@@ -16,7 +16,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>2000</width>
+    <width>8000</width>
     <height>300</height>
    </size>
   </property>
@@ -86,40 +86,21 @@
            <item row="0" column="0">
             <layout class="QVBoxLayout">
              <item>
-              <widget class="ScaledPushButton" name="tlas_title_address_">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
+              <spacer>
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
                </property>
-               <property name="minimumSize">
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
                 <size>
-                 <width>0</width>
-                 <height>0</height>
+                 <width>5</width>
+                 <height>10</height>
                 </size>
                </property>
-               <property name="text">
-                <string>0x-</string>
-               </property>
-              </widget>
+              </spacer>
              </item>
-             <item>
-             <spacer>
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Expanding</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>5</width>
-                <height>10</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
             </layout>
            </item>
            <item>
@@ -395,10 +376,10 @@
        <item>
         <layout class="QGridLayout">
          <property name="topMargin">
-          <number>40</number>
+          <number>10</number>
          </property>
          <property name="bottomMargin">
-          <number>40</number>
+          <number>10</number>
          </property>
          <item row="0" column="0">
           <widget class="ScaledLabel" name="total_triangles_label_">
@@ -407,12 +388,6 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>60</height>
-            </size>
            </property>
            <property name="alignment">
             <set>Qt::AlignTop</set>
@@ -425,7 +400,6 @@
            </property>
           </widget>
          </item>
-
          <item row="0" column="1">
           <widget class="ScaledLabel" name="total_triangles_content_">
            <property name="sizePolicy">
@@ -433,12 +407,6 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>60</height>
-            </size>
            </property>
            <property name="alignment">
             <set>Qt::AlignTop</set>
@@ -451,7 +419,6 @@
            </property>
           </widget>
          </item>
-
          <item row="0" column="2">
           <widget class="ScaledLabel" name="unique_triangles_label_">
            <property name="sizePolicy">
@@ -459,12 +426,6 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>60</height>
-            </size>
            </property>
            <property name="alignment">
             <set>Qt::AlignTop</set>
@@ -477,7 +438,6 @@
            </property>
           </widget>
          </item>
-
          <item row="0" column="3">
           <widget class="ScaledLabel" name="unique_triangles_content_">
            <property name="sizePolicy">
@@ -485,12 +445,6 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>60</height>
-            </size>
            </property>
            <property name="alignment">
             <set>Qt::AlignTop</set>
@@ -500,8 +454,23 @@
            </property>
           </widget>
          </item>
-
          <item row="1" column="0">
+          <spacer>
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>5</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="2" column="0">
           <widget class="ScaledLabel" name="node_information_label_">
            <property name="text">
             <string>Node information</string>
@@ -513,8 +482,7 @@
            </property>
           </widget>
          </item>
-
-         <item row="1" column="2">
+         <item row="2" column="2">
           <widget class="ScaledLabel" name="build_flags_label_">
            <property name="text">
             <string>Build flags</string>
@@ -526,32 +494,28 @@
            </property>
           </widget>
          </item>
-
-         <item row="2" column="0">
+         <item row="3" column="0">
           <widget class="ScaledLabel" name="number_of_nodes_label_">
            <property name="text">
             <string>Number of nodes:</string>
            </property>
           </widget>
          </item>
-
-         <item row="2" column="1">
+         <item row="3" column="1">
           <widget class="ScaledLabel" name="number_of_nodes_content_">
            <property name="text">
             <string>-</string>
            </property>
           </widget>
          </item>
-
-         <item row="2" column="2">
+         <item row="3" column="2">
           <widget class="ScaledLabel" name="allow_update_label_">
            <property name="text">
             <string>Allow update:</string>
            </property>
           </widget>
          </item>
-
-         <item row="2" column="3">
+         <item row="3" column="3">
           <widget class="ReadOnlyCheckBox" name="allow_update_content_">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -561,32 +525,28 @@
            </property>
           </widget>
          </item>
-
-         <item row="3" column="0">
+         <item row="4" column="0">
           <widget class="ScaledLabel" name="number_of_box_nodes_label_">
            <property name="text">
             <string>Number of box nodes:</string>
            </property>
           </widget>
          </item>
-
-         <item row="3" column="1">
+         <item row="4" column="1">
           <widget class="ScaledLabel" name="number_of_box_nodes_content_">
            <property name="text">
             <string>-</string>
            </property>
           </widget>
          </item>
-
-         <item row="3" column="2">
+         <item row="4" column="2">
           <widget class="ScaledLabel" name="allow_compaction_label_">
            <property name="text">
             <string>Allow compaction:</string>
            </property>
           </widget>
          </item>
-
-         <item row="3" column="3">
+         <item row="4" column="3">
           <widget class="ReadOnlyCheckBox" name="allow_compaction_content_">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -596,8 +556,7 @@
            </property>
           </widget>
          </item>
-
-         <item row="4" column="0">
+         <item row="5" column="0">
           <widget class="ScaledLabel" name="number_of_instance_nodes_label_">
            <property name="rightMargin">
             <number>20</number>
@@ -607,24 +566,21 @@
            </property>
           </widget>
          </item>
-
-         <item row="4" column="1">
+         <item row="5" column="1">
           <widget class="ScaledLabel" name="number_of_instance_nodes_content_">
            <property name="text">
             <string>-</string>
            </property>
           </widget>
          </item>
-         
-         <item row="4" column="2">
+         <item row="5" column="2">
           <widget class="ScaledLabel" name="low_memory_label_">
            <property name="text">
             <string>Low memory:</string>
            </property>
           </widget>
          </item>
-
-         <item row="4" column="3">
+         <item row="5" column="3">
           <widget class="ReadOnlyCheckBox" name="low_memory_content_">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -634,74 +590,64 @@
            </property>
           </widget>
          </item>
-
-         <item row="5" column="0">
+         <item row="6" column="0">
           <widget class="ScaledLabel" name="number_of_inactive_instances_label_">
            <property name="text">
             <string>Number of inactive instances:</string>
            </property>
           </widget>
          </item>
-
-         <item row="5" column="1">
+         <item row="6" column="1">
           <widget class="ScaledLabel" name="number_of_inactive_instances_content_">
            <property name="text">
             <string>-</string>
            </property>
           </widget>
          </item>
-
-         <item row="5" column="2">
+         <item row="6" column="2">
           <widget class="ScaledLabel" name="build_type_label_">
            <property name="text">
             <string>Build type:</string>
            </property>
           </widget>
          </item>
-
-         <item row="5" column="3">
+         <item row="6" column="3">
           <widget class="ScaledLabel" name="build_type_content_">
            <property name="text">
             <string>-</string>
            </property>
           </widget>
          </item>
-
-         <item row="6" column="0">
+         <item row="7" column="0">
           <widget class="ScaledLabel" name="number_of_box16_nodes_label_">
            <property name="text">
             <string>Number of Box16 nodes:</string>
            </property>
           </widget>
          </item>
-
-         <item row="6" column="1">
+         <item row="7" column="1">
           <widget class="ScaledLabel" name="number_of_box16_nodes_content_">
            <property name="text">
             <string>-</string>
            </property>
           </widget>
          </item>
-
-         <item row="7" column="0">
+         <item row="8" column="0">
           <widget class="ScaledLabel" name="number_of_box32_nodes_label_">
            <property name="text">
             <string>Number of Box32 nodes:</string>
            </property>
           </widget>
          </item>
-
-         <item row="7" column="1">
+         <item row="8" column="1">
           <widget class="ScaledLabel" name="number_of_box32_nodes_content_">
            <property name="text">
             <string>-</string>
            </property>
           </widget>
          </item>
-
         </layout>
        </item>
-
        <item>
         <spacer>
          <property name="orientation">

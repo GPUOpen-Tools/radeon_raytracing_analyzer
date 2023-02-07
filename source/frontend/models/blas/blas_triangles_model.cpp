@@ -115,8 +115,8 @@ namespace rra
                         {
                             continue;
                         }
-                        stats.geometryFlagOpaque            = geometry_flags & VK_GEOMETRY_OPAQUE_BIT_KHR;
-                        stats.geometryFlagNoDuplicateAnyHit = geometry_flags & VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+                        stats.geometry_flag_opaque            = geometry_flags & VK_GEOMETRY_OPAQUE_BIT_KHR;
+                        stats.geometry_flag_no_duplicate_any_hit = geometry_flags & VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
                         if (RraBlasGetIsInactive(blas_index, child_node, &stats.is_inactive) != kRraOk)
                         {
                             continue;

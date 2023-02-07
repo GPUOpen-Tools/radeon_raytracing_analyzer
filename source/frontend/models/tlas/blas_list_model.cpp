@@ -52,7 +52,7 @@ namespace rra
         uint64_t row_count = 0;
 
         // Don't include any empty BLASes or BLASes that aren't referenced (0 instances).
-        for (int blas_index = 0; blas_index < blas_count; blas_index++)
+        for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
         {
             uint64_t instance_count = 0;
             RraTlasGetInstanceCount(tlas_index, blas_index, &instance_count);
@@ -66,7 +66,7 @@ namespace rra
 
         BlasListStatistics stats      = {};
         uint64_t           rows_added = 0;
-        for (int blas_index = 0; blas_index < blas_count; blas_index++)
+        for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
         {
             if (RraTlasGetInstanceCount(tlas_index, blas_index, &stats.instance_count) != kRraOk)
             {

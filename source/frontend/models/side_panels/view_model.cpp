@@ -12,6 +12,7 @@
 
 #include "constants.h"
 #include "public/rra_print.h"
+#include "settings/settings.h"
 
 namespace rra
 {
@@ -178,7 +179,7 @@ namespace rra
             SetModelData(kSidePaneViewRenderBVH, render_state_adapter_->GetRenderBoundingVolumes());
             SetModelData(kSidePaneViewRenderGeometry, render_state_adapter_->GetRenderGeometry());
             SetModelData(kSidePaneViewWireframeOverlay, render_state_adapter_->GetRenderWireframe());
-            SetModelData(kSidePaneViewCullingMode, render_state_adapter_->GetCullingMode());
+            SetModelData(kSidePaneViewCullingMode, rra::Settings::Get().GetCullMode());
         }
 
         if (view_state_adapter_ != nullptr && current_controller_ != nullptr)
@@ -241,7 +242,7 @@ namespace rra
         }
     }
 
-    std::vector<std::string>& ViewModel::GetCullingModes() const
+    std::vector<std::string>& ViewModel::GetViewportCullingModes() const
     {
         return kCullingModes;
     }
@@ -278,11 +279,12 @@ namespace rra
         }
     }
 
-    void ViewModel::SetCullingMode(int index)
+    void ViewModel::SetViewportCullingMode(int index)
     {
         if (render_state_adapter_ != nullptr)
         {
-            render_state_adapter_->SetCullingMode(index);
+            render_state_adapter_->SetViewportCullingMode(index);
+            rra::Settings::Get().SetCullMode(static_cast<CullModeType>(index));
         }
     }
 
@@ -290,7 +292,17 @@ namespace rra
     {
         if (render_state_adapter_ != nullptr)
         {
-            render_state_adapter_->SetTraversalCounterRange(min_value, max_value);
+            render_state_adapter_->SetTraversalCounterRange(min_value, max_value, Settings::Get().GetTraversalCounterMaximum());
+        }
+    }
+
+    void ViewModel::UpdateTraversalCounterMaximumFromSettings()
+    {
+        if (render_state_adapter_ != nullptr)
+        {
+            uint32_t min_value{render_state_adapter_->GetTraversalCounterMin()};
+            uint32_t max_value{render_state_adapter_->GetTraversalCounterMax()};
+            render_state_adapter_->SetTraversalCounterRange(min_value, max_value, Settings::Get().GetTraversalCounterMaximum());
         }
     }
 
@@ -330,6 +342,11 @@ namespace rra
                 });
             }
         }
+    }
+
+    void ViewModel::SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function, uint32_t traversal_max_setting)
+    {
+        render_state_adapter_->SetHistogramUpdateFunction(update_function, traversal_max_setting);
     }
 
     bool ViewModel::IsTraversalCounterContinuousUpdateSet()
@@ -454,21 +471,23 @@ namespace rra
     void ViewModel::SetInvertVertical(bool enabled)
     {
         camera_controls_.orientation.flip_vertical = enabled;
+        rra::Settings::Get().SetInvertVertical(enabled);
     }
 
     void ViewModel::SetInvertHorizontal(bool enabled)
     {
         camera_controls_.orientation.flip_horizontal = enabled;
+        rra::Settings::Get().SetInvertHorizontal(enabled);
     }
 
     void ViewModel::ToggleInvertVertical()
     {
-        camera_controls_.orientation.flip_vertical = !camera_controls_.orientation.flip_vertical;
+        SetInvertVertical(!camera_controls_.orientation.flip_vertical);
     }
 
     void ViewModel::ToggleInvertHorizontal()
     {
-        camera_controls_.orientation.flip_horizontal = !camera_controls_.orientation.flip_horizontal;
+        SetInvertHorizontal(!camera_controls_.orientation.flip_horizontal);
     }
 
     void ViewModel::SetOrientation(rra::ViewerIOOrientation orientation)
@@ -515,6 +534,26 @@ namespace rra
     void ViewModel::DisableRayFlagsAcceptFirstHit()
     {
         render_state_adapter_->SetRayFlagAcceptFirstHit(false);
+    }
+
+    void ViewModel::EnableRayCullBackFacingTriangles()
+    {
+        render_state_adapter_->SetRayFlagCullBackFacingTriangles(true);
+    }
+
+    void ViewModel::DisableRayCullBackFacingTriangles()
+    {
+        render_state_adapter_->SetRayFlagCullBackFacingTriangles(false);
+    }
+
+    void ViewModel::EnableRayCullFrontFacingTriangles()
+    {
+        render_state_adapter_->SetRayFlagCullFrontFacingTriangles(true);
+    }
+
+    void ViewModel::DisableRayCullFrontFacingTriangles()
+    {
+        render_state_adapter_->SetRayFlagCullFrontFacingTriangles(false);
     }
 
     void ViewModel::SetOrthographic(bool ortho)

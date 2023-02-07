@@ -29,6 +29,7 @@ BlasTrianglesPane::BlasTrianglesPane(QWidget* parent)
 
     // Initialize table.
     model_->InitializeTableModel(ui_->triangles_table_, 0, rra::kBlasTrianglesColumnCount);
+    ui_->triangles_table_->setCursor(Qt::PointingHandCursor);
 
     connect(ui_->search_box_, &QLineEdit::textChanged, model_, &rra::BlasTrianglesModel::SearchTextChanged);
     connect(ui_->triangles_table_, &QAbstractItemView::doubleClicked, [=](const QModelIndex& index) { this->SelectTriangleInBlasViewer(index, true); });

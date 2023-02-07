@@ -70,7 +70,6 @@ namespace rra
         {
             combo_box->AddItem((*it).c_str());
         }
-        combo_box->SetSelectedRow(0);
     }
 
     void widget_util::DrawCheckboxCell(QPainter* painter, const QRectF& cell_rect, bool checked, bool center)

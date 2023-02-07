@@ -129,7 +129,7 @@ namespace rra
         /// @param blas_index The index of the BLAS to check.
         ///
         /// @return true if the BLAS is valid, false if not.
-        uint64_t BlasValid(int blas_index) const;
+        uint64_t BlasValid(uint64_t blas_index) const;
 
         /// @brief Update the UI elements based on what is selected in the tree view.
         ///

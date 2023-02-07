@@ -168,6 +168,22 @@ namespace rra
         return selected_node_ids_;
     }
 
+    void Scene::FilterNodesByInstanceMask(uint32_t filter)
+    {
+        for (auto& pair : nodes_)
+        {
+            SceneNode* node = pair.second;
+            renderer::Instance* instance = node->GetInstance();
+
+            if (instance)
+            {
+                node->SetFiltered((instance->mask & filter) == 0);
+            }
+        }
+
+        IncrementSceneIteration();
+    }
+
     void Scene::PopulateSceneInfo()
     {
         scene_stats_.max_instance_count = ComputeMaxInstanceCount();

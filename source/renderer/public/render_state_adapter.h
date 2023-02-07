@@ -88,6 +88,12 @@ namespace rra
             /// @param [in] update_function The callback to use when the range has been acquired.
             void SetTraversalCounterContinuousUpdateFunction(std::function<void(uint32_t min, uint32_t max)> update_function);
 
+            /// @brief Sets the histogram data update function to populate histogram from traversal counter.
+            ///
+            /// @param [in] update_function The callback to use after the traversal shader runs to populate histogram.
+            /// @param [in] traversal_max_setting The maximum traversal count set in the settings.
+            void SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function, uint32_t traversal_max_setting);
+
             /// @brief Checks if the traversal counter continuous update function is set.
             ///
             /// @returns True if the update function is set.
@@ -110,15 +116,15 @@ namespace rra
             /// @param [out] coloring_modes A vector of traversal counter mode info to populate.
             void GetAvailableTraversalCounterModes(BvhTypeFlags type, std::vector<TraversalCounterModeInfo>& counter_modes) const;
 
-            /// @brief Set the culling mode used for BLAS geometry.
+            /// @brief Set the viewport culling mode used in geometry rendering mode.
             ///
             /// @param [in] culling_mode The culling mode.
-            void SetCullingMode(int culling_mode);
+            void SetViewportCullingMode(int culling_mode);
 
-            /// @brief Get the culling mode used for rendering BLAS geometry.
+            /// @brief Get the viewport culling mode used in geometry rendering mode.
             ///
-            /// @returns The coloring mode type.
-            int GetCullingMode() const;
+            /// @returns The culling mode type.
+            int GetViewportCullingMode() const;
 
             /// @brief Set whether or not to render a wireframe over the BLAS mesh.
             ///
@@ -134,7 +140,8 @@ namespace rra
             ///
             /// @param [in] min_value The minimum counter value.
             /// @param [in] max_value The maximum counter value.
-            void SetTraversalCounterRange(uint32_t min_value, uint32_t max_value);
+            /// @param [in] settings_value The maximum counter value set in the settings.
+            void SetTraversalCounterRange(uint32_t min_value, uint32_t max_value, uint32_t settings_max);
 
             /// @brief Get the traversal counter min.
             ///
@@ -197,6 +204,12 @@ namespace rra
 
             /// @brief Set accept first hit ray flag.
             void SetRayFlagAcceptFirstHit(bool accept_first_hit);
+
+            /// @brief Set cull back facing triangles ray flag.
+            void SetRayFlagCullBackFacingTriangles(bool cull_back_facing_tris);
+
+            /// @brief Set cull front facing triangles ray flag.
+            void SetRayFlagCullFrontFacingTriangles(bool cull_front_facing_tris);
 
             /// @brief Get the boxt sort heuristic value.
             ///

@@ -58,7 +58,7 @@ namespace rta
 
         for (uint32_t i = 0; i < header_->GetLeafNodeCount(); ++i)
         {
-            auto geometry_index  = 0;
+            size_t geometry_index  = 0;
             auto primitive_index = 0;
 
             if (header_->GetGeometryType() == BottomLevelBvhGeometryType::kTriangle)

@@ -260,29 +260,7 @@ namespace rra
             descriptor_indexing_features.pNext                                      = &extended_dynamic_state_features;
             descriptor_indexing_features.sType                                      = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
             descriptor_indexing_features.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
-
-            descriptor_indexing_features.shaderInputAttachmentArrayDynamicIndexing          = VK_TRUE;
-            descriptor_indexing_features.shaderUniformTexelBufferArrayDynamicIndexing       = VK_TRUE;
-            descriptor_indexing_features.shaderStorageTexelBufferArrayDynamicIndexing       = VK_TRUE;
-            descriptor_indexing_features.shaderUniformBufferArrayNonUniformIndexing         = VK_TRUE;
-            descriptor_indexing_features.shaderSampledImageArrayNonUniformIndexing          = VK_TRUE;
-            descriptor_indexing_features.shaderStorageBufferArrayNonUniformIndexing         = VK_TRUE;
-            descriptor_indexing_features.shaderStorageImageArrayNonUniformIndexing          = VK_TRUE;
-            descriptor_indexing_features.shaderInputAttachmentArrayNonUniformIndexing       = VK_TRUE;
-            descriptor_indexing_features.shaderUniformTexelBufferArrayNonUniformIndexing    = VK_TRUE;
-            descriptor_indexing_features.shaderStorageTexelBufferArrayNonUniformIndexing    = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingUniformBufferUpdateAfterBind      = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingSampledImageUpdateAfterBind       = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingStorageImageUpdateAfterBind       = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingStorageBufferUpdateAfterBind      = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingUniformTexelBufferUpdateAfterBind = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingStorageTexelBufferUpdateAfterBind = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingUpdateUnusedWhilePending          = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingPartiallyBound                    = VK_TRUE;
-            descriptor_indexing_features.descriptorBindingVariableDescriptorCount           = VK_TRUE;
-            descriptor_indexing_features.runtimeDescriptorArray                             = VK_TRUE;
-
-            descriptor_indexing_features.runtimeDescriptorArray = VK_TRUE;
+            descriptor_indexing_features.runtimeDescriptorArray                     = VK_TRUE;
 
             VkPhysicalDeviceFeatures2 physical_device_features_2 = {};
             physical_device_features_2.sType                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -528,6 +506,19 @@ namespace rra
                     memcpy(mapped_data, data, size);
                     vmaUnmapMemory(allocator_, allocation);
                 }
+            }
+        }
+
+        void Device::ZeroOutBuffer(const VmaAllocation& allocation, VkDeviceSize size)
+        {
+            void*    mapped_data;
+            VkResult result = vmaMapMemory(allocator_, allocation, &mapped_data);
+            CheckResult(result, "Failed to map memory.");
+
+            if (result == VK_SUCCESS)
+            {
+                memset(mapped_data, 0, size);
+                vmaUnmapMemory(allocator_, allocation);
             }
         }
 

@@ -24,17 +24,17 @@ namespace dxr
             return bounding_box_;
         }
 
-        const std::uint32_t ProceduralNode::GetGeometryIndex() const
+        std::uint32_t ProceduralNode::GetGeometryIndex() const
         {
             return geometry_index;
         }
 
-        const GeometryFlags ProceduralNode::GetGeometryFlags() const
+        GeometryFlags ProceduralNode::GetGeometryFlags() const
         {
             return static_cast<GeometryFlags>(geometry_flags);
         }
 
-        const std::uint32_t ProceduralNode::GetPrimitiveIndex() const
+        std::uint32_t ProceduralNode::GetPrimitiveIndex() const
         {
             return primitive_index_;
         }

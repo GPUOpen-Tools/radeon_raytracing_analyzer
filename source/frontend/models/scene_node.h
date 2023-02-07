@@ -58,7 +58,10 @@ namespace rra
         ///
         /// Note: This function populates mutates the given frustum info struct.
         /// Specifically it populates the closest_distance_to_camera field for nearest plane calculation.
-        void AppendFrustumCulledInstanceMap(renderer::InstanceMap& instance_map, std::vector<bool>& rebraid_duplicates, const Scene* scene, renderer::FrustumInfo& frustum_info) const;
+        void AppendFrustumCulledInstanceMap(renderer::InstanceMap& instance_map,
+                                            std::vector<bool>&     rebraid_duplicates,
+                                            const Scene*           scene,
+                                            renderer::FrustumInfo& frustum_info) const;
 
         /// @brief Recursively adds the render data to the instance map.
         ///
@@ -237,6 +240,11 @@ namespace rra
         /// @param [in] tri_split_counts The primitive index counts unique by geometry.
         void PopulateSplitVertexAttribute(const std::unordered_map<uint64_t, uint32_t>& tri_split_counts);
 
+        /// @brief Set whether or not this node is culled by the instance mask filter.
+        /// 
+        /// @param filtered Culled if true.
+        void SetFiltered(bool filtered);
+
     private:
         /// @brief Construct the tree structure from TLAS.
         ///
@@ -257,7 +265,7 @@ namespace rra
         static SceneNode* ConstructFromBlasNode(uint64_t blas_index, uint32_t node_id, uint32_t depth);
 
         /// @brief Appends the merged instance to the instance map.
-        /// 
+        ///
         /// Caller must call this for only a single rebraid sibling per API instance.
         ///
         /// @param [in] instance The instance to append.
@@ -269,6 +277,7 @@ namespace rra
         uint32_t                         node_id_;                  ///< The node id for this node.
         uint32_t                         depth_           = 0;      ///< The depth of this node.
         bool                             enabled_         = true;   ///< A flag to represent enablement of this node.
+        bool                             filtered_        = false;  ///< A flag to represent whether this node is disabled by being filtered.
         bool                             visible_         = true;   ///< A flag to represent the visibility of this node.
         bool                             selected_        = false;  ///< A flag to represent if this node is selected.
         BoundingVolumeExtents            bounding_volume_ = {};     ///< The bounding volume of this node.

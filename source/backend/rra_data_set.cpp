@@ -16,6 +16,8 @@
 
 #include "rdf/rdf/inc/amdrdf.h"
 
+#include "surface_area_heuristic.h"
+
 #ifndef _WIN32
 #include "public/linux/safe_crt.h"
 #include <stddef.h>  // for offsetof macro.
@@ -89,6 +91,8 @@ RraErrorCode RraDataSetInitialize(const char* path, RraDataSet* data_set)
     RRA_RETURN_ON_ERROR(error_code == kRraOk, error_code);
 
     data_set->file_loaded = true;
+
+    rra::CalculateSurfaceAreaHeuristics(*data_set);
 
     return kRraOk;
 }

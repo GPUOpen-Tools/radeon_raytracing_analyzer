@@ -31,17 +31,17 @@ namespace dxr
             /// @brief Obtain the geometry index.
             ///
             /// @return The geometry index.
-            const std::uint32_t GetGeometryIndex() const;
+            std::uint32_t GetGeometryIndex() const;
 
             /// @brief Obtain the geometry flags.
             ///
             /// @return The geometry flags.
-            const GeometryFlags GetGeometryFlags() const;
+            GeometryFlags GetGeometryFlags() const;
 
             /// @brief Obtain the primitive index.
             ///
             /// @return The primitive index.
-            const std::uint32_t GetPrimitiveIndex() const;
+            std::uint32_t GetPrimitiveIndex() const;
 
             /// @brief Check if the x-component of the bounding box minimum is NaN.
             ///

@@ -1,5 +1,5 @@
 #! python3
-# Copyright (c) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Script to perform all necessary pre build steps. This includes:
 #
@@ -49,8 +49,8 @@ else:
 # parse the command line arguments
 parser = argparse.ArgumentParser(description="A script that generates all the necessary build dependencies for a project")
 if sys.platform == "win32":
-    parser.add_argument("--vs", default="2019", choices=["2017", "2019", "2022"], help="specify the version of Visual Studio to be used with this script (default: 2019)")
-    parser.add_argument("--toolchain", default="2019", choices=["2017", "2019", "2022"], help="specify the compiler toolchain to be used with this script (default: 2019)")
+    parser.add_argument("--vs", default="2022", choices=["2017", "2019", "2022"], help="specify the version of Visual Studio to be used with this script (default: 2022)")
+    parser.add_argument("--toolchain", default="2022", choices=["2017", "2019", "2022"], help="specify the compiler toolchain to be used with this script (default: 2022)")
     parser.add_argument("--qt-root", default="C:\\Qt", help="specify the root directory for locating QT on this system (default: C:\\Qt\\)")
     parser.add_argument("--qt-libver", default="2019", choices=["2017", "2019"], help="specify the Qt lib version to be used with this script (default: 2019)")
 elif sys.platform == "darwin":
@@ -62,9 +62,8 @@ else:
 parser.add_argument("--qt", default="5.15.2", help="specify the version of QT to be used with the script (default: 5.15.2)" )
 parser.add_argument("--clean", action="store_true", help="delete any directories created by this script")
 parser.add_argument("--no-qt", action="store_true", help="build a headless version (not applicable for all products)")
-parser.add_argument("--disable-break", action="store_true", help="disable RRA_DEBUG_BREAK asserts in debug builds")
 parser.add_argument("--update", action="store_true", help="Force fetch_dependencies script to update all dependencies")
-parser.add_argument("--output", default=output_root, help="specify the output location for generated cmake and build output files (default = OS specific subdirectory of location of PreBuild.py script)")
+parser.add_argument("--output", default=output_root, help="specify the output location for generated cmake and build output files (default = OS specific subdirectory of location of pre_build.py script)")
 parser.add_argument("--build", action="store_true", help="build all supported configurations on completion of prebuild step")
 parser.add_argument("--build-jobs", default="4", help="number of simultaneous jobs to run during a build (default = 4)")
 parser.add_argument("--analyze", action="store_true", help="perform static analysis of code on build (currently VS2017 only)")
@@ -259,9 +258,6 @@ def generate_config(config):
     if sys.platform.startswith('linux'):
         if args.disable_extra_qt_lib_deploy:
             cmake_args.extend(["-DDISABLE_EXTRA_QT_LIB_DEPLOY:BOOL=TRUE"])
-
-    if args.disable_break:
-        cmake_args.extend(["-DDISABLE_RRA_DEBUG_BREAK:BOOL=TRUE"])
 
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])

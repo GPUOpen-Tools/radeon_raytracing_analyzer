@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget* parent)
     pane_manager_.AddPane(ui_->blas_viewer_tab_);
     pane_manager_.AddPane(ui_->blas_instances_tab_);
     pane_manager_.AddPane(ui_->blas_triangles_tab_);
+    pane_manager_.AddPane(ui_->blas_geometries_tab_);
     pane_manager_.AddPane(ui_->blas_properties_tab_);
 
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneOverview, false);
@@ -300,6 +301,7 @@ void MainWindow::CreateActions()
     SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasViewerPane, rra::kPaneIdBlasViewer);
     SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasInstancesPane, rra::kPaneIdBlasInstances);
     SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasTrianglesPane, rra::kPaneIdBlasTriangles);
+    SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasGeometriesPane, rra::kPaneIdBlasGeometries);
     SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasPropertiesPane, rra::kPaneIdBlasProperties);
     SetupHotkeyNavAction(signal_mapper, rra::kGotoWelcomePane, rra::kPaneIdStartWelcome);
     SetupHotkeyNavAction(signal_mapper, rra::kGotoRecentTracesPane, rra::kPaneIdStartRecentTraces);

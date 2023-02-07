@@ -72,8 +72,7 @@ void SummaryPane::AddTlasPanes()
         bool    allow_compaction = tlas.build_flags & VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR;
         bool    low_memory       = tlas.build_flags & VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR;
 
-        tlas_overview_pane.tlas_title_->setText(QString("TLAS index %1").arg(tlas.tlas_index));
-        tlas_overview_pane.tlas_title_address_->setText(QString("0x%1").arg(tlas.address, 0, 16));
+        tlas_overview_pane.tlas_title_->setText(QString("TLAS 0x%1").arg(tlas.address, 0, 16));
         tlas_overview_pane.total_triangles_content_->setText(QString("%1").arg(rra::string_util::LocalizedValue(tlas.total_triangle_count)));
         tlas_overview_pane.unique_triangles_content_->setText(QString("%1").arg(rra::string_util::LocalizedValue(tlas.unique_triangle_count)));
         tlas_overview_pane.instance_count_->setText(QString("%1 instances").arg(rra::string_util::LocalizedValue(tlas.instance_count)));
@@ -96,16 +95,12 @@ void SummaryPane::AddTlasPanes()
         if (!model_->IsTlasEmpty(tlas.tlas_index))
         {
             tlas_overview_pane.tlas_title_->setCursor(Qt::PointingHandCursor);
-            tlas_overview_pane.tlas_title_address_->setCursor(Qt::PointingHandCursor);
             connect(tlas_overview_pane.tlas_title_, &QPushButton::clicked, this, [=]() { this->SelectTlas(tlas.tlas_index, true); });
-            connect(tlas_overview_pane.tlas_title_address_, &QPushButton::clicked, this, [=]() { this->SelectTlas(tlas.tlas_index, true); });
         }
         else
         {
             tlas_overview_pane.tlas_title_->setStyleSheet("color: rgb(192,192,192)");
-            tlas_overview_pane.tlas_title_address_->setStyleSheet("color: rgb(192,192,192)");
             tlas_overview_pane.tlas_title_->setEnabled(false);
-            tlas_overview_pane.tlas_title_address_->setEnabled(false);
         }
 
         if (model_->RebraidingEnabled())
@@ -153,7 +148,7 @@ void SummaryPane::Reset()
 
 void SummaryPane::SelectTlas(uint32_t tlas_index, const bool navigate_to_pane)
 {
-    if (tlas_index != -1)
+    if (tlas_index != UINT32_MAX)
     {
         // Select the selected TLAS in the TLAS pane.
         tlas_index_ = tlas_index;

@@ -312,6 +312,11 @@ namespace rra
         /// @return The set of currently selected node IDs.
         std::unordered_set<uint32_t>& GetSelectedNodeIDs();
 
+        /// @brief Make instances invisible depending on their instance mask.
+        /// 
+        /// @param filter The instance mask filter.
+        void FilterNodesByInstanceMask(uint32_t filter);
+
     private:
         /// @brief Populate the scene info values.
         void PopulateSceneInfo();

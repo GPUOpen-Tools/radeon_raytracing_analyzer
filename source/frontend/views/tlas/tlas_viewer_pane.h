@@ -109,7 +109,7 @@ private:
     void SelectBlasFromTree(const QModelIndex& index, const bool navigate_to_blas_pane);
 
     /// @brief Show the buttons linking to the rebraided instance's siblings.
-    /// 
+    ///
     /// @param [in] scene The current scene.
     /// @param [in] tlas_index The current TLAS index.
     /// @param [in] instance_index Index of the selected instance.

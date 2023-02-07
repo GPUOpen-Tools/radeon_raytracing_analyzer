@@ -175,9 +175,15 @@ namespace rra
             /// @brief Write to a buffer allocation.
             ///
             /// @param [out] allocation The allocation for the buffer.
-            /// @param [in] data An pointer to the data to populate the buffer with. If the value is nullptr mapping will be skipped.
+            /// @param [in] data A pointer to the data to populate the buffer with. If the value is nullptr mapping will be skipped.
             /// @param [in] size The total size of the data to write.
             void WriteToBuffer(const VmaAllocation& allocation, const void* data, VkDeviceSize size);
+
+            /// @brief Fill a buffer with all zeroes.
+            ///
+            /// @param [out] allocation The allocation for the buffer.
+            /// @param [in] size The total size of the data to write.
+            void ZeroOutBuffer(const VmaAllocation& allocation, VkDeviceSize size);
 
             /// @brief Read from a buffer allocation.
             ///

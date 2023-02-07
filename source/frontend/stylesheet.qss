@@ -190,6 +190,17 @@ ColoredCheckbox
     qproperty-button_text_ratio: 1.2;
 }
 
+BinaryCheckbox
+{
+    font-size: 9.75pt;
+    qproperty-button_text_ratio: 1.25;
+}
+
+ScaledLabel#label_instance_mask_filter_
+{
+    font-size: 9.75pt;
+}
+
 /*************************************/
 /* MainWindow
 /*************************************/
@@ -454,18 +465,6 @@ ScaledPushButton#tlas_title_
 }
 
 ScaledPushButton#tlas_title_:hover
-{
-    color: rgb(255, 128, 0);
-}
-
-ScaledPushButton#tlas_title_address_
-{
-    color: rgb(0, 0, 255);
-    border: none;
-    text-align: left
-}
-
-ScaledPushButton#tlas_title_address_:hover
 {
     color: rgb(255, 128, 0);
 }

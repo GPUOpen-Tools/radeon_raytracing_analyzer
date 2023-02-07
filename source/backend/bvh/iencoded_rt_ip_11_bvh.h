@@ -82,7 +82,7 @@ namespace rta
         // Interior node branching factor is required for the
         // box node per interior node count.
         // Maybe also for later if we need to interpret this differently
-        BvhFormat format = {BvhEncoding::kAmdRtIp_1_1 /*, 4, 1*/};
+        BvhFormat format = {BvhEncoding::kAmdRtIp_1_1, 0, 0 /*, 4, 1*/};
     };
 
     // Fixed byte sizes for the RT IP 1.1 chunk headers.

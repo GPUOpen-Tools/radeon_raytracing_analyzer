@@ -245,6 +245,14 @@
             <string>Show a table of all triangles in the selected BLAS.</string>
            </attribute>
           </widget>
+          <widget class="BlasGeometriesPane" name="blas_geometries_tab_">
+           <attribute name="title">
+            <string>Geometries</string>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Show a table of all geometries in the selected BLAS.</string>
+           </attribute>
+          </widget>
           <widget class="BlasPropertiesPane" name="blas_properties_tab_">
            <attribute name="title">
             <string>Properties</string>
@@ -390,6 +398,12 @@
    <class>BlasTrianglesPane</class>
    <extends>BasePane</extends>
    <header>views/blas/blas_triangles_pane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BlasGeometriesPane</class>
+   <extends>BasePane</extends>
+   <header>views/blas/blas_geometries_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

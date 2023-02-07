@@ -176,10 +176,12 @@ namespace rra
         {
             uint32_t swapchain_size = context_->swapchain->GetBackBufferCount();
 
-            if (context->framebuffer_width == last_offscreen_image_width_ && context->framebuffer_height == last_offscreen_image_height_)
+            if (context->framebuffer_width == last_offscreen_image_width_ && context->framebuffer_height == last_offscreen_image_height_ &&
+                !traversal_count_setting_changed_)
             {
                 return;
             }
+            traversal_count_setting_changed_ = false;
 
             for (auto& counter : counter_gpu_buffers_)
             {
@@ -189,17 +191,24 @@ namespace rra
             {
                 context_->device->DestroyBuffer(counter.buffer, counter.allocation);
             }
+            for (auto& counter : histogram_gpu_buffers_)
+            {
+                context_->device->DestroyBuffer(counter.buffer, counter.allocation);
+            }
             counter_gpu_buffers_.clear();
             counter_cpu_buffers_.clear();
+            histogram_gpu_buffers_.clear();
 
             counter_gpu_buffers_.resize(swapchain_size);
             counter_cpu_buffers_.resize(swapchain_size);
+            histogram_gpu_buffers_.resize(swapchain_size);
 
             last_offscreen_image_width_  = context->framebuffer_width;
             last_offscreen_image_height_ = context->framebuffer_height;
 
-            counter_gpu_buffer_size_ = (2 + last_offscreen_image_width_ * last_offscreen_image_height_) * sizeof(TraversalResult);
-            counter_cpu_buffer_size_ = 2 * sizeof(TraversalResult);
+            counter_gpu_buffer_size_   = (2 + last_offscreen_image_width_ * last_offscreen_image_height_) * sizeof(TraversalResult);
+            counter_cpu_buffer_size_   = 2 * sizeof(TraversalResult);
+            histogram_gpu_buffer_size_ = max_traversal_count_setting_ * sizeof(uint32_t);
 
             for (uint32_t i = 0; i < swapchain_size; i++)
             {
@@ -222,6 +231,13 @@ namespace rra
                                               nullptr,
                                               counter_cpu_buffer_size_);
 
+                context->device->CreateBuffer(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                              VMA_MEMORY_USAGE_GPU_TO_CPU,
+                                              histogram_gpu_buffers_[i].buffer,
+                                              histogram_gpu_buffers_[i].allocation,
+                                              nullptr,
+                                              histogram_gpu_buffer_size_);
+
                 std::vector<VkWriteDescriptorSet> write_descriptor_sets;
 
                 // Binding 6 : The counter buffer.
@@ -229,6 +245,11 @@ namespace rra
                 counter_info.buffer                 = counter_gpu_buffers_[i].buffer;
                 counter_info.offset                 = 0;
                 counter_info.range                  = VK_WHOLE_SIZE;
+
+                VkDescriptorBufferInfo histogram_info = {};
+                histogram_info.buffer                 = histogram_gpu_buffers_[i].buffer;
+                histogram_info.offset                 = 0;
+                histogram_info.range                  = VK_WHOLE_SIZE;
 
                 VkWriteDescriptorSet write_descriptor_6 = {};
                 write_descriptor_6.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -238,7 +259,15 @@ namespace rra
                 write_descriptor_6.pBufferInfo          = &counter_info;
                 write_descriptor_6.descriptorCount      = 1;
 
-                write_descriptor_sets = {write_descriptor_6};
+                VkWriteDescriptorSet write_descriptor_7 = {};
+                write_descriptor_7.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write_descriptor_7.dstSet               = traversal_descriptor_sets_[i];
+                write_descriptor_7.descriptorType       = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                write_descriptor_7.dstBinding           = 17;
+                write_descriptor_7.pBufferInfo          = &histogram_info;
+                write_descriptor_7.descriptorCount      = 1;
+
+                write_descriptor_sets = {write_descriptor_6, write_descriptor_7};
 
                 vkUpdateDescriptorSets(
                     context_->device->GetDevice(), static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, nullptr);
@@ -269,6 +298,14 @@ namespace rra
                 {
                     traversal_counter_range_continuous_update_function_(min_counter, max_counter);
                 }
+            }
+
+            if (histogram_update_function_ && histogram_gpu_buffer_size_ > 0)
+            {
+                std::vector<uint32_t> histogram_data(histogram_gpu_buffer_size_ / sizeof(uint32_t));
+                context->device->ReadFromBuffer(histogram_gpu_buffers_[context->current_frame].allocation, histogram_data.data(), histogram_gpu_buffer_size_);
+                histogram_update_function_(histogram_data, last_offscreen_image_width_, last_offscreen_image_height_);
+                context->device->ZeroOutBuffer(histogram_gpu_buffers_[context->current_frame].allocation, histogram_gpu_buffer_size_);
             }
 
             // This function is safe to use repeatedly.
@@ -462,8 +499,13 @@ namespace rra
             {
                 context_->device->DestroyBuffer(counter.buffer, counter.allocation);
             }
+            for (auto& counter : histogram_gpu_buffers_)
+            {
+                context_->device->DestroyBuffer(counter.buffer, counter.allocation);
+            }
             counter_gpu_buffers_.clear();
             counter_cpu_buffers_.clear();
+            histogram_gpu_buffers_.clear();
 
             // Cleanup pipeline information.
             VkDevice device_handle = context->device->GetDevice();
@@ -578,6 +620,12 @@ namespace rra
             scene_layout_binding_6.binding                      = 16;
             scene_layout_binding_6.descriptorCount              = 1;
 
+            VkDescriptorSetLayoutBinding scene_layout_binding_7 = {};
+            scene_layout_binding_7.descriptorType               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            scene_layout_binding_7.stageFlags                   = VK_SHADER_STAGE_COMPUTE_BIT;
+            scene_layout_binding_7.binding                      = 17;
+            scene_layout_binding_7.descriptorCount              = 1;
+
             std::vector<VkDescriptorSetLayoutBinding> set_layout_bindings = {scene_layout_binding_0,
                                                                              scene_layout_binding_heatmap,
                                                                              scene_layout_binding_1,
@@ -585,7 +633,8 @@ namespace rra
                                                                              scene_layout_binding_3,
                                                                              scene_layout_binding_4,
                                                                              scene_layout_binding_5,
-                                                                             scene_layout_binding_6};
+                                                                             scene_layout_binding_6,
+                                                                             scene_layout_binding_7};
 
             // Create set layout.
             VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info = {};
@@ -924,6 +973,14 @@ namespace rra
         void TraversalRenderModule::SetTraversalCounterContinuousUpdateFunction(std::function<void(uint32_t min, uint32_t max)> update_function)
         {
             traversal_counter_range_continuous_update_function_ = update_function;
+        }
+
+        void TraversalRenderModule::SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function,
+                                                               uint32_t                                                              max_traversal_setting)
+        {
+            histogram_update_function_       = update_function;
+            traversal_count_setting_changed_ = max_traversal_count_setting_ != max_traversal_setting;
+            max_traversal_count_setting_     = max_traversal_setting;
         }
 
         bool TraversalRenderModule::IsTraversalCounterContinuousUpdateFunctionSet()

@@ -1101,7 +1101,7 @@ namespace rra
             render_state_.render_wireframe    = true;
             render_state_.selection_only      = false;
             render_state_.coloring_mode_index = 0;
-            render_state_.culling_mode        = VK_CULL_MODE_NONE;
+            // We don't initialize the culling mode here since it is set beforehand from settings.
         }
     }  // namespace renderer
 }  // namespace rra

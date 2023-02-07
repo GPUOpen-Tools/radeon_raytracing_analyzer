@@ -143,9 +143,9 @@ namespace rra
             switch (index.column())
             {
             case kBlasTrianglesColumnGeometryFlagOpaque:
-                return cache.geometryFlagOpaque ? Qt::Checked : Qt::Unchecked;
+                return cache.geometry_flag_opaque ? Qt::Checked : Qt::Unchecked;
             case kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit:
-                return cache.geometryFlagNoDuplicateAnyHit ? Qt::Checked : Qt::Unchecked;
+                return cache.geometry_flag_no_duplicate_any_hit ? Qt::Checked : Qt::Unchecked;
             case kBlasTrianglesColumnActive:
                 return cache.is_inactive ? Qt::Unchecked : Qt::Checked;
             }

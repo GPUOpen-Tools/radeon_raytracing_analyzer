@@ -10,7 +10,6 @@
 #include <string.h>
 
 #include "rra_data_set.h"
-#include "surface_area_heuristic.h"
 
 /// The one and only instance of the data set, which is initialized when loading in
 /// a trace file.
@@ -20,11 +19,7 @@ RraErrorCode RraTraceLoaderLoad(const char* trace_file_name)
 {
     RraErrorCode error_code = RraDataSetInitialize(trace_file_name, &data_set_);
 
-    if (error_code == kRraOk)
-    {
-        rra::CalculateSurfaceAreaHeuristics(data_set_);
-    }
-    else
+    if (error_code != kRraOk)
     {
         data_set_ = {};
     }

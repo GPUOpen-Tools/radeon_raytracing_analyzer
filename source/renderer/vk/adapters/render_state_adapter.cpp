@@ -337,6 +337,12 @@ namespace rra
             });
         }
 
+        void RenderStateAdapter::SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function,
+                                                            uint32_t                                                              traversal_max_setting)
+        {
+            traversal_render_module_->SetHistogramUpdateFunction(update_function, traversal_max_setting);
+        }
+
         bool RenderStateAdapter::IsTraversalCounterContinuousUpdateFunctionSet()
         {
             return traversal_render_module_->IsTraversalCounterContinuousUpdateFunctionSet();
@@ -369,17 +375,15 @@ namespace rra
             }
         }
 
-        int RenderStateAdapter::GetCullingMode() const
+        int RenderStateAdapter::GetViewportCullingMode() const
         {
             return mesh_render_module_->GetRenderState().culling_mode;
         }
 
-        void RenderStateAdapter::SetCullingMode(int culling_mode)
+        void RenderStateAdapter::SetViewportCullingMode(int culling_mode)
         {
             mesh_render_module_->GetRenderState().culling_mode = culling_mode;
             mesh_render_module_->GetRenderState().updated      = true;
-            SceneUniformBuffer& scene_ubo                      = vulkan_renderer_->GetSceneUbo();
-            scene_ubo.culling_mode                             = culling_mode;
 
             if (mesh_render_module_->GetRendererInterface() != nullptr)
             {
@@ -387,10 +391,11 @@ namespace rra
             }
         }
 
-        void RenderStateAdapter::SetTraversalCounterRange(uint32_t min_value, uint32_t max_value)
+        void RenderStateAdapter::SetTraversalCounterRange(uint32_t min_value, uint32_t max_value, uint32_t settings_max)
         {
             vulkan_renderer_->GetSceneUbo().min_traversal_count_limit = static_cast<float>(min_value);
             vulkan_renderer_->GetSceneUbo().max_traversal_count_limit = static_cast<float>(max_value);
+            vulkan_renderer_->GetSceneUbo().max_traversal_count_setting = settings_max;
         }
 
         uint32_t RenderStateAdapter::GetTraversalCounterMin() const
@@ -510,6 +515,18 @@ namespace rra
         void RenderStateAdapter::SetRayFlagAcceptFirstHit(bool accept_first_hit)
         {
             vulkan_renderer_->GetSceneUbo().traversal_accept_first_hit = accept_first_hit ? 1 : 0;
+            UpdateRayParameters();
+        }
+
+        void RenderStateAdapter::SetRayFlagCullBackFacingTriangles(bool cull_back_facing_tris)
+        {
+            vulkan_renderer_->GetSceneUbo().traversal_cull_back_facing_triangles = cull_back_facing_tris ? 1 : 0;
+            UpdateRayParameters();
+        }
+
+        void RenderStateAdapter::SetRayFlagCullFrontFacingTriangles(bool cull_front_facing_tris)
+        {
+            vulkan_renderer_->GetSceneUbo().traversal_cull_front_facing_triangles = cull_front_facing_tris ? 1 : 0;
             UpdateRayParameters();
         }
 

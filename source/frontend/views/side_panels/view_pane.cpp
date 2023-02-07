@@ -9,6 +9,7 @@
 
 #include <limits>
 #include <sstream>
+#include <algorithm>
 
 #include <QClipboard>
 #include "constants.h"
@@ -19,13 +20,15 @@
 #include "qt_common/utils/qt_util.h"
 #include "util/string_util.h"
 #include "settings/settings.h"
+#include "views/custom_widgets/slider_style.h"
+#include "views/custom_widgets/rgp_histogram_widget.h"
+#include "settings/settings.h"
 
 #include "public/heatmap.h"
 #include "public/rra_asic_info.h"
 
 static const int kTraversalCounterDefaultMinValue = 0;
 static const int kTraversalCounterDefaultMaxValue = 100;
-static const int kControlStyleDefaultIndex        = 0;
 static const int kProjectionModeDefaultIndex      = 0;
 static const int kHeatmapResolution               = 1000;
 
@@ -52,7 +55,7 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_wireframe_overlay_->Initialize(false, rra::kCheckboxEnableColor);
 
     // Initialize any combo boxes.
-    rra::widget_util::InitializeComboBox(this, ui_->content_culling_mode_, model_->GetCullingModes());
+    rra::widget_util::InitializeComboBox(this, ui_->content_culling_mode_, model_->GetViewportCullingModes());
     rra::widget_util::InitializeComboBox(this, ui_->content_control_style_, model_->GetControlStyles());
     rra::widget_util::InitializeComboBox(this, ui_->content_projection_mode_, model_->GetProjectionModes());
 
@@ -71,6 +74,8 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_architecture_navi_2_->Initialize(true, rra::kCheckboxEnableColor);
     ui_->content_architecture_navi_3_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_ray_flags_accept_first_hit_->Initialize(false, rra::kCheckboxEnableColor);
+    ui_->content_ray_flags_cull_back_facing_triangles_->Initialize(false, rra::kCheckboxEnableColor);
+    ui_->content_ray_flags_cull_front_facing_triangles_->Initialize(false, rra::kCheckboxEnableColor);
 
     // Initialize the traversal counter slider.
     ui_->traversal_counter_slider_->setCursor(Qt::PointingHandCursor);
@@ -117,6 +122,8 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_camera_rotation_row_2_col_2_->hide();
     ui_->label_camera_rotation_->hide();
 
+    ui_->histogram_content_->SetSelectionMode(RgpHistogramWidget::kHistogramSelectionModeRange);
+
     ui_->content_show_hide_control_style_hotkeys_->setCursor(Qt::PointingHandCursor);
     ui_->traversal_adapt_to_view_->setCursor(Qt::PointingHandCursor);
     ui_->camera_to_origin_button_->setCursor(Qt::PointingHandCursor);
@@ -151,6 +158,8 @@ ViewPane::ViewPane(QWidget* parent)
     connect(ui_->traversal_continuous_update_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleTraversalCounterContinuousUpdate);
 
     connect(ui_->content_ray_flags_accept_first_hit_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsAcceptFirstHit);
+    connect(ui_->content_ray_flags_cull_back_facing_triangles_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsCullBackFacingTriangles);
+    connect(ui_->content_ray_flags_cull_front_facing_triangles_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsCullFrontFacingTriangles);
 
     connect(ui_->content_camera_position_x_, SIGNAL(valueChanged(double)), this, SLOT(CameraPositionChangedX(double)));
     connect(ui_->content_camera_position_y_, SIGNAL(valueChanged(double)), this, SLOT(CameraPositionChangedY(double)));
@@ -187,7 +196,7 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->vertical_layout_traversal_counter_controls_container_->setSpacing(0);
 
     // Call SetControlStyle to initialize dynamic settings panel.
-    SetControlStyle(ui_->content_control_style_->CurrentRow());
+    SetControlStyle(rra::Settings::Get().GetControlStyle());
     model_->UpdateControlHotkeys(ui_->camera_hotkeys_widget_);
 
     // Refresh the UI if any render state has changed externally.
@@ -216,6 +225,9 @@ ViewPane::ViewPane(QWidget* parent)
         ui_->traversal_counter_slider_->SetHeatmap(QPixmap::fromImage(heatmap_image));
         ui_->traversal_counter_slider_->repaint();
     });
+
+    ui_->content_field_of_view_->setStyle(new AbsoluteSliderPositionStyle(ui_->content_field_of_view_->style()));
+    ui_->content_movement_speed_->setStyle(new AbsoluteSliderPositionStyle(ui_->content_movement_speed_->style()));
 }
 
 ViewPane::~ViewPane()
@@ -248,13 +260,16 @@ void ViewPane::OnTraceOpen()
     ui_->traversal_adapt_to_view_->setEnabled(true);
     ui_->traversal_continuous_update_->setChecked(false);
     ui_->content_ray_flags_accept_first_hit_->setChecked(false);
+    ui_->content_ray_flags_cull_back_facing_triangles_->setChecked(false);
+    ui_->content_ray_flags_cull_front_facing_triangles_->setChecked(false);
     UpdateBoxSortHeuristicLabel();
 
     ConfigureForGeometryRenderingLayout();
     ui_->content_render_bvh_->setChecked(true);
     ui_->content_render_instance_transform_->setChecked(true);
 
-    model_->SetControlStyle(kControlStyleDefaultIndex);
+    model_->SetViewportCullingMode(rra::Settings::Get().GetCullMode());
+    model_->SetControlStyle(rra::Settings::Get().GetControlStyle());
 
     reset_camera_orientation_ = true;
 
@@ -264,6 +279,37 @@ void ViewPane::OnTraceOpen()
     reset_projection_   = projection_mode != kProjectionModeDefaultIndex;
 
     SetTraversalCounterRange(kTraversalCounterDefaultMinValue, kTraversalCounterDefaultMaxValue);
+}
+
+void HistogramUpdateFunction(Ui::ViewPane* ui, const std::vector<uint32_t>& hist_data, uint32_t buffer_width, uint32_t buffer_height)
+{
+    const uint32_t bin_count{ std::min(100u, (uint32_t)hist_data.size()) };
+    const uint32_t bin_size{(uint32_t)(hist_data.size() / bin_count)};
+    uint32_t       average{0};
+
+    std::vector<RgpHistogramWidget::RgpHistogramData> bin_data{};
+    bin_data.reserve(bin_count);
+
+    for (uint32_t i{0}; i < bin_count; ++i)
+    {
+        uint32_t min_value = i * bin_size;
+        uint32_t max_value = (i + 1) * bin_size;
+        uint32_t count{0};
+
+        for (uint32_t j{min_value}; j < max_value && j < hist_data.size(); ++j)
+        {
+            count += hist_data[j];
+            average += hist_data[j] * j;
+        }
+
+        bin_data.push_back({min_value, max_value, count});
+    }
+
+    average /= buffer_width * buffer_height;
+
+    ui->traversal_average_value_->setText(QString("Avg: ") + QString::number(average));
+    ui->histogram_content_->SetData(bin_data.data(), (uint32_t)bin_data.size());
+    ui->histogram_content_->SetSelectionAttributes(0, INT32_MAX);
 }
 
 void ViewPane::showEvent(QShowEvent* event)
@@ -278,9 +324,24 @@ void ViewPane::showEvent(QShowEvent* event)
 
     if (reset_camera_orientation_)
     {
-        model_->SetInvertVertical(false);
-        model_->SetInvertHorizontal(false);
-        SetUpAxisAsY();
+        model_->SetInvertVertical(rra::Settings::Get().GetInvertVertical());
+        model_->SetInvertHorizontal(rra::Settings::Get().GetInvertHorizontal());
+
+        switch (rra::Settings::Get().GetUpAxis())
+        {
+        case kUpAxisTypeX:
+            model_->SetUpAxisAsX();
+            break;
+        case kUpAxisTypeY:
+            model_->SetUpAxisAsY();
+            break;
+        case kUpAxisTypeZ:
+            model_->SetUpAxisAsZ();
+            break;
+        case kUpAxisTypeMax:
+            break;
+        }
+
         reset_camera_orientation_ = false;
     }
 
@@ -294,6 +355,13 @@ void ViewPane::showEvent(QShowEvent* event)
     {
         emit signal_handler.CameraParametersChanged(false);
     }
+
+    model_->SetHistogramUpdateFunction(
+        [=](const std::vector<uint32_t>& hist_data, uint32_t buffer_width, uint32_t buffer_height) {
+            HistogramUpdateFunction(ui_, hist_data, buffer_width, buffer_height);
+        },
+        rra::Settings::Get().GetTraversalCounterMaximum());
+    model_->UpdateTraversalCounterMaximumFromSettings();
 
     model_->SetMovementSpeedLimit(rra::Settings::Get().GetMovementSpeedLimit());
     ui_->traversal_counter_slider_->setMaximum(rra::Settings::Get().GetTraversalCounterMaximum());
@@ -333,7 +401,8 @@ void ViewPane::SetWireframeOverlay()
 
 void ViewPane::SetCullingMode()
 {
-    model_->SetCullingMode(ui_->content_culling_mode_->CurrentRow());
+    int index = ui_->content_culling_mode_->CurrentRow();
+    model_->SetViewportCullingMode(index);
 }
 
 void ViewPane::SetTraversalCounterRange(int min_value, int max_value)
@@ -379,6 +448,32 @@ void ViewPane::ToggleRayFlagsAcceptFirstHit()
         model_->DisableRayFlagsAcceptFirstHit();
     }
     UpdateBoxSortHeuristicLabel();
+    emit signal_handler.CameraParametersChanged(false);
+}
+
+void ViewPane::ToggleRayFlagsCullBackFacingTriangles()
+{
+    if (ui_->content_ray_flags_cull_back_facing_triangles_->isChecked())
+    {
+        model_->EnableRayCullBackFacingTriangles();
+    }
+    else
+    {
+        model_->DisableRayCullBackFacingTriangles();
+    }
+    emit signal_handler.CameraParametersChanged(false);
+}
+
+void ViewPane::ToggleRayFlagsCullFrontFacingTriangles()
+{
+    if (ui_->content_ray_flags_cull_front_facing_triangles_->isChecked())
+    {
+        model_->EnableRayCullFrontFacingTriangles();
+    }
+    else
+    {
+        model_->DisableRayCullFrontFacingTriangles();
+    }
     emit signal_handler.CameraParametersChanged(false);
 }
 
@@ -442,7 +537,8 @@ void ViewPane::PasteCameraButtonClicked()
 
     // I think it would be better to have an enum defining the indices of control styles
     // so we don't have to loop through them and string compare. Would be O(1) instead of O(n).
-    for (int i = 0; i < styles.size(); ++i)
+    int style_count = static_cast<int>(styles.size());
+    for (int i = 0; i < style_count; ++i)
     {
         if (controller_type == styles[i])
         {
@@ -526,6 +622,9 @@ void ViewPane::SetControlStyle(int index)
 
         controller->ControlStyleChanged();
     }
+
+    // Make this control style persistent even if RRA is closed and reopened.
+    rra::Settings::Get().SetControlStyle(static_cast<ControlStyleType>(index));
 }
 
 void ViewPane::SetProjectionMode(int index)
@@ -553,6 +652,7 @@ void ViewPane::SetUpAxisAsX()
     model_->SetUpAxisAsX();
     emit signal_handler.CameraParametersChanged(false);
     UpdateOrientationWidgets();
+    rra::Settings::Get().SetUpAxis(kUpAxisTypeX);
 }
 
 void ViewPane::SetUpAxisAsY()
@@ -560,6 +660,7 @@ void ViewPane::SetUpAxisAsY()
     model_->SetUpAxisAsY();
     emit signal_handler.CameraParametersChanged(false);
     UpdateOrientationWidgets();
+    rra::Settings::Get().SetUpAxis(kUpAxisTypeY);
 }
 
 void ViewPane::SetUpAxisAsZ()
@@ -567,6 +668,7 @@ void ViewPane::SetUpAxisAsZ()
     model_->SetUpAxisAsZ();
     emit signal_handler.CameraParametersChanged(false);
     UpdateOrientationWidgets();
+    rra::Settings::Get().SetUpAxis(kUpAxisTypeZ);
 }
 
 void ViewPane::ConfigureForGeometryRenderingLayout()
@@ -575,6 +677,7 @@ void ViewPane::ConfigureForGeometryRenderingLayout()
     model_->SetRenderGeometry(true);
     ui_->traversal_counter_controls_container_->hide();
     ui_->content_render_geometry_->show();
+    ui_->content_culling_mode_->show();
     ui_->content_rendering_mode_geometry_->setChecked(true);
     model_->Update();
     emit RenderModeChanged(true);
@@ -585,6 +688,7 @@ void ViewPane::ConfigureForTraversalRenderingLayout()
     model_->SetRenderGeometry(false);
     model_->SetRenderTraversal(true);
     ui_->content_render_geometry_->hide();
+    ui_->content_culling_mode_->hide();
     ui_->traversal_counter_controls_container_->show();
     ui_->content_rendering_mode_traversal_->setChecked(true);
     model_->Update();

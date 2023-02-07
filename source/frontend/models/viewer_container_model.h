@@ -13,6 +13,7 @@
 
 #include "public/renderer_interface.h"
 #include "public/render_state_adapter.h"
+#include "scene.h"
 
 namespace rra
 {
@@ -64,8 +65,25 @@ namespace rra
         /// @param [in] heatmap_data The raw data of the heatmap.
         void SetHeatmapData(rra::renderer::HeatmapData heatmap_data);
 
+        /// @brief Set the instance mask filter.
+        ///
+        /// @param filter The instance flags to use as the filter.
+        void SetInstanceMaskFilter(uint32_t filter);
+
+        /// @brief Get the instance mask filter.
+        ///
+        /// @return The instance mask flags.
+        uint32_t GetInstanceMaskFilter() const;
+
+        /// @brief Set the current scene.
+        /// 
+        /// @param scene The scene.
+        void SetScene(rra::Scene* scene);
+
     private:
         rra::renderer::RenderStateAdapter* render_state_adapter_ = nullptr;  ///< The adapter used to toggle mesh render states.
+        rra::Scene*                        scene_                = nullptr;  ///< The current active scene.
+        uint32_t                           instance_mask_filter_ = 0xFF;     ///< The TLAS viewer filter to hide instances that aren't contained in this mask.
     };
 }  // namespace rra
 

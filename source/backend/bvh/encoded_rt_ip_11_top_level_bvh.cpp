@@ -161,7 +161,7 @@ namespace rta
         else
         {
             // Fix up the instance node addresses.
-            int32_t byte_offset = 0;
+            size_t byte_offset = 0;
             while (byte_offset < instance_node_data_.size())
             {
                 dxr::amd::InstanceNode* instance_node = reinterpret_cast<dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
@@ -293,7 +293,7 @@ namespace rta
     uint64_t EncodedRtIp11TopLevelBvh::GetInactiveInstanceCountImpl() const
     {
         uint64_t inactive_count{0};
-        int32_t  byte_offset = 0;
+        size_t  byte_offset = 0;
         while (byte_offset < instance_node_data_.size())
         {
             const dxr::amd::InstanceNode* instance_node = reinterpret_cast<const dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
@@ -399,17 +399,17 @@ namespace rta
 
     float EncodedRtIp11TopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const
     {
-        const uint32_t index = GetInstanceIndex(&node_ptr);
+        const int32_t index = GetInstanceIndex(&node_ptr);
         assert(index != -1);
-        assert(index < instance_surface_area_heuristic_.size());
+        assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
         return instance_surface_area_heuristic_[index];
     }
 
     void EncodedRtIp11TopLevelBvh::SetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic)
     {
-        const uint32_t index = GetInstanceIndex(&node_ptr);
+        const int32_t index = GetInstanceIndex(&node_ptr);
         assert(index != -1);
-        assert(index < instance_surface_area_heuristic_.size());
+        assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
         instance_surface_area_heuristic_[index] = surface_area_heuristic;
     }
 

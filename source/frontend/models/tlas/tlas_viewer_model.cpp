@@ -122,7 +122,7 @@ namespace rra
         return instance_index;
     }
 
-    uint64_t TlasViewerModel::BlasValid(int blas_index) const
+    uint64_t TlasViewerModel::BlasValid(uint64_t blas_index) const
     {
         if (blas_index != ULLONG_MAX && !RraBlasIsEmpty(blas_index))
         {

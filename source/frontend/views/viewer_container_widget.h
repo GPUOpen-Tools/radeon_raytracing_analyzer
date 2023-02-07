@@ -57,7 +57,22 @@ public:
     /// @param geometry_mode_enable If true, geometry mode is selected, otherwise show traversal counter mode.
     void ShowColoringMode(bool geometry_mode_enabled);
 
+    /// @brief Set the current scene.
+    ///
+    /// @param scene The scene.
+    void SetScene(rra::Scene* scene);
+
 private slots:
+
+    /// @brief Set the checkbox state for the clicked bit.
+    ///
+    /// @param mask The bits to flip.
+    void BinaryCheckboxClicked(uint32_t mask);
+
+    /// @brief Set the instance mask filter using the hex input box.
+    ///
+    /// @param The new instance mask to filter by.
+    void InstanceMaskHexChanged(int mask);
 
     /// @brief Set the bvh coloring mode to use on the BVH.
     void SetBVHColoringMode();
@@ -77,8 +92,10 @@ private slots:
     ///
     /// @param [in] coloring_modes A reference to a vector of coloring mode info.
     /// @param [in] traversal_modes A reference to a vector of traversal counter mode info.
+    /// @param [in] bvh_type Whether the BVH is a TLAS or BLAS.
     void UpdateRenderingModes(const std::vector<rra::renderer::GeometryColoringModeInfo>& coloring_modes,
-                              const std::vector<rra::renderer::TraversalCounterModeInfo>& traversal_modes);
+                              const std::vector<rra::renderer::TraversalCounterModeInfo>& traversal_modes,
+                              rra::renderer::BvhTypeFlags                                 bvh_type);
 
 private:
     Ui::ViewerContainerWidget*                           ui_    = nullptr;           ///< Pointer to the Qt UI design.
@@ -86,6 +103,7 @@ private:
     std::vector<rra::renderer::GeometryColoringModeInfo> filtered_color_modes_;      ///< The coloring modes available to the viewer.
     std::vector<rra::renderer::TraversalCounterModeInfo> filtered_traversal_modes_;  ///< The traversal counter modes available to the viewer.
     std::vector<rra::renderer::HeatmapGenerator>         heatmap_generators_;        ///< The heatmap modes available at update.
+    rra::renderer::BvhTypeFlags                          bvh_type_;
 };
 
 #endif  // RRA_VIEWS_VIEWER_CONTAINER_WIDGET_H_

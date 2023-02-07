@@ -332,12 +332,13 @@ void TlasViewerPane::UpdateSelectedTlas()
 {
     last_selected_as_id_ = AccelerationStructureViewerPane::UpdateSelectedBvh();
 
-    const rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
+    rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
     ui_->tree_depth_slider_->SetLowerValue(scene->GetDepthRangeLowerBound());
     ui_->tree_depth_slider_->SetUpperValue(scene->GetDepthRangeUpperBound());
     ui_->tree_depth_slider_->SetUpperBound(scene->GetSceneStatistics().max_node_depth);
 
     ui_->tlas_tree_->SetViewerModel(model_, last_selected_as_id_);
+    ui_->viewer_container_widget_->SetScene(scene);
     ui_->expand_collapse_tree_->SetCurrentItemIndex(rra::AccelerationStructureViewerModel::TreeViewExpandMode::kCollapsed);
 
     emit rra::MessageManager::Get().TlasSelected(last_selected_as_id_);

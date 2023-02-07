@@ -9,6 +9,8 @@
 
 #include "rra_tlas_impl.h"
 
+#include <limits.h>
+
 #include "bvh/encoded_rt_ip_11_top_level_bvh.h"
 #include "bvh/encoded_rt_ip_11_bottom_level_bvh.h"
 #include "public/rra_assert.h"
@@ -573,7 +575,7 @@ RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, 
     dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
 
     uint32_t instance_index     = tlas->GetInstanceIndex(node);
-    if (instance_index == -1)
+    if (instance_index == UINT_MAX)
     {
         return kRraErrorIndexOutOfRange;
     }

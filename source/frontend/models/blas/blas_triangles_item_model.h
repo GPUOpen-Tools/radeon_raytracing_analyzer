@@ -20,22 +20,22 @@ namespace rra
     /// @brief Structure describing the statistics needed for the Triangles list pane.
     struct BlasTrianglesStatistics
     {
-        uint32_t              node_id;                        ///< The node ID.
-        uint32_t              primitive_index;                ///< The primitive index.
-        uint64_t              triangle_address;               ///< The base address of the triangle.
-        uint64_t              triangle_offset;                ///< The offset of the triangle in the TLAS.
-        uint32_t              geometry_index;                 ///< The geometry index.
-        bool                  geometryFlagOpaque;             ///< The opaque geometry flag.
-        bool                  geometryFlagNoDuplicateAnyHit;  ///< The no duplicate anyhit invocation geometry flag.
-        bool                  is_inactive;                    ///< Whether or not this triangle is inactive.
-        float                 triangle_surface_area;          ///< The triangle surface area.
-        float                 sah;                            ///< The surface area heuristic.
-        rra::renderer::float3 vertex_0;                       ///< Triangle vertex 0.
-        rra::renderer::float3 vertex_1;                       ///< Triangle vertex 1.
-        rra::renderer::float3 vertex_2;                       ///< Triangle vertex 2.
+        uint32_t              node_id;                             ///< The node ID.
+        uint32_t              primitive_index;                     ///< The primitive index.
+        uint64_t              triangle_address;                    ///< The base address of the triangle.
+        uint64_t              triangle_offset;                     ///< The offset of the triangle in the TLAS.
+        uint32_t              geometry_index;                      ///< The geometry index.
+        bool                  geometry_flag_opaque;                ///< The opaque geometry flag.
+        bool                  geometry_flag_no_duplicate_any_hit;  ///< The no duplicate anyhit invocation geometry flag.
+        bool                  is_inactive;                         ///< Whether or not this triangle is inactive.
+        float                 triangle_surface_area;               ///< The triangle surface area.
+        float                 sah;                                 ///< The surface area heuristic.
+        rra::renderer::float3 vertex_0;                            ///< Triangle vertex 0.
+        rra::renderer::float3 vertex_1;                            ///< Triangle vertex 1.
+        rra::renderer::float3 vertex_2;                            ///< Triangle vertex 2.
     };
 
-    /// @brief Column Id's for the fields in the acceleration structure list.
+    /// @brief Column Id's for the fields in the triangle list.
     enum BlasTrianglesColumn
     {
         kBlasTrianglesColumnGeometryIndex,

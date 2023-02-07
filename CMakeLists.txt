@@ -7,7 +7,7 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 1)
+set(RRA_MINOR_VERSION 2)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()
@@ -22,12 +22,12 @@ configure_file("${CMAKE_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_SOURCE_DIR
 configure_file("${CMAKE_SOURCE_DIR}/source/frontend/version.h.in" "${CMAKE_SOURCE_DIR}/source/frontend/version.h")
 
 option(RDF_ENABLE_CXX_BINDINGS "Allow usage of C++ interface for RDF library" ON)
-option(RDF_STATIC              "Build RDF as a static library" OFF)
+option(RDF_STATIC              "Build RDF as a static library" ON)
 
 ## For RRA we only care about the Debug and Release configuration types
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
-## Determine build suffixes based on configuration and bitness
+## Determine build suffixes based on configuration and bitness status
 ## These values will be inherited by all child projects
 set(ADT_PLATFORM_POSTFIX "-x86")
 IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -48,8 +48,12 @@ ENDIF(WIN32)
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
+# Define C++ standard for RRA
+set(CMAKE_CXX_STANDARD 17)
+
 include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
 include_directories("${PROJECT_SOURCE_DIR}/external/")
+include_directories("${PROJECT_SOURCE_DIR}/external/third_party/")
 
 # Global compiler options
 IF(WIN32)
@@ -65,13 +69,11 @@ IF(WIN32)
     # bump the stack size
     add_link_options(/STACK:16777216)
 ELSEIF(UNIX)
-    # Use -Wno-missing-field-initializers for CentOS compiler warning
-    add_compile_options(-D_LINUX -Wno-missing-field-initializers -Wno-ignored-qualifiers -mno-avx2)
+    add_compile_options(-D_LINUX -mno-avx2)
     # Allow executable to be double clicked.
     add_link_options(-no-pie)
     # Use _DEBUG on Unix for Debug Builds (defined automatically on Windows)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 ENDIF(WIN32)
 
@@ -111,13 +113,6 @@ add_subdirectory(source/renderer renderer)
 
 # Group external dependency targets into folder
 IF(WIN32)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_target_properties(QtCustomWidgets
-                      QtUtils
-    PROPERTIES
-    FOLDER Dependencies
-)
-ELSEIF(APPLE)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_target_properties(QtCustomWidgets
                       QtUtils

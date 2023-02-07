@@ -1,5 +1,5 @@
 #! python3
-# Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Script to fetch all external git and/or downloadable dependencies needed to build the project
 #
@@ -14,7 +14,6 @@ import zipfile
 import tarfile
 import platform
 import argparse
-import stat
 
 # Check for the python 3.x name and import it as the 2.x name
 try:
@@ -33,7 +32,7 @@ script_name = os.path.basename(__file__)
 def log_print(message):
     print ("\n" + script_name + ": " + message)
     sys.stdout.flush()
-    
+
 # add script root to support import of URL and git maps
 sys.path.append(script_root)
 from dependency_map import git_mapping

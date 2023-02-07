@@ -13,8 +13,9 @@
 #include "settings/settings.h"
 #include "views/custom_widgets/colored_checkbox.h"
 #include "views/widget_util.h"
+#include "views/custom_widgets/slider_style.h"
 
-constexpr float kMaxCullRatio{0.01f}; ///< The maximum cull ratio able to be set by the settings slider.
+constexpr float kMaxCullRatio{0.01f};  ///< The maximum cull ratio able to be set by the settings slider.
 
 float SliderToFrustumCullRatio(int slider_value)
 {
@@ -65,6 +66,8 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->content_decimal_precision_->setMaximum(9);
     ui_->content_decimal_precision_->setValue(rra::Settings::Get().GetDecimalPrecision());
     connect(ui_->content_decimal_precision_, SIGNAL(valueChanged(int)), this, SLOT(DecimalPrecisionChanged(int)));
+
+    ui_->small_object_culling_content_->setStyle(new AbsoluteSliderPositionStyle(ui_->small_object_culling_content_->style()));
 }
 
 SettingsPane::~SettingsPane()

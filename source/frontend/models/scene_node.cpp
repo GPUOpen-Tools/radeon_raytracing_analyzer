@@ -162,7 +162,7 @@ namespace rra
                                                    renderer::FrustumInfo& frustum_info) const
     {
         // Skip if marked as not visible.
-        if (!(visible_ && enabled_))
+        if (!(visible_ && enabled_ && !filtered_))
         {
             return;
         }
@@ -204,7 +204,7 @@ namespace rra
     void SceneNode::AppendInstanceMap(renderer::InstanceMap& instance_map, const Scene* scene) const
     {
         // Skip if marked as not visible.
-        if (!(visible_ && enabled_))
+        if (!(visible_ && enabled_ && !filtered_))
         {
             return;
         }
@@ -229,7 +229,7 @@ namespace rra
     void SceneNode::AppendTrianglesTo(VertexList& vertex_list) const
     {
         // Skip if marked as not visible.
-        if (!visible_)
+        if (!visible_ || filtered_)
         {
             return;
         }
@@ -488,7 +488,7 @@ namespace rra
 
     void SceneNode::ApplyNodeSelection(std::unordered_set<uint32_t>& selected_node_ids)
     {
-        if (!visible_)
+        if (!visible_ || filtered_)
         {
             return;
         }
@@ -530,7 +530,7 @@ namespace rra
     void SceneNode::Enable(Scene* scene)
     {
         enabled_ = true;
-        if (!visible_)
+        if (!visible_ || filtered_)
         {
             return;
         }
@@ -641,7 +641,7 @@ namespace rra
 
     bool SceneNode::IsVisible()
     {
-        return visible_;
+        return visible_ && !filtered_;
     }
 
     bool SceneNode::IsEnabled()
@@ -669,7 +669,7 @@ namespace rra
 
     void SceneNode::GetBoundingVolumeForSelection(BoundingVolumeExtents& volume) const
     {
-        if (!visible_)
+        if (!visible_ || filtered_)
         {
             return;
         }
@@ -687,7 +687,7 @@ namespace rra
 
     void SceneNode::CastRay(glm::vec3 ray_origin, glm::vec3 ray_direction, std::vector<SceneNode*>& intersected_nodes)
     {
-        if (!visible_)
+        if (!visible_ || filtered_)
         {
             return;
         }
@@ -757,7 +757,7 @@ namespace rra
             return;
         }
 
-        if (visible_)
+        if (visible_ && !filtered_)
         {
             for (auto child : child_nodes_)
             {
@@ -939,4 +939,10 @@ namespace rra
             child->PopulateSplitVertexAttribute(tri_split_counts);
         }
     }
+
+    void SceneNode::SetFiltered(bool filtered)
+    {
+        filtered_ = filtered;
+    }
+
 }  // namespace rra

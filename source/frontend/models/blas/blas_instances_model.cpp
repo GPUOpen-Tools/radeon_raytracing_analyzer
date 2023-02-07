@@ -74,7 +74,7 @@ namespace rra
 
         InstancesTableStatistics stats      = {};
         uint64_t                 rows_added = 0;
-        for (int instance_index = 0; instance_index < instance_count; instance_index++)
+        for (uint64_t instance_index = 0; instance_index < instance_count; instance_index++)
         {
             uint32_t node_ptr = 0;
             if (RraTlasGetInstanceNode(tlas_index, blas_index, instance_index, &node_ptr) != kRraOk)

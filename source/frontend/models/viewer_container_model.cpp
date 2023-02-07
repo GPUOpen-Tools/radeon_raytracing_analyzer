@@ -61,4 +61,21 @@ namespace rra
         }
     }
 
+    void ViewerContainerModel::SetInstanceMaskFilter(uint32_t filter)
+    {
+        instance_mask_filter_ = filter;
+
+        scene_->FilterNodesByInstanceMask(filter);
+    }
+
+    uint32_t ViewerContainerModel::GetInstanceMaskFilter() const
+    {
+        return instance_mask_filter_;
+    }
+
+    void ViewerContainerModel::SetScene(rra::Scene* scene)
+    {
+        scene_ = scene;
+    }
+
 }  // namespace rra

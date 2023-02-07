@@ -30,7 +30,7 @@ IF(WIN32)
     # Warnings as errors for Windows
     add_compile_options(/W4 /WX)
 ELSEIF(UNIX)
-    add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-sign-compare -Wno-uninitialized -Wno-unused-function)
+    add_compile_options(-D_LINUX -Wall -Wextra -Werror)
 ENDIF(WIN32)
 
 IF(UNIX)
@@ -40,7 +40,6 @@ ENDIF(UNIX)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
-
 set( SOURCES
     "constants.h"
     "main.cpp"
@@ -100,10 +99,18 @@ set( SOURCES
     "models/blas/blas_triangles_model.h"
     "models/blas/blas_triangles_proxy_model.cpp"
     "models/blas/blas_triangles_proxy_model.h"
-    "models/blas/blas_viewer_model.cpp"
-    "models/blas/blas_viewer_model.h"
     "models/blas/blas_triangles_table_item_delegate.cpp"
     "models/blas/blas_triangles_table_item_delegate.h"
+    "models/blas/blas_geometries_item_model.cpp"
+    "models/blas/blas_geometries_item_model.h"
+    "models/blas/blas_geometries_model.cpp"
+    "models/blas/blas_geometries_model.h"
+    "models/blas/blas_geometries_proxy_model.cpp"
+    "models/blas/blas_geometries_proxy_model.h"
+    "models/blas/blas_geometries_table_item_delegate.cpp"
+    "models/blas/blas_geometries_table_item_delegate.h"
+    "models/blas/blas_viewer_model.cpp"
+    "models/blas/blas_viewer_model.h"
     "models/overview/device_configuration_model.cpp"
     "models/overview/device_configuration_model.h"
     "models/overview/summary_model.cpp"
@@ -179,11 +186,16 @@ set( SOURCES
     "views/blas/blas_triangles_pane.cpp"
     "views/blas/blas_triangles_pane.h"
     "views/blas/blas_triangles_pane.ui"
+    "views/blas/blas_geometries_pane.cpp"
+    "views/blas/blas_geometries_pane.h"
+    "views/blas/blas_geometries_pane.ui"
     "views/blas/blas_viewer_pane.cpp"
     "views/blas/blas_viewer_pane.h"
     "views/blas/blas_viewer_pane.ui"
     "views/custom_widgets/colored_checkbox.cpp"
     "views/custom_widgets/colored_checkbox.h"
+    "views/custom_widgets/binary_checkbox.cpp"
+    "views/custom_widgets/binary_checkbox.h"
     "views/custom_widgets/color_picker_button.cpp"
     "views/custom_widgets/color_picker_button.h"
     "views/custom_widgets/color_picker_widget.cpp"
@@ -200,6 +212,9 @@ set( SOURCES
     "views/custom_widgets/read_only_checkbox.h"
     "views/custom_widgets/vertical_button_widget.cpp"
     "views/custom_widgets/vertical_button_widget.h"
+    "views/custom_widgets/slider_style.h"
+    "views/custom_widgets/rgp_histogram_widget.cpp"
+    "views/custom_widgets/rgp_histogram_widget.h"
     "views/overview/device_configuration_pane.cpp"
     "views/overview/device_configuration_pane.h"
     "views/overview/device_configuration_pane.ui"
@@ -372,6 +387,7 @@ IF(WIN32)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "copying Visual Studio redist files from ${VSREDISTDIR} to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/concrt140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
@@ -445,7 +461,6 @@ IF(UNIX AND NOT APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_ICONENGINES_SRC}/libqsvgicon.so  ${QT_ICONENGINES_DST}
         COMMAND ${CMAKE_COMMAND} -E echo "copying qt.conf to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../../build/qt.conf $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        COMMAND ${CMAKE_COMMAND} -E rename ${QT_LIB_DST}/../libamdrdf${SO_POSTFIX}.so ${QT_LIB_DST}/libamdrdf${SO_POSTFIX}.so
     )
 
     # Call chrpath on system to override executable file RPATH.

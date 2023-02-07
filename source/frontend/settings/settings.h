@@ -15,6 +15,7 @@
 #include "qt_common/utils/common_definitions.h"
 
 #include "constants.h"
+#include "public/renderer_types.h"
 
 /// @brief A struct for a setting key-value pair.
 struct Setting
@@ -29,6 +30,43 @@ enum TreeviewNodeIDType
     kTreeviewNodeIDTypeVirtualAddress,  ///< Display Treeview Node ID's as GPU virtual addresses.
 
     kTreeviewNodeIDTypeMax,  ///< The maximum value of the TreeviewNodeIDType enums (not a valid value)
+};
+
+enum CullModeType
+{
+    kCullModeTypeNone,   ///< No face culling.
+    kCullModeTypeFront,  ///< Front-face triangle culling.
+    kCullModeTypeBack,   ///< Back-face triangle culling.
+
+    kCullModeTypeMax,  ///< The maximum value of the CullModeType enums (not a valid value)
+};
+
+enum ControlStyleType
+{
+    kControlStyleTypeCAD,       ///< CAD control style.
+    kControlStyleTypeFPS,       ///< FPS control style.
+    kControlStyleTypeAxisFree,  ///< Axis-free control style.
+
+    kControlStyleTypeMax,  ///< The maximum value of the ControlStyleType enums (not a valid value)
+};
+
+enum UpAxisType
+{
+    kUpAxisTypeX,  ///< Indicates the x-axis is the up axis.
+    kUpAxisTypeY,  ///< Indicates the y-axis is the up axis.
+    kUpAxisTypeZ,  ///< Indicates the z-axis is the up axis.
+
+    kUpAxisTypeMax,  ///< The maximum value of the UpAxisType enums (not a valid value)
+};
+
+enum HeatmapColorType
+{
+    kHeatmapColorTypeTemperature,  ///< The temperature heatmap color.
+    kHeatmapColorTypeSpectrum,     ///< The spectrum heatmap color.
+    kHeatmapColorTypeViridis,      ///< The viridis heatmap color.
+    kHeatmapColorTypePlasma,       ///< The plasma heatmap color.
+
+    kHeatmapColorTypeMax,  ///< The maximum value of the HeatmapColorType enums (not a valid value)
 };
 
 /// @brief Enum of all settings.
@@ -51,6 +89,20 @@ enum SettingID
     kSettingGeneralMovementSpeedLimit,
     kSettingGeneralFrustumCullRatio,
     kSettingGeneralDecimalPrecision,
+
+    kSettingGeneralCullMode,
+    kSettingGeneralControlStyle,
+    kSettingGeneralUpAxis,
+    kSettingGeneralInvertVertical,
+    kSettingGeneralInvertHorizontal,
+    kSettingGeneralTLASBVHColoringMode,
+    kSettingGeneralBLASBVHColoringMode,
+    kSettingGeneralTLASGeometryColoringMode,
+    kSettingGeneralBLASGeometryColoringMode,
+    kSettingGeneralTLASHeatmapColor,
+    kSettingGeneralBLASHeatmapColor,
+    kSettingGeneralTLASTraversalCounterMode,
+    kSettingGeneralBLASTraversalCounterMode,
 
     kSettingThemesAndColorsPalette,
 
@@ -229,7 +281,7 @@ namespace rra
         void SetCheckForUpdatesOnStartup(const bool value);
 
         /// @brief Set the value of kSettingGeneralCameraResetOnStyleChange in the settings.
-        /// 
+        ///
         /// @param [in] value The new value of kSettingGeneralCameraResetOnStyleChange.
         void SetCameraResetOnStyleChange(const bool value);
 
@@ -239,7 +291,7 @@ namespace rra
         bool GetCheckForUpdatesOnStartup() const;
 
         /// @brief Get the value of kSettingGeneralResetOnStyleChange.
-        /// 
+        ///
         /// @return The value of kSettingGeneralResetOnStyleChange.
         bool GetCameraResetOnStyleChange() const;
 
@@ -312,7 +364,7 @@ namespace rra
         void SetFrustumCullRatio(float new_ratio);
 
         /// @brief  Set the decimal precision.
-        /// 
+        ///
         /// @param new_precision The new decimal precision.
         void SetDecimalPrecision(int new_precision);
 
@@ -332,9 +384,144 @@ namespace rra
         float GetFrustumCullRatio();
 
         /// @brief Get the decimal precision.
-        /// 
+        ///
         /// @return The decimal precision.
         int GetDecimalPrecision();
+
+        // Viewer persistant settings. -------------------------------------
+
+        /// @brief Get the value of the kSettingGeneralCullMode in the settings.
+        ///
+        /// @return The triangle face culling mode.
+        CullModeType GetCullMode() const;
+
+        /// @brief Set the value of the kSettingGeneralCullMode in the settings.
+        ///
+        /// @param [in] cull_mode The triangle face culling mode.
+        void SetCullMode(CullModeType cull_mode);
+
+        /// @brief Get the value of the kSettingGeneralControlStyle in the settings.
+        ///
+        /// @return The control style type.
+        ControlStyleType GetControlStyle() const;
+
+        /// @brief Set the value of the kSettingGeneralControlStyle in the settings.
+        ///
+        /// @param [in] control_style_type The control style type.
+        void SetControlStyle(ControlStyleType control_style_type);
+
+        /// @brief Get the value of the kSettingGeneralUpAxis in the settings.
+        ///
+        /// @return The up axis type.
+        UpAxisType GetUpAxis() const;
+
+        /// @brief Set the value of the kSettingGeneralUpAxis in the settings.
+        ///
+        /// @param [in] up_axis The up axis type.
+        void SetUpAxis(UpAxisType up_axis);
+
+        /// @brief Get the value of the kSettingGeneralInvertVertical in the settings.
+        ///
+        /// @return True if vertical inversion is enabled.
+        bool GetInvertVertical() const;
+
+        /// @brief Set the value of the kSettingGeneralInvertVertical in the settings.
+        ///
+        /// @param [in] invert_vertical True if vertical inversion is enabled.
+        void SetInvertVertical(bool invert_vertical);
+
+        /// @brief Get the value of the kSettingGeneralInvertHorizontal in the settings.
+        ///
+        /// @return True if horizontal inversion is enabled.
+        bool GetInvertHorizontal() const;
+
+        /// @brief Set the value of the kSettingGeneralInvertHorizontal in the settings.
+        ///
+        /// @param [in] invert_horizontal True if horizontal inversion is enabled.
+        void SetInvertHorizontal(bool invert_horizontal);
+
+        /// @brief Get the value of the kSettingGeneralTLASBVHColoringMode in the settings.
+        ///
+        /// @return The BVH coloring mode.
+        renderer::BVHColoringMode GetTLASBVHColoringMode() const;
+
+        /// @brief Set the value of the kSettingGeneralTLASBVHColoringMode in the settings.
+        ///
+        /// @param [in] coloring_mode The BVH coloring mode.
+        void SetTLASBVHColoringMode(renderer::BVHColoringMode coloring_mode);
+
+        /// @brief Get the value of the kSettingGeneralBLASBVHColoringMode in the settings.
+        ///
+        /// @return The BVH coloring mode.
+        renderer::BVHColoringMode GetBLASBVHColoringMode() const;
+
+        /// @brief Set the value of the kSettingGeneralBLASBVHColoringMode in the settings.
+        ///
+        /// @param [in] coloring_mode The BVH coloring mode.
+        void SetBLASBVHColoringMode(renderer::BVHColoringMode coloring_mode);
+
+        /// @brief Get the value of the kSettingGeneralTLASGeometryColoringMode in the settings.
+        ///
+        /// @return The geometry coloring mode combo box index.
+        int GetTLASGeometryColoringMode() const;
+
+        /// @brief Set the value of the kSettingGeneralTLASGeometryColoringMode in the settings.
+        ///
+        /// @param [in] coloring_mode The geometry coloring mode combo box index.
+        void SetTLASGeometryColoringMode(int coloring_mode);
+
+        /// @brief Get the value of the kSettingGeneralBLASGeometryColoringMode in the settings.
+        ///
+        /// @return The geometry coloring mode combo box index.
+        int GetBLASGeometryColoringMode() const;
+
+        /// @brief Set the value of the kSettingGeneralBLASGeometryColoringMode in the settings.
+        ///
+        /// @param [in] coloring_mode The geometry coloring mode combo box index.
+        void SetBLASGeometryColoringMode(int coloring_mode);
+
+        /// @brief Get the value of the kSettingGeneralTLASHeatmapColor in the settings.
+        ///
+        /// @return The heatmap color.
+        HeatmapColorType GetTLASHeatmapColor() const;
+
+        /// @brief Set the value of the kSettingGeneralTLASHeatmapColor in the settings.
+        ///
+        /// @param [in] heatmap_color The heatmap color.
+        void SetTLASHeatmapColor(HeatmapColorType heatmap_color);
+
+        /// @brief Get the value of the kSettingGeneralBLASHeatmapColor in the settings.
+        ///
+        /// @return The heatmap color.
+        HeatmapColorType GetBLASHeatmapColor() const;
+
+        /// @brief Set the value of the kSettingGeneralBLASHeatmapColor in the settings.
+        ///
+        /// @param [in] heatmap_color The heatmap color.
+        void SetBLASHeatmapColor(HeatmapColorType heatmap_color);
+
+        /// @brief Get the value of the kSettingGeneralTLASTraversalCounterMode in the settings.
+        ///
+        /// @return The traversal counter mode combo box index.
+        int GetTLASTraversalCounterMode() const;
+
+        /// @brief Set the value of the kSettingGeneralTLASTraversalCounterMode in the settings.
+        ///
+        /// @param [in] traversal_counter_mode The traversal counter mode combo box index.
+        void SetTLASTraversalCounterMode(int traversal_counter_mode);
+
+        /// @brief Get the value of the kSettingGeneralBLASTraversalCounterMode in the settings.
+        ///
+        /// @return The traversal counter mode combo box index.
+        int GetBLASTraversalCounterMode() const;
+
+        /// @brief Set the value of the kSettingGeneralBLASTraversalCounterMode in the settings.
+        ///
+        /// @param [in] traversal_counter_mode The traversal counter mode combo box index.
+        void SetBLASTraversalCounterMode(int traversal_counter_mode);
+
+        /// @brief Reset the persistent TLAS/BLAS UI back to the default values.
+        void SetPersistentUIToDefault();
 
     private:
         /// @brief Set the value of checkbox's state in the settings.

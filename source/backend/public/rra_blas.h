@@ -221,6 +221,23 @@ RraErrorCode RraBlasGetProceduralNodeCount(uint64_t blas_index, uint32_t* out_pr
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_geometry_index);
 
+/// @brief Retrieve the number of primitives in a geometry.
+///
+/// @param [in]  blas_index          The index of the BLAS to use.
+/// @param [in]  geometry_index      The index of the geometry to use.
+/// @param [out] out_primitive_count The number of primitives in this geometry.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetGeometryPrimitiveCount(uint64_t blas_index, uint32_t geometry_index, uint32_t* out_primitive_count);
+
+/// @brief Retrieve the number of geometries in a BLAS.
+///
+/// @param [in]  blas_index         The index of the BLAS to use.
+/// @param [out] out_geometry_count	The number of geometries this BLAS has.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetGeometryCount(uint64_t blas_index, uint32_t* out_geometry_count);
+
 /// @brief Retrieve the primitive index for the triangle node.
 ///
 /// @param [in]  blas_index				The index of the BLAS to use.

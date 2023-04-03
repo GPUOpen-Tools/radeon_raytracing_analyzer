@@ -16,6 +16,8 @@ The following fields are displayed:
 
 * Instance mask - The mask specified for the instance node determining which trace ray calls will interact with it.
 
+* Cull disable - Instance flag specifying if the cull mode is disabled.
+
 * Flip facing - Instance flag specifying whether triangles front face should be inverted.
 
 * Force opaque - Instance flag specifying if this instance should be opaque regardless of geometry flags.
@@ -33,7 +35,7 @@ The following fields are displayed:
 * Transform[x][y] - The instance transform, comprising of the rotation and scaling components.
 
 The columns can be sorted by clicking on them. The arrow in the heading shows if
-sorting is in ascending or decending order.
+sorting is in ascending or descending order.
 
 Typically, instances are created with their own local co-ordinate system. When
 placed in the scene, each instance requires a transformation from its local

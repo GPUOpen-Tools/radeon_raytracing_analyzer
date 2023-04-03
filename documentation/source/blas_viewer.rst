@@ -47,6 +47,11 @@ in the BLAS pane.
 
 .. _triangle-splitting-label:
 
+Culling mode ray flags
+~~~~~~~~~~~~~~~~~~~~~~
+These work slightly differently to those in the TLAS pane, since at the BLAS level there is no concept of
+an instance. That means there are no instance flags to override the ray flags set up in the RRA user interface.
+
 Triangle splitting
 ~~~~~~~~~~~~~~~~~~
 Triangle splitting is another driver optimization that can be used if a triangle isn't axis aligned. This

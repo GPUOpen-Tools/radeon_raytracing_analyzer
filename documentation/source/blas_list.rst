@@ -44,7 +44,7 @@ The following fields are displayed:
 * Avg. depth – The average depth of the BLAS.
 
 The columns can be sorted by clicking on them. The arrow in the heading shows if
-sorting is in ascending or decending order.
+sorting is in ascending or descending order.
 
 Double-clicking an item in the table will jump to the BLAS Viewer pane and show
 the selected BLAS.

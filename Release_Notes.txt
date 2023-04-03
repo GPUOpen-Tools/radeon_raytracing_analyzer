@@ -1,9 +1,13 @@
-Radeon Raytracing Analyzer V1.1.1 01/09/2023
---------------------------------------------
+Radeon Raytracing Analyzer V1.2 04/26/2023
+------------------------------------------
 
-V1.1.1 Changes
+V1.2 Changes
 ------------------------------------
-1) Add support for fused instances.
+1) Ray face culling flags added to traversal viewer pane.
+2) Geometry list sub-tab added to BLAS tab.
+3) Addition of an instance mask to the TLAS viewer pane.
+4) Addition of a histogram to the traversal mode viewer side pane.
+5) Bugs/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -17,6 +21,10 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.1.1 Changes
+------------------------------------
+1) Add support for fused instances.
 
 V1.1 Changes
 ------------------------------------

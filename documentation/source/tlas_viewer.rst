@@ -170,7 +170,7 @@ In traversal counter rendering mode, the controls are slightly different, as see
 * The **Box sort heuristic** describes how box nodes are sorted during traversal. This determines the
   order in which box nodes are checked for intersections. It's dependent on ray flags and system configuration.
 
-  * The **Closest** sort heurstic checks the closest box nodes first for intersections.
+  * The **Closest** sort heuristic checks the closest box nodes first for intersections.
 
   * The **Middle point** sort heuristic checks the box nodes with the closest centers first for intersections.
 
@@ -182,7 +182,13 @@ In traversal counter rendering mode, the controls are slightly different, as see
   * The **Counter range** slider has a range between 0 and 1000 but the limit can be changed in the
     **General** section of the settings under **Maximum traversal count**.
   
-  * The values under the slider are the current minimum and maximum values of the 2 slider handles.
+  * The values under the slider are the current minimum and maximum values of the 2 slider handles, as well as the average of
+    the traversal counts of each pixel visible in the viewport.
+
+* The **Counter histogram** above the counter slider shows the distribution of traversal counts in the current viewport. The
+  leftmost end of the histogram is 0 and the rightmost end is the maximum slider traversal count set in the settings. The
+  histogram lines up with the slider below it, where each vertical slice represents the same traversal count for the slider
+  and the histogram.
 
 * Clicking on the **Wand icon** will automatically adjust the slider values to the minimum and maximum
   pixel values visible in the viewport.
@@ -193,9 +199,18 @@ In traversal counter rendering mode, the controls are slightly different, as see
   is enabled, the wand icon is disabled.
 
 The **Show axis aligned BVH**, **Show instance transform**, and **Show wireframe** checkboxes are also
-present, along with the culling mode combo box. But in traversal counter rendering mode, the selected culling mode
-plays the part of the frontface/backface triangle culling flags passed to the trace ray call in the shader. This
-means that the culling behavior can be overridden or modified for each instance via instance flags.
+present, along with the culling mode combo box.
+
+In traversal counter rendering mode, the selected culling mode plays the part of the frontface/backface triangle
+culling flags passed to the trace ray call in the shader. This means that the culling behavior can be overridden
+or modified for each instance via instance flags.
+
+In other words, the instance flags set up for the instance in the application will override the UI settings, and
+not the other way round.
+
+For example, the culling mode ray flags set up in RRA will only have an effect if
+D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_CULL_DISABLE or VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR
+are not set.
 
 Camera controls
 ~~~~~~~~~~~~~~~
@@ -218,11 +233,6 @@ The **Camera controls** section allows selection of the camera controls.
   selected control style and are primarily used to drive the camera. 
   Common keyboard shortcuts are also described in the keyboard shortcuts section in the settings menu. 
 
-.. only:: internal
-
-   * The **Copy camera params** and **paste camera params** allow the camera position to be
-     saved and restored. This can be helpful to return to a point of interest in a scene later.
-
 * The **Projection** combo box allows selection of the projection mode, switching between
   perspective and orthographic viewing modes. The default is perspective.
 
@@ -233,15 +243,10 @@ The **Camera controls** section allows selection of the camera controls.
 
 * The **Coordinate system** checkboxes allow the inversion of the horizontal and vertical axes.
 
-* The **Camera position** editboxes show the current camera position. These values can be
+* The **Camera position** edit-boxes show the current camera position. These values can be
   edited manually if needed. The reset icon can be clicked to move the camera to the origin.
 
 * The **Field of view** slider changes the camera's field of view.
-
-.. only:: internal
-
-    * The **Near plane** slider changes the near clipping plane. (The far plane is set to a
-      large constant.)
 
 * The **Movement speed** slider changes the speed of the camera. The maximum speed can be set in the
   **General** section of the settings under **Maximum camera movement speed**.
@@ -250,7 +255,7 @@ Traversal counter visualization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Given the complexity of acceleration structures and the specifics of the ray traversal algorithms that
-operates on these structures, it can be very diffcult to evaluate the performance cost of a given scene. 
+operates on these structures, it can be very difficult to evaluate the performance cost of a given scene.
 
 The traversal counter visualization will help simplify this complexity and help reduce traversal count
 signatures by editing BLASes and repositioning of instances in the TLAS.
@@ -411,11 +416,6 @@ The coloring modes are available in a row above the scene rendering.
    * Technical drawing
       Directionally lit Gooch shading.
 
-     .. only:: internal
-
-      * Leaf node triangle index (Triangle)
-         The triangle index within a leaf node.
-
 #. **Traversal counters** is only available when the traversal rendering mode is
    enabled, and allows for different hit and test counters to be used when colorizing
    the scene. Each pixel shows how many bounding volume tests or hits were performed.
@@ -444,7 +444,7 @@ The coloring modes are available in a row above the scene rendering.
       The number of triangles which have been considered the closest hit candidate.
 
    * Triangle miss
-      The number of triangles which have been been tested but not considered the closest hit candidate.
+      The number of triangles which have been tested but not considered the closest hit candidate.
 
    * Triangle test
       The number of triangles which the ray has been tested against. This is the sum of triangle hits and misses.
@@ -454,6 +454,16 @@ The coloring modes are available in a row above the scene rendering.
    color spectrum, giving a wider range of colors. The **Viridis** and **Plasma** color schemes are
    perceptually uniform heatmaps. Each heatmap will show the scene slightly differently with some heatmaps
    showing certain areas of the scene better than others.
+
+Instance mask filter
+~~~~~~~~~~~~~~~~~~~~
+The instance mask filter allows setting an 8-bit instance mask to simulate the effect of the InstanceInclusionMask
+argument of TraceRay() in HLSL or the cullMask argument of traceRayEXT() in GLSL. In both geometry rendering mode and
+traversal rendering mode, the instances not included in the mask will be culled.
+
+.. image:: media/tlas/instance_mask_filter.png
+
+The mask can be set either by clicking the individual bits to toggle them on the left side, or by typing or pasting in a hex value on the right side.
 
 .. _Rebraiding:
 

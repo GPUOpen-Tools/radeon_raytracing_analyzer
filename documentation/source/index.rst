@@ -1,9 +1,9 @@
 The Radeon™ Raytracing Analyzer (RRA)
 =====================================
 
-The Radeon Raytracing Analyzer is a tool designed to help developers improve the raytracing performance on AMD Radeon 6000 series GPU's. The tool
-focuses on the visualization of Acceleration Structures, which in our case consist of Bounding Volume Hierarchies. RRA allows the developer to
-visualize the bounding box hierarchies, and related scene geometries, to quickly identify issues with the bounding volume hierarchies, such as
+The Radeon Raytracing Analyzer is a tool designed to help developers improve the raytracing performance on AMD Radeon 6000 and 7000 series GPU's.
+The tool focuses on the visualization of Acceleration Structures, which in our case consist of Bounding Volume Hierarchies. RRA allows the developer
+to visualize the bounding box hierarchies, and related scene geometries, to quickly identify issues with the bounding volume hierarchies, such as
 overlapping bounding volumes and sparse geometry layout within bounding volumes. Once identified, the developer can revisit their BVH generation
 strategy.
 
@@ -30,7 +30,7 @@ Supported graphics APIs, RDNA hardware, and operating systems
 
 -  Windows® 11
 
--  Ubuntu 22.04 LTS (Vulkan only)
+-  Ubuntu® 22.04 LTS (Vulkan only)
 
 Radeon Raytracing Analyzer - Quick Start
 ========================================
@@ -118,7 +118,10 @@ number of sub-windows..
    c. **Triangles** - Lists statistics for all triangles of the selected
       bottom-level acceleration structure.
 
-   d. **Properties** - Lists statistics and properties for the currently
+   d. **Geometries** - Lists statistics for all geometries of the selected
+      selected bottom-level acceleration structure.
+
+   e. **Properties** - Lists statistics and properties for the currently
       selected bottom-level acceleration structure.
 
 Settings
@@ -175,6 +178,8 @@ These panes show information about a bottom-level acceleration structure.
 
 .. include:: triangle_list.rst
 
+.. include:: geometries_list.rst
+
 .. include:: blas_properties.rst
 
 DISCLAIMER
@@ -201,4 +206,4 @@ Microsoft is a registered trademark of Microsoft Corporation in the US and other
 Windows is a registered trademark of Microsoft Corporation in the US and other jurisdictions.
 
 
-© 2022 Advanced Micro Devices, Inc. All rights reserved.
+© 2022-2023 Advanced Micro Devices, Inc. All rights reserved.

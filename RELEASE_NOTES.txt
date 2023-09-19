@@ -1,13 +1,14 @@
-Radeon Raytracing Analyzer V1.2 04/26/2023
+Radeon Raytracing Analyzer V1.3 09/21/2023
 ------------------------------------------
 
-V1.2 Changes
+V1.3 Changes
 ------------------------------------
-1) Ray face culling flags added to traversal viewer pane.
-2) Geometry list sub-tab added to BLAS tab.
-3) Addition of an instance mask to the TLAS viewer pane.
-4) Addition of a histogram to the traversal mode viewer side pane.
-5) Bugs/stability fixes.
+1) Addition of a RAY tab, to enable the ability to visualize dispatches and individual rays.
+2) Ray Dispatches pane added to visualize ray dispatches and allow selection of pixels within those dispatches.
+3) Ray Inspector pane added to visualize individual rays and their collisions with scene objects.
+4) Reset button added to TLAS/BLAS viewer panes and Inspector pane to reset the UI to its default settings.
+5) Allow viewer UI state to be persistent between RRA sessions via a checkbox in the general settings.
+6) Bugs/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -18,9 +19,21 @@ Known Issues
 (5) Radeon Developer Panel cannot capture RRA traces from non-AMD GPUs.
 (6) Unicode folders and filenames are currently not supported.
 (7) There is currently no default "Application 'up' axis" in the viewer panes. When loading or reloading RRA traces, orient your scene and press the "U" key to automatically set the up axis.
+(8) The axis free camera does not properly "Jump to ray" when the view is reset with 'F' key press.
+(9) Only the X dimension is captured for the applications that use indirect dispatches.
+(10) The fov and camera speed does not get properly transmitted when jumping from ray inspector to TLAS viewer via the links on the left panel.
+(11) The ray dispatches feature is currently experimental on Linux and requires at least 16GB of system memory to work reliably in most cases.
 
 Release Notes History
 ------------------------------------
+
+V1.2 Changes
+------------------------------------
+1) Ray face culling flags added to traversal viewer pane.
+2) Geometry list sub-tab added to BLAS tab.
+3) Addition of an instance mask to the TLAS viewer pane.
+4) Addition of a histogram to the traversal mode viewer side pane.
+5) Bugs/stability fixes.
 
 V1.1.1 Changes
 ------------------------------------

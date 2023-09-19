@@ -84,5 +84,25 @@ Alternatively, building can be done directly from the prebuild script with the -
 python3 pre_build.py --build
 ```
 
+It is possible to use the system-installed version of Qt rather than using a Qt installer described above. At the time of this writing, Ubuntu 22.04 LTS
+comes with Qt 5.15.3. To use the system Qt, a fake Qt package is needed. For Qt 5.15.3, this can be made by creating the required directory structure
+and setting up symbolic links to point to the system Qt lib and include directories:
+```bash
+mkdir -p ~/Qt/Qt5.15.3/5.15.3/gcc_64
+sudo ln -s /usr/lib/x86_64-linux-gnu ~/Qt/Qt5.15.3/5.15.3/gcc_64/lib
+sudo ln -s /usr/include/x86_64-linux-gnu/qt5 ~/Qt/Qt5.15.3/5.15.3/gcc_64/include
+```
+python3 pre_build.py --qt 5.15.3 --qt-system --disable-extra-qt-lib-deploy --build
+
+Some additional Qt components may be required, so install those:
+
+```
+sudo apt-get install qtbase5-dev
+sudo apt-get install qtbase5-dev-tools
+sudo apt-get install libqt5svg5-dev
+sudo apt-get install libqt5x11extras5
+sudo apt-get install qtbase5-private-dev
+```
+
 [qt-online]: https://www.qt.io/blog/qt-5.15.2-released
 [qt-offline]: https://download.qt.io/archive/qt/5.12/5.12.6/

@@ -19,12 +19,17 @@ to reduce performance bottlenecks.
    * Radeon Developer Panel (RDP)
    * Radeon Raytracing Analyzer (RRA)
 3. To capture a trace from a game, run the Radeon Developer Panel and follow the instructions in the Help. Help can be found in the following locations:
-   * Help web pages exist in the "docs" sub directory
+   * Help web pages exist in the "help" sub directory
    * Help web pages can be accessed from the **Help** button in the Developer Panel
    * Help web pages can be accessed from the Welcome screen in the Radeon Raytracing Analyzer, or from the **Help** menu
    * The documentation is hosted publicly at:
      * https://radeon-developer-panel.readthedocs.io/en/latest/
      * https://radeon-raytracing-analyzer.readthedocs.io/en/latest/
+
+## Important notes
+1. In order to capture BVH data, please ensure that acceleration structures are rebuilt each frame.
+2. In order to capture ray history information, please ensure that all command buffer are rebuilt each frame.
+3. RayQuery is currently only supported from compute shaders. Calling RayQuery from the graphics pipeline is not supported.
 
 ## Supported APIs
  * DirectX12
@@ -43,7 +48,7 @@ to reduce performance bottlenecks.
 See [BUILD.md](BUILD.md) for more details.
 
 ## License ##
-Radeon Raytracing Analyzer is licensed under the MIT license. See the [License.txt](License.txt) file for complete license information.
+Radeon Raytracing Analyzer is licensed under the MIT license. See the [LICENSE.txt](LICENSE.txt) file for complete license information.
 
 ## Copyright information ##
 Please see [NOTICES.txt](NOTICES.txt) for third party license information.

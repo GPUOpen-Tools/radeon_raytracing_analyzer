@@ -8,6 +8,20 @@ in a scene. Each instance corresponds to a BLAS structure, described below. The 
 pane will therefore show a rendering of the complete scene inside the very top
 bounding volume. There can be multiple TLAS’s in a scene.
 
+Each viewer pane in RRA has a UI reset button, in the top-right corner of the UI:
+
+.. image:: media/reset.png
+
+This allows the rendering and camera controls, and coloring modes to be reset to their
+factory defaults. Certain UI controls are shared between viewers, so resetting these on
+one viewer pane will be reflected on the other viewer panes. Examples of these would be
+the up axis and inverting the horizontal or vertical axes, since these parameters are
+considered global to the scene. The movement speed slider isn't currently reset since
+its initial value is calculated depending on the scene size, so smaller scenes will
+have a smaller movement speed.
+
+An example TLAS viewer pane is shown below:
+
 .. image:: media/tlas/tlas_viewer_1.png
 
 The view is split into 3 sections:
@@ -66,6 +80,7 @@ The viewport camera can be manipulated using a mouse and keyboard
 using a preset control style (described later).
 
 Pressing the "R" key in all camera modes will reset the camera to its default position.
+This is useful to recover from disorientation such as losing sight of the scene in the 3D view.
 
 It is possible to select an instance within the scene by clicking on any mesh within
 the viewport. Multiple instances can be selected by holding down the Ctrl key
@@ -208,7 +223,7 @@ or modified for each instance via instance flags.
 In other words, the instance flags set up for the instance in the application will override the UI settings, and
 not the other way round.
 
-For example, the culling mode ray flags set up in RRA will only have an effect if
+For example, the culling mode ray flags set up in RRA will only have an effect if 
 D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_CULL_DISABLE or VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR
 are not set.
 
@@ -233,6 +248,11 @@ The **Camera controls** section allows selection of the camera controls.
   selected control style and are primarily used to drive the camera. 
   Common keyboard shortcuts are also described in the keyboard shortcuts section in the settings menu. 
 
+.. only:: internal
+
+   * The **Copy camera params** and **paste camera params** allow the camera position to be
+     saved and restored. This can be helpful to return to a point of interest in a scene later.
+
 * The **Projection** combo box allows selection of the projection mode, switching between
   perspective and orthographic viewing modes. The default is perspective.
 
@@ -247,6 +267,11 @@ The **Camera controls** section allows selection of the camera controls.
   edited manually if needed. The reset icon can be clicked to move the camera to the origin.
 
 * The **Field of view** slider changes the camera's field of view.
+
+.. only:: internal
+
+    * The **Near plane** slider changes the near clipping plane. (The far plane is set to a
+      large constant.)
 
 * The **Movement speed** slider changes the speed of the camera. The maximum speed can be set in the
   **General** section of the settings under **Maximum camera movement speed**.
@@ -416,6 +441,11 @@ The coloring modes are available in a row above the scene rendering.
    * Technical drawing
       Directionally lit Gooch shading.
 
+     .. only:: internal
+
+      * Leaf node triangle index (Triangle)
+         The triangle index within a leaf node.
+
 #. **Traversal counters** is only available when the traversal rendering mode is
    enabled, and allows for different hit and test counters to be used when colorizing
    the scene. Each pixel shows how many bounding volume tests or hits were performed.
@@ -454,6 +484,64 @@ The coloring modes are available in a row above the scene rendering.
    color spectrum, giving a wider range of colors. The **Viridis** and **Plasma** color schemes are
    perceptually uniform heatmaps. Each heatmap will show the scene slightly differently with some heatmaps
    showing certain areas of the scene better than others.
+
+UI Persistent state
+~~~~~~~~~~~~~~~~~~~
+The state of some of the lesser-used user interface controls is remembered between RRA sessions.
+This is to try to avoid having to configure the UI each time RRA is loaded, particularly in the
+case where the same application is being analyzed between sessions. The persistent state can
+be toggled from the settings, described in the **Settings** section.
+
+Above the 'Show/hide controls' text button in the top-right of the view is an icon that allows
+the UI to be reset to its default settings. There is a similar button on the BLAS Viewer pane.
+Hoving over the button will display a help tooltip. Clicking on the button will reset the
+persistent UI controls back to their defaults. Since some elements are shared between the BLAS
+and TLAS viewers, both the TLAS and BLAS controls will be reset, regardless of which reset
+button was pressed.
+
+The following UI elements are shared between all viewers:
+
+-  Culling mode
+
+-  Up axis
+
+-  Invert vertical
+
+-  Invert horizontal
+
+-  Continuous update
+
+-  Projection mode
+
+The following UI elements are saved per-view:
+
+-  Control style
+
+-  BVH coloring mode
+
+-  Geometry coloring mode
+
+-  Heatmap coloring mode
+
+-  Traversal counter coloring mode
+
+-  Rendering mode
+
+-  Show geometry checkbox
+
+-  Show axis-aligned BVH checkbox
+
+-  Show instance transform checkbox (TLAS viewer only)
+
+-  Show wireframe checkbox
+
+-  Accept first hit checkbox
+
+-  Cull back-facing triangles
+
+-  Cull front-facing triangles
+
+The movement speed and field of view states currently do not persist between RRA sessions.
 
 Instance mask filter
 ~~~~~~~~~~~~~~~~~~~~

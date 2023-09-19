@@ -3,7 +3,8 @@ These panes show the overview of the trace and the system.
 Summary
 -------
 The summary pane presents a high-level view of the acceleration structures in
-a trace.
+a trace. If dispatches was specified when taking a capture, the dispatches
+that shot rays will also be shown.
 
 At the top, a small table will show the number of acceleration structures by type
 and if there are any acceleration structures that are empty or missing.
@@ -41,6 +42,22 @@ the trace. It is split into several sections:
 
 Clicking on the TLAS name or address (text in blue) will navigate to the TLAS
 Viewer pane.
+
+If dispatches was enabled from the Radeon Developer Panel, the **Dispatch list** shows
+a list of all ray dispatches that were executed during the captured frame.
+
+Each dispatch is shown as a card. The title text shows the API function name that launched
+the dispatch and the dispatch dimensions.
+
+The **Traversal statistics** show information pertaining to how much computation
+was done by this dispatch, such as the number of rays that were cast, the traversal loop counts
+and the number of instance intersections. The size of these values relative to the size of the
+dispatch may give the user an indication of the efficiency of a particular dispatch.
+
+The **Shader invocations** shows the number of shaders that were executed and their type. This
+is also represented as a donut, showing the relative counts of the shader types.
+
+Clicking on the Dispatch name (text in blue) will navigate to the RAY Dispatches pane.
 
 Device configuration
 --------------------

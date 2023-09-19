@@ -6,6 +6,60 @@ that a new version is available for download.
 **Camera reset** If checked, the camera will reset to the starting position and
 orientation each time the camera's control style is changed.
 
+**Viewer UI state** If checked, certain elements of the viewer UI's are persistent
+between RRA sessions. These are typically selections that are seldom changed. The
+following UI elements are shared between all viewers:
+
+-  Culling mode
+
+-  Up axis
+
+-  Invert vertical
+
+-  Invert horizontal
+
+-  Continuous update
+
+-  Projection mode
+
+The following UI elements are saved per-view:
+
+-  Control style
+
+-  BVH coloring mode
+
+-  Geometry coloring mode
+
+-  Heatmap coloring mode
+
+-  Traversal counter coloring mode
+
+-  Rendering mode
+
+-  Show geometry checkbox
+
+-  Show axis-aligned BVH checkbox
+
+-  Show instance transform checkbox (TLAS viewer only)
+
+-  Show wireframe checkbox
+
+-  Accept first hit checkbox
+
+-  Cull back-facing triangles
+
+-  Cull front-facing triangles
+
+**Automatic updates** Check for updates to Radeon Raytracing Analyzer when starting the
+program.
+
+**Camera reset** If enabled, the camera will reset position when the camera control style
+is changed.
+
+**Viewer UI state** If enabled, the state of the TLAS, BLAS and RAY inspector panes will be
+remembered from the last session. Otherwise they will be reset to default settings. Some
+state, like camera movement speed, will not be remembered in either case.
+
 **TLAS/BLAS Node display** Will allow the choice between showing the nodes
 in the treeviews on the viewer panes either by their GPU address, or by an offset.
 
@@ -55,13 +109,18 @@ The **Opacity coloring** is used for the Opacity geometry coloring mode.
 The **Flag indication colors** are the 2 colors used for the build flag geometry coloring modes,
 indicating if the build flag is enabled or disabled.
 
-The **Build type coloring** Combines the FastBuild and FastTrace flags. These colors are
+The **Build type coloring** combines the FastBuild and FastTrace flags. These colors are
 used for the **fast build/trace** geometry coloring mode. Specifying both build flags is improper
 API usage, but coloring it allows the user to spot potential errors.
 
-The **Instance force opaque/no-opaque** Combines the ForceOpaque and ForceNoOpaque flags. These colors
+The **Instance force opaque/no-opaque** combines the ForceOpaque and ForceNoOpaque flags. These colors
 are used for the **opacity** geometry coloring mode. Specifying both build flags is improper
 API usage, but coloring it allows the user to spot potential errors.
+
+The **Shader invocation coloring** determines the colors of the ray tracing shaders shown in the donut
+chart on the Overview pane.
+
+The **Ray coloring** determines the colors of the rays shown in the 3D view of the Ray inspector.
 
 .. image:: media/settings/themes_and_colors_1.png
 

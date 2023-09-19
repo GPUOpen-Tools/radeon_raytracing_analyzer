@@ -40,7 +40,7 @@ Radeon Raytracing Analyzer - Quick Start
 Starting the Radeon Raytracing Analyzer
 ---------------------------------------
 
-Start **RadeonRaytracingAnalyzer.exe** (this is the tool used to view BVH trace data).
+Start **RadeonRaytracingAnalyzer.exe** (this is the tool used to view RRA trace data).
 
 How to load a trace
 -------------------
@@ -68,7 +68,7 @@ There are a few ways to load a trace into RRA.
 
 .. image:: media/recent_traces_1.png
 
-5) Drag and drop a BVH trace file onto the **Radeon Raytracing Analyzer**
+5) Drag and drop an RRA trace file onto the **Radeon Raytracing Analyzer**
    executable, or onto an already open RRA instance.
 
 The Radeon Raytracing Analyzer user interface
@@ -123,6 +123,13 @@ number of sub-windows..
 
    e. **Properties** - Lists statistics and properties for the currently
       selected bottom-level acceleration structure.
+
+5. **RAY**
+
+   a. **Dispatches** - The main viewer for visualizing various types of dispatches that shot rays.
+
+   b. **Inspector** - A viewer for inspecting rays and how they interact with
+      the scene.
 
 Settings
 ========
@@ -181,6 +188,15 @@ These panes show information about a bottom-level acceleration structure.
 .. include:: geometries_list.rst
 
 .. include:: blas_properties.rst
+
+The RAY windows
+===============
+
+These panes allow dispatches and rays to be visualized.
+
+.. include:: ray_dispatches.rst
+
+.. include:: ray_inspector.rst
 
 DISCLAIMER
 ==========

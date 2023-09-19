@@ -277,11 +277,14 @@ void AccelerationStructureViewerPane::InitializeRendererWidget(RendererWidget*  
                                                                ViewerContainerWidget*      viewer_container_widget,
                                                                rra::renderer::BvhTypeFlags bvh_type)
 {
+    HaltRendererWidget();
+
     RRA_ASSERT(renderer_widget != nullptr);
     if (renderer_widget != nullptr)
     {
         // Create a renderer instance that the widget will use to draw the scene geometry.
         rra::renderer::RendererAdapterMap renderer_adapter_map;
+        RRA_ASSERT(renderer_interface_ == nullptr);
         renderer_interface_ = rra::renderer::RendererFactory::CreateRenderer(renderer_adapter_map);
 
         RRA_ASSERT(renderer_interface_ != nullptr);
@@ -317,7 +320,13 @@ void AccelerationStructureViewerPane::InitializeRendererWidget(RendererWidget*  
             connect(renderer_widget, &RendererWidget::FocusOut, this, &AccelerationStructureViewerPane::FocusOut);
             connect(renderer_widget, &RendererWidget::FocusIn, this, &AccelerationStructureViewerPane::FocusIn);
         }
+        else
+        {
+            renderer_widget->SetRendererInterface(nullptr);
+        }
     }
+
+    UpdateCameraController();
 }
 
 void AccelerationStructureViewerPane::HaltRendererWidget()
@@ -401,15 +410,33 @@ void AccelerationStructureViewerPane::UpdateCameraController()
     // If setting UI on trace load, row count will be 0, so no need to set camera controller.
     if (camera_controller && (acceleration_structure_combo_box_->RowCount() > 0))
     {
-        uint64_t selected_bvh_index = model_->FindAccelerationStructureIndex(acceleration_structure_combo_box_);
+        uint64_t               selected_bvh_index = model_->FindAccelerationStructureIndex(acceleration_structure_combo_box_);
+        rra::ViewerIOCallbacks viewer_callbacks   = {};
+
         if (selected_bvh_index != UINT64_MAX)
         {
-            camera_controller->SetViewerModel(model_, selected_bvh_index);
+            viewer_callbacks.get_scene_extents = [=]() -> BoundingVolumeExtents {
+                BoundingVolumeExtents extents = {};
+                model_->GetSceneCollectionModel()->GetSceneBounds(selected_bvh_index, extents);
+                return extents;
+            };
+
+            viewer_callbacks.get_selection_extents = [=]() -> BoundingVolumeExtents {
+                BoundingVolumeExtents extents = {};
+                model_->GetSceneCollectionModel()->GetSceneSelectionBounds(selected_bvh_index, extents);
+                return extents;
+            };
+
+            viewer_callbacks.get_context_options = [=](rra::SceneContextMenuRequest request) -> rra::SceneContextMenuOptions {
+                return model_->GetSceneContextOptions(selected_bvh_index, request);
+            };
+
+            viewer_callbacks.select_from_scene = [=](const rra::renderer::Camera* camera, glm::vec2 coords) -> rra::SceneCollectionModelClosestHit {
+                return model_->SelectFromScene(selected_bvh_index, camera, coords);
+            };
         }
-        else
-        {
-            camera_controller->SetViewerModel(nullptr, UINT64_MAX);
-        }
+
+        camera_controller->SetViewerCallbacks(viewer_callbacks);
 
         if (camera_controller != last_camera_controller_)
         {
@@ -594,7 +621,6 @@ bool DistanceGreaterThan(const QPoint& p1, const QPoint& p2, float dist)
 
 void AccelerationStructureViewerPane::MouseMoved(QMouseEvent* mouse_event)
 {
-    UpdateCameraController();
     rra::renderer::Camera& camera = renderer_interface_->GetCamera();
 
     // Can assume the controller is going to be a ViewerIO.
@@ -687,11 +713,11 @@ void AccelerationStructureViewerPane::KeyPressed(QKeyEvent* key_event)
         break;
 
     case Qt::Key_H:
-        model_->HideSelectedNodes(last_camera_controller_->GetSceneIndex());
+        model_->HideSelectedNodes(model_->FindAccelerationStructureIndex(acceleration_structure_combo_box_));
         break;
 
     case Qt::Key_J:
-        model_->ShowAllNodes(last_camera_controller_->GetSceneIndex());
+        model_->ShowAllNodes(model_->FindAccelerationStructureIndex(acceleration_structure_combo_box_));
         break;
 
     case Qt::Key_Control:

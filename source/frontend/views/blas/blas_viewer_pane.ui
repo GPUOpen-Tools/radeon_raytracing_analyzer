@@ -193,11 +193,11 @@
                 <enum>Qt::Horizontal</enum>
                </property>
                <property name="sizeType">
-                <enum>QSizePolicy::Expanding</enum>
+                <enum>QSizePolicy::Fixed</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>20</width>
+                 <width>4</width>
                  <height>10</height>
                 </size>
                </property>
@@ -215,6 +215,57 @@
                 <string>No node selected.</string>
                </property>
               </widget>
+             </item>
+             <item>
+              <spacer name="horizonal_spacer_node_2_">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>10</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="RraIconButton" name="content_focus_selected_volume_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string></string>
+               </property>
+               <property name="toolTip">
+                <string>Focus the camera on selected volume (F). </string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizonal_spacer_node_3_">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>4</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
              </item>
             </layout>
            </item>
@@ -1333,6 +1384,11 @@
    <class>AccelerationStructureTreeView</class>
    <extends>ScaledTreeView</extends>
    <header>views/acceleration_structure_tree_view.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RraIconButton</class>
+   <extends>QPushButton</extends>
+   <header>views/custom_widgets/icon_button.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

@@ -10,7 +10,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 
-#include "utils/scaling_manager.h"
+#include "qt_common/utils/scaling_manager.h"
 
 static const float kSegmentBorder = 2.0f;  ///< The border around each segment, in pixels.
 

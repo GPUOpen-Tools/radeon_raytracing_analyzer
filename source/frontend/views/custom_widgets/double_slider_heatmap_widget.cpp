@@ -14,8 +14,8 @@
 #include <QStyleOptionSlider>
 #include <QStylePainter>
 
-#include "utils/common_definitions.h"
-#include "utils/scaling_manager.h"
+#include "qt_common/utils/common_definitions.h"
+#include "qt_common/utils/scaling_manager.h"
 
 /// Stylesheet for the double slider widget.
 static const QString kCustomSliderStylesheet(

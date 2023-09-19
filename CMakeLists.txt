@@ -7,7 +7,7 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 2)
+set(RRA_MINOR_VERSION 3)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()
@@ -20,6 +20,11 @@ string(TIMESTAMP YEAR_STRING "\"%Y\"")
 
 configure_file("${CMAKE_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_SOURCE_DIR}/Buildinfo.properties")
 configure_file("${CMAKE_SOURCE_DIR}/source/frontend/version.h.in" "${CMAKE_SOURCE_DIR}/source/frontend/version.h")
+
+# Add cmake utilities
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(devtools_qt_helper)
+include(dev_tools)
 
 option(RDF_ENABLE_CXX_BINDINGS "Allow usage of C++ interface for RDF library" ON)
 option(RDF_STATIC              "Build RDF as a static library" ON)
@@ -51,9 +56,10 @@ add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 # Define C++ standard for RRA
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
 include_directories("${PROJECT_SOURCE_DIR}/external/")
+include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
 include_directories("${PROJECT_SOURCE_DIR}/external/third_party/")
+include_directories("${PROJECT_SOURCE_DIR}/external/third_party/vulkan/include/")
 
 # Global compiler options
 IF(WIN32)
@@ -103,8 +109,7 @@ MACRO(SOURCE_GROUP_BY_FOLDER target)
     ENDIF (files)
 ENDMACRO(SOURCE_GROUP_BY_FOLDER)
 
-add_subdirectory(external/qt_common/custom_widgets QtCommon/custom_widgets)
-add_subdirectory(external/qt_common/utils QtCommon/utils)
+add_subdirectory(external/qt_common qt_common)
 add_subdirectory(external/rdf/imported/zstd)
 add_subdirectory(external/rdf/rdf)
 add_subdirectory(source/backend backend)
@@ -143,9 +148,9 @@ source_group("sphinx" FILES ${ALL_SPHINX_FILES})
 # group release documents into a release_docs folder
 set (RELEASE_DOCS_IN_ROOT
      ${CMAKE_SOURCE_DIR}/README.md
-     ${CMAKE_SOURCE_DIR}/Release_Notes.txt
+     ${CMAKE_SOURCE_DIR}/RELEASE_NOTES.txt
      ${CMAKE_SOURCE_DIR}/NOTICES.txt
-     ${CMAKE_SOURCE_DIR}/License.txt
+     ${CMAKE_SOURCE_DIR}/LICENSE.txt
 )
 set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
 source_group("release_docs" FILES ${RELEASE_DOCS})
@@ -162,19 +167,22 @@ if(SPHINX_EXECUTABLE)
     add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
     add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
         COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
-        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/docs/help/rra/html/. -t ${SPHINX_OPTION}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/docs/help/rra/html/.doctrees
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/blas_instance_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/blas_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/blas_properties.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/blas_viewer.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/capture.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/overview.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/settings.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/tlas_instance_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/tlas_properties.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/tlas_viewer.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/docs/help/rra/html/triangle_list.html
+        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rra/. -t ${SPHINX_OPTION}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/help/rra/.doctrees
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/blas_instance_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/blas_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/blas_properties.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/blas_viewer.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/capture.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/geometries_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/overview.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/ray_dispatches.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/ray_inspector.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/settings.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/tlas_instance_list.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/tlas_properties.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/tlas_viewer.html
+        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/triangle_list.html
     )
 else()
     message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
@@ -184,9 +192,9 @@ endif()
 
 add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "copying Documentation to output directory"
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/docs
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${DOCS_OUTPUT_DIR}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/landscape.rra  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rra
 )
+

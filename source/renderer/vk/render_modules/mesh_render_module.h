@@ -59,6 +59,12 @@ namespace rra
             /// @param [in] context The context to cleanup.
             virtual void Cleanup(const RenderModuleContext* context) override;
 
+            /// @brief Whether this render module should save a copy of the depth buffer to be read
+            /// from a later render pass.
+            ///
+            /// @return True if a copy of the depth buffer should be saved.
+            virtual bool ShouldCopyDepthBuffer() const;
+
             /// @brief Retrieve a reference to the render state settings structure.
             ///
             /// @returns A reference to the render state settings structure.
@@ -179,7 +185,7 @@ namespace rra
 
             TriangleCullPipelines                                           geometry_wireframe_only_pipeline_;  ///< The wireframe only pipeline.
             std::unordered_map<GeometryColoringMode, TriangleCullPipelines> geometry_color_pipelines_;  ///< Pipelines used for each geometry coloring mode.
-            GeometryColoringMode                                            coloring_mode_;             ///< The geometry color mode currently being drawn.
+            GeometryColoringMode                                            coloring_mode_ = {};        ///< The geometry color mode currently being drawn.
 
             std::vector<VkDescriptorSet> blas_mesh_descriptor_sets_;  ///< The descriptor sets used for rendering BVH geometry.
 

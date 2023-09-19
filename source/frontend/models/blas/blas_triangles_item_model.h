@@ -50,6 +50,7 @@ namespace rra
         kBlasTrianglesColumnVertex0,
         kBlasTrianglesColumnVertex1,
         kBlasTrianglesColumnVertex2,
+        kBlasTrianglesColumnPadding,
 
         kBlasTrianglesColumnCount,
     };

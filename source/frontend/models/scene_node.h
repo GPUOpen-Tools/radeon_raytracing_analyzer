@@ -160,7 +160,7 @@ namespace rra
         /// @param [in] ray_origin The origin of the ray.
         /// @param [in] ray_direction The direction of the ray.
         /// @param [out] intersected_nodes The list to add onto in case of intersection.
-        void CastRay(glm::vec3 ray_origin, glm::vec3 ray_direction, std::vector<SceneNode*>& intersected_nodes);
+        void CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction, std::vector<SceneNode*>& intersected_nodes);
 
         /// @brief Get instances of this node.
         ///

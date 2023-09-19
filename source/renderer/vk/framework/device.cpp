@@ -479,6 +479,34 @@ namespace rra
             }
         }
 
+        void Device::TransferBufferToDevice(VkCommandBuffer cmd, VkQueue queue, VkBuffer buffer, const void* data, VkDeviceSize size)
+        {
+            VkBuffer      staging_buffer{};
+            VmaAllocation staging_allocation{};
+
+            CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, staging_buffer, staging_allocation, data, size);
+
+            vkResetCommandBuffer(cmd, 0);
+
+            VkCommandBufferBeginInfo begin_info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+            begin_info.flags            = 0;
+            begin_info.pInheritanceInfo = nullptr;
+
+            VkResult result = vkBeginCommandBuffer(cmd, &begin_info);
+            CheckResult(result, "Failed to begin command buffer.");
+
+            VkBufferCopy buffer_copy{};
+            buffer_copy.srcOffset = 0;
+            buffer_copy.dstOffset = 0;
+            buffer_copy.size      = size;
+
+            vkCmdCopyBuffer(cmd, staging_buffer, buffer, 1, &buffer_copy);
+
+            FlushCommandBuffer(cmd, queue, VK_NULL_HANDLE, false);
+
+            vmaDestroyBuffer(allocator_, staging_buffer, staging_allocation);
+        }
+
         void Device::CreateImage(VkImageCreateInfo image_create_info, VmaMemoryUsage memory_usage, VkImage& image, VmaAllocation& allocation)
         {
             RRA_ASSERT(image == VK_NULL_HANDLE);

@@ -75,7 +75,7 @@ namespace rra
     void widget_util::DrawCheckboxCell(QPainter* painter, const QRectF& cell_rect, bool checked, bool center)
     {
         const static int    kCheckBoxBoxSize = 14;
-        const static QColor kCheckBoxCheckedColor(11, 96, 212);
+        const static QColor kCheckBoxCheckedColor(42, 42, 42);
         const static QColor kCheckBoxUncheckedColor(224, 224, 224);
         const static QColor kCheckBoxCheckColor(255, 255, 255);
 
@@ -85,7 +85,7 @@ namespace rra
 
         // Center the checkbox by finding out the width of the column, then subtract half the checkbox width
         // from the center of the column to allow for the checkbox width.
-        const int   column_center = center ? (cell_rect.width() / 2) - half_size : 0;
+        const int   column_center = center ? (cell_rect.width() / 2) - half_size : cell_rect.width() - scaled_check_box_size;
         const QRect rect(cell_rect.x() + column_center, cell_rect.center().y() - half_size, scaled_check_box_size, scaled_check_box_size);
 
         // Turn on Antialiasing.

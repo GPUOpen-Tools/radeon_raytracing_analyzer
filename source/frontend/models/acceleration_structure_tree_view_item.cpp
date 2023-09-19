@@ -12,7 +12,6 @@
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
-#include "public/rra_blas.h"
 
 #include "settings/settings.h"
 

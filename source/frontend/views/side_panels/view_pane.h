@@ -10,6 +10,7 @@
 
 #include "ui_view_pane.h"
 
+#include "managers/pane_manager.h"
 #include "models/side_panels/view_model.h"
 
 /// Signal handler for the view pane. Signals emitted from here will be picked
@@ -32,7 +33,7 @@ signals:
     ///
     /// @param [in] controller_changed Flag indicating if the camera controller type has changed. If so, the camera
     /// controller will need changing.
-    void CameraParametersChanged(bool controller_changed);
+    void CameraParametersChanged(bool controller_changed, rra::RRAPaneId pane_id);
 
     /// @brief Signal to indicate that the camera hotkeys have changed and need updating.
     ///
@@ -62,6 +63,11 @@ public:
     /// @param [in] event The show event object.
     virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
 
+    /// @brief Apply the state of the UI from the state in the settings.
+    ///
+    /// @param [in] pane The parent pane containing this viewer container.
+    void ApplyUIStateFromSettings(rra::RRAPaneId pane);
+
     /// @brief Get a pointer to the underlying View model instance.
     ///
     /// @returns A pointer to the underlying View model instance.
@@ -70,10 +76,18 @@ public:
     /// @brief Hides the tlas specific widgets.
     void HideTLASWidgets();
 
+    /// @brief Hides the ray specific widgets.
+    void HideRAYWidgets();
+
     /// @brief Hides or shows widgets that aren't needed for BLASes with procedural geometry.
     ///
     /// @param [in] hidden Shows non-procedural widgets if true, hides them if false.
     void NonProceduralWidgetsHidden(bool hidden);
+
+    /// @brief Set the parent pane for this instance of the view pane.
+    ///
+    /// @param [in] pane_if The parent pane ID.
+    void SetParentPaneId(rra::RRAPaneId pane_id);
 
 signals:
     /// @brief A signal to notify for control style changes.
@@ -82,21 +96,27 @@ signals:
     /// @brief A signal to notify for render mode changes.
     void RenderModeChanged(bool geometry_node);
 
+public slots:
+    /// @brief Set the control style for the camera.
+    ///
+    /// Interrogates the UI control and passes the data off to the model.
+    void SetControlStyle(int index);
+
 private slots:
     /// @brief Enable/disable whether to render the geometry.
     ///
     /// Interrogates the UI control and passes the data off to the model.
-    void SetRenderGeometry();
+    void SetRenderGeometry(bool update_model);
 
     /// @brief Enable/disable whether to render the BVH.
     ///
     /// Interrogates the UI control and passes the data off to the model.
-    void SetRenderBVH();
+    void SetRenderBVH(bool update_model);
 
     /// @brief Enable/disable whether to render the instance pretransoforms.
     ///
     /// Interrogates the UI control and passes the data off to the model.
-    void SetRenderInstancePretransform();
+    void SetRenderInstancePretransform(bool update_model);
 
     /// @brief Enable/disable whether to show a wireframe overlay.
     ///
@@ -140,6 +160,9 @@ private slots:
     /// @brief Move the camera to (0, 0, 0).
     void MoveCameraToOrigin();
 
+    /// @brief Toggle the inspector camera lock. This persists camera position when changing dispatch coordinate selection.
+    void ToggleCameraLock();
+
     /// @brief Toggles traversal counter continuous update.
     void ToggleTraversalCounterContinuousUpdate();
 
@@ -173,11 +196,6 @@ private slots:
     /// Needs to adjust the camera's actual position to keep them in sync.
     void CameraPositionChangedZ(double);
 
-    /// @brief Set the control style for the camera.
-    ///
-    /// Interrogates the UI control and passes the data off to the model.
-    void SetControlStyle(int index);
-
     /// @brief Set the projection mode for the camera.
     ///
     /// @param [in] index The index into the projection dropdown.
@@ -207,14 +225,23 @@ private slots:
     /// @brief Toggles the hotkey layout to show or hide.
     void ToggleHotkeyLayout();
 
+    /// @brief Save the field of view selected in the UI to the settings.
+    ///
+    /// @param [in] value The value to save.
+    void SetFieldOfView(int value);
+
+    /// @brief Save the movement speed selected in the UI to the settings.
+    ///
+    /// @param [in] value The value to save.
+    void SetMovementSpeed(int value);
+
 private:
     /// @brief Updates the orientation widgets.
     void UpdateOrientationWidgets();
 
-    Ui::ViewPane*   ui_                       = nullptr;  ///< Pointer to the Qt UI design.
-    rra::ViewModel* model_                    = nullptr;  ///< The model for this pane.
-    bool            reset_projection_         = false;    ///< Flag to indicate if the projection mode needs resetting on showEvent.
-    bool            reset_camera_orientation_ = false;    ///< Flag to indicate if the camera orientation needs resetting on showEvent.
+    Ui::ViewPane*   ui_             = nullptr;              ///< Pointer to the Qt UI design.
+    rra::ViewModel* model_          = nullptr;              ///< The model for this pane.
+    rra::RRAPaneId  parent_pane_id_ = rra::kPaneIdInvalid;  ///< The parent pane id.
 
     static ViewPaneSignalHandler signal_handler;  ///< The singal handler for camera events.
 };

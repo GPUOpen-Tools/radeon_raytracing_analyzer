@@ -95,13 +95,27 @@ void BinaryCheckbox::paintEvent(QPaintEvent* event)
         painter.drawRoundedRect(outer_rect, switch_radius, switch_radius);
 
         // Draw space.
-        painter.setBrush(Qt::white);
+        if (interaction_disabled_)
+        {
+            painter.setBrush(Qt::lightGray);
+        }
+        else
+        {
+            painter.setBrush(Qt::white);
+        }
+
+        if (override_warning_)
+        {
+            // Color background as red to indicate warning.
+            painter.setBrush(Qt::red);
+        }
+
         QRectF inner_rect(space_x_coord, space_y_coord, space_width, space_height);
         painter.drawRoundedRect(inner_rect, space_radius, space_radius);
 
         // Draw binary bit.
         painter.setPen(Qt::black);
-        int   text_width           = font_metrics.width(QString("0"));
+        int   text_width           = font_metrics.horizontalAdvance(QString("0"));
         qreal text_horizontal_base = (switch_width - text_width) * 0.5;
         painter.drawText(text_horizontal_base, text_base, QString("0"));
     }
@@ -110,12 +124,31 @@ void BinaryCheckbox::paintEvent(QPaintEvent* event)
         const QRectF outer_rect(0, 0, switch_width, switch_height);
 
         // Draw single color switch.
-        painter.setBrush(color_);
-        painter.drawRoundedRect(outer_rect, switch_radius, switch_radius);
+        if (interaction_disabled_)
+        {
+            painter.setBrush(Qt::black);
+            painter.drawRoundedRect(outer_rect, switch_radius, switch_radius);
+
+            painter.setBrush(Qt::gray);
+            QRectF inner_rect(space_x_coord, space_y_coord, space_width, space_height);
+            painter.drawRoundedRect(inner_rect, space_radius, space_radius);
+        }
+        else
+        {
+            painter.setBrush(color_);
+            painter.drawRoundedRect(outer_rect, switch_radius, switch_radius);
+        }
 
         // Draw binary bit.
-        painter.setPen(Qt::white);
-        int   text_width           = font_metrics.width(QString("1"));
+        if (interaction_disabled_)
+        {
+            painter.setPen(Qt::black);
+        }
+        else
+        {
+            painter.setPen(Qt::white);
+        }
+        int   text_width           = font_metrics.horizontalAdvance(QString("1"));
         qreal text_horizontal_base = (switch_width - text_width) * 0.5;
         painter.drawText(text_horizontal_base, text_base, QString("1"));
     }
@@ -176,6 +209,22 @@ void BinaryCheckbox::SetButtonTextRatio(qreal button_text_ratio)
 qreal BinaryCheckbox::GetButtonTextRatio() const
 {
     return button_text_ratio_;
+}
+
+void BinaryCheckbox::DisableInteraction()
+{
+    setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    interaction_disabled_ = true;
+}
+
+void BinaryCheckbox::EnableWarningOverride()
+{
+    override_warning_ = true;
+}
+
+void BinaryCheckbox::DisableWarningOverride()
+{
+    override_warning_ = false;
 }
 
 qreal BinaryCheckbox::GetSwitchHeight(const QFontMetricsF& font_metrics) const

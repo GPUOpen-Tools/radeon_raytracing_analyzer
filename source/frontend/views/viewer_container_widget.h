@@ -16,9 +16,12 @@
 
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 
+#include "managers/pane_manager.h"
 #include "models/viewer_container_model.h"
 
 #include "public/renderer_adapter.h"
+
+#include "settings/settings.h"
 
 /// @brief Class declaration.
 class ViewerContainerWidget : public QWidget
@@ -47,7 +50,7 @@ public:
     /// they can expand correctly when opened.
     ///
     /// @param [in] parent The pane containing the widgets in this container.
-    void SetupUI(QWidget* parent);
+    void SetupUI(QWidget* parent, rra::RRAPaneId pane);
 
     /// @brief Show the coloring mode combo box depending on the rendering mode selected.
     ///
@@ -61,6 +64,24 @@ public:
     ///
     /// @param scene The scene.
     void SetScene(rra::Scene* scene);
+
+    /// @brief Disable the mask widget interaction.
+    void DisableMaskWidgetInteraction();
+
+    /// @brief Update the mask widget with given value.
+    ///
+    /// @param The new instance mask to filter by.
+    void UpdateMaskWidget(int mask);
+
+    /// @brief Set the heatmap type
+    ///
+    /// @param [in] heatmap_type The type of the heatmap to set.
+    void SetHeatmap(HeatmapColorType heatmap_type);
+
+    /// @brief Apply the state of the UI from the state in the settings.
+    ///
+    /// @param [in] pane The parent pane containing this viewer container.
+    void ApplyUIStateFromSettings(rra::RRAPaneId pane);
 
 private slots:
 
@@ -97,13 +118,20 @@ private slots:
                               const std::vector<rra::renderer::TraversalCounterModeInfo>& traversal_modes,
                               rra::renderer::BvhTypeFlags                                 bvh_type);
 
+    /// @brief Checks if the instance mask should have a red background.
+    ///
+    /// @params mask The mask value.
+    void EvaluateInstanceMaskWarning(int mask);
+
 private:
     Ui::ViewerContainerWidget*                           ui_    = nullptr;           ///< Pointer to the Qt UI design.
     rra::ViewerContainerModel*                           model_ = nullptr;           ///< The model backing the view.
     std::vector<rra::renderer::GeometryColoringModeInfo> filtered_color_modes_;      ///< The coloring modes available to the viewer.
     std::vector<rra::renderer::TraversalCounterModeInfo> filtered_traversal_modes_;  ///< The traversal counter modes available to the viewer.
     std::vector<rra::renderer::HeatmapGenerator>         heatmap_generators_;        ///< The heatmap modes available at update.
-    rra::renderer::BvhTypeFlags                          bvh_type_;
+    rra::renderer::BvhTypeFlags                          bvh_type_;                  ///< The type of the bvh.
+    bool instance_mask_interaction_disabled_ = false;                                ///< A flag to indicate if the mask interaction is disabled.
+    rra::RRAPaneId parent_pane_id_                     = rra::kPaneIdInvalid;        ///< The parent pane id.
 };
 
 #endif  // RRA_VIEWS_VIEWER_CONTAINER_WIDGET_H_

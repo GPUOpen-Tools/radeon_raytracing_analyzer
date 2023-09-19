@@ -13,7 +13,8 @@ namespace rra
 {
     namespace renderer
     {
-        bool IntersectAABB(const glm::vec3& ray_origin, const glm::vec3& ray_direction, const glm::vec3& min, const glm::vec3& max)
+
+        bool IntersectAABB(const glm::vec3& ray_origin, const glm::vec3& ray_direction, const glm::vec3& min, const glm::vec3& max, float& closest)
         {
             constexpr float infinity = std::numeric_limits<float>::infinity();
 
@@ -47,6 +48,8 @@ namespace rra
                 min_t = infinity;
                 max_t = -infinity;
             }
+
+            closest = min_t;
 
             const float eps = 5.960464478e-8f;  // 2^-24;
             return (min_t <= (max_t * (1 + 6 * eps)));

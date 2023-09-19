@@ -9,13 +9,18 @@
 
 #include <QVariant>
 
-#include "public/rra_blas.h"
 #include "public/rra_tlas.h"
+#include "public/rra_ray_history.h"
 
 #include "managers/trace_manager.h"
 #include "settings/settings.h"
 #include "util/string_util.h"
 #include "views/widget_util.h"
+#include "public/rra_api_info.h"
+
+#ifdef _LINUX
+#include "public/linux/safe_crt.h"
+#endif
 
 namespace rra
 {
@@ -43,8 +48,10 @@ namespace rra
     {
         global_stats_table_model_ = new QStandardItemModel(kGlobalStatsTableNumRows, 2);
 
+        QStandardItem* count_item = new QStandardItem("Count");
+        count_item->setTextAlignment(Qt::AlignRight);
         global_stats_table_model_->setHorizontalHeaderItem(0, new QStandardItem("Type"));
-        global_stats_table_model_->setHorizontalHeaderItem(1, new QStandardItem("Count"));
+        global_stats_table_model_->setHorizontalHeaderItem(1, count_item);
 
         table_view->setModel(global_stats_table_model_);
 
@@ -109,19 +116,22 @@ namespace rra
         uint64_t tlas_count = 0;
         if (RraBvhGetTlasCount(&tlas_count) == kRraOk)
         {
-            widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(tlas_count), kGlobalStatsTableRowTlasCount, 1);
+            widget_util::SetTableModelData(
+                global_stats_table_model_, rra::string_util::LocalizedValue(tlas_count), kGlobalStatsTableRowTlasCount, 1, Qt::AlignRight);
         }
 
         uint64_t blas_count = 0;
         if (RraBvhGetBlasCount(&blas_count) == kRraOk)
         {
-            widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(blas_count), kGlobalStatsTableRowBlasCount, 1);
+            widget_util::SetTableModelData(
+                global_stats_table_model_, rra::string_util::LocalizedValue(blas_count), kGlobalStatsTableRowBlasCount, 1, Qt::AlignRight);
         }
 
         uint64_t empty_blas_count = 0;
         if (RraBvhGetEmptyBlasCount(&empty_blas_count) == kRraOk)
         {
-            widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(empty_blas_count), kGlobalStatsTableRowBlasEmpty, 1);
+            widget_util::SetTableModelData(
+                global_stats_table_model_, rra::string_util::LocalizedValue(empty_blas_count), kGlobalStatsTableRowBlasEmpty, 1, Qt::AlignRight);
         }
 
         // Calculate how many rows are needed.
@@ -148,7 +158,7 @@ namespace rra
             uint64_t missing_blas_count = 0;
             if (RraBvhGetMissingBlasCount(&missing_blas_count) == kRraOk)
             {
-                widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(missing_blas_count), last_row, 1);
+                widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(missing_blas_count), last_row, 1, Qt::AlignRight);
             }
             last_row++;
         }
@@ -160,7 +170,8 @@ namespace rra
             uint64_t inactive_instance_count = 0;
             if (RraBvhGetInactiveInstancesCount(&inactive_instance_count) == kRraOk)
             {
-                widget_util::SetTableModelData(global_stats_table_model_, rra::string_util::LocalizedValue(inactive_instance_count), last_row, 1);
+                widget_util::SetTableModelData(
+                    global_stats_table_model_, rra::string_util::LocalizedValue(inactive_instance_count), last_row, 1, Qt::AlignRight);
             }
         }
 
@@ -263,6 +274,22 @@ namespace rra
     bool SummaryModel::IsTlasEmpty(uint64_t tlas_index) const
     {
         return RraTlasIsEmpty(tlas_index);
+    }
+
+    uint32_t SummaryModel::GetDispatchCount() const
+    {
+        uint32_t     num_dispatches = 0;
+        RraErrorCode status         = RraRayGetDispatchCount(&num_dispatches);
+        if (status == kRraOk)
+        {
+            return num_dispatches;
+        }
+        return 0;
+    }
+
+    RraErrorCode SummaryModel::GetDispatchDimensions(uint32_t dispatch_id, uint32_t* out_width, uint32_t* out_height, uint32_t* out_depth) const
+    {
+        return RraRayGetDispatchDimensions(dispatch_id, out_width, out_height, out_depth);
     }
 
 }  // namespace rra

@@ -53,7 +53,7 @@ namespace rra
         }
     }
 
-    void ViewerContainerModel::SetHeatmapData(rra::renderer::HeatmapData heatmap_data)
+    void ViewerContainerModel::SetHeatmapData(const rra::renderer::HeatmapData& heatmap_data)
     {
         if (render_state_adapter_ != nullptr)
         {
@@ -65,7 +65,10 @@ namespace rra
     {
         instance_mask_filter_ = filter;
 
-        scene_->FilterNodesByInstanceMask(filter);
+        if (scene_)
+        {
+            scene_->FilterNodesByInstanceMask(filter);
+        }
     }
 
     uint32_t ViewerContainerModel::GetInstanceMaskFilter() const

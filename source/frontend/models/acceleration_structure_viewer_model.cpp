@@ -23,7 +23,7 @@
 #include "public/intersect.h"
 
 #include "constants.h"
-#include "custom_widgets/scaled_check_box.h"
+#include "qt_common/custom_widgets/scaled_check_box.h"
 #include "views/widget_util.h"
 
 #include "settings/settings.h"
@@ -354,7 +354,7 @@ namespace rra
         selected_node_index_ = model_index;
     }
 
-    std::map<std::string, std::function<void()>> AccelerationStructureViewerModel::GetSceneContextOptions(uint64_t bvh_index, SceneContextMenuRequest request)
+    SceneContextMenuOptions AccelerationStructureViewerModel::GetSceneContextOptions(uint64_t bvh_index, SceneContextMenuRequest request)
     {
         auto scene = GetSceneCollectionModel()->GetSceneByIndex(bvh_index);
         if (scene)

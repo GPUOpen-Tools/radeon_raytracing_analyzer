@@ -10,13 +10,18 @@
 
 #include "framework/device.h"
 #include "public/renderer_interface.h"
+#include "public/renderer_types.h"
 #include <map>
 #include <memory>
+#include <QImage>
 
 namespace rra
 {
     namespace renderer
     {
+        class RayHistoryOffscreenRenderer;
+        struct DispatchIdData;
+
         /// @brief An instruction to use when drawing a blas.
         struct BlasDrawInstruction
         {
@@ -97,6 +102,47 @@ namespace rra
             /// @param scene_info The scene info used for renderering.
             void SetSceneInfo(RendererSceneInfo* scene_info);
 
+            /// @brief Create the device buffer containing traversal data that can be rendered.
+            ///
+            /// @param dispatch_id The dispatch ID.
+            /// @param [out] out_max_count Maximum count of each dispatch ID statistic.
+            void CreateRayHistoryStatsBuffer(uint32_t dispatch_id, DispatchIdData* out_max_count);
+
+            /// @brief Render the previously created render image.
+            ///
+            /// @param heatmap_min The minimum heatmap value selected from the heatmap slider.
+            /// @param heatmap_max The maximum heatmap value selected from the heatmap slider.
+            /// @param reshaped_x  The dispatch width, after reshaping for 1D dispatches.
+            /// @param reshaped_y  The dispatch height, after reshaping for 1D dispatches.
+            /// @param reshaped_z  The dispatch depth, after reshaping for 1D dispatches.
+            /// @param color_mode  The ray history color mode to render with.
+            /// @param slice_index The slice of the 3D dispatch to be rendered.
+            /// @param slice_plane  The plane of the 3D dispatch to be rendered.
+            ///
+            /// @return The QT image.
+            QImage RenderRayHistoryImage(uint32_t            heatmap_min,
+                                         uint32_t            heatmap_max,
+                                         uint32_t            reshaped_x,
+                                         uint32_t            reshaped_y,
+                                         uint32_t            reshaped_z,
+                                         RayHistoryColorMode color_mode,
+                                         uint32_t            slice_index,
+                                         SlicePlane           slice_plane);
+
+            /// @brief Set the heatmap data.
+            ///
+            /// @param [in] heatmap_data The raw data of the heatmap.
+            void SetRayHistoryHeatmapData(const HeatmapData& heatmap_data);
+
+            /// @brief Create Vulkan image and sampler for the heatmap.
+            ///
+            /// @param cmd         The command buffer.
+            /// @param heatmap     The heatmap data.
+            /// @param for_compute True if these resources will be used with a compute pipeline.
+            ///
+            /// @return The Vulkan heatmap resources.
+            VulkanHeatmap CreateVulkanHeatmapResources(VkCommandBuffer cmd, Heatmap* heatmap, bool for_compute);
+
         private:
             /// @brief Collects and uploads the traversal trees to the device.
             ///
@@ -113,7 +159,8 @@ namespace rra
             bool error_window_primed_ = false;  /// A flag to track if the error window can be shown if the vulkan crashes after the loading has been complete.
             std::string initialization_error_message_ = "";  /// The error message in case of a crash before rendering starts (aka loading).
 
-            bool initialized_ = false;  ///< A flag used to track if the context has been initialized.
+            bool                         initialized_ = false;  ///< A flag used to track if the context has been initialized.
+            RayHistoryOffscreenRenderer* rh_renderer_{};
         };
 
         /// @brief A function to get the global graphics context.

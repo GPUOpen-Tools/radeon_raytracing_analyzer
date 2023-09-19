@@ -24,7 +24,7 @@ namespace rra
 
         if (reader_.readNextStartElement())
         {
-            if (reader_.name() == "RRA")
+            if (reader_.name() == QString("RRA"))
             {
                 ReadSettingsAndRecents();
             }
@@ -37,11 +37,11 @@ namespace rra
     {
         while (reader_.readNextStartElement())
         {
-            if (reader_.name() == "GlobalSettings")
+            if (reader_.name() == QString("GlobalSettings"))
             {
                 ReadSettings();
             }
-            else if (reader_.name() == "RecentFiles")
+            else if (reader_.name() == QString("RecentFiles"))
             {
                 ReadRecentFiles();
             }
@@ -56,7 +56,7 @@ namespace rra
     {
         while (reader_.readNextStartElement())
         {
-            if (reader_.name() == "Setting")
+            if (reader_.name() == QString("Setting"))
             {
                 ReadSetting();
             }
@@ -73,11 +73,11 @@ namespace rra
 
         while (reader_.readNextStartElement())
         {
-            if (reader_.name() == "Name")
+            if (reader_.name() == QString("Name"))
             {
                 setting.name = reader_.readElementText();
             }
-            else if (reader_.name() == "Value")
+            else if (reader_.name() == QString("Value"))
             {
                 setting.value = reader_.readElementText();
             }
@@ -94,7 +94,7 @@ namespace rra
     {
         while (reader_.readNextStartElement())
         {
-            if (reader_.name() == "RecentFile")
+            if (reader_.name() == QString("RecentFile"))
             {
                 ReadRecentFile();
             }
@@ -111,39 +111,39 @@ namespace rra
 
         while (reader_.readNextStartElement())
         {
-            if (reader_.name() == "Path")
+            if (reader_.name() == QString("Path"))
             {
                 recent_file.path = reader_.readElementText();
             }
-            else if (reader_.name() == "Keywords")
+            else if (reader_.name() == QString("Keywords"))
             {
                 recent_file.keywords = reader_.readElementText();
             }
-            else if (reader_.name() == "API")
+            else if (reader_.name() == QString("API"))
             {
                 recent_file.api = reader_.readElementText();
             }
-            else if (reader_.name() == "Created")
+            else if (reader_.name() == QString("Created"))
             {
                 recent_file.created = reader_.readElementText();
             }
-            else if (reader_.name() == "Accessed")
+            else if (reader_.name() == QString("Accessed"))
             {
                 recent_file.accessed = reader_.readElementText();
             }
-            else if (reader_.name() == "Events")
+            else if (reader_.name() == QString("Events"))
             {
                 recent_file.events = reader_.readElementText();
             }
-            else if (reader_.name() == "DeviceID")
+            else if (reader_.name() == QString("DeviceID"))
             {
                 recent_file.device_id = reader_.readElementText();
             }
-            else if (reader_.name() == "DeviceRevisionID")
+            else if (reader_.name() == QString("DeviceRevisionID"))
             {
                 recent_file.device_revision_id = reader_.readElementText();
             }
-            else if (reader_.name() == "DeviceString")
+            else if (reader_.name() == QString("DeviceString"))
             {
                 recent_file.device_string = reader_.readElementText();
             }

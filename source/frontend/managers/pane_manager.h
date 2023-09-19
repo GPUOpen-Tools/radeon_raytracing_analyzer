@@ -23,6 +23,7 @@ namespace rra
         kMainPaneOverview,
         kMainPaneTlas,
         kMainPaneBlas,
+        kMainPaneRay,
         kMainPaneSpacer,
         kMainPaneSettings,
 
@@ -71,6 +72,15 @@ namespace rra
         kBlasPaneCount,
     };
 
+    /// @brief An enum of all the panes in the Ray menu.
+    enum RayPanes
+    {
+        kRayPaneHistory,
+        kRayPaneInspector,
+
+        kRayPaneCount,
+    };
+
     /// @brief An enum of all the panes in the settings menu.
     enum SettingsPanes
     {
@@ -92,6 +102,7 @@ namespace rra
         int32_t overview_list_row;  ///< Overview list row.
         int32_t tlas_list_row;      ///< TLAS list row.
         int32_t blas_list_row;      ///< BLAS list row.
+        int32_t ray_list_row;       ///< RAY list row.
         int32_t settings_list_row;  ///< Settings list row.
     };
 
@@ -112,9 +123,12 @@ namespace rra
         kPaneIdBlasTriangles             = (kMainPaneBlas << kPaneShift) | kBlasPaneTriangles,
         kPaneIdBlasGeometries            = (kMainPaneBlas << kPaneShift) | kBlasPaneGeometries,
         kPaneIdBlasProperties            = (kMainPaneBlas << kPaneShift) | kBlasPaneProperties,
+        kPaneIdRayHistory                = (kMainPaneRay << kPaneShift) | kRayPaneHistory,
+        kPaneIdRayInspector              = (kMainPaneRay << kPaneShift) | kRayPaneInspector,
         kPaneIdSettingsGeneral           = (kMainPaneSettings << kPaneShift) | kSettingsPaneGeneral,
         kPaneIdSettingsThemesAndColors   = (kMainPaneSettings << kPaneShift) | kSettingsPaneThemesAndColors,
         kPaneIdSettingsKeyboardShortcuts = (kMainPaneSettings << kPaneShift) | kSettingsPaneKeyboardShortcuts,
+        kPaneIdInvalid                   = (kMainPaneCount << kPaneShift)
     };
 
     /// @brief Hotkeys.
@@ -131,6 +145,8 @@ namespace rra
     static const int kGotoBlasTrianglesPane  = Qt::Key_D;
     static const int kGotoBlasGeometriesPane = Qt::Key_F;
     static const int kGotoBlasPropertiesPane = Qt::Key_G;
+    static const int kGotoRayHistoryPane   = Qt::Key_H;
+    static const int kGotoRayInspectorPane = Qt::Key_J;
 
     static const int kGotoWelcomePane           = Qt::Key_X;
     static const int kGotoRecentTracesPane      = Qt::Key_C;
@@ -200,6 +216,11 @@ namespace rra
         ///
         /// @param [in] index The index in the list selected.
         void UpdateBlasListIndex(const int index);
+
+        /// @brief Store RAY list index and update current pane.
+        ///
+        /// @param [in] index The index in the list selected.
+        void UpdateRayListIndex(const int index);
 
         /// @brief Store settings list row and update current pane.
         ///

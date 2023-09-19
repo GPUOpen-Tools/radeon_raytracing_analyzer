@@ -21,6 +21,7 @@
 #include "models/acceleration_structure_viewer_model.h"
 #include "settings/settings.h"
 #include "views/widget_util.h"
+#include <vulkan/vulkan.h>
 
 namespace rra
 {

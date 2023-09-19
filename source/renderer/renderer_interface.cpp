@@ -16,6 +16,7 @@
 #include "vk/render_modules/checker_clear.h"
 #include "vk/render_modules/traversal.h"
 #include "vk/render_modules/orientation_gizmo_module.h"
+#include "vk/render_modules/ray_inspector_overlay.h"
 #include "vk/render_modules/selection_module.h"
 
 namespace rra
@@ -65,7 +66,7 @@ namespace rra
             update_scene_info_ = callback;
         }
 
-        void RendererInterface::SetHeatmapData(HeatmapData heatmap_data)
+        void RendererInterface::SetHeatmapData(const HeatmapData& heatmap_data)
         {
             if (heatmap_)
             {
@@ -102,6 +103,10 @@ namespace rra
             SelectionRenderModule* selection_module = new SelectionRenderModule();
             render_modules.push_back(selection_module);
 
+            // Add the ray inspector render module.
+            RayInspectorOverlayRenderModule* ray_inspector_module = new RayInspectorOverlayRenderModule();
+            render_modules.push_back(ray_inspector_module);
+
             // Add orientation gizmo render module.
             OrientationGizmoRenderModule* orientation_gizmo_module = new OrientationGizmoRenderModule();
             render_modules.push_back(orientation_gizmo_module);
@@ -111,7 +116,7 @@ namespace rra
 
             // Create an adapter to alter the render state.
             renderer_adapter_map[RendererAdapterType::kRendererAdapterTypeRenderState] =
-                new RenderStateAdapter(renderer, blas_render_module, bounding_volumes_module, traversal_module, selection_module);
+                new RenderStateAdapter(renderer, blas_render_module, bounding_volumes_module, traversal_module, selection_module, ray_inspector_module);
 
             // Create an adapter to alter the camera state.
             renderer_adapter_map[RendererAdapterType::kRendererAdapterTypeView] = new ViewStateAdapter(&renderer->GetCamera());

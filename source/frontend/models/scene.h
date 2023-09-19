@@ -13,6 +13,7 @@
 #include <functional>
 
 #include "public/renderer_types.h"
+#include "public/rra_ray_history.h"
 #include "scene_node.h"
 
 namespace rra
@@ -32,10 +33,12 @@ namespace rra
         glm::vec3                direction = {};
     };
 
+    using SceneContextMenuOptions = std::map<std::string, std::function<void()>>;
+
     /// @brief Colors to use in the renderer.
     struct SceneNodeColors
     {
-        glm::vec4 box16_node_color;                       ///< The box16  node color.
+        glm::vec4 box16_node_color;                       ///< The box16 node color.
         glm::vec4 box32_node_color;                       ///< The box32 node color.
         glm::vec4 instance_node_color;                    ///< The instance node color.
         glm::vec4 procedural_node_color;                  ///< The procedural nodecolor.
@@ -58,6 +61,10 @@ namespace rra
         glm::vec4 instance_opaque_force_opaque_color;     ///< The color indicating the user specified force opaque flag.
         glm::vec4 instance_opaque_force_no_opaque_color;  ///< The color indicating the user specified force no opaque flag.
         glm::vec4 instance_opaque_force_both_color;       ///< The color indicating the user specified both force opaque and force no opaque.
+        glm::vec4 selected_ray_color;                     ///< The selected ray color.
+        glm::vec4 ray_color;                              ///< The ray color.
+        glm::vec4 shadow_ray_color;                       ///< The shadow ray color.
+        glm::vec4 zero_mask_ray_color;                    ///< The zero mask ray color.
     };
 
     /// @brief Set the global scene node colors.
@@ -77,6 +84,13 @@ namespace rra
         uint32_t max_triangle_count = 0;  ///< The highest triangle count out of each mesh in the scene.
         int32_t  max_tree_depth     = 0;  ///< The maximum BVH tree depth in the scene.
         uint32_t max_node_depth     = 0;  ///< The maximum node depth in the scene.
+    };
+
+    /// @brief Info on a raycast's closest intersection.
+    struct SceneClosestHit
+    {
+        float      distance = -1.0f;
+        SceneNode* node     = nullptr;
     };
 
     /// @brief Declaration for the Scene type.
@@ -217,7 +231,15 @@ namespace rra
         /// @param [in] ray_direction The direction of the ray.
         ///
         /// @returns The nodes that has their bounding volumes intersected by this ray.
-        std::vector<SceneNode*> CastRay(glm::vec3 ray_origin, glm::vec3 ray_direction);
+        std::vector<SceneNode*> CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction);
+
+        /// @brief Cast a ray and report closest distance.
+        ///
+        /// @param [in] ray_origin The origin of the ray.
+        /// @param [in] ray_direction The direction of the ray.
+        ///
+        /// @returns The closest distance to the origin.
+        SceneClosestHit CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction);
 
         /// @brief Get node by id.
         ///
@@ -247,7 +269,7 @@ namespace rra
         /// @param [in] request The request that the options are requested with.
         ///
         /// @returns The selection context options with their corresponding functions.
-        std::map<std::string, std::function<void()>> GetSceneContextOptions(SceneContextMenuRequest request);
+        SceneContextMenuOptions GetSceneContextOptions(SceneContextMenuRequest request);
 
         /// @brief Generates the traversal tree
         ///
@@ -313,9 +335,12 @@ namespace rra
         std::unordered_set<uint32_t>& GetSelectedNodeIDs();
 
         /// @brief Make instances invisible depending on their instance mask.
-        /// 
+        ///
         /// @param filter The instance mask filter.
         void FilterNodesByInstanceMask(uint32_t filter);
+
+        /// @brief Get the node by the instance index.
+        SceneNode* GetNodeByInstanceIndex(uint32_t instance_index);
 
     private:
         /// @brief Populate the scene info values.
@@ -351,6 +376,9 @@ namespace rra
         /// @brief Populate the triangle split map with triangle nodes.
         void PopulateSplitTrianglesMap();
 
+        /// @brief Populates the instance nodes for a quick lookup by instance index.
+        void PopulateInstanceNodes();
+
         SceneNode*                                    root_node_ = nullptr;               ///< The root node of the scene.
         renderer::BoundingVolumeList                  bounding_volume_list_;              ///< A list of all the bounding volumes to display.
         std::vector<renderer::SelectedVolumeInstance> selected_volume_instances_;         ///< A list of all the selected volume instances to be rendered.
@@ -363,7 +391,8 @@ namespace rra
         renderer::InstanceMap                         cached_instance_map_{};  ///< Saved instance map of all instances, used when frustum culling is disabled.
         std::vector<std::vector<SceneNode*>> rebraid_siblings_{};  ///< The ith index contains all instances with index i, indicating they're rebraid siblings.
         std::unordered_map<uint64_t, std::vector<SceneNode*>>
-            split_triangle_siblings_{};  ///< The key is a combination of geometry index and triangle index, and the value is all the siblings.
+            split_triangle_siblings_{};           ///< The key is a combination of geometry index and triangle index, and the value is all the siblings.
+        std::vector<SceneNode*> instance_nodes_;  ///< The instances of the all the nodes in this scene by instance index.
 
         // Using a map instead of a vector since only the visible node IDs are included in the list.
         std::unordered_map<uint32_t, uint32_t> custom_triangle_map_{};  ///< Contains pairs (node_id, custom_triangles_ index) of all visible triangle nodes.

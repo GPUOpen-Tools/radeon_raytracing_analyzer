@@ -13,6 +13,15 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <volk/volk.h>
+
+#ifdef _WIN32
+#pragma warning(push, 3)
+#endif
+#include <vma/include/vk_mem_alloc.h>
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
 
 namespace rra
 {
@@ -36,6 +45,16 @@ namespace rra
             std::function<HeatmapData()> generator_function;  ///< The generator function for the heatmap.
             std::string                  name;                ///< The name of the heatmap.
             std::string                  tooltip;             ///< The tooltip to show for this heatmap.
+        };
+
+        /// @brief The Vulkan objects needed to render the heatmap.
+        struct VulkanHeatmap
+        {
+            VkImage               image      = VK_NULL_HANDLE;  ///< The one dimensional heatmap spectrum. NOT the final rendered heatmap image.
+            VkImageView           image_view = VK_NULL_HANDLE;
+            VkSampler             sampler    = VK_NULL_HANDLE;
+            VmaAllocation         allocation = VK_NULL_HANDLE;
+            VkDescriptorImageInfo image_info = {};
         };
 
         /// @brief The heatmap for the renderer.

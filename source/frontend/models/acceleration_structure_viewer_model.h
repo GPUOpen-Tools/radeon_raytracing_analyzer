@@ -255,7 +255,7 @@ namespace rra
         /// @param [in] request The request that the options are requested on.
         ///
         /// @returns The selection context options with their corresponding functions.
-        std::map<std::string, std::function<void()>> GetSceneContextOptions(uint64_t bvh_index, SceneContextMenuRequest request);
+        SceneContextMenuOptions GetSceneContextOptions(uint64_t bvh_index, SceneContextMenuRequest request);
 
         /// @brief Get whether the selected node is an instance.
         ///

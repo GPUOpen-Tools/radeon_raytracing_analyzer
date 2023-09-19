@@ -19,6 +19,7 @@
 #include <QObject>
 
 #include "managers/pane_manager.h"
+#include "glm/glm/glm.hpp"
 
 namespace rra
 {
@@ -55,6 +56,11 @@ namespace rra
         /// @param [in] instance_index The index of the instance clicked on.
         void InstanceSelected(uint32_t instance_index);
 
+        /// @brief Signal to indicate the user has clicked on an instance in the inspector pane.
+        ///
+        /// @param [in] instance_index The index of the instance clicked on.
+        void InspectorInstanceSelected(uint32_t instance_index);
+
         /// @brief Signal to indicate the user has double-clicked on an instance on the instances pane.
         ///
         /// @param [in] tlas_index The index of the selected TLAS.
@@ -68,6 +74,13 @@ namespace rra
         ///
         /// @param [in] index The index of the TLAS selected.
         void TlasSelected(uint64_t index);
+
+        /// @brief Signal to hint TLAS viewer to assume new camera parameters.
+        ///
+        /// @param [in] origin The origin to place the camera.
+        /// @param [in] forward The direction of the camera
+        /// @param [in] up The up axis of the camera.
+        void TlasAssumeCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up);
 
         /// @brief Signal to indicate that the user has selected a triangle in the BLAS viewer.
         ///
@@ -94,6 +107,24 @@ namespace rra
         ///
         /// @param [in] failure_message The failure message.
         void GraphicsContextFailedToInitialize(const QString& failure_message);
+
+        /// @brief Signal to indicate that a dispatch has been selected in the overview pane.
+        ///
+        /// @param [in] dispatch_id The trace rays dispatch ID.
+        void DispatchSelected(uint32_t dispatch_id);
+
+        /// @brief Signal to indicate that a ray has been selected in the ray history pane.
+        ///
+        /// @param [in] dispatch_id The dispatch ID.
+        /// @param [in] x           The x-component of the dispatch coordinate.
+        /// @param [in] y           The y-component of the dispatch coordinate.
+        /// @param [in] z           The z-component of the dispatch coordinate.
+        void RayCoordinateSelected(uint32_t dispatch_id, uint32_t x, uint32_t y, uint32_t z);
+
+        /// @brief Signal to reset the UI to its default state.
+        ///
+        /// @param [in] pane The pane whose UI state is to be reset.
+        void ResetUIState(rra::RRAPaneId pane);
     };
 }  // namespace rra
 

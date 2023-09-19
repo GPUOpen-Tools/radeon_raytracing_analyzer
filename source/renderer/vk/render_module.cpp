@@ -16,6 +16,11 @@ namespace rra
             render_pass_hint_ = render_pass_hint;
         }
 
+        bool RenderModule::ShouldCopyDepthBuffer() const
+        {
+            return false;
+        }
+
         void RenderModule::Enable()
         {
             enabled_ = true;

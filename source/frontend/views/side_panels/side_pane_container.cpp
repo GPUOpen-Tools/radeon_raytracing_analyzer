@@ -86,6 +86,7 @@ ViewPane* SidePaneContainer::GetViewPane() const
 void SidePaneContainer::MarkAsBLAS()
 {
     view_pane_->HideTLASWidgets();
+    view_pane_->HideRAYWidgets();
 }
 
 void SidePaneContainer::MarkProceduralGeometry(bool is_procedural)

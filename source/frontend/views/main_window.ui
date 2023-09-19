@@ -265,6 +265,159 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="ray_tab_">
+       <attribute name="title">
+        <string>  RAY  </string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontal_layout_6_" stretch="1,5">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QStackedWidget" name="ray_history_valid_switch_">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="table_empty_">
+           <layout class="QVBoxLayout" name="table_empty_layout_">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <spacer name="vertical_spacer_2_">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_1_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="pixmap">
+               <pixmap resource="resources.qrc">:/Resources/assets/stop_128x128.png</pixmap>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="ScaledLabel" name="label_2_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>The loaded trace does not contain ray history information.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="ScaledLabel" name="label_3_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>If ray history information is required, please ensure ray history is enabled in the Radeon Developer Panel when capturing ray trace information.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="vertical_spacer_3_">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+          <widget class="ScaledTabWidget" name="ray_sub_tab_">
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="RayHistoryPane" name="ray_history_tab_">
+            <attribute name="title">
+             <string>Dispatches</string>
+            </attribute>
+            <attribute name="toolTip">
+             <string>Show a list of trace ray events, their timeline and a 3D rendering of the scene.</string>
+            </attribute>
+           </widget>
+           <widget class="RayInspectorPane" name="ray_inspector_tab_">
+            <attribute name="title">
+             <string>Inspector</string>
+            </attribute>
+            <attribute name="toolTip">
+             <string>Inspect a particular ray from a dispatch.</string>
+            </attribute>
+           </widget>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="spacer_tab_">
        <attribute name="title">
         <string>SPACER</string>
@@ -416,6 +569,18 @@
    <class>BlasPropertiesPane</class>
    <extends>BasePane</extends>
    <header>views/blas/blas_properties_pane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RayHistoryPane</class>
+   <extends>BasePane</extends>
+   <header>views/ray/ray_history_pane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RayInspectorPane</class>
+   <extends>BasePane</extends>
+   <header>views/ray/ray_inspector_pane.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

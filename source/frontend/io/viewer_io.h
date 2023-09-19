@@ -9,6 +9,7 @@
 #define RRA_IO_VIEWER_IO_H_
 
 #include <QWidget>
+#include <functional>
 #include "public/camera.h"
 #include "models/acceleration_structure_viewer_model.h"
 
@@ -33,6 +34,23 @@ namespace rra
         kSuccess,
         kFailure,
         kOrthographicNotSupported,
+    };
+
+    struct ViewerFitParams
+    {
+        glm::vec3 position;
+        glm::vec3 forward;
+        glm::vec3 up;
+    };
+
+    /// @brief A structure to keep callbacks to useful viewer functions.
+    struct ViewerIOCallbacks
+    {
+        std::function<BoundingVolumeExtents()>                                            get_selection_extents = nullptr;
+        std::function<BoundingVolumeExtents()>                                            get_scene_extents     = nullptr;
+        std::function<ViewerFitParams(renderer::Camera*)>                                 get_camera_fit        = nullptr;
+        std::function<SceneContextMenuOptions(SceneContextMenuRequest)>                   get_context_options   = nullptr;
+        std::function<SceneCollectionModelClosestHit(const renderer::Camera*, glm::vec2)> select_from_scene     = nullptr;
     };
 
     /// @brief A structure to contain camera orientation data.
@@ -94,6 +112,9 @@ namespace rra
 
         /// @brief Reset the controller. Wipe internal state.
         virtual void Reset() = 0;
+
+        /// @brief Reset key states.
+        void ResetKeyStates();
 
         /// @brief Key pressed callback for Qt based camera controller.
         ///
@@ -169,9 +190,8 @@ namespace rra
 
         /// @brief Set the viewer model.
         ///
-        /// @param [in] viewer_model The viewer model to set.
-        /// @param [in] bvh_index The bvh index to use alongside the model.
-        void SetViewerModel(AccelerationStructureViewerModel* viewer_model, uint64_t bvh_index);
+        /// @param [in] callbacks The callbacks to set.
+        void SetViewerCallbacks(ViewerIOCallbacks callbacks);
 
         /// @brief Set the view model.
         ///
@@ -230,11 +250,6 @@ namespace rra
         /// @returns True if an up axis is supported, false otherwise.
         virtual bool SupportsUpAxis() const = 0;
 
-        /// @brief Get the index of the the current scene.
-        ///
-        /// @return Index of scene.
-        uint64_t GetSceneIndex() const;
-
         /// @brief Set the last mouse position as invalid.
         void InvalidateLastMousePosition();
 
@@ -286,18 +301,17 @@ namespace rra
         std::chrono::steady_clock::time_point elapsed_time_start_;               ///< Used to track elapsed time for processing user inputs.
         Qt::MouseButton last_mouse_button_pressed_ = Qt::MouseButton::NoButton;  ///< The last button press state to make decisions on mouse callbacks.
 
-        glm::vec3                         pan_distance_              = {};       ///< The pan distance to track camera position.
-        AccelerationStructureViewerModel* viewer_model_              = nullptr;  ///< The viewer model to manipulate.
-        ViewModel*                        view_model_                = nullptr;  ///< The view model to update.
-        uint64_t                          viewer_bvh_index_          = 0;        ///< The bvh index to manipulate scene model.
-        ViewerIOOrientation               camera_orientation_        = {};       ///< The camera orientation.
-        glm::vec3                         euler_angles_              = {};       ///< The euler angles to track camera rotation.
-        float                             arc_radius_                = 0.0f;     ///< The arc radius to track camera anchor.
-        bool                              updated_                   = false;    ///< A flag to check if the contoller was updated.
-        bool                              should_focus_on_selection_ = false;    ///< A flag to keep determine if the controller should focus on selection.
-        QPoint                            last_mouse_position_       = {};       ///< The last mouse position to keep track of displacement.
-        QPoint                            mouse_press_position_      = {};       ///< Position the last time mouse was pressed down.
-        float                             mouse_move_delta_          = 3.0f;  ///< Maximum distance mouse can move between press and release for ray to be cast.
+        glm::vec3           pan_distance_              = {};       ///< The pan distance to track camera position.
+        ViewerIOCallbacks   viewer_callbacks_          = {};       ///< The viewer callbacks.
+        ViewModel*          view_model_                = nullptr;  ///< The view model to update.
+        ViewerIOOrientation camera_orientation_        = {};       ///< The camera orientation.
+        glm::vec3           euler_angles_              = {};       ///< The euler angles to track camera rotation.
+        float               arc_radius_                = 0.0f;     ///< The arc radius to track camera anchor.
+        bool                updated_                   = false;    ///< A flag to check if the contoller was updated.
+        bool                should_focus_on_selection_ = false;    ///< A flag to keep determine if the controller should focus on selection.
+        QPoint              last_mouse_position_       = {};       ///< The last mouse position to keep track of displacement.
+        QPoint              mouse_press_position_      = {};       ///< Position the last time mouse was pressed down.
+        float               mouse_move_delta_          = 3.0f;     ///< Maximum distance mouse can move between press and release for ray to be cast.
     };
 }  // namespace rra
 

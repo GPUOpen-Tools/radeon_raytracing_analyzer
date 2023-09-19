@@ -10,7 +10,7 @@ IF(WIN32)
     add_compile_options(/W4 /WX)
 ELSEIF(UNIX)
     # Remove warnings for Linux in backend. Unused function used by flags_util.h
-    add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-unused-function)
+    add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-unused-function -Wno-class-memaccess)
 ENDIF(WIN32)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
@@ -27,6 +27,8 @@ set( SOURCES
     "public/rra_print.h"
     "public/rra_tlas.h"
     "public/rra_trace_loader.h"
+    "public/rra_ray_history.h"
+    "public/rra_async_ray_history_loader.h"
 
     # private backend files
     "api_info.cpp"
@@ -46,11 +48,14 @@ set( SOURCES
     "rra_data_set.cpp"
     "rra_data_set.h"
     "rra_print.cpp"
+    "rra_ray_history.cpp"
     "rra_tlas.cpp"
     "rra_tlas_impl.h"
     "rra_trace_loader.cpp"
+    "rra_ray_history.cpp"
     "surface_area_heuristic.cpp"
     "surface_area_heuristic.h"
+    "rra_async_ray_history_loader.cpp"
 
     # other dependencies
     "bvh/bvh_bundle.cpp"
@@ -98,6 +103,14 @@ set( SOURCES
     "bvh/node_types/procedural_node.h"
     "bvh/node_types/triangle_node.cpp"
     "bvh/node_types/triangle_node.h"
+
+    # Ray history
+    "ray_history/ray_history.h"
+    "ray_history/ray_history.cpp"
+    "ray_history/counter.h"
+    "ray_history/raytracing_counter.h"
+    "ray_history/loader.h"
+    "ray_history/loader.cpp"
 )
 
 set( LINUX_SOURCES
@@ -105,12 +118,11 @@ set( LINUX_SOURCES
     "linux/safe_crt.cpp"
 )
 
-# Backend currently build with C++14. This can be changed back to C++11 if needed but some
-# template classes will need refactoring.
 add_definitions(-DRDF_CXX_BINDINGS)
 IF (WIN32)
     add_definitions(-DRDF_PLATFORM_WINDOWS)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
 ELSEIF(UNIX)
     add_definitions(-DRDF_PLATFORM_UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -mavx2 -mf16c")
@@ -122,6 +134,8 @@ IF(WIN32)
 ELSEIF(UNIX)
     add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
 ENDIF(WIN32)
+
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

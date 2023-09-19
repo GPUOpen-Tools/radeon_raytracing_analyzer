@@ -101,7 +101,7 @@ namespace rra
         auto scene = GetSceneByIndex(bvh_index);
         if (scene)
         {
-            auto scene_nodes = scene->CastRay(origin, direction);
+            auto scene_nodes = scene->CastRayCollectNodes(origin, direction);
             for (auto node : scene_nodes)
             {
                 for (const auto& instance : node->GetInstances())

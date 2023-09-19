@@ -14,6 +14,7 @@
 #include <QClipboard>
 #include "constants.h"
 #include "managers/message_manager.h"
+#include "managers/pane_manager.h"
 #include "models/side_panels/view_model.h"
 #include "io/viewer_io.h"
 #include "views/widget_util.h"
@@ -23,17 +24,22 @@
 #include "views/custom_widgets/slider_style.h"
 #include "views/custom_widgets/rgp_histogram_widget.h"
 #include "settings/settings.h"
+#include "constants.h"
 
 #include "public/heatmap.h"
 #include "public/rra_asic_info.h"
 
 static const int kTraversalCounterDefaultMinValue = 0;
 static const int kTraversalCounterDefaultMaxValue = 100;
-static const int kProjectionModeDefaultIndex      = 0;
-static const int kHeatmapResolution               = 1000;
 
-constexpr int kPerspectiveIndex  = 0;  ///< Index for perspective option in combo box.
-constexpr int kOrthographicIndex = 1;  ///< Index for orthographic option in combo box.
+const char* kLockOpenClickableIcon = ":/Resources/assets/third_party/ionicons/lock-open-outline-clickable.svg";
+const char* kLockOpenHoverIcon     = ":/Resources/assets/third_party/ionicons/lock-open-outline-hover.svg";
+
+const char* kLockClosedClickableIcon = ":/Resources/assets/third_party/ionicons/lock-closed-outline-clickable.svg";
+const char* kLockClosedHoverIcon     = ":/Resources/assets/third_party/ionicons/lock-closed-outline-hover.svg";
+
+const char* kKBDMouseClickableIcon = ":/Resources/assets/kbd_mouse_clickable.svg";
+const char* kKBDMouseHoverIcon     = ":/Resources/assets/kbd_mouse_hover.svg";
 
 /// @brief The signal handler to broadcast camera changes to all instances of ViewPane objects.
 ViewPaneSignalHandler ViewPane::signal_handler;
@@ -124,9 +130,25 @@ ViewPane::ViewPane(QWidget* parent)
 
     ui_->histogram_content_->SetSelectionMode(RgpHistogramWidget::kHistogramSelectionModeRange);
 
+    ui_->lock_camera_button_->SetNormalIcon(QIcon(kLockOpenClickableIcon));
+    ui_->lock_camera_button_->SetHoverIcon(QIcon(kLockOpenHoverIcon));
+
+    ui_->lock_camera_button_->setCursor(Qt::PointingHandCursor);
     ui_->content_show_hide_control_style_hotkeys_->setCursor(Qt::PointingHandCursor);
     ui_->traversal_adapt_to_view_->setCursor(Qt::PointingHandCursor);
     ui_->camera_to_origin_button_->setCursor(Qt::PointingHandCursor);
+
+    ui_->camera_to_origin_button_->setCursor(Qt::PointingHandCursor);
+
+    QIcon refresh_clickable_icon;
+    refresh_clickable_icon.addFile(
+        QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+
+    QIcon refresh_hover_icon;
+    refresh_hover_icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-hover.svg"), QSize(), QIcon::Normal, QIcon::Off);
+
+    ui_->camera_to_origin_button_->SetNormalIcon(refresh_clickable_icon);
+    ui_->camera_to_origin_button_->SetHoverIcon(refresh_hover_icon);
 
     ui_->copy_camera_transform_button_->hide();
     ui_->paste_camera_transform_button_->hide();
@@ -147,14 +169,15 @@ ViewPane::ViewPane(QWidget* parent)
     model_->InitializeModel(ui_->traversal_continuous_update_, rra::kSidePaneViewTraversalContinuousUpdate, "unchecked");
 
     // Set up the connections.
-    connect(ui_->content_render_geometry_, &ColoredCheckbox::Clicked, this, &ViewPane::SetRenderGeometry);
-    connect(ui_->content_render_bvh_, &ColoredCheckbox::Clicked, this, &ViewPane::SetRenderBVH);
-    connect(ui_->content_render_instance_transform_, &ColoredCheckbox::Clicked, this, &ViewPane::SetRenderInstancePretransform);
+    connect(ui_->content_render_geometry_, &ColoredCheckbox::Clicked, [=]() { this->SetRenderGeometry(true); });
+    connect(ui_->content_render_bvh_, &ColoredCheckbox::Clicked, [=]() { this->SetRenderBVH(true); });
+    connect(ui_->content_render_instance_transform_, &ColoredCheckbox::Clicked, [=]() { this->SetRenderInstancePretransform(true); });
     connect(ui_->content_wireframe_overlay_, &ColoredCheckbox::Clicked, this, &ViewPane::SetWireframeOverlay);
     connect(ui_->content_culling_mode_, &ArrowIconComboBox::SelectionChanged, this, &ViewPane::SetCullingMode);
     connect(ui_->traversal_counter_slider_, &DoubleSliderHeatmapWidget::SpanChanged, this, &ViewPane::SetTraversalCounterRange);
     connect(ui_->traversal_adapt_to_view_, SIGNAL(clicked(bool)), this, SLOT(AdaptTraversalCounterRangeToView()));
     connect(ui_->camera_to_origin_button_, SIGNAL(clicked(bool)), this, SLOT(MoveCameraToOrigin()));
+    connect(ui_->lock_camera_button_, SIGNAL(clicked(bool)), this, SLOT(ToggleCameraLock()));
     connect(ui_->traversal_continuous_update_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleTraversalCounterContinuousUpdate);
 
     connect(ui_->content_ray_flags_accept_first_hit_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsAcceptFirstHit);
@@ -174,10 +197,10 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->camera_hotkeys_widget_->hide();
     connect(ui_->content_show_hide_control_style_hotkeys_, SIGNAL(clicked(bool)), this, SLOT(ToggleHotkeyLayout()));
 
-    connect(ui_->content_field_of_view_, &QSlider::valueChanged, model_, &rra::ViewModel::SetFieldOfView);
+    connect(ui_->content_field_of_view_, &QSlider::valueChanged, this, &ViewPane::SetFieldOfView);
     ui_->label_near_plane_->hide();
     ui_->content_near_plane_->hide();
-    connect(ui_->content_movement_speed_, &QSlider::valueChanged, model_, &rra::ViewModel::SetMovementSpeed);
+    connect(ui_->content_movement_speed_, &QSlider::valueChanged, this, &ViewPane::SetMovementSpeed);
 
     connect(ui_->content_control_style_invert_vertical_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleVerticalAxisInverted);
     connect(ui_->content_control_style_invert_horizontal_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleHorizontalAxisInverted);
@@ -195,10 +218,6 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->vertical_layout_traversal_counter_controls_container_->setContentsMargins(0, 0, 0, 0);
     ui_->vertical_layout_traversal_counter_controls_container_->setSpacing(0);
 
-    // Call SetControlStyle to initialize dynamic settings panel.
-    SetControlStyle(rra::Settings::Get().GetControlStyle());
-    model_->UpdateControlHotkeys(ui_->camera_hotkeys_widget_);
-
     // Refresh the UI if any render state has changed externally.
     connect(&rra::MessageManager::Get(), &rra::MessageManager::RenderStateChanged, model_, &rra::ViewModel::Update);
 
@@ -207,18 +226,13 @@ ViewPane::ViewPane(QWidget* parent)
         ui_->traversal_counter_slider_->SetSpan(min, max);
     });
 
-    UpdateOrientationWidgets();
-
-    // Configure for geometry rendering as default layout.
-    ConfigureForGeometryRenderingLayout();
-
     // Set the heatmap update callback.
     model_->SetHeatmapUpdateCallback([&](rra::renderer::HeatmapData heatmap_data) {
-        auto heatmap_image = QImage(static_cast<int>(kHeatmapResolution), 1, QImage::Format::Format_RGBA8888);
+        auto heatmap_image = QImage(static_cast<int>(rra::kHeatmapResolution), 1, QImage::Format::Format_RGBA8888);
 
-        for (size_t i = 0; i < kHeatmapResolution; i++)
+        for (size_t i = 0; i < rra::kHeatmapResolution; i++)
         {
-            auto color = heatmap_data.Evaluate(i / (static_cast<float>(kHeatmapResolution - 1)));
+            auto color = heatmap_data.Evaluate(i / (static_cast<float>(rra::kHeatmapResolution - 1)));
             heatmap_image.setPixelColor(QPoint(static_cast<int>(i), 0), QColor::fromRgbF(color.r, color.g, color.b, color.a));
         }
 
@@ -228,6 +242,10 @@ ViewPane::ViewPane(QWidget* parent)
 
     ui_->content_field_of_view_->setStyle(new AbsoluteSliderPositionStyle(ui_->content_field_of_view_->style()));
     ui_->content_movement_speed_->setStyle(new AbsoluteSliderPositionStyle(ui_->content_movement_speed_->style()));
+
+    ui_->content_show_hide_control_style_hotkeys_->SetNormalIcon(QIcon(kKBDMouseClickableIcon));
+    ui_->content_show_hide_control_style_hotkeys_->SetHoverIcon(QIcon(kKBDMouseHoverIcon));
+    ui_->content_show_hide_control_style_hotkeys_->setBaseSize(QSize(47, 17));
 }
 
 ViewPane::~ViewPane()
@@ -264,26 +282,17 @@ void ViewPane::OnTraceOpen()
     ui_->content_ray_flags_cull_front_facing_triangles_->setChecked(false);
     UpdateBoxSortHeuristicLabel();
 
-    ConfigureForGeometryRenderingLayout();
     ui_->content_render_bvh_->setChecked(true);
     ui_->content_render_instance_transform_->setChecked(true);
 
     model_->SetViewportCullingMode(rra::Settings::Get().GetCullMode());
-    model_->SetControlStyle(rra::Settings::Get().GetControlStyle());
-
-    reset_camera_orientation_ = true;
-
-    // See if the projection mode needs resetting. Do the actual reset in showEvent
-    // since the UI will be set up at that point.
-    int projection_mode = ui_->content_projection_mode_->CurrentRow();
-    reset_projection_   = projection_mode != kProjectionModeDefaultIndex;
 
     SetTraversalCounterRange(kTraversalCounterDefaultMinValue, kTraversalCounterDefaultMaxValue);
 }
 
 void HistogramUpdateFunction(Ui::ViewPane* ui, const std::vector<uint32_t>& hist_data, uint32_t buffer_width, uint32_t buffer_height)
 {
-    const uint32_t bin_count{ std::min(100u, (uint32_t)hist_data.size()) };
+    const uint32_t bin_count{std::min(100u, (uint32_t)hist_data.size())};
     const uint32_t bin_size{(uint32_t)(hist_data.size() / bin_count)};
     uint32_t       average{0};
 
@@ -316,46 +325,6 @@ void ViewPane::showEvent(QShowEvent* event)
 {
     Q_UNUSED(event);
 
-    if (reset_projection_)
-    {
-        ui_->content_projection_mode_->SetSelectedRow(kProjectionModeDefaultIndex);
-        reset_projection_ = false;
-    }
-
-    if (reset_camera_orientation_)
-    {
-        model_->SetInvertVertical(rra::Settings::Get().GetInvertVertical());
-        model_->SetInvertHorizontal(rra::Settings::Get().GetInvertHorizontal());
-
-        switch (rra::Settings::Get().GetUpAxis())
-        {
-        case kUpAxisTypeX:
-            model_->SetUpAxisAsX();
-            break;
-        case kUpAxisTypeY:
-            model_->SetUpAxisAsY();
-            break;
-        case kUpAxisTypeZ:
-            model_->SetUpAxisAsZ();
-            break;
-        case kUpAxisTypeMax:
-            break;
-        }
-
-        reset_camera_orientation_ = false;
-    }
-
-    int control_style_index = model_->GetCurrentControllerIndex();
-    if (control_style_index != ui_->content_control_style_->CurrentRow())
-    {
-        ui_->content_control_style_->SetSelectedRow(control_style_index);
-        emit signal_handler.CameraParametersChanged(true);
-    }
-    else
-    {
-        emit signal_handler.CameraParametersChanged(false);
-    }
-
     model_->SetHistogramUpdateFunction(
         [=](const std::vector<uint32_t>& hist_data, uint32_t buffer_width, uint32_t buffer_height) {
             HistogramUpdateFunction(ui_, hist_data, buffer_width, buffer_height);
@@ -365,10 +334,102 @@ void ViewPane::showEvent(QShowEvent* event)
 
     model_->SetMovementSpeedLimit(rra::Settings::Get().GetMovementSpeedLimit());
     ui_->traversal_counter_slider_->setMaximum(rra::Settings::Get().GetTraversalCounterMaximum());
-    model_->Update();
-    model_->UpdateControlHotkeys(ui_->camera_hotkeys_widget_);
 
-    UpdateOrientationWidgets();
+    ApplyUIStateFromSettings(parent_pane_id_);
+}
+
+void ViewPane::ApplyUIStateFromSettings(rra::RRAPaneId pane)
+{
+    int  rendering_mode           = rra::Settings::Get().GetRenderingMode(pane);
+    bool show_instance_transforms = false;
+    bool lock_camera              = false;
+
+    // Geometry settings.
+    bool show_geometry = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowGeometry);
+    bool show_bvh      = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowAxisAlignedBVH);
+    if (pane == rra::kPaneIdTlasViewer)
+    {
+        show_instance_transforms = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowInstanceTransform);
+    }
+    else if (pane == rra::kPaneIdRayInspector)
+    {
+        lock_camera = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingLockCamera);
+    }
+
+    bool show_wireframe = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowWireframe);
+
+    // Ray flags.
+    bool accept_first_hit            = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingAcceptFirstHit);
+    bool cull_back_facing_triangles  = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingCullBackFacingTriangles);
+    bool cull_front_facing_triangles = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingCullFrontFacingTriangles);
+
+    // Set renderer checkbox states.
+    ui_->content_render_geometry_->setChecked(show_geometry);
+    SetRenderGeometry(false);
+    ui_->content_render_bvh_->setChecked(show_bvh);
+    SetRenderBVH(false);
+    if (pane == rra::kPaneIdTlasViewer)
+    {
+        ui_->content_render_instance_transform_->setChecked(show_instance_transforms);
+        SetRenderInstancePretransform(false);
+    }
+    else if (pane == rra::kPaneIdRayInspector)
+    {
+        if (model_->GetCameraLock() != lock_camera)
+        {
+            ToggleCameraLock();
+        }
+    }
+    ui_->content_wireframe_overlay_->setChecked(show_wireframe);
+    SetWireframeOverlay();
+
+    // Set FOV.
+    int fov = rra::Settings::Get().GetFieldOfView(pane);
+    model_->SetFieldOfView(fov);
+
+    ui_->content_ray_flags_accept_first_hit_->setChecked(accept_first_hit);
+    ToggleRayFlagsAcceptFirstHit();
+    ui_->content_ray_flags_cull_back_facing_triangles_->setChecked(cull_back_facing_triangles);
+    ToggleRayFlagsCullBackFacingTriangles();
+    ui_->content_ray_flags_cull_front_facing_triangles_->setChecked(cull_front_facing_triangles);
+    ToggleRayFlagsCullFrontFacingTriangles();
+
+    // Set rendering mode. Done after setting the renderer state.
+    if (rendering_mode == kRenderingModeGeometry)
+    {
+        ConfigureForGeometryRenderingLayout();
+    }
+    else
+    {
+        ConfigureForTraversalRenderingLayout();
+    }
+
+    ui_->content_culling_mode_->SetSelectedRow(rra::Settings::Get().GetCullMode());
+
+    model_->SetInvertVertical(rra::Settings::Get().GetInvertVertical());
+    model_->SetInvertHorizontal(rra::Settings::Get().GetInvertHorizontal());
+
+    switch (rra::Settings::Get().GetUpAxis())
+    {
+    case kUpAxisTypeX:
+        SetUpAxisAsX();
+        break;
+    case kUpAxisTypeY:
+        SetUpAxisAsY();
+        break;
+    case kUpAxisTypeZ:
+        SetUpAxisAsZ();
+        break;
+    case kUpAxisTypeMax:
+        break;
+    }
+
+    int style = rra::Settings::Get().GetControlStyle(pane);
+    ui_->content_control_style_->SetSelectedRow(style);
+
+    ui_->content_projection_mode_->SetSelectedRow(rra::Settings::Get().GetProjectionMode());
+    ui_->traversal_continuous_update_->setChecked(rra::Settings::Get().GetContinuousUpdateState());
+    model_->Update();
 }
 
 rra::ViewModel* ViewPane::GetModel() const
@@ -376,27 +437,44 @@ rra::ViewModel* ViewPane::GetModel() const
     return model_;
 }
 
-void ViewPane::SetRenderGeometry()
+void ViewPane::SetRenderGeometry(bool update_model)
 {
-    model_->SetRenderGeometry(ui_->content_render_geometry_->isChecked());
-    model_->Update();
+    bool show_geometry = ui_->content_render_geometry_->isChecked();
+    model_->SetRenderGeometry(show_geometry);
+    if (update_model)
+    {
+        model_->Update();
+    }
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowGeometry, show_geometry);
 }
 
-void ViewPane::SetRenderBVH()
+void ViewPane::SetRenderBVH(bool update_model)
 {
-    model_->SetRenderBVH(ui_->content_render_bvh_->isChecked());
-    model_->Update();
+    bool render_bvh = ui_->content_render_bvh_->isChecked();
+    model_->SetRenderBVH(render_bvh);
+    if (update_model)
+    {
+        model_->Update();
+    }
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowAxisAlignedBVH, render_bvh);
 }
 
-void ViewPane::SetRenderInstancePretransform()
+void ViewPane::SetRenderInstancePretransform(bool update_model)
 {
-    model_->SetRenderInstancePretransform(ui_->content_render_instance_transform_->isChecked());
-    model_->Update();
+    bool render_instance_transform = ui_->content_render_instance_transform_->isChecked();
+    model_->SetRenderInstancePretransform(render_instance_transform);
+    if (update_model)
+    {
+        model_->Update();
+    }
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowInstanceTransform, render_instance_transform);
 }
 
 void ViewPane::SetWireframeOverlay()
 {
-    model_->SetWireframeOverlay(ui_->content_wireframe_overlay_->isChecked());
+    bool show_wireframe = ui_->content_wireframe_overlay_->isChecked();
+    model_->SetWireframeOverlay(show_wireframe);
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowWireframe, show_wireframe);
 }
 
 void ViewPane::SetCullingMode()
@@ -427,14 +505,14 @@ void ViewPane::SetArchitectureToNavi2()
 {
     model_->SetArchitectureToNavi2();
     UpdateBoxSortHeuristicLabel();
-    emit signal_handler.CameraParametersChanged(false);
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
 }
 
 void ViewPane::SetArchitectureToNavi3()
 {
     model_->SetArchitectureToNavi3();
     UpdateBoxSortHeuristicLabel();
-    emit signal_handler.CameraParametersChanged(false);
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
 }
 
 void ViewPane::ToggleRayFlagsAcceptFirstHit()
@@ -448,7 +526,8 @@ void ViewPane::ToggleRayFlagsAcceptFirstHit()
         model_->DisableRayFlagsAcceptFirstHit();
     }
     UpdateBoxSortHeuristicLabel();
-    emit signal_handler.CameraParametersChanged(false);
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingAcceptFirstHit, ui_->content_ray_flags_accept_first_hit_->isChecked());
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
 }
 
 void ViewPane::ToggleRayFlagsCullBackFacingTriangles()
@@ -461,7 +540,9 @@ void ViewPane::ToggleRayFlagsCullBackFacingTriangles()
     {
         model_->DisableRayCullBackFacingTriangles();
     }
-    emit signal_handler.CameraParametersChanged(false);
+    rra::Settings::Get().SetCheckboxSetting(
+        parent_pane_id_, kCheckboxSettingCullBackFacingTriangles, ui_->content_ray_flags_cull_back_facing_triangles_->isChecked());
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
 }
 
 void ViewPane::ToggleRayFlagsCullFrontFacingTriangles()
@@ -474,7 +555,9 @@ void ViewPane::ToggleRayFlagsCullFrontFacingTriangles()
     {
         model_->DisableRayCullFrontFacingTriangles();
     }
-    emit signal_handler.CameraParametersChanged(false);
+    rra::Settings::Get().SetCheckboxSetting(
+        parent_pane_id_, kCheckboxSettingCullFrontFacingTriangles, ui_->content_ray_flags_cull_front_facing_triangles_->isChecked());
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
 }
 
 void ViewPane::MoveCameraToOrigin()
@@ -482,9 +565,18 @@ void ViewPane::MoveCameraToOrigin()
     model_->GetCurrentController()->MoveToOrigin();
 }
 
+void ViewPane::ToggleCameraLock()
+{
+    model_->SetCameraLock(!model_->GetCameraLock());
+    ui_->lock_camera_button_->SetNormalIcon(QIcon(model_->GetCameraLock() ? kLockClosedClickableIcon : kLockOpenClickableIcon));
+    ui_->lock_camera_button_->SetHoverIcon(QIcon(model_->GetCameraLock() ? kLockClosedHoverIcon : kLockOpenHoverIcon));
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingLockCamera, model_->GetCameraLock());
+}
+
 void ViewPane::ToggleTraversalCounterContinuousUpdate()
 {
     model_->ToggleTraversalCounterContinuousUpdate([=](uint32_t min, uint32_t max) { ui_->traversal_counter_slider_->SetSpan(min, max); });
+    rra::Settings::Get().SetContinuousUpdateState(ui_->traversal_continuous_update_->isChecked());
     auto should_disable_manual_functions = model_->IsTraversalCounterContinuousUpdateSet();
     ui_->traversal_adapt_to_view_->setDisabled(should_disable_manual_functions);
     ui_->traversal_counter_slider_->setDisabled(should_disable_manual_functions);
@@ -592,7 +684,7 @@ void ViewPane::UpdateOrientationWidgets()
 void ViewPane::SetControlStyle(int index)
 {
     bool changed = model_->SetControlStyle(index);
-    emit signal_handler.CameraParametersChanged(changed);
+    emit signal_handler.CameraParametersChanged(changed, parent_pane_id_);
     emit signal_handler.CameraHotkeysChanged(ui_->camera_hotkeys_widget_);
     UpdateOrientationWidgets();
     emit ControlStyleChanged();
@@ -607,7 +699,7 @@ void ViewPane::SetControlStyle(int index)
         }
         else
         {
-            ui_->content_projection_mode_->SetSelectedRow(kPerspectiveIndex);
+            ui_->content_projection_mode_->SetSelectedRow(kProjectionModePerspective);
             ui_->content_projection_mode_->setHidden(true);
             controller->GetCamera()->SetOrthographic(false);
         }
@@ -623,34 +715,44 @@ void ViewPane::SetControlStyle(int index)
         controller->ControlStyleChanged();
     }
 
-    // Make this control style persistent even if RRA is closed and reopened.
-    rra::Settings::Get().SetControlStyle(static_cast<ControlStyleType>(index));
+    model_->UpdateControlHotkeys(ui_->camera_hotkeys_widget_);
+
+    if (index != ui_->content_control_style_->CurrentRow())
+    {
+        ui_->content_control_style_->SetSelectedRow(index);
+        emit signal_handler.CameraParametersChanged(true, parent_pane_id_);
+    }
+    else
+    {
+        emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
+    }
 }
 
 void ViewPane::SetProjectionMode(int index)
 {
     model_->SetOrthographic(index == 1);
-    emit signal_handler.CameraParametersChanged(false);
+    rra::Settings::Get().SetProjectionMode(static_cast<ProjectionMode>(index));
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
 }
 
 void ViewPane::ToggleVerticalAxisInverted()
 {
     model_->ToggleInvertVertical();
-    emit signal_handler.CameraParametersChanged(false);
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
     UpdateOrientationWidgets();
 }
 
 void ViewPane::ToggleHorizontalAxisInverted()
 {
     model_->ToggleInvertHorizontal();
-    emit signal_handler.CameraParametersChanged(false);
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
     UpdateOrientationWidgets();
 }
 
 void ViewPane::SetUpAxisAsX()
 {
     model_->SetUpAxisAsX();
-    emit signal_handler.CameraParametersChanged(false);
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
     UpdateOrientationWidgets();
     rra::Settings::Get().SetUpAxis(kUpAxisTypeX);
 }
@@ -658,7 +760,7 @@ void ViewPane::SetUpAxisAsX()
 void ViewPane::SetUpAxisAsY()
 {
     model_->SetUpAxisAsY();
-    emit signal_handler.CameraParametersChanged(false);
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
     UpdateOrientationWidgets();
     rra::Settings::Get().SetUpAxis(kUpAxisTypeY);
 }
@@ -666,15 +768,15 @@ void ViewPane::SetUpAxisAsY()
 void ViewPane::SetUpAxisAsZ()
 {
     model_->SetUpAxisAsZ();
-    emit signal_handler.CameraParametersChanged(false);
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
     UpdateOrientationWidgets();
     rra::Settings::Get().SetUpAxis(kUpAxisTypeZ);
 }
 
 void ViewPane::ConfigureForGeometryRenderingLayout()
 {
+    rra::Settings::Get().SetRenderingMode(parent_pane_id_, kRenderingModeGeometry);
     model_->SetRenderTraversal(false);
-    model_->SetRenderGeometry(true);
     ui_->traversal_counter_controls_container_->hide();
     ui_->content_render_geometry_->show();
     ui_->content_culling_mode_->show();
@@ -685,7 +787,7 @@ void ViewPane::ConfigureForGeometryRenderingLayout()
 
 void ViewPane::ConfigureForTraversalRenderingLayout()
 {
-    model_->SetRenderGeometry(false);
+    rra::Settings::Get().SetRenderingMode(parent_pane_id_, kRenderingModeTraversal);
     model_->SetRenderTraversal(true);
     ui_->content_render_geometry_->hide();
     ui_->content_culling_mode_->hide();
@@ -715,8 +817,32 @@ void ViewPane::HideTLASWidgets()
     ui_->content_render_instance_transform_->hide();
 }
 
+void ViewPane::HideRAYWidgets()
+{
+    ui_->lock_camera_button_->hide();
+}
+
 void ViewPane::NonProceduralWidgetsHidden(bool hidden)
 {
     ui_->content_render_geometry_->setHidden(hidden);
     ui_->content_wireframe_overlay_->setHidden(hidden);
+}
+
+void ViewPane::SetParentPaneId(rra::RRAPaneId pane_id)
+{
+    parent_pane_id_ = pane_id;
+    model_->SetParentPaneId(pane_id);
+    ApplyUIStateFromSettings(parent_pane_id_);
+}
+
+void ViewPane::SetFieldOfView(int slider_value)
+{
+    float fov = model_->SetFieldOfViewFromSlider(slider_value);
+    rra::Settings::Get().SetFieldOfView(parent_pane_id_, static_cast<int>(fov));
+}
+
+void ViewPane::SetMovementSpeed(int slider_value)
+{
+    float speed = model_->SetMovementSpeedFromSlider(slider_value);
+    rra::Settings::Get().SetMovementSpeed(parent_pane_id_, static_cast<int>(speed));
 }

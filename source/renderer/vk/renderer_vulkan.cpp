@@ -214,6 +214,11 @@ namespace rra
                         context.begin_render_pass = [=, &render_module]() { BeginRenderPass(cmd, render_module->GetRenderPassHint()); };
                         context.end_render_pass   = [=]() { EndRenderPass(cmd); };
                         render_module->Draw(&context);
+
+                        if (render_module->ShouldCopyDepthBuffer())
+                        {
+                            CopyDepthBuffer(cmd);
+                        }
                     }
                 };
 
@@ -356,6 +361,9 @@ namespace rra
             scene_uniform_buffer_.triangle_node_color     = scene_info_.triangle_node_color;
             scene_uniform_buffer_.selected_node_color     = scene_info_.selected_node_color;
             scene_uniform_buffer_.selected_geometry_color = scene_info_.selected_geometry_color;
+            scene_uniform_buffer_.selected_ray_color      = scene_info_.selected_ray_color;
+            scene_uniform_buffer_.ray_color               = scene_info_.ray_color;
+            scene_uniform_buffer_.shadow_ray_color        = scene_info_.shadow_ray_color;
 
             scene_uniform_buffer_.transparent_color = scene_info_.transparent_color;
             scene_uniform_buffer_.opaque_color      = scene_info_.opaque_color;
@@ -394,111 +402,8 @@ namespace rra
             WaitForGpu();
             CleanupHeatmap();
 
-            auto data = heatmap_->GetData();
-
-            VkDeviceSize buffer_size = data.size() * sizeof(glm::vec4);
-
-            VkImageCreateInfo image_create_info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
-            image_create_info.format            = VK_FORMAT_R32G32B32A32_SFLOAT;
-            image_create_info.usage             = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-            image_create_info.imageType         = VK_IMAGE_TYPE_1D;
-            image_create_info.extent            = {static_cast<uint32_t>(data.size()), 1, 1};
-            image_create_info.mipLevels         = 1;
-            image_create_info.arrayLayers       = 1;
-            image_create_info.samples           = VK_SAMPLE_COUNT_1_BIT;
-            image_create_info.tiling            = VK_IMAGE_TILING_OPTIMAL;
-            image_create_info.initialLayout     = VK_IMAGE_LAYOUT_UNDEFINED;
-
-            device_.CreateImage(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, vulkan_heatmap_.image, vulkan_heatmap_.allocation);
-
-            VkBuffer      staging_buffer     = VK_NULL_HANDLE;
-            VmaAllocation staging_allocation = VK_NULL_HANDLE;
-
-            device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, staging_buffer, staging_allocation, data.data(), buffer_size);
-
-            VkCommandBufferBeginInfo begin_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-            auto                     upload_cmd = command_buffer_ring_.GetUploadCommandBuffer();
-            auto                     result     = vkBeginCommandBuffer(upload_cmd, &begin_info);
-            CheckResult(result, "Upload command buffer failed to begin during heatmap upload.");
-
-            VkImageMemoryBarrier undefined_to_transfer_barrier        = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
-            undefined_to_transfer_barrier.oldLayout                   = VK_IMAGE_LAYOUT_UNDEFINED;
-            undefined_to_transfer_barrier.newLayout                   = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-            undefined_to_transfer_barrier.srcQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
-            undefined_to_transfer_barrier.dstQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
-            undefined_to_transfer_barrier.image                       = vulkan_heatmap_.image;
-            undefined_to_transfer_barrier.srcAccessMask               = VK_ACCESS_MEMORY_READ_BIT;
-            undefined_to_transfer_barrier.dstAccessMask               = VK_ACCESS_TRANSFER_WRITE_BIT;
-            undefined_to_transfer_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            undefined_to_transfer_barrier.subresourceRange.levelCount = 1;
-            undefined_to_transfer_barrier.subresourceRange.layerCount = 1;
-            vkCmdPipelineBarrier(
-                upload_cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &undefined_to_transfer_barrier);
-
-            VkBufferImageCopy copy_region           = {};
-            copy_region.bufferOffset                = 0;
-            copy_region.bufferRowLength             = 0;
-            copy_region.bufferImageHeight           = 0;
-            copy_region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            copy_region.imageSubresource.layerCount = 1;
-            copy_region.imageOffset                 = {0, 0, 0};
-            copy_region.imageExtent                 = {static_cast<uint32_t>(data.size()), 1, 1};
-
-            vkCmdCopyBufferToImage(upload_cmd, staging_buffer, vulkan_heatmap_.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_region);
-
-            VkImageMemoryBarrier transfer_to_read_barrier        = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
-            transfer_to_read_barrier.oldLayout                   = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-            transfer_to_read_barrier.newLayout                   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            transfer_to_read_barrier.srcQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
-            transfer_to_read_barrier.dstQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
-            transfer_to_read_barrier.image                       = vulkan_heatmap_.image;
-            transfer_to_read_barrier.srcAccessMask               = VK_ACCESS_TRANSFER_WRITE_BIT;
-            transfer_to_read_barrier.dstAccessMask               = VK_ACCESS_MEMORY_READ_BIT;
-            transfer_to_read_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            transfer_to_read_barrier.subresourceRange.levelCount = 1;
-            transfer_to_read_barrier.subresourceRange.layerCount = 1;
-            vkCmdPipelineBarrier(
-                upload_cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &transfer_to_read_barrier);
-
-            result = vkEndCommandBuffer(upload_cmd);
-            CheckResult(result, "Upload command buffer failed to end during heatmap upload.");
-
-            VkSubmitInfo submit_info       = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
-            submit_info.commandBufferCount = 1;
-            submit_info.pCommandBuffers    = &upload_cmd;
-
-            result = vkQueueSubmit(device_.GetGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
-            CheckResult(result, "Failed to submit heatmap buffer uploads to the graphics queue.");
-
+            vulkan_heatmap_        = GetVkGraphicsContext()->CreateVulkanHeatmapResources(command_buffer_ring_.GetUploadCommandBuffer(), heatmap_, false);
             should_update_heatmap_ = false;
-            WaitForGpu();
-
-            device_.DestroyBuffer(staging_buffer, staging_allocation);
-
-            VkImageViewCreateInfo image_view_create_info       = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
-            image_view_create_info.image                       = vulkan_heatmap_.image;
-            image_view_create_info.format                      = VK_FORMAT_R32G32B32A32_SFLOAT;
-            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            image_view_create_info.subresourceRange.levelCount = 1;
-            image_view_create_info.subresourceRange.layerCount = 1;
-
-            result = vkCreateImageView(device_.GetDevice(), &image_view_create_info, nullptr, &vulkan_heatmap_.image_view);
-            CheckResult(result, "Failed to create heatmap image view.");
-
-            VkSamplerCreateInfo sampler_create_info = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
-            sampler_create_info.magFilter           = VK_FILTER_LINEAR;
-            sampler_create_info.minFilter           = VK_FILTER_LINEAR;
-            sampler_create_info.addressModeU        = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-            sampler_create_info.addressModeV        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            sampler_create_info.addressModeW        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            sampler_create_info.borderColor         = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
-
-            result = vkCreateSampler(device_.GetDevice(), &sampler_create_info, nullptr, &vulkan_heatmap_.sampler);
-            CheckResult(result, "Failed to create heatmap image view.");
-
-            vulkan_heatmap_.image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            vulkan_heatmap_.image_info.imageView   = vulkan_heatmap_.image_view;
-            vulkan_heatmap_.image_info.sampler     = vulkan_heatmap_.sampler;
         }
 
         void RendererVulkan::CleanupHeatmap()
@@ -510,6 +415,101 @@ namespace rra
             device_.DestroyImage(vulkan_heatmap_.image, vulkan_heatmap_.allocation);
 
             vulkan_heatmap_ = {};
+        }
+
+        void RendererVulkan::CopyDepthBuffer(VkCommandBuffer cmd)
+        {
+            // Wait for depth buffer to finish being written to and transition to transfer src.
+            VkImageSubresourceRange subresource_range{};
+            subresource_range.aspectMask     = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+            subresource_range.baseMipLevel   = 0;
+            subresource_range.levelCount     = 1;
+            subresource_range.baseArrayLayer = 0;
+            subresource_range.layerCount     = 1;
+
+            VkImageMemoryBarrier image_barrier{};
+            image_barrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            image_barrier.srcAccessMask       = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            image_barrier.dstAccessMask       = VK_ACCESS_MEMORY_READ_BIT;
+            image_barrier.oldLayout           = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            image_barrier.newLayout           = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            image_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            image_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            image_barrier.image               = swapchain_.GetDepthStencilImage();
+            image_barrier.subresourceRange    = subresource_range;
+
+            // Transition destination image for transfer.
+            VkImageMemoryBarrier image_barrier_dst{};
+            image_barrier_dst.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            image_barrier_dst.srcAccessMask       = VK_ACCESS_NONE;
+            image_barrier_dst.dstAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+            image_barrier_dst.oldLayout           = VK_IMAGE_LAYOUT_UNDEFINED;
+            image_barrier_dst.newLayout           = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            image_barrier_dst.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            image_barrier_dst.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            image_barrier_dst.image               = swapchain_.GetDepthInputImage();
+            image_barrier_dst.subresourceRange    = subresource_range;
+
+            std::array<VkImageMemoryBarrier, 2> image_barriers = {image_barrier, image_barrier_dst};
+
+            vkCmdPipelineBarrier(cmd,
+                                 VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                 VK_DEPENDENCY_BY_REGION_BIT,
+                                 0,
+                                 nullptr,
+                                 0,
+                                 nullptr,
+                                 (uint32_t)image_barriers.size(),
+                                 image_barriers.data());
+
+            // Copy image.
+            VkImageSubresourceLayers subresource{};
+            subresource.aspectMask     = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+            subresource.mipLevel       = 0;
+            subresource.baseArrayLayer = 0;
+            subresource.layerCount     = 1;
+
+            VkExtent2D swap_extent{swapchain_.GetSwapchainExtent()};
+
+            VkImageCopy image_copy{};
+            image_copy.srcSubresource = subresource;
+            image_copy.srcOffset      = {0, 0, 0};
+            image_copy.dstSubresource = subresource;
+            image_copy.dstOffset      = {0, 0, 0};
+            image_copy.extent         = {swap_extent.width, swap_extent.height, 1};
+
+            vkCmdCopyImage(cmd,
+                           swapchain_.GetDepthStencilImage(),
+                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                           swapchain_.GetDepthInputImage(),
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                           1,
+                           &image_copy);
+
+            // Transition images back to original layouts.
+            image_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            image_barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            image_barrier.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            image_barrier.newLayout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            image_barrier_dst.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            image_barrier_dst.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            image_barrier_dst.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            image_barrier_dst.newLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            image_barriers = {image_barrier, image_barrier_dst};
+
+            vkCmdPipelineBarrier(cmd,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                 VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                 VK_DEPENDENCY_BY_REGION_BIT,
+                                 0,
+                                 nullptr,
+                                 0,
+                                 nullptr,
+                                 (uint32_t)image_barriers.size(),
+                                 image_barriers.data());
         }
 
         void RendererVulkan::WaitForSwapchain()

@@ -12,6 +12,7 @@
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
+#include "settings/settings.h"
 #include "views/widget_util.h"
 
 static const int kSplitterWidth = 300;
@@ -21,7 +22,8 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     , ui_(new Ui::BlasViewerPane)
 {
     ui_->setupUi(this);
-    ui_->viewer_container_widget_->SetupUI(this);
+    ui_->side_panel_container_->GetViewPane()->SetParentPaneId(rra::kPaneIdBlasViewer);
+    ui_->viewer_container_widget_->SetupUI(this, rra::kPaneIdBlasViewer);
 
     rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
     ui_->blas_tree_->setIndentation(rra::kTreeViewIndent);
@@ -79,6 +81,20 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     connect(ui_->tree_depth_slider_, &DepthSliderWidget::SpanChanged, this, &BlasViewerPane::UpdateTreeDepths);
 
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ControlStyleChanged, this, &BlasViewerPane::UpdateCameraController);
+    // Save selected control style to settings.
+    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ControlStyleChanged, this, [&]() {
+        if (renderer_interface_ == nullptr)
+        {
+            return;
+        }
+        rra::renderer::Camera& camera = renderer_interface_->GetCamera();
+
+        auto camera_controller = static_cast<rra::ViewerIO*>(camera.GetCameraController());
+        if (camera_controller && (acceleration_structure_combo_box_->RowCount() > 0))
+        {
+            rra::Settings::Get().SetControlStyle(rra::kPaneIdBlasViewer, (ControlStyleType)camera_controller->GetComboBoxIndex());
+        }
+    });
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=](bool geometry_mode) {
         ui_->viewer_container_widget_->ShowColoringMode(geometry_mode);
     });
@@ -86,10 +102,25 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &BlasViewerPane::OnScaleFactorChanged);
     connect(ui_->content_parent_blas_, &ScaledPushButton::clicked, this, &BlasViewerPane::SelectParentNode);
 
+    // Reset the UI state. When the 'reset' button is clicked, it broadcasts a message from the message manager. Any objects interested in this
+    // message can then act upon it.
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::ResetUIState, [=](rra::RRAPaneId pane) {
+        if (pane == rra::kPaneIdBlasViewer)
+        {
+            ui_->side_panel_container_->GetViewPane()->ApplyUIStateFromSettings(rra::kPaneIdBlasViewer);
+            ui_->viewer_container_widget_->ApplyUIStateFromSettings(rra::kPaneIdBlasViewer);
+        }
+    });
+
     ui_->side_panel_container_->MarkAsBLAS();
 
     flag_table_delegate_ = new FlagTableItemDelegate();
     ui_->geometry_flags_table_1_->setItemDelegate(flag_table_delegate_);
+
+    ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
+    ui_->content_focus_selected_volume_->SetHoverIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-hover.svg"));
+    ui_->content_focus_selected_volume_->setBaseSize(QSize(25, 25));
+    connect(ui_->content_focus_selected_volume_, &ScaledPushButton::clicked, [&]() { model_->GetCameraController()->FocusOnSelection(); });
 }
 
 BlasViewerPane::~BlasViewerPane()
@@ -114,6 +145,7 @@ void BlasViewerPane::OnTraceClose()
 void BlasViewerPane::OnTraceOpen()
 {
     InitializeRendererWidget(ui_->blas_scene_, ui_->side_panel_container_, ui_->viewer_container_widget_, rra::renderer::BvhTypeFlags::BottomLevel);
+
     last_selected_as_id_ = 0;
     ui_->side_panel_container_->OnTraceOpen();
     ui_->tree_depth_slider_->SetLowerValue(0);
@@ -124,6 +156,7 @@ void BlasViewerPane::OnTraceOpen()
 void BlasViewerPane::showEvent(QShowEvent* event)
 {
     ui_->label_bvh_->setText("BLAS:");
+    ui_->side_panel_container_->GetViewPane()->SetControlStyle(rra::Settings::Get().GetControlStyle(rra::kPaneIdBlasViewer));
     AccelerationStructureViewerPane::showEvent(event);
 }
 

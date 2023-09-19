@@ -68,6 +68,12 @@ private slots:
     /// @brief Open a URL to RGA.
     void OpenRGAURL();
 
+    /// @brief Open a URL to RGD.
+    void OpenRGDURL();
+
+    /// @brief Open a URL to RMV.
+    void OpenRMVURL();
+
     /// @brief Open sample trace.
     void OpenSampleTrace();
 

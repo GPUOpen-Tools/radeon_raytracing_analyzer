@@ -34,10 +34,7 @@ namespace rra
 
     void FPSController::Reset()
     {
-        for (auto& i : key_states_)
-        {
-            i.second = false;
-        }
+        ResetKeyStates();
         elapsed_time_start_ = std::chrono::steady_clock::now();
     }
 
@@ -93,26 +90,29 @@ namespace rra
     {
         auto camera = GetCamera();
 
-        if (!viewer_model_)
+        if (viewer_callbacks_.get_camera_fit)
+        {
+            auto fit = viewer_callbacks_.get_camera_fit(camera);
+            FitCameraParams(fit.position, fit.forward, fit.up);
+            return;
+        }
+
+        if (!viewer_callbacks_.get_scene_extents)
         {
             return;
         }
 
-        BoundingVolumeExtents volume;
-        auto                  has_volume = viewer_model_->GetSceneCollectionModel()->GetSceneBounds(viewer_bvh_index_, volume);
-        if (has_volume)
-        {
-            float diagonal = glm::length(glm::vec3{volume.max_x - volume.min_x, volume.max_y - volume.min_y, volume.max_z - volume.min_z});
-            euler_angles_ = GetCameraOrientation().GetDefaultEuler();
-            arc_radius_   = 0.0f;
-            camera->SetEulerRotation(GetCameraOrientation().MapEuler(euler_angles_));
-            camera->SetRotationMatrix(GetCameraOrientation().GetReflectionMatrix() * camera->GetRotationMatrix());
-            camera->SetFieldOfView(renderer::kDefaultCameraFieldOfView);
-            camera->SetMovementSpeed(kDefaultSpeedDiagonalMultiplier * diagonal);
-            auto radius = FocusCameraOnVolume(camera, volume);
-            camera->SetFarClip(radius * kViewerIOFarPlaneMultiplier);
-            updated_ = true;
-        }
+        BoundingVolumeExtents volume = viewer_callbacks_.get_scene_extents();
+
+        float diagonal = glm::length(glm::vec3{volume.max_x - volume.min_x, volume.max_y - volume.min_y, volume.max_z - volume.min_z});
+        euler_angles_  = GetCameraOrientation().GetDefaultEuler();
+        arc_radius_    = 0.0f;
+        camera->SetEulerRotation(GetCameraOrientation().MapEuler(euler_angles_));
+        camera->SetRotationMatrix(GetCameraOrientation().GetReflectionMatrix() * camera->GetRotationMatrix());
+        camera->SetMovementSpeed(kDefaultSpeedDiagonalMultiplier * diagonal);
+        auto radius = FocusCameraOnVolume(camera, volume);
+        camera->SetFarClip(radius * kViewerIOFarPlaneMultiplier);
+        updated_ = true;
 
         if (view_model_)
         {
@@ -137,7 +137,7 @@ namespace rra
 
         // Point the camera directly at the center of the bounding volume extents.
         glm::vec3 center = min + (max - min) / 2.0f;
-        camera->SetArcCenterPosition(center - looking_direction * distance * 1.5f);
+        camera->SetArcCenterPosition(center - looking_direction * distance * 2.0f);
 
         updated_ = true;
         return radius;
@@ -147,8 +147,8 @@ namespace rra
     {
         std::vector<std::pair<std::string, std::string>> controls;
 
-        controls.push_back({"Rotate camera", "Mouse Right Button"});
-        controls.push_back({"Pan camera", "Mouse Middle Button"});
+        controls.push_back({"Rotate camera", "Right Mouse Drag"});
+        controls.push_back({"Pan camera", "Middle Mouse Drag"});
         controls.push_back({"Move Forward, Left, Back, Right", "W, A, S, D"});
         controls.push_back({"Move Up, Down", "E and Q"});
         controls.push_back({"Look Up, Left, Down, Right", "Arrow Keys"});
@@ -291,14 +291,10 @@ namespace rra
         key_releases_.clear();
 
         // Handle camera if the focus flag is set.
-        if (should_focus_on_selection_ && viewer_model_)
+        if (should_focus_on_selection_ && viewer_callbacks_.get_selection_extents)
         {
-            BoundingVolumeExtents volume;
-            auto                  has_volume = viewer_model_->GetSceneCollectionModel()->GetSceneSelectionBounds(viewer_bvh_index_, volume);
-            if (has_volume)
-            {
-                FocusCameraOnVolume(camera, volume);
-            }
+            BoundingVolumeExtents volume = viewer_callbacks_.get_selection_extents();
+            FocusCameraOnVolume(camera, volume);
             should_focus_on_selection_ = false;
         }
 
@@ -358,7 +354,7 @@ namespace rra
             }
         }
 
-        if (updated_ && viewer_model_)
+        if (updated_ && view_model_)
         {
             view_model_->UpdateCameraTransformUI();
         }

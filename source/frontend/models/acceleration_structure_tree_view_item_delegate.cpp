@@ -124,7 +124,12 @@ namespace rra
         {
             QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
             auto         item_data  = qvariant_cast<AccelerationStructureTreeViewItemData>(index.data(Qt::DisplayRole));
-            if (checkbox_rect.left() <= mouseEvent->x() && mouseEvent->x() <= checkbox_rect.right())
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            int x_pos = mouseEvent->x();
+#else
+            int x_pos = mouseEvent->position().toPoint().x();
+#endif
+            if (checkbox_rect.left() <= x_pos && x_pos <= checkbox_rect.right())
             {
                 auto node = scene_->GetNodeById(item_data.node_id);
                 if (node && node->IsEnabled())

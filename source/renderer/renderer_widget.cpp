@@ -320,6 +320,7 @@ LRESULT WndProc(MSG* message)
 }
 #endif
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 bool RendererWidget::nativeEvent(const QByteArray& event_type, void* message, long* result)
 {
     Q_UNUSED(event_type);
@@ -332,3 +333,5 @@ bool RendererWidget::nativeEvent(const QByteArray& event_type, void* message, lo
     return QWidget::nativeEvent(event_type, message, result);
 #endif
 }
+
+#endif

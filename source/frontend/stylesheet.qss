@@ -22,8 +22,13 @@ QTableView::item:selected
 
 QSplitter::handle
 {
-    background: gray;
+    color: grey;
     width: 1px;
+}
+
+QSplitter::handle#ray_splitter_
+{
+    background-color: #C4C4C4;
 }
 
 QSlider::groove:horizontal
@@ -325,6 +330,38 @@ MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:!selected:hover {
     background-color: rgb(237, 246, 255)
 }
 
+MainWindow QTabWidget#ray_sub_tab_
+{
+    font:  bold 10pt;
+}
+
+MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab
+{
+    border: 1px solid #C4C4C3;
+    padding: 1em 2em 1em 2em;
+}
+
+MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab:selected
+{
+    background-color: white;
+    border: 1px solid #C4C4C3;
+    border-bottom: 1px solid white;
+    margin-left: -1px;
+}
+
+MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab:!selected
+{
+    background-color: rgb(236, 236, 236);
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: 1px solid #C4C4C3;
+    margin-left: -1px;
+}
+
+MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab:!selected:hover {
+    background-color: rgb(237, 246, 255)
+}
+
 /*************************************/
 /* Welcome Pane
 /*************************************/
@@ -467,6 +504,23 @@ ScaledPushButton#tlas_title_
 ScaledPushButton#tlas_title_:hover
 {
     color: rgb(255, 128, 0);
+}
+
+ScaledLabel#dispatch_list_header_
+{
+    font: bold 12pt;
+}
+
+QScrollArea#dispatch_scroll_area_
+{
+    border-style: none;
+    background-color: white;
+}
+
+QWidget#dispatch_scroll_area_contents_
+{
+    border-style: none;
+    background-color: white;
 }
 
 /*************************************/
@@ -619,6 +673,159 @@ QWidget#split_triangle_siblings
     border-style: none;
     background-color: white;
 }
+
+/*************************************/
+/* Ray Pane
+/*************************************/
+
+ScaledLabel#dispatch_counters_label_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#shader_binding_table_label_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#dispatch_indices_label_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#selected_ray_label_
+{
+    font: bold 12pt;
+}
+
+ScaledLabel#selected_ray_result_label_
+{
+    font: bold 12pt;
+}
+
+ScaledPushButton#content_ray_acceleration_structure_address_
+{
+    font: bold;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_ray_acceleration_structure_address_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+ScaledPushButton#content_ray_acceleration_structure_address_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
+ScaledPushButton#content_ray_result_hit_distance_
+{
+    font: bold;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_ray_result_hit_distance_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+ScaledPushButton#content_ray_result_hit_distance_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
+ScaledPushButton#content_ray_result_instance_index_
+{
+    font: bold;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_ray_result_instance_index_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+ScaledPushButton#content_ray_result_instance_index_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
+ScaledPushButton#content_ray_result_geometry_index_
+{
+    font: bold;
+    color: rgb(0, 0, 0);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_ray_result_geometry_index_:hover
+{
+    color: rgb(0, 0, 0);
+}
+
+ScaledPushButton#content_ray_result_geometry_index_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
+ScaledPushButton#content_ray_result_primitive_index_
+{
+    font: bold;
+    color: rgb(0, 0, 0);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_ray_result_primitive_index_:hover
+{
+    color: rgb(0, 0, 0);
+}
+
+ScaledPushButton#content_ray_result_primitive_index_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
+ScaledLabel#reshape_label_
+{
+    font-size: 9.75pt;
+}
+
+ScaledPushButton#content_origin_
+{
+    font: bold;
+    color: rgb(0, 0, 255);
+    border: none;
+    text-align: left;
+}
+
+ScaledPushButton#content_origin_:hover
+{
+    color: rgb(255, 128, 0);
+}
+
+ScaledPushButton#content_origin_:disabled
+{
+    color: rgb(64, 64, 64);
+}
+
+QFrame#rh_viewer_line_separator_0_
+{
+    color: rgb(216, 216, 216);
+}
+
+QFrame#rh_viewer_line_separator_1_
+{
+    color: rgb(216, 216, 216);
+}
+
 
 /*************************************/
 /* Device Configuration Pane

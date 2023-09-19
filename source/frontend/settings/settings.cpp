@@ -22,6 +22,80 @@
 
 namespace rra
 {
+    // Look up maps. The first level is a lookup from PaneID to the Panes' associated data. The second is a lookup from
+    // A generic ID to its pane-specific ID.
+    static SettingLookups pane_color_maps = {
+        {rra::kPaneIdTlasViewer,
+         {{kColoringModeBVHColor, kSettingPersistenceTLASBVHColoringMode},
+          {kColoringModeGeometryColor, kSettingPersistenceTLASGeometryColoringMode},
+          {kColoringModeHeatmapColor, kSettingPersistenceTLASHeatmapColor},
+          {kColoringModeTraversalCounterColor, kSettingPersistenceTLASTraversalCounterMode}}},
+
+        {rra::kPaneIdBlasViewer,
+         {{kColoringModeBVHColor, kSettingPersistenceBLASBVHColoringMode},
+          {kColoringModeGeometryColor, kSettingPersistenceBLASGeometryColoringMode},
+          {kColoringModeHeatmapColor, kSettingPersistenceBLASHeatmapColor},
+          {kColoringModeTraversalCounterColor, kSettingPersistenceBLASTraversalCounterMode}}},
+
+        {rra::kPaneIdRayInspector,
+         {{kColoringModeBVHColor, kSettingPersistenceInspectorBVHColoringMode},
+          {kColoringModeGeometryColor, kSettingPersistenceInspectorGeometryColoringMode},
+          {kColoringModeHeatmapColor, kSettingPersistenceInspectorHeatmapColor},
+          {kColoringModeTraversalCounterColor, kSettingPersistenceInspectorTraversalCounterMode}}},
+    };
+
+    static Pane2SettingMap pane_2_rendering_mode = {
+        {rra::kPaneIdTlasViewer, kSettingPersistenceTLASRenderingMode},
+        {rra::kPaneIdBlasViewer, kSettingPersistenceBLASRenderingMode},
+        {rra::kPaneIdRayInspector, kSettingPersistenceInspectorRenderingMode},
+    };
+
+    static Pane2SettingMap pane_2_control_style = {
+        {rra::kPaneIdTlasViewer, kSettingPersistenceTLASControlStyle},
+        {rra::kPaneIdBlasViewer, kSettingPersistenceBLASControlStyle},
+        {rra::kPaneIdRayInspector, kSettingPersistenceInspectorControlStyle},
+    };
+
+    static SettingLookups pane_checkbox_maps = {
+        {rra::kPaneIdTlasViewer,
+         {{kCheckboxSettingShowGeometry, kSettingPersistenceTLASShowGeometry},
+          {kCheckboxSettingShowAxisAlignedBVH, kSettingPersistenceTLASShowAxisAlignedBVH},
+          {kCheckboxSettingShowInstanceTransform, kSettingPersistenceTLASShowInstanceTransform},
+          {kCheckboxSettingShowWireframe, kSettingPersistenceTLASShowWireframe},
+          {kCheckboxSettingAcceptFirstHit, kSettingPersistenceTLASAcceptFirstHit},
+          {kCheckboxSettingCullBackFacingTriangles, kSettingPersistenceTLASCullBackFacingTriangles},
+          {kCheckboxSettingCullFrontFacingTriangles, kSettingPersistenceTLASCullFrontFacingTriangles}}},
+
+        {rra::kPaneIdBlasViewer,
+         {{kCheckboxSettingShowGeometry, kSettingPersistenceBLASShowGeometry},
+          {kCheckboxSettingShowAxisAlignedBVH, kSettingPersistenceBLASShowAxisAlignedBVH},
+          {kCheckboxSettingShowWireframe, kSettingPersistenceBLASShowWireframe},
+          {kCheckboxSettingAcceptFirstHit, kSettingPersistenceBLASAcceptFirstHit},
+          {kCheckboxSettingCullBackFacingTriangles, kSettingPersistenceBLASCullBackFacingTriangles},
+          {kCheckboxSettingCullFrontFacingTriangles, kSettingPersistenceBLASCullFrontFacingTriangles}}},
+
+        {rra::kPaneIdRayInspector,
+         {{kCheckboxSettingShowGeometry, kSettingPersistenceInspectorShowGeometry},
+          {kCheckboxSettingLockCamera, kSettingPersistenceInspectorLockCamera},
+          {kCheckboxSettingShowAxisAlignedBVH, kSettingPersistenceInspectorShowAxisAlignedBVH},
+          {kCheckboxSettingShowWireframe, kSettingPersistenceInspectorShowWireframe},
+          {kCheckboxSettingAcceptFirstHit, kSettingPersistenceInspectorAcceptFirstHit},
+          {kCheckboxSettingCullBackFacingTriangles, kSettingPersistenceInspectorCullBackFacingTriangles},
+          {kCheckboxSettingCullFrontFacingTriangles, kSettingPersistenceInspectorCullFrontFacingTriangles}}},
+    };
+
+    static Pane2SettingMap pane_2_fov = {
+        {rra::kPaneIdTlasViewer, kSettingPersistenceTLASFieldOfView},
+        {rra::kPaneIdBlasViewer, kSettingPersistenceBLASFieldOfView},
+        {rra::kPaneIdRayInspector, kSettingPersistenceInspectorFieldOfView},
+    };
+
+    static Pane2SettingMap pane_2_movement_speed = {
+        {rra::kPaneIdTlasViewer, kSettingPersistenceTLASMovementSpeed},
+        {rra::kPaneIdBlasViewer, kSettingPersistenceBLASMovementSpeed},
+        {rra::kPaneIdRayInspector, kSettingPersistenceInspectorMovementSpeed},
+    };
+
     // Single instance of the Settings.
     static Settings settings;
 
@@ -210,6 +284,10 @@ namespace rra
         scene_palette.instance_opaque_force_opaque_color    = QColorToGLM(GetColorValue(kSettingThemesAndColorsInstanceOpaqueForceOpaque));
         scene_palette.instance_opaque_force_no_opaque_color = QColorToGLM(GetColorValue(kSettingThemesAndColorsInstanceOpaqueForceNoOpaque));
         scene_palette.instance_opaque_force_both_color      = QColorToGLM(GetColorValue(kSettingThemesAndColorsInstanceOpaqueBoth));
+        scene_palette.selected_ray_color                    = QColorToGLM(GetColorValue(kSettingThemesAndColorsSelectedRayColor));
+        scene_palette.ray_color                             = QColorToGLM(GetColorValue(kSettingThemesAndColorsRayColor));
+        scene_palette.shadow_ray_color                      = QColorToGLM(GetColorValue(kSettingThemesAndColorsShadowRayColor));
+        scene_palette.zero_mask_ray_color                   = QColorToGLM(GetColorValue(kSettingThemesAndColorsZeroMaskRayColor));
 
         rra::SetSceneNodeColors(scene_palette);
     }
@@ -227,30 +305,18 @@ namespace rra
 #endif  // BETA_LICENSE
         default_settings_[kSettingGeneralCheckForUpdatesOnStartup] = {"CheckForUpdatesOnStartup", "False"};
         default_settings_[kSettingGeneralCameraResetOnStyleChange] = {"CameraResetOnStyleChange", "True"};
+        default_settings_[kSettingGeneralCameraControlSync]        = {"CameraControlSync", "False"};
+        default_settings_[kSettingGeneralPersistentUIState]        = {"PersistentUIState", "True"};
         default_settings_[kSettingGeneralTreeviewNodeID]           = {"TreeviewNodeID", "0"};
         default_settings_[kSettingGeneralTraversalCounterMaximum]  = {"TraversalCounterMaximum", "1000"};
         default_settings_[kSettingGeneralMovementSpeedLimit]       = {"MovementSpeedLimit", "10000"};
         default_settings_[kSettingGeneralFrustumCullRatio]         = {"FrustumCullRatio", "0.0005"};
         default_settings_[kSettingGeneralDecimalPrecision]         = {"DecimalPrecision", "2"};
 
-        default_settings_[kSettingGeneralCullMode]                 = {"CullMode", "0"};
-        default_settings_[kSettingGeneralControlStyle]             = {"ControlStyle", "0"};
-        default_settings_[kSettingGeneralUpAxis]                   = {"UpAxis", "1"};
-        default_settings_[kSettingGeneralInvertVertical]           = {"InvertVertical", "False"};
-        default_settings_[kSettingGeneralInvertHorizontal]         = {"InvertHorizontal", "False"};
-        default_settings_[kSettingGeneralTLASBVHColoringMode]      = {"TLASBVHColoringMode", "0"};
-        default_settings_[kSettingGeneralBLASBVHColoringMode]      = {"BLASBVHColoringMode", "0"};
-        default_settings_[kSettingGeneralTLASGeometryColoringMode] = {"TLASGeometryColoringMode", "0"};
-        default_settings_[kSettingGeneralBLASGeometryColoringMode] = {"BLASGeometryColoringMode", "0"};
-        default_settings_[kSettingGeneralTLASHeatmapColor]         = {"TLASHeatmapColor", "0"};
-        default_settings_[kSettingGeneralBLASHeatmapColor]         = {"BLASHeatmapColor", "0"};
-        default_settings_[kSettingGeneralTLASTraversalCounterMode] = {"TLASTraversalCounterMode", "0"};
-        default_settings_[kSettingGeneralBLASTraversalCounterMode] = {"BLASTraversalCounterMode", "0"};
-
         default_settings_[kSettingThemesAndColorsPalette] = {"ColorPalette",
                                                              "#FFFFBA02,#FFFF8B00,#FFF76210,#FFE17F35,#FFDA3B01,#FFEF6950,#FFD03438,#FFFF4343,"
                                                              "#FFFF6062,#FFE81123,#FFEA015D,#FFC40052,#FFFF0080,#FFFF97FF,#FFFF4CFF,#FFDC00DD,"
-                                                             "#FF0278D8,#FF0063B1,#FF8E8CD7,#FF6B69D6,#FF7F00FF,#FF754CA8,#FFAF47C2,#FF871797,"
+                                                             "#FF0278D8,#FF0063B1,#FF8E8CD7,#FF6B69D6,#FF7F00FF,#FF00EAFF,#FFAF47C2,#FF871797,"
                                                              "#FF000000,#FFC3C3C3,#FFFFFFFF,#FF00172E,#FFC0D1D5,#FFF0FFFF,#FF00CC69,#FF10883E"};
 
         default_settings_[kSettingThemesAndColorsBoundingVolumeBox16]         = {"BoundingVolumeBox16Color", "23"};
@@ -276,8 +342,73 @@ namespace rra
         default_settings_[kSettingThemesAndColorsInstanceOpaqueForceOpaque]   = {"InstanceOpaqueForceOpaque", "30"};
         default_settings_[kSettingThemesAndColorsInstanceOpaqueForceNoOpaque] = {"InstanceOpaqueForceNoOpaque", "20"};
         default_settings_[kSettingThemesAndColorsInstanceOpaqueBoth]          = {"InstanceOpaqueBoth", "9"};
+        default_settings_[kSettingThemesAndColorsInvocationRaygen]            = {"InvocationRaygen", "16"};
+        default_settings_[kSettingThemesAndColorsInvocationClosestHit]        = {"InvocationClosestHit", "30"};
+        default_settings_[kSettingThemesAndColorsInvocationAnyHit]            = {"InvocationAnyHit", "1"};
+        default_settings_[kSettingThemesAndColorsInvocationIntersection]      = {"InvocationIntersection", "9"};
+        default_settings_[kSettingThemesAndColorsInvocationMiss]              = {"InvocationMiss", "18"};
+        default_settings_[kSettingThemesAndColorsInvocationCallable]          = {"InvocationCallable", "0"};
+        default_settings_[kSettingThemesAndColorsSelectedRayColor]            = {"SelectedRay", "0"};
+        default_settings_[kSettingThemesAndColorsRayColor]                    = {"Ray", "31"};
+        default_settings_[kSettingThemesAndColorsShadowRayColor]              = {"ShadowRay", "18"};
+        default_settings_[kSettingThemesAndColorsZeroMaskRayColor]            = {"ZeroMaskRay", "9"};
 
         color_palette_ = new ColorPalette(default_settings_[kSettingThemesAndColorsPalette].value);
+
+        // UI Persistent state.
+        default_settings_[kSettingPersistenceCullMode]         = {"CullMode", "0"};
+        default_settings_[kSettingPersistenceUpAxis]           = {"UpAxis", "1"};
+        default_settings_[kSettingPersistenceInvertVertical]   = {"InvertVertical", "False"};
+        default_settings_[kSettingPersistenceInvertHorizontal] = {"InvertHorizontal", "False"};
+        default_settings_[kSettingPersistenceProjectionMode]   = {"Perspective", "0"};
+        default_settings_[kSettingPersistenceContinuousUpdate] = {"ContinuousUpdate", "False"};
+
+        default_settings_[kSettingPersistenceTLASControlStyle]             = {"TLASControlStyle", "1"};
+        default_settings_[kSettingPersistenceTLASBVHColoringMode]          = {"TLASBVHColoringMode", "0"};
+        default_settings_[kSettingPersistenceTLASGeometryColoringMode]     = {"TLASGeometryColoringMode", "0"};
+        default_settings_[kSettingPersistenceTLASHeatmapColor]             = {"TLASHeatmapColor", "0"};
+        default_settings_[kSettingPersistenceTLASTraversalCounterMode]     = {"TLASTraversalCounterMode", "0"};
+        default_settings_[kSettingPersistenceTLASRenderingMode]            = {"TLASRenderingMode", "0"};
+        default_settings_[kSettingPersistenceTLASShowGeometry]             = {"TLASShowGeometry", "True"};
+        default_settings_[kSettingPersistenceTLASShowAxisAlignedBVH]       = {"TLASShowAxisAlignedBVH", "True"};
+        default_settings_[kSettingPersistenceTLASShowInstanceTransform]    = {"TLASShowInstanceTransform", "True"};
+        default_settings_[kSettingPersistenceTLASShowWireframe]            = {"TLASShowWireframe", "True"};
+        default_settings_[kSettingPersistenceTLASAcceptFirstHit]           = {"TLASAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceTLASCullBackFacingTriangles]  = {"TLASCullBackFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceTLASCullFrontFacingTriangles] = {"TLASCullFrontFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceTLASFieldOfView]              = {"TLASFieldOfView", "75"};
+        default_settings_[kSettingPersistenceTLASMovementSpeed]            = {"TLASMovementSpeed", "3"};
+
+        default_settings_[kSettingPersistenceBLASControlStyle]             = {"BLASControlStyle", "0"};
+        default_settings_[kSettingPersistenceBLASBVHColoringMode]          = {"BLASBVHColoringMode", "0"};
+        default_settings_[kSettingPersistenceBLASGeometryColoringMode]     = {"BLASGeometryColoringMode", "0"};
+        default_settings_[kSettingPersistenceBLASHeatmapColor]             = {"BLASHeatmapColor", "0"};
+        default_settings_[kSettingPersistenceBLASTraversalCounterMode]     = {"BLASTraversalCounterMode", "0"};
+        default_settings_[kSettingPersistenceBLASRenderingMode]            = {"BLASRenderingMode", "0"};
+        default_settings_[kSettingPersistenceBLASShowGeometry]             = {"BLASShowGeometry", "True"};
+        default_settings_[kSettingPersistenceBLASShowAxisAlignedBVH]       = {"BLASShowAxisAlignedBVH", "True"};
+        default_settings_[kSettingPersistenceBLASShowWireframe]            = {"BLASShowWireframe", "True"};
+        default_settings_[kSettingPersistenceBLASAcceptFirstHit]           = {"BLASAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceBLASCullBackFacingTriangles]  = {"BLASCullBackFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceBLASCullFrontFacingTriangles] = {"BLASCullFrontFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceBLASFieldOfView]              = {"BLASFieldOfView", "75"};
+        default_settings_[kSettingPersistenceBLASMovementSpeed]            = {"BLASMovementSpeed", "3"};
+
+        default_settings_[kSettingPersistenceInspectorControlStyle]             = {"InspectorControlStyle", "1"};
+        default_settings_[kSettingPersistenceInspectorBVHColoringMode]          = {"InspectorBVHColoringMode", "0"};
+        default_settings_[kSettingPersistenceInspectorGeometryColoringMode]     = {"InspectorGeometryColoringMode", "0"};
+        default_settings_[kSettingPersistenceInspectorHeatmapColor]             = {"InspectorHeatmapColor", "2"};
+        default_settings_[kSettingPersistenceInspectorTraversalCounterMode]     = {"InspectorTraversalCounterMode", "0"};
+        default_settings_[kSettingPersistenceInspectorRenderingMode]            = {"InspectorRenderingMode", "0"};
+        default_settings_[kSettingPersistenceInspectorShowGeometry]             = {"InspectorShowGeometry", "True"};
+        default_settings_[kSettingPersistenceInspectorLockCamera]               = {"InspectorLockCamera", "False"};
+        default_settings_[kSettingPersistenceInspectorShowAxisAlignedBVH]       = {"InspectorShowAxisAlignedBVH", "True"};
+        default_settings_[kSettingPersistenceInspectorShowWireframe]            = {"InspectorShowWireframe", "True"};
+        default_settings_[kSettingPersistenceInspectorAcceptFirstHit]           = {"InspectorAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceInspectorCullBackFacingTriangles]  = {"InspectorCullBackFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceInspectorCullFrontFacingTriangles] = {"InspectorCullFrontFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceInspectorFieldOfView]              = {"InspectorFieldOfView", "75"};
+        default_settings_[kSettingPersistenceInspectorMovementSpeed]            = {"InspectorMovementSpeed", "3"};
     }
 
     void Settings::AddActiveSetting(SettingID setting_id, const Setting& setting)
@@ -325,21 +456,93 @@ namespace rra
         active_settings_[setting_id].value = default_settings_[setting_id].value;
     }
 
+    void Settings::SetPersistentUIToDefault(RRAPaneId pane)
+    {
+        // If the cameras are synced, the TLAS value is used as the default setting when reset.
+        if (GetCameraControlSync())
+        {
+            SetToDefaultValue(kSettingPersistenceTLASControlStyle);
+        }
+
+        switch (pane)
+        {
+        case rra::kPaneIdTlasViewer:
+            SetToDefaultValue(kSettingPersistenceTLASControlStyle);
+            SetToDefaultValue(kSettingPersistenceTLASBVHColoringMode);
+            SetToDefaultValue(kSettingPersistenceTLASGeometryColoringMode);
+            SetToDefaultValue(kSettingPersistenceTLASHeatmapColor);
+            SetToDefaultValue(kSettingPersistenceTLASTraversalCounterMode);
+
+            SetToDefaultValue(kSettingPersistenceTLASRenderingMode);
+            SetToDefaultValue(kSettingPersistenceTLASShowGeometry);
+            SetToDefaultValue(kSettingPersistenceTLASShowAxisAlignedBVH);
+            SetToDefaultValue(kSettingPersistenceTLASShowInstanceTransform);
+            SetToDefaultValue(kSettingPersistenceTLASShowWireframe);
+
+            SetToDefaultValue(kSettingPersistenceTLASAcceptFirstHit);
+            SetToDefaultValue(kSettingPersistenceTLASCullBackFacingTriangles);
+            SetToDefaultValue(kSettingPersistenceTLASCullFrontFacingTriangles);
+
+            SetToDefaultValue(kSettingPersistenceTLASFieldOfView);
+            SetToDefaultValue(kSettingPersistenceTLASMovementSpeed);
+            break;
+
+        case rra::kPaneIdBlasViewer:
+            SetToDefaultValue(kSettingPersistenceBLASControlStyle);
+            SetToDefaultValue(kSettingPersistenceBLASBVHColoringMode);
+            SetToDefaultValue(kSettingPersistenceBLASGeometryColoringMode);
+            SetToDefaultValue(kSettingPersistenceBLASHeatmapColor);
+            SetToDefaultValue(kSettingPersistenceBLASTraversalCounterMode);
+
+            SetToDefaultValue(kSettingPersistenceBLASRenderingMode);
+            SetToDefaultValue(kSettingPersistenceBLASShowGeometry);
+            SetToDefaultValue(kSettingPersistenceBLASShowAxisAlignedBVH);
+            SetToDefaultValue(kSettingPersistenceBLASShowWireframe);
+
+            SetToDefaultValue(kSettingPersistenceBLASAcceptFirstHit);
+            SetToDefaultValue(kSettingPersistenceBLASCullBackFacingTriangles);
+            SetToDefaultValue(kSettingPersistenceBLASCullFrontFacingTriangles);
+
+            SetToDefaultValue(kSettingPersistenceBLASFieldOfView);
+            SetToDefaultValue(kSettingPersistenceBLASMovementSpeed);
+            break;
+
+        case rra::kPaneIdRayInspector:
+            SetToDefaultValue(kSettingPersistenceInspectorControlStyle);
+            SetToDefaultValue(kSettingPersistenceInspectorBVHColoringMode);
+            SetToDefaultValue(kSettingPersistenceInspectorGeometryColoringMode);
+            SetToDefaultValue(kSettingPersistenceInspectorHeatmapColor);
+            SetToDefaultValue(kSettingPersistenceInspectorTraversalCounterMode);
+
+            SetToDefaultValue(kSettingPersistenceInspectorRenderingMode);
+            SetToDefaultValue(kSettingPersistenceInspectorShowGeometry);
+            SetToDefaultValue(kSettingPersistenceInspectorLockCamera);
+            SetToDefaultValue(kSettingPersistenceInspectorShowAxisAlignedBVH);
+            SetToDefaultValue(kSettingPersistenceInspectorShowWireframe);
+
+            SetToDefaultValue(kSettingPersistenceInspectorAcceptFirstHit);
+            SetToDefaultValue(kSettingPersistenceInspectorCullBackFacingTriangles);
+            SetToDefaultValue(kSettingPersistenceInspectorCullFrontFacingTriangles);
+
+            SetToDefaultValue(kSettingPersistenceInspectorFieldOfView);
+            SetToDefaultValue(kSettingPersistenceInspectorMovementSpeed);
+            break;
+
+        default:
+            RRA_ASSERT_MESSAGE(false, "Invalid pane");
+            return;
+        }
+    }
+
     void Settings::SetPersistentUIToDefault()
     {
-        SetToDefaultValue(kSettingGeneralCullMode);
-        SetToDefaultValue(kSettingGeneralControlStyle);
-        SetToDefaultValue(kSettingGeneralUpAxis);           
-        SetToDefaultValue(kSettingGeneralInvertVertical);
-        SetToDefaultValue(kSettingGeneralInvertHorizontal);
-        SetToDefaultValue(kSettingGeneralTLASBVHColoringMode);
-        SetToDefaultValue(kSettingGeneralBLASBVHColoringMode);
-        SetToDefaultValue(kSettingGeneralTLASGeometryColoringMode);
-        SetToDefaultValue(kSettingGeneralBLASGeometryColoringMode);
-        SetToDefaultValue(kSettingGeneralTLASHeatmapColor);
-        SetToDefaultValue(kSettingGeneralBLASHeatmapColor);
-        SetToDefaultValue(kSettingGeneralTLASTraversalCounterMode);
-        SetToDefaultValue(kSettingGeneralBLASTraversalCounterMode);
+        // Shared currently.
+        SetToDefaultValue(kSettingPersistenceCullMode);
+        SetToDefaultValue(kSettingPersistenceUpAxis);
+        SetToDefaultValue(kSettingPersistenceInvertVertical);
+        SetToDefaultValue(kSettingPersistenceInvertHorizontal);
+        SetToDefaultValue(kSettingPersistenceProjectionMode);
+        SetToDefaultValue(kSettingPersistenceContinuousUpdate);
     }
 
     void Settings::SetBoolValue(SettingID setting_id, const bool value)
@@ -436,6 +639,12 @@ namespace rra
         SaveSettings();
     }
 
+    void Settings::SetPersistentUIState(const bool value)
+    {
+        SetBoolValue(kSettingGeneralPersistentUIState, value);
+        SaveSettings();
+    }
+
     void Settings::SetCheckBoxStatus(const SettingID setting_id, const bool value)
     {
         SetBoolValue(setting_id, value);
@@ -455,6 +664,17 @@ namespace rra
     bool Settings::GetCameraResetOnStyleChange() const
     {
         return GetBoolValue(kSettingGeneralCameraResetOnStyleChange);
+    }
+
+    bool Settings::GetCameraControlSync() const
+    {
+        // This feature has been sunset, not necessary after persistent settings patch.
+        return false;
+    }
+
+    bool Settings::GetPersistentUIState() const
+    {
+        return GetBoolValue(kSettingGeneralPersistentUIState);
     }
 
     TreeviewNodeIDType Settings::GetTreeviewNodeIdType() const
@@ -525,6 +745,15 @@ namespace rra
         SetToDefaultValue(kSettingThemesAndColorsInstanceOpaqueForceOpaque);
         SetToDefaultValue(kSettingThemesAndColorsInstanceOpaqueForceNoOpaque);
         SetToDefaultValue(kSettingThemesAndColorsInstanceOpaqueBoth);
+        SetToDefaultValue(kSettingThemesAndColorsInvocationRaygen);
+        SetToDefaultValue(kSettingThemesAndColorsInvocationClosestHit);
+        SetToDefaultValue(kSettingThemesAndColorsInvocationAnyHit);
+        SetToDefaultValue(kSettingThemesAndColorsInvocationIntersection);
+        SetToDefaultValue(kSettingThemesAndColorsInvocationMiss);
+        SetToDefaultValue(kSettingThemesAndColorsSelectedRayColor);
+        SetToDefaultValue(kSettingThemesAndColorsRayColor);
+        SetToDefaultValue(kSettingThemesAndColorsShadowRayColor);
+        SetToDefaultValue(kSettingThemesAndColorsZeroMaskRayColor);
 
         SaveSettings();
     }
@@ -588,149 +817,227 @@ namespace rra
         return GetIntValue(kSettingGeneralDecimalPrecision);
     }
 
-    // Viewer persistant settings. -------------------------------------
+    // Viewer persistent settings. -------------------------------------
+
+    SettingID Settings::GetSettingIndex(const SettingLookups& lut, rra::RRAPaneId pane, int index) const
+    {
+        const auto& it = lut.find(pane);
+        if (it != lut.end())
+        {
+            const auto& settings_map = (*it).second;
+            const auto& it2          = settings_map.find(index);
+            if (it2 != settings_map.end())
+            {
+                return (*it2).second;
+            }
+        }
+        RRA_ASSERT(false);
+        return kSettingCount;
+    }
+
+    SettingID Settings::GetSettingIndex(const Pane2SettingMap& lut, rra::RRAPaneId pane) const
+    {
+        const auto& it = lut.find(pane);
+        if (it != lut.end())
+        {
+            return (*it).second;
+        }
+        RRA_ASSERT(false);
+        return kSettingCount;
+    }
+
+    bool Settings::GetContinuousUpdateState() const
+    {
+        return GetBoolValue(kSettingPersistenceContinuousUpdate);
+    }
+
+    void Settings::SetContinuousUpdateState(bool state)
+    {
+        SetBoolValue(kSettingPersistenceContinuousUpdate, state);
+        SaveSettings();
+    }
 
     CullModeType Settings::GetCullMode() const
     {
-        return static_cast<CullModeType>(GetIntValue(kSettingGeneralCullMode));
+        return static_cast<CullModeType>(GetIntValue(kSettingPersistenceCullMode));
     }
 
     void Settings::SetCullMode(CullModeType cull_mode)
     {
-        SetIntValue(kSettingGeneralCullMode, cull_mode);
+        SetIntValue(kSettingPersistenceCullMode, cull_mode);
         SaveSettings();
     }
 
-    ControlStyleType Settings::GetControlStyle() const
+    int Settings::GetControlStyle(rra::RRAPaneId pane) const
     {
-        return static_cast<ControlStyleType>(GetIntValue(kSettingGeneralControlStyle));
+        // If camera controls are synced, we use TLAS settings for each pane.
+        SettingID setting_id = GetCameraControlSync() ? kSettingPersistenceTLASControlStyle : GetSettingIndex(pane_2_control_style, pane);
+        if (setting_id != kSettingCount)
+        {
+            return GetIntValue(setting_id);
+        }
+        RRA_ASSERT(false);
+        return 0;
     }
 
-    void Settings::SetControlStyle(ControlStyleType control_style_type)
+    void Settings::SetControlStyle(rra::RRAPaneId pane, ControlStyleType value)
     {
-        SetIntValue(kSettingGeneralControlStyle, control_style_type);
+        // If camera controls are synced, we use TLAS settings for each pane.
+        SettingID setting_id = GetCameraControlSync() ? kSettingPersistenceTLASControlStyle : GetSettingIndex(pane_2_control_style, pane);
+        if (setting_id != kSettingCount)
+        {
+            SetIntValue(setting_id, value);
+            SaveSettings();
+        }
+    }
+
+    ProjectionMode Settings::GetProjectionMode() const
+    {
+        return static_cast<ProjectionMode>(GetIntValue(kSettingPersistenceProjectionMode));
+    }
+
+    void Settings::SetProjectionMode(ProjectionMode projection_mode)
+    {
+        SetIntValue(kSettingPersistenceProjectionMode, projection_mode);
         SaveSettings();
     }
 
     UpAxisType Settings::GetUpAxis() const
     {
-        return static_cast<UpAxisType>(GetIntValue(kSettingGeneralUpAxis));
+        return static_cast<UpAxisType>(GetIntValue(kSettingPersistenceUpAxis));
     }
 
     void Settings::SetUpAxis(UpAxisType up_axis)
     {
-        SetIntValue(kSettingGeneralUpAxis, up_axis);
+        SetIntValue(kSettingPersistenceUpAxis, up_axis);
         SaveSettings();
     }
 
     bool Settings::GetInvertVertical() const
     {
-        return GetBoolValue(kSettingGeneralInvertVertical);
+        return GetBoolValue(kSettingPersistenceInvertVertical);
     }
 
     void Settings::SetInvertVertical(bool invert_vertical)
     {
-        SetBoolValue(kSettingGeneralInvertVertical, invert_vertical);
+        SetBoolValue(kSettingPersistenceInvertVertical, invert_vertical);
         SaveSettings();
     }
 
     bool Settings::GetInvertHorizontal() const
     {
-        return GetBoolValue(kSettingGeneralInvertHorizontal);
+        return GetBoolValue(kSettingPersistenceInvertHorizontal);
     }
 
     void Settings::SetInvertHorizontal(bool invert_horizontal)
     {
-        SetBoolValue(kSettingGeneralInvertHorizontal, invert_horizontal);
+        SetBoolValue(kSettingPersistenceInvertHorizontal, invert_horizontal);
         SaveSettings();
     }
 
-    renderer::BVHColoringMode Settings::GetTLASBVHColoringMode() const
+    int Settings::GetColoringMode(rra::RRAPaneId pane, ColoringMode color_mode) const
     {
-        return static_cast<renderer::BVHColoringMode>(GetIntValue(kSettingGeneralTLASBVHColoringMode));
+        SettingID index = GetSettingIndex(pane_color_maps, pane, color_mode);
+        if (index != kSettingCount)
+        {
+            return GetIntValue(index);
+        }
+        RRA_ASSERT(false);
+        return 0;
     }
 
-    void Settings::SetTLASBVHColoringMode(renderer::BVHColoringMode coloring_mode)
+    void Settings::SetColoringMode(rra::RRAPaneId pane, ColoringMode color_mode, int value)
     {
-        SetIntValue(kSettingGeneralTLASBVHColoringMode, (int)coloring_mode);
-        SaveSettings();
+        SettingID index = GetSettingIndex(pane_color_maps, pane, color_mode);
+        if (index != kSettingCount)
+        {
+            SetIntValue(index, value);
+            SaveSettings();
+        }
     }
 
-    renderer::BVHColoringMode Settings::GetBLASBVHColoringMode() const
+    int Settings::GetRenderingMode(rra::RRAPaneId pane) const
     {
-        return static_cast<renderer::BVHColoringMode>(GetIntValue(kSettingGeneralBLASBVHColoringMode));
+        SettingID index = GetSettingIndex(pane_2_rendering_mode, pane);
+        if (index != kSettingCount)
+        {
+            return GetIntValue(index);
+        }
+        RRA_ASSERT(false);
+        return 0;
     }
 
-    void Settings::SetBLASBVHColoringMode(renderer::BVHColoringMode coloring_mode)
+    void Settings::SetRenderingMode(rra::RRAPaneId pane, RenderingMode value)
     {
-        SetIntValue(kSettingGeneralBLASBVHColoringMode, (int)coloring_mode);
-        SaveSettings();
+        SettingID index = GetSettingIndex(pane_2_rendering_mode, pane);
+        if (index != kSettingCount)
+        {
+            SetIntValue(index, value);
+            SaveSettings();
+        }
     }
 
-    int Settings::GetTLASGeometryColoringMode() const
+    bool Settings::GetCheckboxSetting(rra::RRAPaneId pane, CheckboxSetting setting) const
     {
-        return GetIntValue(kSettingGeneralTLASGeometryColoringMode);
+        SettingID index = GetSettingIndex(pane_checkbox_maps, pane, setting);
+        if (index != kSettingCount)
+        {
+            return GetBoolValue(index);
+        }
+        RRA_ASSERT(false);
+        return true;
     }
 
-    void Settings::SetTLASGeometryColoringMode(int coloring_mode)
+    void Settings::SetCheckboxSetting(rra::RRAPaneId pane, CheckboxSetting setting, bool value)
     {
-        SetIntValue(kSettingGeneralTLASGeometryColoringMode, coloring_mode);
-        SaveSettings();
+        SettingID index = GetSettingIndex(pane_checkbox_maps, pane, setting);
+        if (index != kSettingCount)
+        {
+            SetBoolValue(index, value);
+            SaveSettings();
+        }
     }
 
-    int Settings::GetBLASGeometryColoringMode() const
+    int Settings::GetFieldOfView(rra::RRAPaneId pane) const
     {
-        return GetIntValue(kSettingGeneralBLASGeometryColoringMode);
+        SettingID index = GetSettingIndex(pane_2_fov, pane);
+        if (index != kSettingCount)
+        {
+            return GetIntValue(index);
+        }
+        RRA_ASSERT(false);
+        return 0;
     }
 
-    void Settings::SetBLASGeometryColoringMode(int coloring_mode)
+    void Settings::SetFieldOfView(rra::RRAPaneId pane, int value)
     {
-        SetIntValue(kSettingGeneralBLASGeometryColoringMode, coloring_mode);
-        SaveSettings();
+        SettingID index = GetSettingIndex(pane_2_fov, pane);
+        if (index != kSettingCount)
+        {
+            SetIntValue(index, value);
+            SaveSettings();
+        }
     }
 
-    HeatmapColorType Settings::GetTLASHeatmapColor() const
+    int Settings::GetMovementSpeed(rra::RRAPaneId pane) const
     {
-        return static_cast<HeatmapColorType>(GetIntValue(kSettingGeneralTLASHeatmapColor));
+        SettingID index = GetSettingIndex(pane_2_movement_speed, pane);
+        if (index != kSettingCount)
+        {
+            return GetIntValue(index);
+        }
+        RRA_ASSERT(false);
+        return 0;
     }
 
-    void Settings::SetTLASHeatmapColor(HeatmapColorType heatmap_color)
+    void Settings::SetMovementSpeed(rra::RRAPaneId pane, int value)
     {
-        SetIntValue(kSettingGeneralTLASHeatmapColor, (int)heatmap_color);
-        SaveSettings();
-    }
-
-    HeatmapColorType Settings::GetBLASHeatmapColor() const
-    {
-        return static_cast<HeatmapColorType>(GetIntValue(kSettingGeneralBLASHeatmapColor));
-    }
-
-    void Settings::SetBLASHeatmapColor(HeatmapColorType heatmap_color)
-    {
-        SetIntValue(kSettingGeneralBLASHeatmapColor, (int)heatmap_color);
-        SaveSettings();
-    }
-
-    int Settings::GetTLASTraversalCounterMode() const
-    {
-        return GetIntValue(kSettingGeneralTLASTraversalCounterMode);
-    }
-
-    void Settings::SetTLASTraversalCounterMode(int traversal_counter_mode)
-    {
-        SetIntValue(kSettingGeneralTLASTraversalCounterMode, (int)traversal_counter_mode);
-        SaveSettings();
-    }
-
-    int Settings::GetBLASTraversalCounterMode() const
-    {
-        return GetIntValue(kSettingGeneralBLASTraversalCounterMode);
-    }
-
-    void Settings::SetBLASTraversalCounterMode(int traversal_counter_mode)
-    {
-        SetIntValue(kSettingGeneralBLASTraversalCounterMode, traversal_counter_mode);
-        SaveSettings();
+        SettingID index = GetSettingIndex(pane_2_movement_speed, pane);
+        if (index != kSettingCount)
+        {
+            SetIntValue(index, value);
+            SaveSettings();
+        }
     }
 
 }  // namespace rra

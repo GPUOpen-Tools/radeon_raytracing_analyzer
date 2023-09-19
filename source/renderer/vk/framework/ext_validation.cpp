@@ -46,7 +46,10 @@ namespace rra
             RRA_UNUSED(layer_prefix);
             RRA_UNUSED(usage_data);
 
-            RraPrint("%s\n", message);
+            if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+            {
+                RraPrint("%s\n\n", message);
+            }
             return VK_FALSE;
         }
 

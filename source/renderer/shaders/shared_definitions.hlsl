@@ -59,6 +59,11 @@ struct SceneUBO
     float4 instance_opaque_force_no_opaque_color;
     float4 instance_opaque_force_both_color;
 
+    float4 selected_ray_color;
+    float4 ray_color;
+    float4 shadow_ray_color;
+    float4 zero_mask_ray_color;
+
     float ortho_scale;
 
     int max_instance_count;
@@ -79,7 +84,7 @@ struct SceneUBO
     int   traversal_counter_mode;
     int   traversal_counter_use_custom_min_max;
 
-    int  wireframe_enabled;
+    int wireframe_enabled;
 
     uint traversal_box_sort_heuristic;
     int  traversal_accept_first_hit;

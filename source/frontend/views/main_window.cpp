@@ -7,7 +7,6 @@
 
 #include "views/main_window.h"
 
-#include <QDesktopWidget>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QMimeData>
@@ -26,6 +25,7 @@
 #include "managers/trace_manager.h"
 #include "views/overview/device_configuration_pane.h"
 #include "views/overview/summary_pane.h"
+#include "views/ray/ray_history_pane.h"
 #include "views/settings/settings_pane.h"
 #include "views/settings/themes_and_colors_pane.h"
 #include "views/settings/keyboard_shortcuts_pane.h"
@@ -95,10 +95,13 @@ MainWindow::MainWindow(QWidget* parent)
     pane_manager_.AddPane(ui_->blas_triangles_tab_);
     pane_manager_.AddPane(ui_->blas_geometries_tab_);
     pane_manager_.AddPane(ui_->blas_properties_tab_);
+    pane_manager_.AddPane(ui_->ray_history_tab_);
+    pane_manager_.AddPane(ui_->ray_inspector_tab_);
 
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneOverview, false);
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneTlas, false);
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneBlas, false);
+    ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneRay, false);
 
     SetupTabBar();
     CreateActions();
@@ -119,6 +122,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui_->overview_list_, &QListWidget::currentRowChanged, &pane_manager_, &rra::PaneManager::UpdateOverviewListRow);
     connect(ui_->tlas_sub_tab_, &QTabWidget::currentChanged, &pane_manager_, &rra::PaneManager::UpdateTlasListIndex);
     connect(ui_->blas_sub_tab_, &QTabWidget::currentChanged, &pane_manager_, &rra::PaneManager::UpdateBlasListIndex);
+    connect(ui_->ray_sub_tab_, &QTabWidget::currentChanged, &pane_manager_, &rra::PaneManager::UpdateRayListIndex);
     connect(ui_->settings_list_, &QListWidget::currentRowChanged, &pane_manager_, &rra::PaneManager::UpdateSettingsListRow);
     connect(ui_->main_tab_widget_, &QTabWidget::currentChanged, &pane_manager_, &rra::PaneManager::UpdateMainTabIndex);
 
@@ -126,6 +130,12 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui_->start_list_, &QListWidget::currentRowChanged, ui_->start_stack_, &QStackedWidget::setCurrentIndex);
     connect(ui_->overview_list_, &QListWidget::currentRowChanged, ui_->overview_stack_, &QStackedWidget::setCurrentIndex);
     connect(ui_->settings_list_, &QListWidget::currentRowChanged, ui_->settings_stack_, &QStackedWidget::setCurrentIndex);
+
+    // Update the Reset UI button visibility on the required panes. Main tab widget needs connecting as well as the subtabs containing viewers.
+    connect(ui_->tlas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
+    connect(ui_->blas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
+    connect(ui_->ray_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
+    connect(ui_->main_tab_widget_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
 
     connect(&rra::MessageManager::Get(), &rra::MessageManager::OpenTraceFileMenuClicked, this, &MainWindow::OpenTraceFromFileMenu);
     connect(recent_traces_pane, &RecentTracesPane::RecentFileDeleted, this, &MainWindow::SetupRecentTracesMenu);
@@ -142,6 +152,14 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(&rra::MessageManager::Get(), &rra::MessageManager::GraphicsContextFailedToInitialize, this, &MainWindow::OnGraphicsContextFailedToInitialize);
 
+    // Add a reset UI button to the right side of the TLAS, BLAS and RAY tab bar
+    auto* reset_tlas_ui_state = CreateUIResetButton();
+    ui_->tlas_sub_tab_->setCornerWidget(reset_tlas_ui_state);
+    auto* reset_blas_ui_state = CreateUIResetButton();
+    ui_->blas_sub_tab_->setCornerWidget(reset_blas_ui_state);
+    auto* reset_ray_ui_state = CreateUIResetButton();
+    ui_->ray_sub_tab_->setCornerWidget(reset_ray_ui_state);
+
 #ifdef BETA_LICENSE
     // Setup license dialog signal/slots.
     connect(license_dialog_, &LicenseDialog::AgreeToLicense, this, &MainWindow::AgreedToLicense);
@@ -152,6 +170,10 @@ MainWindow::~MainWindow()
 {
     disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MainWindow::OnScaleFactorChanged);
 
+    disconnect(ui_->tlas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
+    disconnect(ui_->blas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
+    disconnect(ui_->ray_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
+
 #ifdef BETA_LICENSE
     delete license_dialog_;
 #endif  // BETA_LICENSE
@@ -161,6 +183,55 @@ MainWindow::~MainWindow()
 void MainWindow::OnScaleFactorChanged()
 {
     ResizeNavigationLists();
+    ResizeNavigationLists();
+}
+
+RraIconButton* MainWindow::CreateUIResetButton()
+{
+    RraIconButton* reset_ui_state = new RraIconButton(this);
+
+    QIcon icon;
+    icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    reset_ui_state->SetNormalIcon(icon);
+
+    QIcon hover_icon;
+    hover_icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-hover.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    reset_ui_state->SetHoverIcon(hover_icon);
+
+    reset_ui_state->setBaseSize(QSize(32, 32));
+    reset_ui_state->setFlat(true);
+    reset_ui_state->setToolTip("Reset the UI to its default state.");
+
+    connect(reset_ui_state, &ScaledPushButton::clicked, [=]() {
+        const auto& pane = pane_manager_.GetCurrentPane();
+        rra::Settings::Get().SetPersistentUIToDefault(pane);
+        rra::Settings::Get().SetPersistentUIToDefault();
+        emit rra::MessageManager::Get().ResetUIState(pane);
+    });
+    return reset_ui_state;
+}
+
+void MainWindow::UpdateResetButtons()
+{
+    const auto& pane = pane_manager_.GetCurrentPane();
+
+    QWidget* widget = ui_->tlas_sub_tab_->cornerWidget();
+    if (widget)
+    {
+        widget->setVisible(pane == rra::kPaneIdTlasViewer);
+    }
+
+    widget = ui_->blas_sub_tab_->cornerWidget();
+    if (widget)
+    {
+        widget->setVisible(pane == rra::kPaneIdBlasViewer);
+    }
+
+    widget = ui_->ray_sub_tab_->cornerWidget();
+    if (widget)
+    {
+        widget->setVisible(pane == rra::kPaneIdRayInspector);
+    }
 }
 
 void MainWindow::OnGraphicsContextFailedToInitialize(const QString& failure_message)
@@ -278,49 +349,48 @@ void MainWindow::SetupWindowRects(bool loaded_settings)
 #endif  // RRA_DEBUG_WINDOW
 }
 
-void MainWindow::SetupHotkeyNavAction(QSignalMapper* mapper, int key, int pane)
+void MainWindow::SetupHotkeyNavAction(int key, int pane)
 {
     QAction* action = new QAction(this);
     action->setShortcut(key | Qt::ALT);
 
-    connect(action, SIGNAL(triggered()), mapper, SLOT(map()));
     this->addAction(action);
-    mapper->setMapping(action, pane);
+    connect(action, &QAction::triggered, [=]() { ViewPane(pane); });
 }
 
 void MainWindow::CreateActions()
 {
-    QSignalMapper* signal_mapper = new QSignalMapper(this);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoOverviewSummaryPane, rra::kPaneIdOverviewSummary);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoOverviewDeviceConfigPane, rra::kPaneIdOverviewDeviceConfig);
+    SetupHotkeyNavAction(rra::kGotoOverviewSummaryPane, rra::kPaneIdOverviewSummary);
+    SetupHotkeyNavAction(rra::kGotoOverviewDeviceConfigPane, rra::kPaneIdOverviewDeviceConfig);
 
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoTlasViewerPane, rra::kPaneIdTlasViewer);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoTlasInstancesPane, rra::kPaneIdTlasInstances);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoTlasBlasListPane, rra::kPaneIdTlasBlasList);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoTlasPropertiesPane, rra::kPaneIdTlasProperties);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasViewerPane, rra::kPaneIdBlasViewer);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasInstancesPane, rra::kPaneIdBlasInstances);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasTrianglesPane, rra::kPaneIdBlasTriangles);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasGeometriesPane, rra::kPaneIdBlasGeometries);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoBlasPropertiesPane, rra::kPaneIdBlasProperties);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoWelcomePane, rra::kPaneIdStartWelcome);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoRecentTracesPane, rra::kPaneIdStartRecentTraces);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoAboutPane, rra::kPaneIdStartAbout);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoGeneralSettingsPane, rra::kPaneIdSettingsGeneral);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoThemesAndColorsPane, rra::kPaneIdSettingsThemesAndColors);
-    SetupHotkeyNavAction(signal_mapper, rra::kGotoKeyboardShortcutsPane, rra::kPaneIdSettingsKeyboardShortcuts);
+    SetupHotkeyNavAction(rra::kGotoTlasViewerPane, rra::kPaneIdTlasViewer);
+    SetupHotkeyNavAction(rra::kGotoTlasInstancesPane, rra::kPaneIdTlasInstances);
+    SetupHotkeyNavAction(rra::kGotoTlasBlasListPane, rra::kPaneIdTlasBlasList);
+    SetupHotkeyNavAction(rra::kGotoTlasPropertiesPane, rra::kPaneIdTlasProperties);
+    SetupHotkeyNavAction(rra::kGotoBlasViewerPane, rra::kPaneIdBlasViewer);
+    SetupHotkeyNavAction(rra::kGotoBlasInstancesPane, rra::kPaneIdBlasInstances);
+    SetupHotkeyNavAction(rra::kGotoBlasTrianglesPane, rra::kPaneIdBlasTriangles);
+    SetupHotkeyNavAction(rra::kGotoBlasGeometriesPane, rra::kPaneIdBlasGeometries);
+    SetupHotkeyNavAction(rra::kGotoBlasPropertiesPane, rra::kPaneIdBlasProperties);
+    SetupHotkeyNavAction(rra::kGotoRayHistoryPane, rra::kPaneIdRayHistory);
+    SetupHotkeyNavAction(rra::kGotoRayInspectorPane, rra::kPaneIdRayInspector);
 
-    connect(signal_mapper, SIGNAL(mapped(int)), this, SLOT(ViewPane(int)));
+    SetupHotkeyNavAction(rra::kGotoWelcomePane, rra::kPaneIdStartWelcome);
+    SetupHotkeyNavAction(rra::kGotoRecentTracesPane, rra::kPaneIdStartRecentTraces);
+    SetupHotkeyNavAction(rra::kGotoAboutPane, rra::kPaneIdStartAbout);
+    SetupHotkeyNavAction(rra::kGotoGeneralSettingsPane, rra::kPaneIdSettingsGeneral);
+    SetupHotkeyNavAction(rra::kGotoThemesAndColorsPane, rra::kPaneIdSettingsThemesAndColors);
+    SetupHotkeyNavAction(rra::kGotoKeyboardShortcutsPane, rra::kPaneIdSettingsKeyboardShortcuts);
 
     // Set up forward/backward navigation.
     QAction* shortcut = new QAction(this);
-    shortcut->setShortcut(Qt::ALT | rra::kKeyNavForwardArrow);
+    shortcut->setShortcut(QKeySequence(Qt::ALT | rra::kKeyNavForwardArrow));
 
     connect(shortcut, &QAction::triggered, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateForward);
     this->addAction(shortcut);
 
     shortcut = new QAction(this);
-    shortcut->setShortcut(Qt::ALT | rra::kKeyNavBackwardArrow);
+    shortcut->setShortcut(QKeySequence(Qt::ALT | rra::kKeyNavBackwardArrow));
 
     connect(shortcut, &QAction::triggered, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateBack);
     this->addAction(shortcut);
@@ -347,7 +417,7 @@ void MainWindow::CreateActions()
     for (int i = 0; i < kMaxSubmenuTraces; i++)
     {
         recent_trace_actions_.push_back(new QAction("", this));
-        recent_trace_mappers_.push_back(new QSignalMapper());
+        recent_trace_connections_.push_back(QMetaObject::Connection());
     }
 
     help_action_ = new QAction(tr("Help"), this);
@@ -361,15 +431,14 @@ void MainWindow::CreateActions()
 
 void MainWindow::SetupRecentTracesMenu()
 {
-    for (int i = 0; i < recent_trace_mappers_.size(); i++)
+    const QVector<RecentFileData>& files = rra::Settings::Get().RecentFiles();
+
+    for (int i = 0; i < recent_trace_connections_.size(); i++)
     {
-        disconnect(recent_trace_actions_[i], SIGNAL(triggered(bool)), recent_trace_mappers_[i], SLOT(map()));
-        disconnect(recent_trace_mappers_[i], SIGNAL(mapped(QString)), this, SLOT(LoadTrace(QString)));
+        disconnect(recent_trace_connections_[i]);
     }
 
     recent_traces_menu_->clear();
-
-    const QVector<RecentFileData>& files = rra::Settings::Get().RecentFiles();
 
     const int num_items = (files.size() > kMaxSubmenuTraces) ? kMaxSubmenuTraces : files.size();
 
@@ -379,11 +448,7 @@ void MainWindow::SetupRecentTracesMenu()
 
         recent_traces_menu_->addAction(recent_trace_actions_[i]);
 
-        connect(recent_trace_actions_[i], SIGNAL(triggered(bool)), recent_trace_mappers_[i], SLOT(map()));
-
-        recent_trace_mappers_[i]->setMapping(recent_trace_actions_[i], files[i].path);
-
-        connect(recent_trace_mappers_[i], SIGNAL(mapped(QString)), this, SLOT(LoadTrace(QString)));
+        recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=]() { LoadTrace(files[i].path); });
     }
 
     emit rra::MessageManager::Get().RecentFileListChanged();
@@ -420,6 +485,19 @@ void MainWindow::OpenTrace()
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneOverview, true);
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneTlas, true);
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneBlas, true);
+    ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneRay, true);
+
+    // Determine if ray history is present.
+    uint32_t     dispatch_count = 0;
+    RraErrorCode status         = RraRayGetDispatchCount(&dispatch_count);
+    if (status == kRraOk && dispatch_count > 0)
+    {
+        ui_->ray_history_valid_switch_->setCurrentIndex(1);
+    }
+    else
+    {
+        ui_->ray_history_valid_switch_->setCurrentIndex(0);
+    }
 
     pane_manager_.OnTraceOpen();
 
@@ -480,11 +558,13 @@ void MainWindow::ResetUI()
     ui_->overview_list_->setCurrentRow(nav_location.overview_list_row);
     ui_->tlas_sub_tab_->setCurrentIndex(nav_location.tlas_list_row);
     ui_->blas_sub_tab_->setCurrentIndex(nav_location.blas_list_row);
+    ui_->ray_sub_tab_->setCurrentIndex(nav_location.ray_list_row);
     ui_->settings_list_->setCurrentRow(nav_location.settings_list_row);
 
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneOverview, false);
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneTlas, false);
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneBlas, false);
+    ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneRay, false);
 
     UpdateTitlebar();
     pane_manager_.Reset();
@@ -594,10 +674,13 @@ rra::RRAPaneId MainWindow::SetupNextPane(rra::RRAPaneId pane)
     ui_->overview_list_->setCurrentRow(nav_location->overview_list_row);
     ui_->tlas_sub_tab_->setCurrentIndex(nav_location->tlas_list_row);
     ui_->blas_sub_tab_->setCurrentIndex(nav_location->blas_list_row);
+    ui_->ray_sub_tab_->setCurrentIndex(nav_location->ray_list_row);
     ui_->settings_list_->setCurrentRow(nav_location->settings_list_row);
     ui_->main_tab_widget_->setCurrentIndex(nav_location->main_tab_index);
 
-    return (pane_manager_.UpdateCurrentPane());
+    rra::RRAPaneId current_pane = pane_manager_.UpdateCurrentPane();
+    UpdateResetButtons();
+    return current_pane;
 }
 
 void MainWindow::ViewPane(int pane)

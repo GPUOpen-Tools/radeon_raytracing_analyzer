@@ -162,6 +162,8 @@ namespace rra
                 return QString::number(cache.avg_depth);
             case kBlasListColumnBlasIndex:
                 return QString::number(cache.blas_index);
+            case kBlasListColumnPadding:
+                return QString{""};
             default:
                 break;
             }
@@ -248,6 +250,8 @@ namespace rra
                 return QVariant::fromValue<uint32_t>(cache.avg_depth);
             case kBlasListColumnBlasIndex:
                 return QVariant::fromValue<uint64_t>(cache.blas_index);
+            case kBlasListColumnPadding:
+                return QVariant();
             default:
                 break;
             }
@@ -306,6 +310,8 @@ namespace rra
                     return "Avg. depth";
                 case kBlasListColumnBlasIndex:
                     return "BLAS index";
+                case kBlasListColumnPadding:
+                    return "";
                 default:
                     break;
                 }
@@ -385,6 +391,10 @@ namespace rra
                 default:
                     break;
                 }
+            }
+            else if (role == Qt::TextAlignmentRole)
+            {
+                return Qt::AlignRight;
             }
         }
 

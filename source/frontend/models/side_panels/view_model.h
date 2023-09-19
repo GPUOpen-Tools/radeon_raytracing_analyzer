@@ -11,6 +11,7 @@
 #include "side_panel_model.h"
 #include "public/view_state_adapter.h"
 #include "io/camera_controllers.h"
+#include "managers/pane_manager.h"
 
 namespace rra
 {
@@ -63,7 +64,7 @@ namespace rra
 
     constexpr float kDefaultSpeedDiagonalMultiplier = 0.25f;     ///< The default speed is this multiple of the scene bounding volume diagonal.
     constexpr float kMinimumMovementSpeedMultiplier = 0.00005f;  ///< The minimum movement speed is this multiple of the maximum movement speed.
-    const int32_t   kMovementSliderMaximum          = 1000;      ///< The number of tick marks on the slider, essentially.
+    const int32_t   kMovementSliderMaximum          = 1000000;   ///< The number of tick marks on the slider, essentially.
 
     /// @brief The View model class declaration.
     class ViewModel : public SidePanelModel
@@ -143,7 +144,7 @@ namespace rra
         void ToggleTraversalCounterContinuousUpdate(std::function<void(uint32_t min, uint32_t max)> update_function);
 
         /// @brief Sets the histogram data update function to populate histogram from traversal counter.
-        /// 
+        ///
         /// @param [in] update_function The callback to use after the traversal shader runs to populate histogram.
         /// @param [in] traversal_max_setting The maximum traversal count set in the settings.
         void SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function, uint32_t traversal_max_setting);
@@ -189,20 +190,32 @@ namespace rra
         /// @return The camera controller orientation;
         const ViewerIOOrientation& GetCameraControllerOrientation() const;
 
+        /// @brief Set the field of view from the field of view slider value.
+        ///
+        /// The slider value is scaled to the correct FOV, in degrees.
+        ///
+        /// @param [in] slider_value The field of view slider value.
+        float SetFieldOfViewFromSlider(int slider_value);
+
         /// @brief Set the field of view.
         ///
-        /// @param [in] value The field of view.
-        void SetFieldOfView(int value);
+        /// @param [in] fov The field of view value, in degrees.
+        void SetFieldOfView(int fov);
 
         /// @brief Set the near place.
         ///
         /// @param [in] value The near plane value.
         void SetNearPlane(int value);
 
+        /// @brief Set the movement speed multiplier from the slider value.
+        ///
+        /// @param [in] slider_value The movement speed multiplier.
+        float SetMovementSpeedFromSlider(int slider_value);
+
         /// @brief Set the movement speed multiplier.
         ///
-        /// @param [in] value The movement speed multiplier.
-        void SetMovementSpeed(int value);
+        /// @param [in] speed The movement speed multiplier.
+        void SetMovementSpeed(float speed);
 
         /// @brief Set the control style.
         ///
@@ -269,7 +282,8 @@ namespace rra
         /// @brief Set camera parameters based on common data.
         ///
         /// @param [in] controller_changed Flag indicating if the camera controller has changed.
-        void SetCameraControllerParameters(bool controller_changed);
+        /// @param [in] pane_id            The pane id that the camera parameters were changed on.
+        void SetCameraControllerParameters(bool controller_changed, rra::RRAPaneId pane_id);
 
         /// @brief Set heatmap update callback.
         ///
@@ -290,6 +304,24 @@ namespace rra
         ///
         /// @return The box sort heuristic name.
         QString GetBoxSortHeuristicName();
+
+        /// @brief Set whether or not the camera state should persist when switching to and from inspector.
+        ///
+        /// @param locked If true, camera state will persist.
+        void SetCameraLock(bool locked);
+
+        /// @brief Get whether or not the camera state should persist when switching to and from inspector.
+        ///
+        /// @return Whether or not the camera is locked.
+        bool GetCameraLock() const;
+
+        /// @brief Set the parent pane id.
+        /// @param [in] pane_id The id to update with.
+        void SetParentPaneId(rra::RRAPaneId pane_id);
+
+        /// @brief Get the parent pane id.
+        /// @return The parent pane id.
+        rra::RRAPaneId GetParentPaneId() const;
 
     private:
         /// @brief Convert a movement speed slider value to a valid range-clamped movement speed value.
@@ -317,14 +349,17 @@ namespace rra
             rra::ViewerIOOrientation orientation;
         };
 
-        rra::renderer::ViewStateAdapter*                view_state_adapter_   = nullptr;     ///< The adapter used to alter the view state.
-        rra::renderer::RenderStateAdapter*              render_state_adapter_ = nullptr;     ///< The adapter used to toggle mesh render states.
-        CameraControllers                               camera_controllers_   = {};          ///< The camera controllers object to manage camera controllers.
-        ViewerIO*                                       current_controller_   = nullptr;     ///< The camera controller currently in use.
-        static CameraUIControls                         camera_controls_;                    ///< The camera controls shared by all instances of this class.
+        rra::renderer::ViewStateAdapter*                view_state_adapter_      = nullptr;  ///< The adapter used to alter the view state.
+        rra::renderer::RenderStateAdapter*              render_state_adapter_    = nullptr;  ///< The adapter used to toggle mesh render states.
+        CameraControllers                               camera_controllers_      = {};       ///< The camera controllers object to manage camera controllers.
+        ViewerIO*                                       current_controller_      = nullptr;  ///< The camera controller currently in use.
+        CameraUIControls                                camera_controls_         = {};       ///< The camera controls shared by all instances of this class.
         std::function<void(rra::renderer::HeatmapData)> heatmap_update_callback_ = nullptr;  ///< The heatmap update callback.
         float                                           movement_speed_minimum_  = {};       ///< The minimum movement speed. Set from settings.
         float                                           movement_speed_maximum_  = {};       ///< The maximum movement speed. Set from settings.
+        bool                                            camera_lock_ = false;  ///< Persist camera position when selected dispatch coordinate changes.
+
+        rra::RRAPaneId parent_pane_id_ = rra::RRAPaneId::kPaneIdInvalid;  ///< The parent pane id that this model belongs to.
     };
 }  // namespace rra
 

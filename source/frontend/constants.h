@@ -50,6 +50,9 @@ namespace rra
     static const int  kQtTooltipFloatPrecision = 7;    ///< Decimal place precision for tooltip of printed floating point values.
     static const char kQtFloatFormat           = 'f';  ///< Floating point format specifier.
 
+    /// @brief Resolution of texture heatmap is sampled from.
+    static const int kHeatmapResolution = 1000;
+
     namespace text
     {
         // @brief Delete recent file pop up dialog.
@@ -80,9 +83,9 @@ namespace rra
         static const QString kRRATraceFileExtension = ".rra";
 
         // @brief Help file locations.
-        static const QString kTraceHelpFile       = "/docs/help/rdp/html/index.html";
-        static const QString kHelpFile            = "/docs/help/rra/html/index.html";
-        static const QString kLicenseFile         = "/License.txt";
+        static const QString kTraceHelpFile       = "/help/rdp/index.html";
+        static const QString kHelpFile            = "/help/rra/index.html";
+        static const QString kLicenseFile         = "/LICENSE.txt";
         static const QString kSampleTraceLocation = "/samples/sample_trace" + kRRATraceFileExtension;
         static const QString kFileOpenFileTypes = "RRA trace files (*" + kRRATraceFileExtension + ")";
         static const QString kMissingHelpFile = "Missing RRA help file: ";
@@ -92,6 +95,8 @@ namespace rra
         static const QUrl kRraGithubUrl              = QUrl("https://github.com/GPUOpen-Tools/radeon_raytracing_analyzer");
         static const QUrl kRgpGpuOpenUrl             = QUrl("https://gpuopen.com/rgp/");
         static const QUrl kRgaGpuOpenUrl             = QUrl("https://gpuopen.com/rga/");
+        static const QUrl kRgdGpuOpenUrl             = QUrl("https://gpuopen.com/radeon-gpu-detective/");
+        static const QUrl kRmvGpuOpenUrl             = QUrl("https://gpuopen.com/rmv/");
         static const QUrl kRdnaPerformanceGpuOpenUrl = QUrl("https://gpuopen.com/performance/");
 
         // @brief Treeview node ID selection types in the settings.
@@ -114,6 +119,17 @@ namespace rra
     {
         // @brief Stylesheet resource.
         static const QString kStylesheet = ":/Resources/stylesheet.qss";
+
+        // Zoom in/out svg resources.
+        static const QString kZoomInEnabled   = ":/Resources/assets/zoom_in.svg";
+        static const QString kZoomOutEnabled  = ":/Resources/assets/zoom_out.svg";
+        static const QString kZoomInDisabled  = ":/Resources/assets/zoom_in_disabled.svg";
+        static const QString kZoomOutDisabled = ":/Resources/assets/zoom_out_disabled.svg";
+
+        static const QString kZoomToSelectionEnabled  = ":/Resources/assets/zoom_to_selection.svg";
+        static const QString kZoomResetEnabled        = ":/Resources/assets/zoom_reset.svg";
+        static const QString kZoomToSelectionDisabled = ":/Resources/assets/zoom_to_selection_disabled.svg";
+        static const QString kZoomResetDisabled       = ":/Resources/assets/zoom_reset_disabled.svg";
 
     }  // namespace resource
 }  // namespace rra

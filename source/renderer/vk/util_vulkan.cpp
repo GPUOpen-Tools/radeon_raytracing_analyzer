@@ -16,10 +16,12 @@
 #include "util_vulkan.h"
 
 #include "public/rra_assert.h"
+#include "public/rra_print.h"
 
 #include "framework/device.h"
 
 #include "vk/vk_graphics_context.h"
+#include "vk/framework/ext_debug_utils.h"
 
 namespace rra
 {
@@ -100,6 +102,7 @@ namespace rra
 
                 VkResult create_result = vkCreateShaderModule(device->GetDevice(), &module_create_info, nullptr, &shader_module);
                 CheckResult(create_result, "Shader module creation failed.");
+                SetObjectName(device->GetDevice(), VK_OBJECT_TYPE_SHADER_MODULE, (uint64_t)shader_module, shader_file_path);
 
                 delete[] shader_code;
             }

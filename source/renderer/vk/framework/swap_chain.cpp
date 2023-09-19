@@ -186,12 +186,12 @@ namespace rra
             {
             case RenderPassHint::kRenderPassHintClearColorAndDepth:
                 return render_pass_clear_color_and_depth_;
-            case RenderPassHint::kRenderPassHintClearColorOnly:
-                return render_pass_clear_color_only_;
             case RenderPassHint::kRenderPassHintClearDepthOnly:
                 return render_pass_clear_depth_only_;
             case RenderPassHint::kRenderPassHintClearNone:
                 return render_pass_clear_none_;
+            case RenderPassHint::kRenderPassHintClearNoneDepthInput:
+                return render_pass_clear_none_depth_input_;
             case RenderPassHint::kRenderPassHintResolve:
                 return render_pass_resolve_;
             default:
@@ -205,12 +205,12 @@ namespace rra
             {
             case RenderPassHint::kRenderPassHintClearColorAndDepth:
                 return frame_buffers_clear_color_and_depth_[image_index];
-            case RenderPassHint::kRenderPassHintClearColorOnly:
-                return frame_buffers_clear_color_only_[image_index];
             case RenderPassHint::kRenderPassHintClearDepthOnly:
                 return frame_buffers_clear_depth_only_[image_index];
             case RenderPassHint::kRenderPassHintClearNone:
                 return frame_buffers_clear_none_[image_index];
+            case RenderPassHint::kRenderPassHintClearNoneDepthInput:
+                return frame_buffers_clear_none_depth_input_[image_index];
             case RenderPassHint::kRenderPassHintResolve:
                 return frame_buffers_resolve_[image_index];
             default:
@@ -299,19 +299,6 @@ namespace rra
             VkDevice         device_handle  = device_->GetDevice();
             VkPhysicalDevice physicaldevice = device_->GetPhysicalDevice();
 
-            // Destroy and re-create all resources they rely on a specific rendering resolution, since it has just changed.
-            DestroyRenderPass();
-
-            DestroyColorImage();
-
-            DestroyDepthStencil();
-
-            CreateColorImage();
-
-            CreateDepthStencil();
-
-            CreateRenderPass();
-
             // Get the surface capabilities.
             VkSurfaceCapabilitiesKHR surface_capabilities = {};
 
@@ -336,6 +323,19 @@ namespace rra
             {
                 swapchain_extent_.height = surface_capabilities.maxImageExtent.height;
             }
+
+            // Destroy and re-create all resources they rely on a specific rendering resolution, since it has just changed.
+            DestroyRenderPass();
+
+            DestroyColorImage();
+
+            DestroyDepthStencil();
+
+            CreateColorImage();
+
+            CreateDepthStencil();
+
+            CreateRenderPass();
 
             // Set identity transform.
             VkSurfaceTransformFlagBitsKHR pre_ptransform = (surface_capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
@@ -465,6 +465,19 @@ namespace rra
                 depth_stencil_.image      = VK_NULL_HANDLE;
                 depth_stencil_.allocation = VK_NULL_HANDLE;
             }
+
+            if (geometry_depth_copy_.view != VK_NULL_HANDLE)
+            {
+                vkDestroyImageView(device_->GetDevice(), geometry_depth_copy_.view, nullptr);
+                geometry_depth_copy_.view = VK_NULL_HANDLE;
+            }
+
+            if (geometry_depth_copy_.image != VK_NULL_HANDLE)
+            {
+                vmaDestroyImage(device_->GetAllocator(), geometry_depth_copy_.image, geometry_depth_copy_.allocation);
+                geometry_depth_copy_.image = VK_NULL_HANDLE;
+                geometry_depth_copy_.allocation = VK_NULL_HANDLE;
+            }
         }
 
         void SwapChain::CreateColorImage()
@@ -513,7 +526,7 @@ namespace rra
             image_create_info.arrayLayers       = 1;
             image_create_info.samples           = msaa_samples_;
             image_create_info.tiling            = VK_IMAGE_TILING_OPTIMAL;
-            image_create_info.usage             = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+            image_create_info.usage             = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
             VmaAllocationCreateInfo alloc_info = {};
             alloc_info.usage                   = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -521,6 +534,12 @@ namespace rra
             VkResult create_result =
                 vmaCreateImage(device_->GetAllocator(), &image_create_info, &alloc_info, &depth_stencil_.image, &depth_stencil_.allocation, nullptr);
             CheckResult(create_result, "Failed to create depth stencil image.");
+
+            image_create_info.usage = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+            create_result = vmaCreateImage(
+                device_->GetAllocator(), &image_create_info, &alloc_info, &geometry_depth_copy_.image, &geometry_depth_copy_.allocation, nullptr);
+            CheckResult(create_result, "Failed to create depth input attachment image.");
 
             VkImageViewCreateInfo image_view_create_info           = {};
             image_view_create_info.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -541,19 +560,36 @@ namespace rra
 
             create_result = vkCreateImageView(device_->GetDevice(), &image_view_create_info, nullptr, &depth_stencil_.view);
             CheckResult(create_result, "Failed to create depth stencil image view.");
+
+            image_view_create_info.image                       = geometry_depth_copy_.image;
+            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+            create_result = vkCreateImageView(device_->GetDevice(), &image_view_create_info, nullptr, &geometry_depth_copy_.view);
+            CheckResult(create_result, "Failed to create depth input attachment image view.");
         }
 
         void SwapChain::CreateRenderPass()
         {
             // Regular render passes.
             {
+                enum AttachmentIndexType
+                {
+                    kAttachmentIndexColor,
+                    kAttachmentIndexDepthOut,
+                    kAttachmentIndexDepthInput,
+                };
+
                 VkAttachmentReference color_reference = {};
-                color_reference.attachment            = 0;
+                color_reference.attachment            = kAttachmentIndexColor;
                 color_reference.layout                = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
                 VkAttachmentReference depth_reference = {};
-                depth_reference.attachment            = 1;
+                depth_reference.attachment            = kAttachmentIndexDepthOut;
                 depth_reference.layout                = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+                VkAttachmentReference depth_input_reference = {};
+                depth_input_reference.attachment            = kAttachmentIndexDepthInput;
+                depth_input_reference.layout                = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
                 VkSubpassDescription subpass_description    = {};
                 subpass_description.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -565,6 +601,10 @@ namespace rra
                 subpass_description.preserveAttachmentCount = 0;
                 subpass_description.pPreserveAttachments    = nullptr;
                 subpass_description.pResolveAttachments     = nullptr;
+
+                VkSubpassDescription subpass_depth_input_description{subpass_description};
+                subpass_depth_input_description.inputAttachmentCount = 1;
+                subpass_depth_input_description.pInputAttachments    = &depth_input_reference;
 
                 // Subpass dependencies for layout transitions.
                 std::array<VkSubpassDependency, 3> dependencies;
@@ -593,21 +633,38 @@ namespace rra
                 dependencies[2].dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
                 dependencies[2].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-                std::array<VkAttachmentDescription, 2> attachments = {};
-
                 // Color attachment.
-                attachments[0].format         = swapchain_format_.format;
-                attachments[0].samples        = msaa_samples_;
-                attachments[0].storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-                attachments[0].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                VkAttachmentDescription color_attachment{};
+                color_attachment.format         = swapchain_format_.format;
+                color_attachment.samples        = msaa_samples_;
+                color_attachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
+                color_attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                color_attachment.initialLayout  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                color_attachment.finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
                 // Depth attachment.
-                attachments[1].format         = kDepthFormat;
-                attachments[1].samples        = msaa_samples_;
-                attachments[1].storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-                attachments[1].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+                VkAttachmentDescription depth_attachment{};
+                depth_attachment.format         = kDepthFormat;
+                depth_attachment.samples        = msaa_samples_;
+                depth_attachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
+                depth_attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+                depth_attachment.initialLayout  = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                depth_attachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+                // Depth input attachment.
+                VkAttachmentDescription depth_input_attachment{};
+                depth_input_attachment.format         = kDepthFormat;
+                depth_input_attachment.samples        = msaa_samples_;
+                depth_input_attachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
+                depth_input_attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                depth_input_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                depth_input_attachment.initialLayout  = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                depth_input_attachment.finalLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+                std::array<VkAttachmentDescription, 2> attachments             = {color_attachment, depth_attachment};
+                std::array<VkAttachmentDescription, 3> attachments_depth_input = {color_attachment, depth_attachment, depth_input_attachment};
 
                 VkRenderPassCreateInfo render_pass_info = {};
                 render_pass_info.sType                  = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -618,47 +675,57 @@ namespace rra
                 render_pass_info.dependencyCount        = static_cast<uint32_t>(dependencies.size());
                 render_pass_info.pDependencies          = dependencies.data();
 
+                VkRenderPassCreateInfo render_pass_depth_input_info = {};
+                render_pass_depth_input_info.sType                  = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+                render_pass_depth_input_info.attachmentCount        = static_cast<uint32_t>(attachments_depth_input.size());
+                render_pass_depth_input_info.pAttachments           = attachments_depth_input.data();
+                render_pass_depth_input_info.subpassCount           = 1;
+                render_pass_depth_input_info.pSubpasses             = &subpass_depth_input_description;
+                render_pass_depth_input_info.dependencyCount        = static_cast<uint32_t>(dependencies.size());
+                render_pass_depth_input_info.pDependencies          = dependencies.data();
+
                 VkResult create_result;
 
                 // Transition layout to clear all, unique to the clear_color_and_depth render pass.
-                attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachments[0].finalLayout   = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-                attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachments[1].finalLayout   = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachments[kAttachmentIndexColor].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED;
+                attachments[kAttachmentIndexColor].finalLayout      = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                attachments[kAttachmentIndexDepthOut].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                attachments[kAttachmentIndexDepthOut].finalLayout   = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
                 // Clear both color and depth.
-                attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                create_result         = vkCreateRenderPass(device_->GetDevice(), &render_pass_info, nullptr, &render_pass_clear_color_and_depth_);
+                attachments[kAttachmentIndexColor].loadOp    = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                attachments[kAttachmentIndexDepthOut].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                create_result = vkCreateRenderPass(device_->GetDevice(), &render_pass_info, nullptr, &render_pass_clear_color_and_depth_);
                 CheckResult(create_result, "Render pass (render_pass_clear_color_and_depth_) creation failed");
                 SetObjectName(device_->GetDevice(), VK_OBJECT_TYPE_RENDER_PASS, (uint64_t)render_pass_clear_color_and_depth_, "renderPassClearColorAndDepth");
 
                 // Retain layout for anything other than clear_color_and_depth.
-                attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-                attachments[0].finalLayout   = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-                attachments[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-                attachments[1].finalLayout   = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-                // Clear color only.
-                attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-                create_result         = vkCreateRenderPass(device_->GetDevice(), &render_pass_info, nullptr, &render_pass_clear_color_only_);
-                CheckResult(create_result, "Render pass (render_pass_clear_color_only_) creation failed");
-                SetObjectName(device_->GetDevice(), VK_OBJECT_TYPE_RENDER_PASS, (uint64_t)render_pass_clear_color_only_, "renderPassClearColorOnly");
+                attachments[kAttachmentIndexColor].initialLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                attachments[kAttachmentIndexColor].finalLayout      = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                attachments[kAttachmentIndexDepthOut].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachments[kAttachmentIndexDepthOut].finalLayout   = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
                 // Clear depth only.
-                attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-                attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                create_result         = vkCreateRenderPass(device_->GetDevice(), &render_pass_info, nullptr, &render_pass_clear_depth_only_);
+                attachments[kAttachmentIndexColor].loadOp    = VK_ATTACHMENT_LOAD_OP_LOAD;
+                attachments[kAttachmentIndexDepthOut].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                create_result = vkCreateRenderPass(device_->GetDevice(), &render_pass_info, nullptr, &render_pass_clear_depth_only_);
                 CheckResult(create_result, "Render pass (render_pass_clear_depth_only_) creation failed");
                 SetObjectName(device_->GetDevice(), VK_OBJECT_TYPE_RENDER_PASS, (uint64_t)render_pass_clear_depth_only_, "renderPassClearDepthOnly");
 
                 // Clear none.
-                attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-                attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-                create_result         = vkCreateRenderPass(device_->GetDevice(), &render_pass_info, nullptr, &render_pass_clear_none_);
+                attachments[kAttachmentIndexColor].loadOp    = VK_ATTACHMENT_LOAD_OP_LOAD;
+                attachments[kAttachmentIndexDepthOut].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                create_result                                = vkCreateRenderPass(device_->GetDevice(), &render_pass_info, nullptr, &render_pass_clear_none_);
                 CheckResult(create_result, "Render pass (render_pass_clear_none_) creation failed");
                 SetObjectName(device_->GetDevice(), VK_OBJECT_TYPE_RENDER_PASS, (uint64_t)render_pass_clear_none_, "renderPassClearNone");
+
+                // Clear none and use depth input attachment.
+                attachments_depth_input[kAttachmentIndexColor].loadOp      = VK_ATTACHMENT_LOAD_OP_LOAD;
+                attachments_depth_input[kAttachmentIndexDepthOut].loadOp   = VK_ATTACHMENT_LOAD_OP_LOAD;
+                attachments_depth_input[kAttachmentIndexDepthInput].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                create_result = vkCreateRenderPass(device_->GetDevice(), &render_pass_depth_input_info, nullptr, &render_pass_clear_none_depth_input_);
+                CheckResult(create_result, "Render pass (render_pass_clear_none_depth_input_) creation failed");
+                SetObjectName(device_->GetDevice(), VK_OBJECT_TYPE_RENDER_PASS, (uint64_t)render_pass_clear_none_depth_input_, "renderPassClearNone");
             }
 
             // Resolve render pass.
@@ -772,12 +839,6 @@ namespace rra
                 render_pass_clear_color_and_depth_ = VK_NULL_HANDLE;
             }
 
-            if (render_pass_clear_color_only_ != VK_NULL_HANDLE)
-            {
-                vkDestroyRenderPass(device_->GetDevice(), render_pass_clear_color_only_, nullptr);
-                render_pass_clear_color_only_ = VK_NULL_HANDLE;
-            }
-
             if (render_pass_clear_depth_only_ != VK_NULL_HANDLE)
             {
                 vkDestroyRenderPass(device_->GetDevice(), render_pass_clear_depth_only_, nullptr);
@@ -790,11 +851,32 @@ namespace rra
                 render_pass_clear_none_ = VK_NULL_HANDLE;
             }
 
+            if (render_pass_clear_none_depth_input_ != VK_NULL_HANDLE)
+            {
+                vkDestroyRenderPass(device_->GetDevice(), render_pass_clear_none_depth_input_, nullptr);
+                render_pass_clear_none_depth_input_ = VK_NULL_HANDLE;
+            }
+
             if (render_pass_resolve_ != VK_NULL_HANDLE)
             {
                 vkDestroyRenderPass(device_->GetDevice(), render_pass_resolve_, nullptr);
                 render_pass_resolve_ = VK_NULL_HANDLE;
             }
+        }
+
+        VkImage SwapChain::GetDepthInputImage() const
+        {
+            return geometry_depth_copy_.image;
+        }
+
+        const VkImageView& SwapChain::GetDepthInputImageView() const
+        {
+            return geometry_depth_copy_.view;
+        }
+
+        VkExtent2D SwapChain::GetSwapchainExtent() const
+        {
+            return swapchain_extent_;
         }
 
         void SwapChain::CreateRTV()
@@ -835,9 +917,9 @@ namespace rra
         void SwapChain::CreateFramebuffers(uint32_t width, uint32_t height)
         {
             frame_buffers_clear_color_and_depth_.resize(image_views_.size());
-            frame_buffers_clear_color_only_.resize(image_views_.size());
             frame_buffers_clear_depth_only_.resize(image_views_.size());
             frame_buffers_clear_none_.resize(image_views_.size());
+            frame_buffers_clear_none_depth_input_.resize(image_views_.size());
             frame_buffers_resolve_.resize(image_views_.size());
 
             for (uint32_t image_index = 0; image_index < image_views_.size(); image_index++)
@@ -859,10 +941,6 @@ namespace rra
                 result             = vkCreateFramebuffer(device_->GetDevice(), &fb_info, nullptr, &frame_buffers_clear_color_and_depth_[image_index]);
                 CheckResult(result, "Failed to create frame_buffers_clear_color_and_depth_.");
 
-                fb_info.renderPass = render_pass_clear_color_only_;
-                result             = vkCreateFramebuffer(device_->GetDevice(), &fb_info, nullptr, &frame_buffers_clear_color_only_[image_index]);
-                CheckResult(result, "Failed to create frame_buffers_clear_color_only_.");
-
                 fb_info.renderPass = render_pass_clear_depth_only_;
                 result             = vkCreateFramebuffer(device_->GetDevice(), &fb_info, nullptr, &frame_buffers_clear_depth_only_[image_index]);
                 CheckResult(result, "Failed to create frame_buffers_clear_depth_only_.");
@@ -871,12 +949,19 @@ namespace rra
                 result             = vkCreateFramebuffer(device_->GetDevice(), &fb_info, nullptr, &frame_buffers_clear_none_[image_index]);
                 CheckResult(result, "Failed to create frame_buffers_clear_none_.");
 
+                attachments             = {color_image_.view, depth_stencil_.view, geometry_depth_copy_.view};
+                fb_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+                fb_info.pAttachments    = attachments.data();
+                fb_info.renderPass      = render_pass_clear_none_depth_input_;
+                result                  = vkCreateFramebuffer(device_->GetDevice(), &fb_info, nullptr, &frame_buffers_clear_none_depth_input_[image_index]);
+                CheckResult(result, "Failed to create frame_buffers_clear_none_depth_input_.");
+
                 attachments             = {color_image_.view, depth_stencil_.view, image_views_[image_index]};
                 fb_info.attachmentCount = static_cast<uint32_t>(attachments.size());
                 fb_info.pAttachments    = attachments.data();
                 fb_info.renderPass      = render_pass_resolve_;
                 result                  = vkCreateFramebuffer(device_->GetDevice(), &fb_info, nullptr, &frame_buffers_resolve_[image_index]);
-                CheckResult(result, "Failed to create frame_buffers_clear_none_.");
+                CheckResult(result, "Failed to create frame_buffers_resolve_.");
             }
         }
 
@@ -887,11 +972,6 @@ namespace rra
                 vkDestroyFramebuffer(device_->GetDevice(), frame_buffers_clear_color_and_depth_[frame_buffer_index], nullptr);
             }
 
-            for (uint32_t frame_buffer_index = 0; frame_buffer_index < frame_buffers_clear_color_only_.size(); frame_buffer_index++)
-            {
-                vkDestroyFramebuffer(device_->GetDevice(), frame_buffers_clear_color_only_[frame_buffer_index], nullptr);
-            }
-
             for (uint32_t frame_buffer_index = 0; frame_buffer_index < frame_buffers_clear_depth_only_.size(); frame_buffer_index++)
             {
                 vkDestroyFramebuffer(device_->GetDevice(), frame_buffers_clear_depth_only_[frame_buffer_index], nullptr);
@@ -900,6 +980,11 @@ namespace rra
             for (uint32_t frame_buffer_index = 0; frame_buffer_index < frame_buffers_clear_none_.size(); frame_buffer_index++)
             {
                 vkDestroyFramebuffer(device_->GetDevice(), frame_buffers_clear_none_[frame_buffer_index], nullptr);
+            }
+
+            for (uint32_t frame_buffer_index = 0; frame_buffer_index < frame_buffers_clear_none_depth_input_.size(); frame_buffer_index++)
+            {
+                vkDestroyFramebuffer(device_->GetDevice(), frame_buffers_clear_none_depth_input_[frame_buffer_index], nullptr);
             }
 
             for (uint32_t frame_buffer_index = 0; frame_buffer_index < frame_buffers_resolve_.size(); frame_buffer_index++)

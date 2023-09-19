@@ -22,7 +22,7 @@
 #include <windows.h>
 #elif defined(VK_USE_PLATFORM_XCB_KHR)
 #include <xcb/xcb.h>
-#include <QtGui/5.15.2/QtGui/qpa/qplatformnativeinterface.h>
+#include <qpa/qplatformnativeinterface.h>
 #include <QGuiApplication>
 #endif
 
@@ -166,6 +166,14 @@ namespace rra
             kTriangleSplitting,
         };
 
+        /// @brief Determines the plane of a 3D dispatch to be rendered in the ray history pane.
+        enum SlicePlane
+        {
+            kSlicePlaneXY,
+            kSlicePlaneXZ,
+            kSlicePlaneYZ,
+        };
+
         /// @brief Geometry color mode info structure.
         struct GeometryColoringModeInfo
         {
@@ -306,6 +314,43 @@ namespace rra
             uint32_t exit_properly;
             uint32_t placeholder_2;
             uint32_t placeholder_3;
+        };
+
+        enum RayHistoryColorMode
+        {
+            kRayHistoryColorModeRayCount,
+            kRayHistoryColorModeTraversalCount,
+            kRayHistoryColorModeInstanceIntersectionCount,
+            kRayHistoryColorModeAnyHitInvocationCount,
+        };
+
+        // Ray history dispatch ID data.
+        struct DispatchIdData
+        {
+            uint32_t ray_count;
+            uint32_t traversal_count;
+            uint32_t instance_intersection_count;
+            uint32_t any_hit_invocation_count;
+        };
+
+        struct RayInspectorRay
+        {
+            glm::vec3 origin = {};
+            float     tmin   = 0.0;
+
+            glm::vec3 direction = {};
+            float     tmax      = 0.0;
+
+            glm::vec4 color = {};
+
+            int   is_outline   = 0;
+            float hit_distance = -1.0;  // -1.0 means no hit.
+
+            int ray_flags = {};
+
+            uint64_t tlas_address = 0;
+            uint32_t cull_mask    = 0;
+            uint32_t padding      = {};
         };
 
     }  // namespace renderer

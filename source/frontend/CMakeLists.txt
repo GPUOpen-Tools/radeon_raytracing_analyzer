@@ -31,6 +31,18 @@ IF(WIN32)
     add_compile_options(/W4 /WX)
 ELSEIF(UNIX)
     add_compile_options(-D_LINUX -Wall -Wextra -Werror)
+
+    # Include the qt version subdirectory path.
+    set(result "")
+    set(QT_NATIVE_PATH "")
+    foreach(path ${Qt5Gui_INCLUDE_DIRS})
+        string(FIND ${path} "QtGui" result)
+        if (NOT ${result} STREQUAL "-1")
+            set(QT_NATIVE_PATH ${path}/${QT_VERSION}/QtGui)
+            set(QT_NATIVE_PATH ${QT_NATIVE_PATH} PARENT_SCOPE)
+            include_directories(AFTER ${QT_NATIVE_PATH})
+        endif()
+    endforeach(path)
 ENDIF(WIN32)
 
 IF(UNIX)
@@ -144,6 +156,28 @@ set( SOURCES
     "models/instances_item_model.h"
     "models/instances_proxy_model.cpp"
     "models/instances_proxy_model.h"
+    "models/ray/ray_history_model.cpp"
+    "models/ray/ray_history_model.h"
+    "models/ray/ray_inspector_model.cpp"
+    "models/ray/ray_inspector_model.h"
+    "models/ray/ray_list_proxy_model.cpp"
+    "models/ray/ray_list_proxy_model.h"
+    "models/ray/ray_list_item_model.cpp"
+    "models/ray/ray_list_item_model.h"
+    "models/ray/ray_list_table_item_delegate.cpp"
+    "models/ray/ray_list_table_item_delegate.h"
+    "models/ray/ray_history_image_generator.cpp"
+    "models/ray/ray_history_image_generator.h"
+    "models/ray/ray_inspector_ray_list_item_delegate.cpp"
+    "models/ray/ray_inspector_ray_list_item_delegate.h" 
+    "models/ray/ray_inspector_ray_list_item_model.cpp"
+    "models/ray/ray_inspector_ray_list_item_model.h"
+    "models/ray/ray_inspector_ray_list_proxy_model.cpp"
+    "models/ray/ray_inspector_ray_list_proxy_model.h"
+    "models/ray/ray_inspector_scene_collection_model.cpp"
+    "models/ray/ray_inspector_scene_collection_model.h"
+    "models/ray/ray_counters_item_model.cpp"
+    "models/ray/ray_counters_item_model.h"
     "settings/geometry_settings.cpp"
     "settings/geometry_settings.h"
     "settings/settings.cpp"
@@ -202,6 +236,8 @@ set( SOURCES
     "views/custom_widgets/color_picker_widget.h"
     "views/custom_widgets/depth_slider_widget.cpp"
     "views/custom_widgets/depth_slider_widget.h"
+    "views/custom_widgets/dispatch_legend.cpp"
+    "views/custom_widgets/dispatch_legend.h"
     "views/custom_widgets/themes_and_colors_item_button.cpp"
     "views/custom_widgets/themes_and_colors_item_button.h"
     "views/custom_widgets/colored_radio_button.cpp"
@@ -215,9 +251,18 @@ set( SOURCES
     "views/custom_widgets/slider_style.h"
     "views/custom_widgets/rgp_histogram_widget.cpp"
     "views/custom_widgets/rgp_histogram_widget.h"
+    "views/custom_widgets/ray_history_graphics_view.cpp"
+    "views/custom_widgets/ray_history_graphics_view.h"
+    "views/custom_widgets/dispatch_loading_bar.cpp"
+    "views/custom_widgets/dispatch_loading_bar.h"
+    "views/custom_widgets/icon_button.cpp"
+    "views/custom_widgets/icon_button.h"
     "views/overview/device_configuration_pane.cpp"
     "views/overview/device_configuration_pane.h"
     "views/overview/device_configuration_pane.ui"
+    "views/overview/dispatch_pane.cpp"
+    "views/overview/dispatch_pane.h"
+    "views/overview/dispatch_pane.ui"
     "views/overview/summary_pane.cpp"
     "views/overview/summary_pane.h"
     "views/overview/summary_pane.ui"
@@ -258,6 +303,13 @@ set( SOURCES
     "views/tlas/tlas_viewer_pane.cpp"
     "views/tlas/tlas_viewer_pane.h"
     "views/tlas/tlas_viewer_pane.ui"
+    "views/ray/ray_inspector_pane.cpp"
+    "views/ray/ray_inspector_pane.h"
+    "views/ray/ray_inspector_pane.ui"
+    "views/ray/ray_history_pane.cpp"
+    "views/ray/ray_history_pane.h"
+    "views/ray/ray_history_pane.ui"
+    "views/ray/ray_history_viewer_widget.ui"
     "views/viewer_container_widget.cpp"
     "views/viewer_container_widget.h"
     "views/viewer_container_widget.ui"
@@ -463,11 +515,13 @@ IF(UNIX AND NOT APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../../build/qt.conf $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
 
-    # Call chrpath on system to override executable file RPATH.
-    find_program(CHRPATH_EXECUTABLE NAMES chrpath)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E echo "trying chrpath"
-        COMMAND ${CHRPATH_EXECUTABLE} -r "\\$$ORIGIN/lib" $<TARGET_FILE:${PROJECT_NAME}>
-    )
+    IF(NOT QT_SYSTEM)
+        # Call chrpath on system to override executable file RPATH.
+        find_program(CHRPATH_EXECUTABLE NAMES chrpath)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "trying chrpath"
+            COMMAND ${CHRPATH_EXECUTABLE} -r "\\$$ORIGIN/lib" $<TARGET_FILE:${PROJECT_NAME}>
+        )
+    ENDIF(NOT QT_SYSTEM)
 
 ENDIF(UNIX AND NOT APPLE)

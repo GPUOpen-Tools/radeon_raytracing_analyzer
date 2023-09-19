@@ -685,22 +685,25 @@ namespace rra
         }
     }
 
-    void SceneNode::CastRay(glm::vec3 ray_origin, glm::vec3 ray_direction, std::vector<SceneNode*>& intersected_nodes)
+    void SceneNode::CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction, std::vector<SceneNode*>& intersected_nodes)
     {
         if (!visible_ || filtered_)
         {
             return;
         }
 
+        float closest = 0.0f;
+
         if (renderer::IntersectAABB(ray_origin,
                                     ray_direction,
                                     glm::vec3(bounding_volume_.min_x, bounding_volume_.min_y, bounding_volume_.min_z),
-                                    glm::vec3(bounding_volume_.max_x, bounding_volume_.max_y, bounding_volume_.max_z)))
+                                    glm::vec3(bounding_volume_.max_x, bounding_volume_.max_y, bounding_volume_.max_z),
+                                    closest))
         {
             intersected_nodes.push_back(this);
             for (auto child : child_nodes_)
             {
-                child->CastRay(ray_origin, ray_direction, intersected_nodes);
+                child->CastRayCollectNodes(ray_origin, ray_direction, intersected_nodes);
             }
         }
     }

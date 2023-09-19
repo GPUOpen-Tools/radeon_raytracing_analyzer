@@ -46,6 +46,18 @@ public:
     /// @param [in] navigate_to_blas_pane  If true, navigate to the BLAS pane.
     virtual void SelectLeafNode(const uint64_t blas_index, const bool navigate_to_blas_pane) Q_DECL_OVERRIDE;
 
+    /// @brief Set the TLAS viewer to assume new camera parameters.
+    ///
+    /// @param [in] origin The origin to place the camera.
+    /// @param [in] forward The direction of the camera
+    /// @param [in] up The up axis of the camera.
+    void SetTlasCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up);
+
+    /// @brief Select the given instance.
+    ///
+    /// @param [in] instance_index The instance to select
+    void SelectInstance(uint32_t instance_index);
+
 protected:
     /// @brief Updates widgets depending on the model.
     ///

@@ -297,8 +297,7 @@ namespace rra
                 }
                 else
                 {
-                    RRA_ASSERT(false);
-                    sah = 1.0f;
+                    sah = std::numeric_limits<float>::quiet_NaN();
                 }
                 tlas->SetLeafNodeSurfaceAreaHeuristic(root_node, sah);
             }
@@ -386,6 +385,12 @@ namespace rra
 
         for (const auto& node_ptr : tri_node_pointers)
         {
+            if (node_ptr.GetByteOffset() < header_offsets.leaf_nodes)
+            {
+                // Bad address for a triangle.
+                continue;
+            }
+
             const uint32_t node_index = (node_ptr.GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
             uint32_t tri_count{};

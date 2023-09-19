@@ -19,9 +19,9 @@ namespace rra
         enum class RenderPassHint
         {
             kRenderPassHintClearColorAndDepth,
-            kRenderPassHintClearColorOnly,
             kRenderPassHintClearDepthOnly,
             kRenderPassHintClearNone,
+            kRenderPassHintClearNoneDepthInput,
             kRenderPassHintResolve,
         };
 
@@ -121,6 +121,21 @@ namespace rra
             /// @returns The MSAA samples.
             VkSampleCountFlagBits GetMSAASamples() const;
 
+            /// @brief Get the depth input image to read from.
+            ///
+            /// @return The depth input image.
+            VkImage GetDepthInputImage() const;
+
+            /// @brief Get the depth input image view to read from.
+            ///
+            /// @return The depth input image view.
+            const VkImageView& GetDepthInputImageView() const;
+
+            /// @brief Get the size of the swapchain image.
+            /// 
+            /// @return The swapchain extent.
+            VkExtent2D  GetSwapchainExtent() const;
+
         private:
             /// @brief Create a render target view for each back buffer image.
             void CreateRTV();
@@ -167,44 +182,38 @@ namespace rra
             VkQueue                  present_queue_ = VK_NULL_HANDLE;  ///< Handle to the queue used to present the swapchain images.
             VkSurfaceKHR             surface_       = VK_NULL_HANDLE;  ///< The surface used to present graphics.
 
-            VkRenderPass render_pass_clear_color_and_depth_ = VK_NULL_HANDLE;  ///< Handle to the render pass with kRenderPassHintClearColorAndDepth setting.
-            VkRenderPass render_pass_clear_color_only_      = VK_NULL_HANDLE;  ///< Handle to the render pass with kRenderPassHintClearColorOnly setting.
-            VkRenderPass render_pass_clear_depth_only_      = VK_NULL_HANDLE;  ///< Handle to the render pass with kRenderPassHintClearDepthOnly setting.
-            VkRenderPass render_pass_clear_none_            = VK_NULL_HANDLE;  ///< Handle to the render pass with kRenderPassHintClearNone setting.
-            VkRenderPass render_pass_resolve_               = VK_NULL_HANDLE;  ///< Handle to the render pass that will resolve the pipeline if MSAA is active.
+            VkRenderPass render_pass_clear_color_and_depth_  = VK_NULL_HANDLE;  ///< Handle to the render pass with kRenderPassHintClearColorAndDepth setting.
+            VkRenderPass render_pass_clear_depth_only_       = VK_NULL_HANDLE;  ///< Handle to the render pass with kRenderPassHintClearDepthOnly setting.
+            VkRenderPass render_pass_clear_none_             = VK_NULL_HANDLE;  ///< Handle to the render pass with kRenderPassHintClearNone setting.
+            VkRenderPass render_pass_clear_none_depth_input_ = VK_NULL_HANDLE;  ///< Handle to the render pass with kRenderPassHintClearNoneDepthInput setting.
+            VkRenderPass render_pass_resolve_                = VK_NULL_HANDLE;  ///< Handle to the render pass that will resolve the pipeline if MSAA is active.
 
             std::vector<VkFramebuffer>
                 frame_buffers_clear_color_and_depth_;                    ///< The vector of frame buffer handles for kRenderPassHintClearColorAndDepth setting.
-            std::vector<VkFramebuffer> frame_buffers_clear_color_only_;  ///< The vector of frame buffer handles for kRenderPassHintClearColorOnly setting.
             std::vector<VkFramebuffer> frame_buffers_clear_depth_only_;  ///< The vector of frame buffer handles for kRenderPassHintClearDepthOnly setting.
             std::vector<VkFramebuffer> frame_buffers_clear_none_;        ///< The vector of frame buffer handles for kRenderPassHintClearNone setting.
-            std::vector<VkFramebuffer> frame_buffers_resolve_;           ///< The vector of frame buffer handles for resolve.
+            std::vector<VkFramebuffer>
+                frame_buffers_clear_none_depth_input_;          ///< The vector of frame buffer handles for kRenderPassHintClearNoneDepthInput setting.
+            std::vector<VkFramebuffer> frame_buffers_resolve_;  ///< The vector of frame buffer handles for resolve.
 
             VkSampleCountFlagBits msaa_samples_ = VK_SAMPLE_COUNT_1_BIT;  ///< The desired msaa samples for rendering.
 
-            /// @brief A helper type used to group depth/stencil resources together.
-            struct DepthStencil
+            /// @brief A helper type used to group image resources together.
+            struct Image
             {
-                VkImage       image;       ///< Handle to the depth/stencil image.
-                VmaAllocation allocation;  ///< Handle to the depth/stencil image memory.
-                VkImageView   view;        ///< Handle to the depth/stencil image view.
+                VkImage       image;       ///< Handle to the image.
+                VmaAllocation allocation;  ///< Handle to the image memory.
+                VkImageView   view;        ///< Handle to the image view.
             };
 
-            /// @brief A helper type used to group color image resources together.
-            struct ColorImage
-            {
-                VkImage       image;       ///< Handle to the color image.
-                VmaAllocation allocation;  ///< Handle to the color image memory.
-                VkImageView   view;        ///< Handle to the color image view.
-            };
-
-            DepthStencil depth_stencil_ = {};    ///< The depth/stencil image handles.
-            ColorImage   color_image_   = {};    ///< The color image handles.
-            VkExtent2D   swapchain_extent_;      ///< The dimension of the swapchain images.
-            uint32_t     image_index_ = 0;       ///< The current back buffer image index.
-            uint32_t     back_buffer_count_;     ///< The number of back buffers in the swapchain.
-            uint32_t     semaphore_index_ = 0;       ///< The current frame semaphore index.
-            uint32_t     prev_semaphore_index_ = 0;  ///< The previous frame semaphore index.
+            Image      depth_stencil_       = {};  ///< The depth/stencil image handles.
+            Image      geometry_depth_copy_ = {};  ///< A copy of the geometry's depth buffer to be used as an input attachment.
+            Image      color_image_         = {};  ///< The color image handles.
+            VkExtent2D swapchain_extent_;          ///< The dimension of the swapchain images.
+            uint32_t   image_index_ = 0;           ///< The current back buffer image index.
+            uint32_t   back_buffer_count_;         ///< The number of back buffers in the swapchain.
+            uint32_t   semaphore_index_      = 0;  ///< The current frame semaphore index.
+            uint32_t   prev_semaphore_index_ = 0;  ///< The previous frame semaphore index.
 
             bool v_sync_enabled_ = false;  ///< A flag used to indicate if v-sync is enabled.
         };

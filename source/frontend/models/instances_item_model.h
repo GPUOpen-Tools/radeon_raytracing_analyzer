@@ -58,6 +58,7 @@ namespace rra
         kInstancesColumnM32,
         kInstancesColumnM33,
         kInstancesColumnUniqueInstanceIndex,
+        kInstancesColumnPadding,
 
         kInstancesColumnCount,
     };

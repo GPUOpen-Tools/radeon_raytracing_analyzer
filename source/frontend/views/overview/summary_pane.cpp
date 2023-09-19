@@ -15,9 +15,11 @@
 #include "managers/message_manager.h"
 #include "views/widget_util.h"
 
-#include "utils/scaling_manager.h"
+#include "qt_common/utils/scaling_manager.h"
+#include "dispatch_pane.h"
 #include "ui_tlas_pane.h"
 #include "util/string_util.h"
+#include <public/rra_ray_history.h>
 
 SummaryPane::SummaryPane(QWidget* parent)
     : BasePane(parent)
@@ -36,6 +38,9 @@ SummaryPane::SummaryPane(QWidget* parent)
     model_ = new rra::SummaryModel();
 
     // Initialize tables.
+    ui_->global_stats_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui_->global_stats_table_->setFocusPolicy(Qt::NoFocus);
+    ui_->global_stats_table_->setSelectionMode(QAbstractItemView::NoSelection);
     model_->InitializeStatsTableModel(ui_->global_stats_table_);
 
     connect(ui_->search_box_, &QLineEdit::textChanged, model_, &rra::SummaryModel::SearchTextChanged);
@@ -51,6 +56,25 @@ SummaryPane::~SummaryPane()
     delete model_;
 }
 
+void SummaryPane::AddDispatchPanes()
+{
+    uint32_t num_dispatches = model_->GetDispatchCount();
+    if (num_dispatches > 0)
+    {
+        for (uint64_t index = 0; index < num_dispatches; index++)
+        {
+            DispatchPane* dispatch_pane = new DispatchPane();
+            dispatch_pane->SetDispatchId(index);
+            widget_deletion_queue_.push_back(dispatch_pane);
+
+            ui_->dispatch_pane_list_->addWidget(dispatch_pane, 0, Qt::AlignLeft | Qt::AlignTop);
+        }
+    }
+
+    // Show/hide the dispatches depending if ray history information is available.
+    ui_->dispatch_contents_->setVisible(num_dispatches > 0);
+}
+
 void SummaryPane::AddTlasPanes()
 {
     const auto& tlas_stats = model_->GetTlasStatistics();
@@ -63,7 +87,7 @@ void SummaryPane::AddTlasPanes()
     for (const rra::TlasListStatistics& tlas : tlas_stats)
     {
         QWidget* tlas_pane = new QWidget();
-        tlas_pane_widgets_.push_back(tlas_pane);
+        widget_deletion_queue_.push_back(tlas_pane);
         tlas_overview_pane.setupUi(tlas_pane);
 
         QString tlas_memory{rra::string_util::LocalizedValueMemory(static_cast<double>(tlas.memory), false, true)};
@@ -117,6 +141,8 @@ void SummaryPane::OnTraceOpen()
 {
     model_->Update();
 
+    AddDispatchPanes();
+
     AddTlasPanes();
 
     tlas_index_ = 0;
@@ -127,12 +153,12 @@ void SummaryPane::OnTraceOpen()
 
 void SummaryPane::OnTraceClose()
 {
-    for (QWidget* tlas_pane : tlas_pane_widgets_)
+    for (QWidget* widget : widget_deletion_queue_)
     {
-        ui_->tlas_pane_list_->removeWidget(tlas_pane);
-        delete tlas_pane;
+        ui_->tlas_pane_list_->removeWidget(widget);
+        delete widget;
     }
-    tlas_pane_widgets_.clear();
+    widget_deletion_queue_.clear();
 }
 
 void SummaryPane::showEvent(QShowEvent* event)

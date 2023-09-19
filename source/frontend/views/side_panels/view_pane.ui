@@ -797,7 +797,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="ScaledPushButton" name="content_show_hide_control_style_hotkeys_">
+         <widget class="RraIconButton" name="content_show_hide_control_style_hotkeys_">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -809,17 +809,6 @@
           </property>
           <property name="toolTip">
            <string>Shows the keyboard and mouse controls for the control style.</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../../resources.qrc">
-            <normaloff>:/Resources/assets/kbd_mouse.svg</normaloff>:/Resources/assets/kbd_mouse.svg
-           </iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>47</width>
-            <height>17</height>
-           </size>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -1203,7 +1192,26 @@
          </spacer>
         </item>
         <item>
-         <widget class="ScaledPushButton" name="camera_to_origin_button_">
+         <widget class="RraIconButton" name="lock_camera_button_">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string></string>
+          </property>
+          <property name="toolTip">
+           <string>If locked, camera position will persist when selected dispatch coordinate changes.</string>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="RraIconButton" name="camera_to_origin_button_">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -1215,17 +1223,6 @@
           </property>
           <property name="toolTip">
            <string>Move the camera to the origin.</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../../resources.qrc">
-            <normaloff>:/Resources/assets/third_party/ionicons/refresh-outline.svg</normaloff>
-           </iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>18</width>
-            <height>18</height>
-           </size>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -1357,10 +1354,10 @@
          </sizepolicy>
         </property>
         <property name="minimum">
-         <number>0</number>
+         <number>30</number>
         </property>
         <property name="maximum">
-         <number>100</number>
+         <number>120</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -1528,7 +1525,7 @@
          <number>0</number>
         </property>
         <property name="maximum">
-         <number>1000</number>
+         <number>1000000</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -1627,6 +1624,11 @@
    <class>ScaledPushButton</class>
    <extends>QPushButton</extends>
    <header>qt_common/custom_widgets/scaled_push_button.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RraIconButton</class>
+   <extends>QPushButton</extends>
+   <header>views/custom_widgets/icon_button.h</header>
   </customwidget>
  </customwidgets>
  <resources>

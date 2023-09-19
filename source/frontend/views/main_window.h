@@ -11,7 +11,6 @@
 #include <QMainWindow>
 #include <QAction>
 #include <QMenu>
-#include <QSignalMapper>
 
 #include "ui_main_window.h"
 
@@ -116,6 +115,11 @@ private slots:
     /// @param [in] pane The pane to jump to.
     void ViewPane(int pane);
 
+    /// @brief Update the UI reset buttons.
+    ///
+    /// Either show or hide the UI reset button depending which sub-pane is currently being displayed.
+    void UpdateResetButtons();
+
 #ifdef BETA_LICENSE
     /// @brief What happens when the user agrees to the license.
     void AgreedToLicense();
@@ -146,10 +150,9 @@ private:
 
     /// @brief Setup mapping for keyboard binds.
     ///
-    /// @param [in] mapper The signal mapper.
     /// @param [in] key    The pressed key.
     /// @param [in] pane   The target pane.
-    void SetupHotkeyNavAction(QSignalMapper* mapper, int key, int pane);
+    void SetupHotkeyNavAction(int key, int pane);
 
     /// @brief Handle a drag enter event.
     ///
@@ -183,6 +186,11 @@ private:
         return pane;
     }
 
+    /// @brief Create the UI reset icon.
+    ///
+    /// @return Pointer to the newly created UI reset button.
+    RraIconButton* CreateUIResetButton();
+
     Ui::MainWindow* ui_;  ///< Pointer to the Qt UI design.
 
 #ifdef RRA_DEBUG_WINDOW
@@ -198,15 +206,15 @@ private:
 
     QMenu* help_menu_;  ///< Help menu control
 
-    QMenu*                  recent_traces_menu_;    ///< Sub menu containing recently opened files.
-    QVector<QSignalMapper*> recent_trace_mappers_;  ///< Map signals to the recent traces when clicked on.
-    QVector<QAction*>       recent_trace_actions_;  ///< List of actions for recent traces.
+    QMenu*                           recent_traces_menu_;        ///< Sub menu containing recently opened files.
+    QVector<QAction*>                recent_trace_actions_;      ///< List of actions for recent traces.
+    QVector<QMetaObject::Connection> recent_trace_connections_;  ///< List of previously connected signals/slots.
 
     NavigationBar    navigation_bar_;  ///< The Back/Forward Navigation buttons added to the main tab bar.
     rra::PaneManager pane_manager_;    ///< The class responsible for managing the relationships between different panes.
 #ifdef BETA_LICENSE
     LicenseDialog* license_dialog_;  ///< The UI licence dialog box.
-#endif  // BETA_LICENSE
+#endif                               // BETA_LICENSE
 };
 
 #endif  // RRA_VIEWS_MAIN_WINDOW_H_

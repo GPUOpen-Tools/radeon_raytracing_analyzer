@@ -64,6 +64,12 @@ namespace rra
             glm::vec4 instance_opaque_force_opaque_color;     ///< The color indicating the user specified force opaque flag.
             glm::vec4 instance_opaque_force_no_opaque_color;  ///< The color indicating the user specified force no opaque flag.
             glm::vec4 instance_opaque_force_both_color;       ///< The color indicating the user specified both force opaque and force no opaque.
+            glm::vec4 selected_ray_color;                     ///< The color of the selected rays.
+            glm::vec4 ray_color;                              ///< The color of the normal rays.
+            glm::vec4 shadow_ray_color;                       ///< The color of the shadow rays.
+            glm::vec4 zero_mask_ray_color;                    ///< The color of the zero ray mask rays.
+            uint32_t  first_ray_outline;                      ///< Index into ray ray_inspector_rays of the first ray outline (they should all be consecutive).
+            uint32_t  ray_outline_count;                      ///< The number of ray outlines in ray_inspector_rays.
 
             // Bounding volume render module.
             const std::vector<RraVertex>*              custom_triangles;           ///< The custom triangle list.
@@ -81,6 +87,8 @@ namespace rra
             glm::mat4                           last_view_proj;           ///< The view projection matrix the camera used on the last frame.
 
             bool fused_instances_enabled;  ///< The indicator for fused instances in traversal.
+
+            std::vector<RayInspectorRay> ray_inspector_rays;  ///< The rays for the ray inspector.
         };
 
         /// @brief Info about the scene that is needed at startup.
@@ -134,7 +142,7 @@ namespace rra
             /// @brief Set heatmap.
             ///
             /// @param [in] heatmap The new heatmap to set.
-            void SetHeatmapData(HeatmapData heatmap_data);
+            void SetHeatmapData(const HeatmapData& heatmap_data);
 
             /// @brief Set the window info structure.
             ///

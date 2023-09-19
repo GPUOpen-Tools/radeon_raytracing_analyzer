@@ -40,6 +40,7 @@ namespace rra
         nav_location_.overview_list_row = kOverviewPaneSummary;
         nav_location_.tlas_list_row     = kTlasPaneViewer;
         nav_location_.blas_list_row     = kBlasPaneViewer;
+        nav_location_.ray_list_row      = kRayPaneHistory;
         nav_location_.settings_list_row = kSettingsPaneGeneral;
 
         return nav_location_;
@@ -64,7 +65,7 @@ namespace rra
     {
         rra::MainPanes main_pane = GetMainPaneFromPane(pane);
 
-        if (main_pane == rra::kMainPaneOverview || main_pane == rra::kMainPaneTlas || main_pane == rra::kMainPaneBlas)
+        if (main_pane == rra::kMainPaneOverview || main_pane == rra::kMainPaneTlas || main_pane == rra::kMainPaneBlas || main_pane == rra::kMainPaneRay)
         {
             // Make sure a trace is loaded before navigating.
             if (!RraTraceLoaderValid())
@@ -93,6 +94,10 @@ namespace rra
 
         case kMainPaneBlas:
             nav_location_.blas_list_row = list_row;
+            break;
+
+        case kMainPaneRay:
+            nav_location_.ray_list_row = list_row;
             break;
 
         case kMainPaneSettings:
@@ -138,6 +143,9 @@ namespace rra
         case kMainPaneSettings:
             current_pane |= nav_location_.settings_list_row;
             break;
+
+        case kMainPaneRay:
+            current_pane |= nav_location_.ray_list_row;
 
         default:
             break;
@@ -198,6 +206,15 @@ namespace rra
         }
     }
 
+    void PaneManager::UpdateRayListIndex(const int index)
+    {
+        if (index < kBlasPaneCount)
+        {
+            nav_location_.ray_list_row = index;
+            UpdateAndRecordCurrentPane();
+        }
+    }
+
     void PaneManager::UpdateSettingsListRow(const int row)
     {
         if (row < kSettingsPaneCount)
@@ -225,7 +242,13 @@ namespace rra
 
     void PaneManager::OnTraceOpen()
     {
-        Settings::Get().SetPersistentUIToDefault();
+        if (!rra::Settings::Get().GetPersistentUIState())
+        {
+            Settings::Get().SetPersistentUIToDefault(rra::kPaneIdTlasViewer);
+            Settings::Get().SetPersistentUIToDefault(rra::kPaneIdBlasViewer);
+            Settings::Get().SetPersistentUIToDefault(rra::kPaneIdRayInspector);
+            Settings::Get().SetPersistentUIToDefault();
+        }
 
         for (auto it = panes_.begin(); it != panes_.end(); ++it)
         {

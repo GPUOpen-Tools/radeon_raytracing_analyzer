@@ -67,7 +67,7 @@ namespace rra
     {
         renderer::InstanceMap instance_map;
 
-        std::vector<bool> rebraid_duplicates(rebraid_siblings_.size()); // Only needed during appending frustum culled instances.
+        std::vector<bool> rebraid_duplicates(rebraid_siblings_.size());  // Only needed during appending frustum culled instances.
         root_node_->AppendFrustumCulledInstanceMap(instance_map, rebraid_duplicates, this, frustum_info);
 
         float min_distance = std::numeric_limits<float>::infinity();
@@ -172,7 +172,7 @@ namespace rra
     {
         for (auto& pair : nodes_)
         {
-            SceneNode* node = pair.second;
+            SceneNode*          node     = pair.second;
             renderer::Instance* instance = node->GetInstance();
 
             if (instance)
@@ -184,6 +184,15 @@ namespace rra
         IncrementSceneIteration();
     }
 
+    SceneNode* Scene::GetNodeByInstanceIndex(uint32_t instance_index)
+    {
+        if (instance_index >= instance_nodes_.size())
+        {
+            return nullptr;
+        }
+        return instance_nodes_[instance_index];
+    }
+
     void Scene::PopulateSceneInfo()
     {
         scene_stats_.max_instance_count = ComputeMaxInstanceCount();
@@ -191,6 +200,7 @@ namespace rra
         scene_stats_.max_tree_depth     = ComputeMaxTreeDepth();
         PopulateRebraidMap();
         PopulateSplitTrianglesMap();
+        PopulateInstanceNodes();
 
         // We set rebraided member later than other instance members since this must be done
         // after the rebraid map has been created.
@@ -396,6 +406,24 @@ namespace rra
             if (siblings.second.size() > 1)
             {
                 std::sort(siblings.second.begin(), siblings.second.end(), [](SceneNode* a, SceneNode* b) { return a->GetId() < b->GetId(); });
+            }
+        }
+    }
+
+    void Scene::PopulateInstanceNodes()
+    {
+        instance_nodes_.clear();
+
+        for (auto& it : nodes_)
+        {
+            auto instance = it.second->GetInstance();
+            if (it.second && instance)
+            {
+                if (instance->instance_index >= instance_nodes_.size())
+                {
+                    instance_nodes_.resize(instance->instance_index + 1);
+                }
+                instance_nodes_[instance->instance_index] = it.second;
             }
         }
     }
@@ -699,24 +727,17 @@ namespace rra
         return depth_range_upper_bound_;
     }
 
-    std::vector<SceneNode*> Scene::CastRay(glm::vec3 ray_origin, glm::vec3 ray_direction)
+    std::vector<SceneNode*> Scene::CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction)
     {
         std::vector<SceneNode*> intersected_nodes;
 
         if (root_node_)
         {
-            root_node_->CastRay(ray_origin, ray_direction, intersected_nodes);
+            root_node_->CastRayCollectNodes(ray_origin, ray_direction, intersected_nodes);
         }
 
         return intersected_nodes;
     }
-
-    /// @brief Info on a raycast's closest intersection.
-    struct SceneClosestHit
-    {
-        float      distance = -1.0f;
-        SceneNode* node     = nullptr;
-    };
 
     RraErrorCode CastClosestHitRayOnBlas(uint64_t         bvh_index,
                                          SceneNode*       node,
@@ -740,16 +761,21 @@ namespace rra
             {
                 BoundingVolumeExtents extent = {};
 
+                float closest = std::numeric_limits<float>::infinity();
+
                 RRA_BUBBLE_ON_ERROR(RraBlasGetBoundingVolumeExtents(bvh_index, traverse_nodes[i], &extent));
                 if (renderer::IntersectAABB(
-                        origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z)))
+                        origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z), closest))
                 {
-                    // Get the child nodes. If this is not a box node, the child count is 0.
-                    uint32_t child_node_count;
-                    RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(bvh_index, traverse_nodes[i], &child_node_count));
-                    std::vector<uint32_t> child_nodes(child_node_count);
-                    RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(bvh_index, traverse_nodes[i], child_nodes.data()));
-                    swap_nodes.insert(swap_nodes.end(), child_nodes.begin(), child_nodes.end());
+                    if (closest >= 0.0 && (scene_closest_hit.distance <= 0.0f || closest <= scene_closest_hit.distance))
+                    {
+                        // Get the child nodes. If this is not a box node, the child count is 0.
+                        uint32_t child_node_count;
+                        RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(bvh_index, traverse_nodes[i], &child_node_count));
+                        std::vector<uint32_t> child_nodes(child_node_count);
+                        RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(bvh_index, traverse_nodes[i], child_nodes.data()));
+                        swap_nodes.insert(swap_nodes.end(), child_nodes.begin(), child_nodes.end());
+                    }
                 }
 
                 // Get the triangle nodes. If this is not a triangle the triangle count is 0.
@@ -803,7 +829,30 @@ namespace rra
         }
     }
 
-    std::map<std::string, std::function<void()>> Scene::GetSceneContextOptions(SceneContextMenuRequest request)
+    SceneClosestHit Scene::CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction)
+    {
+        auto            cast_results      = CastRayCollectNodes(ray_origin, ray_direction);
+        SceneClosestHit scene_closest_hit = {};
+
+        for (auto node : cast_results)
+        {
+            for (auto& instance : node->GetInstances())
+            {
+                glm::vec3 transformed_origin    = glm::transpose(glm::inverse(instance.transform)) * glm::vec4(ray_origin, 1.0f);
+                glm::vec3 transformed_direction = glm::mat3(glm::transpose(glm::inverse(instance.transform))) * ray_direction;
+                CastClosestHitRayOnBlas(instance.blas_index, node, transformed_origin, transformed_direction, scene_closest_hit);
+            }
+
+            for (auto& triangle : node->GetTriangles())
+            {
+                CastClosestHitRayOnTriangle(triangle, node, ray_origin, ray_direction, scene_closest_hit);
+            }
+        }
+
+        return scene_closest_hit;
+    }
+
+    SceneContextMenuOptions Scene::GetSceneContextOptions(SceneContextMenuRequest request)
     {
         std::map<std::string, std::function<void()>> options;
 
@@ -823,7 +872,7 @@ namespace rra
 
             options["Hide selected"] = [&]() { HideSelectedNodes(); };
 
-            auto cast_results = CastRay(request.origin, request.direction);
+            auto cast_results = CastRayCollectNodes(request.origin, request.direction);
 
             if (!cast_results.empty())
             {

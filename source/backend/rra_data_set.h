@@ -16,6 +16,8 @@
 #include "rra_configuration.h"
 
 #include "bvh/bvh_bundle.h"
+#include "ray_history/ray_history.h"
+#include "public/rra_async_ray_history_loader.h"
 #include "api_info.h"
 #include "asic_info.h"
 
@@ -26,13 +28,14 @@ extern "C" {
 /// A structure encapsulating a single RRA dataset.
 typedef struct RraDataSet
 {
-    char                            file_path[RRA_MAXIMUM_FILE_PATH];  ///< The file path to the file being worked with.
-    bool                            file_loaded;                       ///< Has a file been successfully loaded.
-    size_t                          file_size_in_bytes;                ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
-    time_t                          create_time;                       ///< The time the trace was created.
-    std::unique_ptr<rta::BvhBundle> bvh_bundle;                        ///< The BVH bundle class encapsulating all the BLAS and TLAS for the loaded trace.
-    rra::ApiInfo                    api_info  = {};                    ///< The API info.
-    rra::AsicInfo                   asic_info = {};                    ///< The ASIC info.
+    char                                                   file_path[RRA_MAXIMUM_FILE_PATH];  ///< The file path to the file being worked with.
+    bool                                                   file_loaded;                       ///< Has a file been successfully loaded.
+    size_t                                                 file_size_in_bytes;  ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
+    time_t                                                 create_time;         ///< The time the trace was created.
+    std::unique_ptr<rta::BvhBundle>                        bvh_bundle;  ///< The BVH bundle class encapsulating all the BLAS and TLAS for the loaded trace.
+    std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> async_ray_histories;  ///< The ray histories made available per asnyc work.
+    rra::ApiInfo                                           api_info  = {};       ///< The API info.
+    rra::AsicInfo                                          asic_info = {};       ///< The ASIC info.
 } RraDataSet;
 
 /// Initialize the RRA data set from a file path.

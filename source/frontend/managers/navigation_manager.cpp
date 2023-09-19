@@ -258,6 +258,12 @@ namespace rra
         case kPaneIdBlasProperties:
             out = "BLAS Properties";
             break;
+        case kPaneIdRayHistory:
+            out = "RAY History";
+            break;
+        case kPaneIdRayInspector:
+            out = "RAY Inspector";
+            break;
         case kPaneIdSettingsGeneral:
             out = "General";
             break;

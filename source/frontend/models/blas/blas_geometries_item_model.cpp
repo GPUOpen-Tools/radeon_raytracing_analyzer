@@ -79,6 +79,8 @@ namespace rra
                 return QString("%1").arg(cache.geometry_index);
             case kBlasGeometriesColumnPrimitiveCount:
                 return QString("%1").arg(cache.primitive_count);
+            case kBlasGeometriesColumnPadding:
+                return QString{""};
             default:
                 break;
             }
@@ -104,6 +106,8 @@ namespace rra
                 return QVariant::fromValue<quint32>(cache.geometry_index);
             case kBlasGeometriesColumnPrimitiveCount:
                 return QVariant::fromValue<quint32>(cache.primitive_count);
+            case kBlasGeometriesColumnPadding:
+                return QVariant();
             default:
                 break;
             }
@@ -129,9 +133,11 @@ namespace rra
                 case kBlasGeometriesColumnGeometryFlagOpaque:
                     return "Opaque";
                 case kBlasGeometriesColumnGeometryFlagNoDuplicateAnyHit:
-                    return "No duplicate any hit invocation";
+                    return "No duplicate\nany hit invocation";
                 case kBlasGeometriesColumnPrimitiveCount:
                     return "Primitive count";
+                case kBlasGeometriesColumnPadding:
+                    return "";
                 default:
                     break;
                 }
@@ -165,6 +171,10 @@ namespace rra
                 default:
                     break;
                 }
+            }
+            else if (role == Qt::TextAlignmentRole)
+            {
+                return Qt::AlignRight;
             }
         }
 

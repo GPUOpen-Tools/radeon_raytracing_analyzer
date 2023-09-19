@@ -86,6 +86,34 @@ namespace rra
         return out_model_index;
     }
 
+    QModelIndex TableProxyModel::FindModelIndex(uint32_t lookup0, uint32_t lookup1, uint32_t lookup2, int column0, int column1, int column2) const
+    {
+        QModelIndex out_model_index;
+
+        const int num_rows = rowCount();
+
+        for (int row = 0; row < num_rows; row++)
+        {
+            const QModelIndex model_index0 = index(row, column0, QModelIndex());
+            const QModelIndex model_index1 = index(row, column1, QModelIndex());
+            const QModelIndex model_index2 = index(row, column2, QModelIndex());
+
+            if (model_index0.isValid() && model_index1.isValid() && model_index2.isValid())
+            {
+                qulonglong value0 = data(model_index0, Qt::UserRole).toULongLong();
+                qulonglong value1 = data(model_index1, Qt::UserRole).toULongLong();
+                qulonglong value2 = data(model_index2, Qt::UserRole).toULongLong();
+                if (value0 == lookup0 && value1 == lookup1 && value2 == lookup2)
+                {
+                    out_model_index = model_index0;
+                    break;
+                }
+            }
+        }
+
+        return out_model_index;
+    }
+
     bool TableProxyModel::FilterSearchString(int row, const QModelIndex& source_parent) const
     {
         if (column_filters_.empty() == false && search_filter_.isEmpty() == false)

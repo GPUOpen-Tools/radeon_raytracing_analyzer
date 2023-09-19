@@ -35,7 +35,7 @@ QString file_util::GetFileLocation()
     Q_ASSERT(hr == S_OK);
     if (hr == S_OK)
     {
-        file_location = QString::fromUtf16(reinterpret_cast<const ushort*>(wsz_path));
+        file_location = QString::fromUtf16(reinterpret_cast<const char16_t*>(wsz_path));
         file_location.append("/" + rra::kExecutableBaseFilename);
     }
 

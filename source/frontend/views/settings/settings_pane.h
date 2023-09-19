@@ -45,6 +45,11 @@ private slots:
     /// Update and save the settings.
     void CameraResetOnStyleChangeStateChanged();
 
+    /// @brief Slot to handle what happens when the UI persistent state check box changes.
+    ///
+    /// Update and save the settings.
+    void PersistentUIStateChanged();
+
     /// @brief Slot to handle what happens when the Treeview Node ID combo box changes.
     ///
     /// Update and save the settings.

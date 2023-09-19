@@ -309,11 +309,18 @@ RraErrorCode RraBlasGetSurfaceAreaImpl(const rta::EncodedRtIp11BottomLevelBvh* b
 {
     if (node_ptr->IsTriangleNode())
     {
+        const auto& header_offsets = blas->GetHeader().GetBufferOffsets();
+
+        if (node_ptr->GetByteOffset() < header_offsets.leaf_nodes)
+        {
+            *out_surface_area = std::numeric_limits<float>::quiet_NaN();
+            return kRraOk;
+        }
+
         const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*node_ptr);
 
 #ifdef _DEBUG
-        const auto&    header_offsets = blas->GetHeader().GetBufferOffsets();
-        const uint32_t node_index     = (node_ptr->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+        const uint32_t node_index = (node_ptr->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
         // Get the triangle vertices for this node index.
         const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
@@ -472,11 +479,17 @@ RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_ptr, uin
     const dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
     if (current_node->IsTriangleNode())
     {
+        const auto& header_offsets = blas->GetHeader().GetBufferOffsets();
+        if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+        {
+            *out_geometry_index = 0;
+            return kRraErrorInvalidPointer;
+        }
+
         const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*current_node);
 
 #ifdef _DEBUG
-        const auto&    header_offsets = blas->GetHeader().GetBufferOffsets();
-        const uint32_t index          = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+        const uint32_t index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
         const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
         const auto& tri_node       = triangle_nodes[index];
@@ -541,11 +554,16 @@ RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, ui
     const dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
     if (current_node->IsTriangleNode())
     {
-        const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*current_node);
+        const dxr::amd::TriangleNode* triangle_node  = blas->GetTriangleNode(*current_node);
+        const auto&                   header_offsets = blas->GetHeader().GetBufferOffsets();
+        if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+        {
+            *out_primitive_index = 0;
+            return kRraErrorInvalidPointer;
+        }
 
 #ifdef _DEBUG
-        const auto&    header_offsets = blas->GetHeader().GetBufferOffsets();
-        const uint32_t node_index     = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+        const uint32_t node_index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
         // Get the primitive index for this node index.
         const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
@@ -700,11 +718,16 @@ RraErrorCode RraBlasGetNodeTriangles(uint64_t blas_index, uint32_t node_ptr, Tri
     // The incoming node id should be a triangle node. If it's not, we can't extract triangle data.
     if (current_node->IsTriangleNode())
     {
-        const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*current_node);
+        const dxr::amd::TriangleNode* triangle_node  = blas->GetTriangleNode(*current_node);
+        const auto&                   header_offsets = blas->GetHeader().GetBufferOffsets();
+
+        if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+        {
+            return kRraErrorInvalidPointer;
+        }
 
 #ifdef _DEBUG
-        const auto&    header_offsets = blas->GetHeader().GetBufferOffsets();
-        const uint32_t node_index     = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+        const uint32_t node_index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
         // Get the triangle vertices for this node index.
         const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());

@@ -81,6 +81,12 @@ namespace rra
             /// @param [in] context The context to cleanup.
             virtual void Cleanup(const RenderModuleContext* context) = 0;
 
+            /// @brief Whether this render module should save a copy of the depth buffer to be read
+            /// from a later render pass.
+            ///
+            /// @return True if a copy of the depth buffer should be saved.
+            virtual bool ShouldCopyDepthBuffer() const;
+
             /// @brief Enable module to draw.
             void Enable();
 

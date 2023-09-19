@@ -17,6 +17,8 @@
 #include "constants.h"
 #include "public/renderer_types.h"
 
+#include "managers/pane_manager.h"
+
 /// @brief A struct for a setting key-value pair.
 struct Setting
 {
@@ -63,10 +65,45 @@ enum HeatmapColorType
 {
     kHeatmapColorTypeTemperature,  ///< The temperature heatmap color.
     kHeatmapColorTypeSpectrum,     ///< The spectrum heatmap color.
+    kHeatmapColorTypeGrayscale,    ///< The grayscale heatmap color.
     kHeatmapColorTypeViridis,      ///< The viridis heatmap color.
     kHeatmapColorTypePlasma,       ///< The plasma heatmap color.
 
     kHeatmapColorTypeMax,  ///< The maximum value of the HeatmapColorType enums (not a valid value)
+};
+
+/// @brief Coloring mode types set in the UI.
+enum ColoringMode
+{
+    kColoringModeBVHColor,
+    kColoringModeGeometryColor,
+    kColoringModeHeatmapColor,
+    kColoringModeTraversalCounterColor,
+};
+
+enum RenderingMode
+{
+    kRenderingModeGeometry,
+    kRenderingModeTraversal,
+};
+
+enum ProjectionMode
+{
+    kProjectionModePerspective,
+    kProjectionModeOrthographic,
+};
+
+/// @brief Checkbox setting types set in the UI.
+enum CheckboxSetting
+{
+    kCheckboxSettingShowGeometry,
+    kCheckboxSettingLockCamera,
+    kCheckboxSettingShowAxisAlignedBVH,
+    kCheckboxSettingShowInstanceTransform,
+    kCheckboxSettingShowWireframe,
+    kCheckboxSettingAcceptFirstHit,
+    kCheckboxSettingCullBackFacingTriangles,
+    kCheckboxSettingCullFrontFacingTriangles,
 };
 
 /// @brief Enum of all settings.
@@ -84,25 +121,13 @@ enum SettingID
 #endif  // BETA_LICENSE
     kSettingGeneralCheckForUpdatesOnStartup,
     kSettingGeneralCameraResetOnStyleChange,
+    kSettingGeneralCameraControlSync,
     kSettingGeneralTreeviewNodeID,
     kSettingGeneralTraversalCounterMaximum,
     kSettingGeneralMovementSpeedLimit,
     kSettingGeneralFrustumCullRatio,
     kSettingGeneralDecimalPrecision,
-
-    kSettingGeneralCullMode,
-    kSettingGeneralControlStyle,
-    kSettingGeneralUpAxis,
-    kSettingGeneralInvertVertical,
-    kSettingGeneralInvertHorizontal,
-    kSettingGeneralTLASBVHColoringMode,
-    kSettingGeneralBLASBVHColoringMode,
-    kSettingGeneralTLASGeometryColoringMode,
-    kSettingGeneralBLASGeometryColoringMode,
-    kSettingGeneralTLASHeatmapColor,
-    kSettingGeneralBLASHeatmapColor,
-    kSettingGeneralTLASTraversalCounterMode,
-    kSettingGeneralBLASTraversalCounterMode,
+    kSettingGeneralPersistentUIState,
 
     kSettingThemesAndColorsPalette,
 
@@ -129,9 +154,78 @@ enum SettingID
     kSettingThemesAndColorsInstanceOpaqueForceOpaque,
     kSettingThemesAndColorsInstanceOpaqueForceNoOpaque,
     kSettingThemesAndColorsInstanceOpaqueBoth,
+    kSettingThemesAndColorsInvocationRaygen,
+    kSettingThemesAndColorsInvocationClosestHit,
+    kSettingThemesAndColorsInvocationAnyHit,
+    kSettingThemesAndColorsInvocationIntersection,
+    kSettingThemesAndColorsInvocationMiss,
+    kSettingThemesAndColorsInvocationCallable,
+    kSettingThemesAndColorsSelectedRayColor,
+    kSettingThemesAndColorsRayColor,
+    kSettingThemesAndColorsShadowRayColor,
+    kSettingThemesAndColorsZeroMaskRayColor,
+
+    // Persistent UI state.
+    kSettingPersistenceCullMode,
+    kSettingPersistenceUpAxis,
+    kSettingPersistenceInvertVertical,
+    kSettingPersistenceInvertHorizontal,
+    kSettingPersistenceContinuousUpdate,
+    kSettingPersistenceProjectionMode,
+
+    // Persistent UI state for each view pane.
+    kSettingPersistenceTLASControlStyle,
+    kSettingPersistenceTLASBVHColoringMode,
+    kSettingPersistenceTLASGeometryColoringMode,
+    kSettingPersistenceTLASHeatmapColor,
+    kSettingPersistenceTLASTraversalCounterMode,
+    kSettingPersistenceTLASRenderingMode,
+    kSettingPersistenceTLASShowGeometry,
+    kSettingPersistenceTLASShowAxisAlignedBVH,
+    kSettingPersistenceTLASShowInstanceTransform,  // TLAS only.
+    kSettingPersistenceTLASShowWireframe,
+    kSettingPersistenceTLASAcceptFirstHit,
+    kSettingPersistenceTLASCullBackFacingTriangles,
+    kSettingPersistenceTLASCullFrontFacingTriangles,
+    kSettingPersistenceTLASFieldOfView,
+    kSettingPersistenceTLASMovementSpeed,
+
+    kSettingPersistenceBLASControlStyle,
+    kSettingPersistenceBLASBVHColoringMode,
+    kSettingPersistenceBLASGeometryColoringMode,
+    kSettingPersistenceBLASHeatmapColor,
+    kSettingPersistenceBLASTraversalCounterMode,
+    kSettingPersistenceBLASRenderingMode,
+    kSettingPersistenceBLASShowGeometry,
+    kSettingPersistenceBLASShowAxisAlignedBVH,
+    kSettingPersistenceBLASShowWireframe,
+    kSettingPersistenceBLASAcceptFirstHit,
+    kSettingPersistenceBLASCullBackFacingTriangles,
+    kSettingPersistenceBLASCullFrontFacingTriangles,
+    kSettingPersistenceBLASFieldOfView,
+    kSettingPersistenceBLASMovementSpeed,
+
+    kSettingPersistenceInspectorControlStyle,
+    kSettingPersistenceInspectorBVHColoringMode,
+    kSettingPersistenceInspectorGeometryColoringMode,
+    kSettingPersistenceInspectorHeatmapColor,
+    kSettingPersistenceInspectorTraversalCounterMode,
+    kSettingPersistenceInspectorRenderingMode,
+    kSettingPersistenceInspectorShowGeometry,
+    kSettingPersistenceInspectorLockCamera,
+    kSettingPersistenceInspectorShowAxisAlignedBVH,
+    kSettingPersistenceInspectorShowWireframe,
+    kSettingPersistenceInspectorAcceptFirstHit,
+    kSettingPersistenceInspectorCullBackFacingTriangles,
+    kSettingPersistenceInspectorCullFrontFacingTriangles,
+    kSettingPersistenceInspectorFieldOfView,
+    kSettingPersistenceInspectorMovementSpeed,
 
     kSettingCount,
 };
+
+typedef std::unordered_map<rra::RRAPaneId, std::unordered_map<int, SettingID> > SettingLookups;
+typedef std::unordered_map<rra::RRAPaneId, SettingID>                           Pane2SettingMap;
 
 typedef QMap<SettingID, Setting> SettingsMap;
 
@@ -285,6 +379,11 @@ namespace rra
         /// @param [in] value The new value of kSettingGeneralCameraResetOnStyleChange.
         void SetCameraResetOnStyleChange(const bool value);
 
+        /// @brief Set the value of kSettingGeneralPersistentUIState in the settings.
+        ///
+        /// @param [in] value The new value of kSettingGeneralPersistentUIState.
+        void SetPersistentUIState(const bool value);
+
         /// @brief Get the value of kSettingGeneralCheckForUpdatesOnStartup in the settings.
         ///
         /// @return The value of kSettingGeneralCheckForUpdatesOnStartup.
@@ -294,6 +393,16 @@ namespace rra
         ///
         /// @return The value of kSettingGeneralResetOnStyleChange.
         bool GetCameraResetOnStyleChange() const;
+
+        /// @brief Get the value of kSettingGeneralCameraResetOnStyleChange.
+        ///
+        /// @return The value of kSettingGeneralCameraResetOnStyleChange.
+        bool GetCameraControlSync() const;
+
+        /// @brief Get the value of kSettingGeneralPersistentUIState.
+        ///
+        /// @return The value of kSettingGeneralPersistentUIState.
+        bool GetPersistentUIState() const;
 
         /// @brief Get the value of the kSettingGeneralTreeviewNodeID in the settings.
         ///
@@ -388,7 +497,17 @@ namespace rra
         /// @return The decimal precision.
         int GetDecimalPrecision();
 
-        // Viewer persistant settings. -------------------------------------
+        // Viewer persistent settings. -------------------------------------
+
+        /// @brief Get the value of the continuous update state from the settings.
+        ///
+        /// @return The continuous update state.
+        bool GetContinuousUpdateState() const;
+
+        /// @brief Set the value of the continuous update state in the settings.
+        ///
+        /// @param [in] statue The continuous update state to save to the settings.
+        void SetContinuousUpdateState(bool state);
 
         /// @brief Get the value of the kSettingGeneralCullMode in the settings.
         ///
@@ -400,15 +519,28 @@ namespace rra
         /// @param [in] cull_mode The triangle face culling mode.
         void SetCullMode(CullModeType cull_mode);
 
-        /// @brief Get the value of the kSettingGeneralControlStyle in the settings.
+        /// @brief Get the value of the control style from the settings.
+        ///
+        /// @param [in] pane The pane to get the control style for.
         ///
         /// @return The control style type.
-        ControlStyleType GetControlStyle() const;
+        int GetControlStyle(rra::RRAPaneId pane) const;
 
-        /// @brief Set the value of the kSettingGeneralControlStyle in the settings.
+        /// @brief Set the value of thecontrol style in the settings.
         ///
+        /// @param [in] pane               The pane to set the control style for.
         /// @param [in] control_style_type The control style type.
-        void SetControlStyle(ControlStyleType control_style_type);
+        void SetControlStyle(rra::RRAPaneId pane, ControlStyleType control_style_type);
+
+        /// @brief Get the value of the projection mode from the settings.
+        ///
+        /// @return The projection mode.
+        ProjectionMode GetProjectionMode() const;
+
+        /// @brief Set the value of the projection mode in the settings.
+        ///
+        /// @param [in] projection_mode The projection mode to save to the settings.
+        void SetProjectionMode(ProjectionMode projection_mode);
 
         /// @brief Get the value of the kSettingGeneralUpAxis in the settings.
         ///
@@ -440,90 +572,104 @@ namespace rra
         /// @param [in] invert_horizontal True if horizontal inversion is enabled.
         void SetInvertHorizontal(bool invert_horizontal);
 
-        /// @brief Get the value of the kSettingGeneralTLASBVHColoringMode in the settings.
+        /// @brief Get the coloring mode from the settings.
         ///
-        /// @return The BVH coloring mode.
-        renderer::BVHColoringMode GetTLASBVHColoringMode() const;
-
-        /// @brief Set the value of the kSettingGeneralTLASBVHColoringMode in the settings.
+        /// @param [in] pane       The pane to get the coloring mode for.
+        /// @param [in] color_mode The type of coloring mode requested.
         ///
-        /// @param [in] coloring_mode The BVH coloring mode.
-        void SetTLASBVHColoringMode(renderer::BVHColoringMode coloring_mode);
+        /// @return The coloring mode value.
+        int GetColoringMode(rra::RRAPaneId pane, ColoringMode color_mode) const;
 
-        /// @brief Get the value of the kSettingGeneralBLASBVHColoringMode in the settings.
+        /// @brief Set the coloring mode in the settings.
         ///
-        /// @return The BVH coloring mode.
-        renderer::BVHColoringMode GetBLASBVHColoringMode() const;
+        /// @param [in] pane       The pane to apply the coloring mode to.
+        /// @param [in] color_mode The type of coloring mode.
+        /// @param [in] value      The value to store in the settings.
+        void SetColoringMode(rra::RRAPaneId pane, ColoringMode color_mode, int value);
 
-        /// @brief Set the value of the kSettingGeneralBLASBVHColoringMode in the settings.
+        /// @brief Get the rendering mode (geometry or traversal) from the settings.
         ///
-        /// @param [in] coloring_mode The BVH coloring mode.
-        void SetBLASBVHColoringMode(renderer::BVHColoringMode coloring_mode);
-
-        /// @brief Get the value of the kSettingGeneralTLASGeometryColoringMode in the settings.
+        /// @param [in] pane The pane to get the rendering mode for.
         ///
-        /// @return The geometry coloring mode combo box index.
-        int GetTLASGeometryColoringMode() const;
+        /// @return The rendering mode.
+        int GetRenderingMode(rra::RRAPaneId pane) const;
 
-        /// @brief Set the value of the kSettingGeneralTLASGeometryColoringMode in the settings.
+        /// @brief Set the rendering mode (geometry or traversal) in the settings.
         ///
-        /// @param [in] coloring_mode The geometry coloring mode combo box index.
-        void SetTLASGeometryColoringMode(int coloring_mode);
+        /// @param [in] pane           The pane to apply the rendering mode to.
+        /// @param [in] rendering_mode The rendering mode to store in the settings.
+        void SetRenderingMode(rra::RRAPaneId pane, RenderingMode rendering_mode);
 
-        /// @brief Get the value of the kSettingGeneralBLASGeometryColoringMode in the settings.
+        /// @brief Get a checkbox state from the settings.
         ///
-        /// @return The geometry coloring mode combo box index.
-        int GetBLASGeometryColoringMode() const;
-
-        /// @brief Set the value of the kSettingGeneralBLASGeometryColoringMode in the settings.
+        /// Allows multiple checkbox states per pane to be accessed via a single function.
         ///
-        /// @param [in] coloring_mode The geometry coloring mode combo box index.
-        void SetBLASGeometryColoringMode(int coloring_mode);
-
-        /// @brief Get the value of the kSettingGeneralTLASHeatmapColor in the settings.
+        /// @param [in] pane    The pane to apply the checkbox state mode to.
+        /// @param [in] setting The checkbox setting to get.
         ///
-        /// @return The heatmap color.
-        HeatmapColorType GetTLASHeatmapColor() const;
+        /// @return The checkbox state from the settings.
+        bool GetCheckboxSetting(rra::RRAPaneId pane, CheckboxSetting setting) const;
 
-        /// @brief Set the value of the kSettingGeneralTLASHeatmapColor in the settings.
+        /// @brief Apply a checkbox state to the settings.
         ///
-        /// @param [in] heatmap_color The heatmap color.
-        void SetTLASHeatmapColor(HeatmapColorType heatmap_color);
+        /// @param [in] pane    The pane where the checkbox state originates.
+        /// @param [in] setting The checkbox setting to set.
+        /// @param [in] value   The checkbox state to store in the settings.
+        void SetCheckboxSetting(rra::RRAPaneId pane, CheckboxSetting setting, bool value);
 
-        /// @brief Get the value of the kSettingGeneralBLASHeatmapColor in the settings.
+        /// @brief Get the field of view from a specified viewer pane.
         ///
-        /// @return The heatmap color.
-        HeatmapColorType GetBLASHeatmapColor() const;
-
-        /// @brief Set the value of the kSettingGeneralBLASHeatmapColor in the settings.
+        /// @param [in] pane The pane to get the field of view setting for.
         ///
-        /// @param [in] heatmap_color The heatmap color.
-        void SetBLASHeatmapColor(HeatmapColorType heatmap_color);
+        /// @return The field of view.
+        int GetFieldOfView(rra::RRAPaneId pane) const;
 
-        /// @brief Get the value of the kSettingGeneralTLASTraversalCounterMode in the settings.
+        /// @brief Set the field of view in a specified viewer pane.
         ///
-        /// @return The traversal counter mode combo box index.
-        int GetTLASTraversalCounterMode() const;
+        /// @param [in] pane  The pane to set the field of view setting from.
+        /// @param [in] value The value to save in the settings.
+        void SetFieldOfView(rra::RRAPaneId pane, int value);
 
-        /// @brief Set the value of the kSettingGeneralTLASTraversalCounterMode in the settings.
+        /// @brief Get the movement speed from a specified viewer pane.
+        /// @param [in] pane The pane to get the movement speed setting for.
         ///
-        /// @param [in] traversal_counter_mode The traversal counter mode combo box index.
-        void SetTLASTraversalCounterMode(int traversal_counter_mode);
+        /// @return The movement speed.
+        int GetMovementSpeed(rra::RRAPaneId pane) const;
 
-        /// @brief Get the value of the kSettingGeneralBLASTraversalCounterMode in the settings.
+        /// @brief Set the movement speed in a specified viewer pane.
         ///
-        /// @return The traversal counter mode combo box index.
-        int GetBLASTraversalCounterMode() const;
+        /// @param [in] pane  The pane to set the movement speed setting from.
+        /// @param [in] value The value to save in the settings.
+        void SetMovementSpeed(rra::RRAPaneId pane, int value);
 
-        /// @brief Set the value of the kSettingGeneralBLASTraversalCounterMode in the settings.
+        /// @brief Reset the persistent UI state back to the default values.
         ///
-        /// @param [in] traversal_counter_mode The traversal counter mode combo box index.
-        void SetBLASTraversalCounterMode(int traversal_counter_mode);
+        /// @param pane The ID of the Pane to reset the UI for.
+        void SetPersistentUIToDefault(RRAPaneId pane);
 
-        /// @brief Reset the persistent TLAS/BLAS UI back to the default values.
+        /// @brief Reset the persistent UI state back to the default values.
+        ///
+        /// Sets the UI state common between panes.
         void SetPersistentUIToDefault();
 
     private:
+        /// @brief Get the settingID from a lookup map based on the pane and an index.
+        ///
+        /// Used to return multiple settings from a single function.
+        ///
+        /// @param [in] lut   The lookup table to use.
+        /// @param [in] pane  The Id of the pane to use for the lookup.
+        /// @param [in] index The setting type to use.
+        SettingID GetSettingIndex(const SettingLookups& lut, rra::RRAPaneId pane, int index) const;
+
+        /// @brief Get the settingID from a lookup map based on the pane and an index.
+        ///
+        /// Used to return multiple settings from a single function.
+        ///
+        /// @param [in] lut   The lookup table to use.
+        /// @param [in] pane  The Id of the pane to use for the lookup.
+        SettingID GetSettingIndex(const Pane2SettingMap& lut, rra::RRAPaneId pane) const;
+
         /// @brief Set the value of checkbox's state in the settings.
         ///
         /// @param [in] setting_id The setting id of checkbox.

@@ -680,6 +680,9 @@
    <extends>QCheckbox</extends>
    <header>views/custom_widgets/read_only_checkbox.h</header>
   </customwidget>
+  <customwidget>
+   <class>RayHistoryViewerWidget</class>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="resources.qrc"/>

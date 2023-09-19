@@ -145,6 +145,8 @@ namespace rra
                 return QString::number(cache.transform[kTransformIndexM33], kQtFloatFormat, decimal_precision);
             case kInstancesColumnUniqueInstanceIndex:
                 return QString::number(cache.unique_instance_index);
+            case kInstancesColumnPadding:
+                return QString{""};
             default:
                 break;
             }
@@ -229,6 +231,8 @@ namespace rra
                 return QVariant::fromValue<float>(cache.transform[kTransformIndexM33]);
             case kInstancesColumnUniqueInstanceIndex:
                 return QVariant::fromValue<uint32_t>(cache.unique_instance_index);
+            case kInstancesColumnPadding:
+                return QVariant();
             default:
                 break;
             }
@@ -305,6 +309,8 @@ namespace rra
                     return "Transform [2][1]";
                 case kInstancesColumnM33:
                     return "Transform [2][2]";
+                case kInstancesColumnPadding:
+                    return "";
                 default:
                     break;
                 }
@@ -385,6 +391,10 @@ namespace rra
                 default:
                     break;
                 }
+            }
+            else if (role == Qt::TextAlignmentRole)
+            {
+                return Qt::AlignRight;
             }
         }
 

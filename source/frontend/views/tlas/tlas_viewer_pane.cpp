@@ -14,6 +14,7 @@
 #include "models/acceleration_structure_tree_view_item.h"
 #include "models/acceleration_structure_viewer_model.h"
 #include "models/tlas/tlas_viewer_model.h"
+#include "settings/settings.h"
 #include "views/widget_util.h"
 #include "public/rra_api_info.h"
 
@@ -24,7 +25,8 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     , ui_(new Ui::TlasViewerPane)
 {
     ui_->setupUi(this);
-    ui_->viewer_container_widget_->SetupUI(this);
+    ui_->side_panel_container_->GetViewPane()->SetParentPaneId(rra::kPaneIdTlasViewer);
+    ui_->viewer_container_widget_->SetupUI(this, rra::kPaneIdTlasViewer);
 
     rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
     ui_->tlas_tree_->setIndentation(rra::kTreeViewIndent);
@@ -55,6 +57,8 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     ui_->rebraid_info_->setCursor(Qt::PointingHandCursor);
     ui_->rebraid_info_->hide();
 
+    ui_->side_panel_container_->GetViewPane()->HideRAYWidgets();
+
     // Initialize tables.
     model_->InitializeExtentsTableModel(ui_->extents_table_);
     derived_model_->InitializeFlagsTableModel(ui_->flags_table_);
@@ -75,23 +79,54 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     connect(ui_->tlas_tree_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TlasViewerPane::TreeNodeChanged);
     connect(acceleration_structure_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &TlasViewerPane::UpdateSelectedTlas);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::InstancesTableDoubleClicked, this, &TlasViewerPane::SetBlasInstanceSelection);
-    connect(model_, &rra::AccelerationStructureViewerModel::SceneSelectionChanged, this, &TlasViewerPane::HandleSceneSelectionChanged);
+    connect(model_, &rra::AccelerationStructureViewerModel::SceneSelectionChanged, [=]() { HandleSceneSelectionChanged(); });
     connect(ui_->expand_collapse_tree_, &ScaledCycleButton::Clicked, model_, &rra::AccelerationStructureViewerModel::ExpandCollapseTreeView);
     connect(ui_->search_box_, &TextSearchWidget::textChanged, model_, &rra::AccelerationStructureViewerModel::SearchTextChanged);
     connect(ui_->content_blas_address_, &ScaledPushButton::clicked, this, &TlasViewerPane::GotoBlasPaneFromBlasAddress);
     connect(ui_->content_parent_, &ScaledPushButton::clicked, this, &TlasViewerPane::SelectParentNode);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasSelected, this, &TlasViewerPane::SetTlasIndex);
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasAssumeCamera, this, &TlasViewerPane::SetTlasCamera);
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::InspectorInstanceSelected, this, &TlasViewerPane::SelectInstance);
 
     ui_->tree_depth_slider_->setCursor(Qt::PointingHandCursor);
     connect(ui_->tree_depth_slider_, &DepthSliderWidget::SpanChanged, this, &TlasViewerPane::UpdateTreeDepths);
 
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ControlStyleChanged, this, &TlasViewerPane::UpdateCameraController);
+    // Save selected control style to settings.
+    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ControlStyleChanged, this, [&]() {
+        if (renderer_interface_ == nullptr)
+        {
+            return;
+        }
+        rra::renderer::Camera& camera = renderer_interface_->GetCamera();
+
+        auto camera_controller = static_cast<rra::ViewerIO*>(camera.GetCameraController());
+        if (camera_controller && (acceleration_structure_combo_box_->RowCount() > 0))
+        {
+            rra::Settings::Get().SetControlStyle(rra::kPaneIdTlasViewer, (ControlStyleType)camera_controller->GetComboBoxIndex());
+        }
+    });
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=](bool geometry_mode) {
         ui_->viewer_container_widget_->ShowColoringMode(geometry_mode);
     });
 
+    // Reset the UI state. When the 'reset' button is clicked, it broadcasts a message from the message manager. Any objects interested in this
+    // message can then act upon it.
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::ResetUIState, [=](rra::RRAPaneId pane) {
+        if (pane == rra::kPaneIdTlasViewer)
+        {
+            ui_->side_panel_container_->GetViewPane()->ApplyUIStateFromSettings(rra::kPaneIdTlasViewer);
+            ui_->viewer_container_widget_->ApplyUIStateFromSettings(rra::kPaneIdTlasViewer);
+        }
+    });
+
     flag_table_delegate_ = new FlagTableItemDelegate();
     ui_->flags_table_->setItemDelegate(flag_table_delegate_);
+
+    ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
+    ui_->content_focus_selected_volume_->SetHoverIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-hover.svg"));
+    ui_->content_focus_selected_volume_->setBaseSize(QSize(25, 25));
+    connect(ui_->content_focus_selected_volume_, &ScaledPushButton::clicked, [&]() { model_->GetCameraController()->FocusOnSelection(); });
 }
 
 TlasViewerPane::~TlasViewerPane()
@@ -102,6 +137,7 @@ TlasViewerPane::~TlasViewerPane()
 void TlasViewerPane::showEvent(QShowEvent* event)
 {
     ui_->label_bvh_->setText("TLAS:");
+    ui_->side_panel_container_->GetViewPane()->SetControlStyle(rra::Settings::Get().GetControlStyle(rra::kPaneIdTlasViewer));
     AccelerationStructureViewerPane::showEvent(event);
 }
 
@@ -122,6 +158,7 @@ void TlasViewerPane::OnTraceClose()
 void TlasViewerPane::OnTraceOpen()
 {
     InitializeRendererWidget(ui_->tlas_scene_, ui_->side_panel_container_, ui_->viewer_container_widget_, rra::renderer::BvhTypeFlags::TopLevel);
+
     last_selected_as_id_ = 0;
     ui_->side_panel_container_->OnTraceOpen();
     AccelerationStructureViewerPane::OnTraceOpen();
@@ -288,6 +325,31 @@ void TlasViewerPane::TreeNodeChanged(const QItemSelection& selected, const QItem
     }
 
     AccelerationStructureViewerPane::SelectedTreeNodeChanged(selected, deselected);
+}
+
+void TlasViewerPane::SetTlasCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up)
+{
+    UpdateCameraController();
+    if (last_camera_controller_)
+    {
+        last_camera_controller_->FitCameraParams(origin, forward, up);
+        renderer_interface_->MarkAsDirty();
+    }
+}
+
+void TlasViewerPane::SelectInstance(uint32_t instance_index)
+{
+    rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
+
+    auto node = scene->GetNodeByInstanceIndex(instance_index);
+    if (node == nullptr)
+    {
+        return;
+    }
+
+    scene->SetSceneSelection(node->GetId());
+
+    HandleSceneSelectionChanged();
 }
 
 void TlasViewerPane::UpdateWidgets(const QModelIndex& index)

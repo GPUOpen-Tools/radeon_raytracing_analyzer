@@ -30,9 +30,6 @@ public:
     /// @brief Destructor.
     ~SummaryPane();
 
-    /// @brief Add all the TLAS panes to the summary pane.
-    void AddTlasPanes();
-
     /// @brief Overridden Qt show event. Fired when this pane is opened.
     ///
     /// @param [in] event The show event object.
@@ -62,10 +59,16 @@ private slots:
     void SetTlasIndex(uint64_t tlas_index);
 
 private:
-    Ui::SummaryPane*      ui_;                 ///< Pointer to the Qt UI design.
-    rra::SummaryModel*    model_;              ///< The model for this pane.
-    uint64_t              tlas_index_;         ///< The index in the table.
-    std::vector<QWidget*> tlas_pane_widgets_;  ///< The TLAS pane widgets shown in the TLAS list.
+    /// @brief Add all the dispatch panes to the summary pane.
+    void AddDispatchPanes();
+
+    /// @brief Add all the TLAS panes to the summary pane.
+    void AddTlasPanes();
+
+    Ui::SummaryPane*      ui_;                     ///< Pointer to the Qt UI design.
+    rra::SummaryModel*    model_;                  ///< The model for this pane.
+    uint64_t              tlas_index_;             ///< The index in the table.
+    std::vector<QWidget*> widget_deletion_queue_;  ///< A list of dynamic widgets in the pane which need manual deletion.
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_SUMMARY_PANE_H_

@@ -51,8 +51,10 @@ namespace rra
                     continue;
                 }
 
+                float closest = 0.0f;
+
                 if (renderer::IntersectAABB(
-                        origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z)))
+                        origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z), closest))
                 {
                     // Get the child nodes. If this is not a box node, the child count is 0.
                     uint32_t child_node_count;

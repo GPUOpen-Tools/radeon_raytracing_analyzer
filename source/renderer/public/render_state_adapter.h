@@ -34,6 +34,7 @@ namespace rra
         class BoundingVolumeRenderModule;
         class TraversalRenderModule;
         class SelectionRenderModule;
+        class RayInspectorOverlayRenderModule;
 
         /// @brief Declaration of the RenderStateAdapter class.
         class RenderStateAdapter : public RendererAdapter
@@ -44,11 +45,12 @@ namespace rra
             /// @param [in] renderer The renderer instanced used to draw frames.
             /// @param [in] blas_mesh_module The BLAS mesh render module instance.
             /// @param [in] bounding_volume_module The bounding volume render module instance.
-            RenderStateAdapter(RendererInterface*          renderer,
-                               MeshRenderModule*           blas_mesh_module,
-                               BoundingVolumeRenderModule* bounding_volume_module,
-                               TraversalRenderModule*      traversal_render_module,
-                               SelectionRenderModule*      selection_render_module);
+            RenderStateAdapter(RendererInterface*               renderer,
+                               MeshRenderModule*                blas_mesh_module,
+                               BoundingVolumeRenderModule*      bounding_volume_module,
+                               TraversalRenderModule*           traversal_render_module,
+                               SelectionRenderModule*           selection_render_module,
+                               RayInspectorOverlayRenderModule* ray_inspector_overlay_module);
 
             /// @brief Destructor.
             virtual ~RenderStateAdapter() = default;
@@ -92,7 +94,8 @@ namespace rra
             ///
             /// @param [in] update_function The callback to use after the traversal shader runs to populate histogram.
             /// @param [in] traversal_max_setting The maximum traversal count set in the settings.
-            void SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function, uint32_t traversal_max_setting);
+            void SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function,
+                                            uint32_t                                                              traversal_max_setting);
 
             /// @brief Checks if the traversal counter continuous update function is set.
             ///
@@ -186,7 +189,7 @@ namespace rra
             /// @brief Set the heatmap data.
             ///
             /// @param [in] heatmap_data The raw heatmap data.
-            void SetHeatmapData(HeatmapData heatmap_data);
+            void SetHeatmapData(const HeatmapData& heatmap_data);
 
             /// @brief  Add a heatmap update callback.
             ///
@@ -225,7 +228,8 @@ namespace rra
             BoundingVolumeRenderModule*                                  bounding_volume_module_  = nullptr;  ///< The bounding volume module instance.
             TraversalRenderModule*                                       traversal_render_module_ = nullptr;  ///< The traversal render volume instance.
             SelectionRenderModule*                                       selection_render_module_ = nullptr;  ///< The selection render volume instance.
-            std::vector<std::function<void(rra::renderer::HeatmapData)>> heatmap_update_callbacks_;           ///< The heatmap update callbacks.
+            RayInspectorOverlayRenderModule*                             ray_inspector_overlay_module_ = nullptr;  ///< The ray inspector module to draw rays.
+            std::vector<std::function<void(rra::renderer::HeatmapData)>> heatmap_update_callbacks_;                ///< The heatmap update callbacks.
             uint32_t traversal_counter_min_ = 0;      ///< The min traversal value to compare against to check if the renderer should re-render.
             uint32_t traversal_counter_max_ = 0;      ///< The max traversal value to compare against to check if the renderer should re-render.
             bool     using_navi_3_          = false;  ///< The flag to determine which Architecture to render for.

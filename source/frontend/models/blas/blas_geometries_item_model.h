@@ -33,6 +33,7 @@ namespace rra
         kBlasGeometriesColumnGeometryFlagOpaque,
         kBlasGeometriesColumnGeometryFlagNoDuplicateAnyHit,
         kBlasGeometriesColumnPrimitiveCount,
+        kBlasGeometriesColumnPadding,
 
         kBlasGeometriesColumnCount,
     };

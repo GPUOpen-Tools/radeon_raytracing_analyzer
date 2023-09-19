@@ -12,6 +12,7 @@
 #include "views/viewer_container_widget.h"
 
 #include "views/widget_util.h"
+#include "managers/pane_manager.h"
 
 #include "public/heatmap.h"
 #include "public/renderer_types.h"
@@ -57,8 +58,34 @@ void ViewerContainerWidget::SetRendererAdapters(const rra::renderer::RendererAda
     }
 }
 
-void ViewerContainerWidget::SetupUI(QWidget* parent)
+void ViewerContainerWidget::ApplyUIStateFromSettings(rra::RRAPaneId pane)
 {
+    int bvh_index       = rra::Settings::Get().GetColoringMode(pane, kColoringModeBVHColor);
+    int geometry_index  = rra::Settings::Get().GetColoringMode(pane, kColoringModeGeometryColor);
+    int heatmap_index   = rra::Settings::Get().GetColoringMode(pane, kColoringModeHeatmapColor);
+    int traversal_index = rra::Settings::Get().GetColoringMode(pane, kColoringModeTraversalCounterColor);
+
+    ui_->content_bvh_coloring_mode_->SetSelectedRow(bvh_index);
+    rra::renderer::BVHColoringMode bvh_mode_value = rra::renderer::kAvailableBVHColoringModes[bvh_index].value;
+    model_->SetBVHColoringMode(static_cast<int>(bvh_mode_value));
+
+    ui_->content_geometry_coloring_mode_->SetSelectedRow(geometry_index);
+    rra::renderer::GeometryColoringMode geometry_mode_value = filtered_color_modes_[geometry_index].value;
+    model_->SetGeometryColoringMode(geometry_mode_value);
+
+    ui_->content_heatmap_->SetSelectedRow(heatmap_index);
+    model_->SetHeatmapData(heatmap_generators_[heatmap_index].generator_function());
+
+    ui_->content_traversal_counter_mode_->SetSelectedRow(traversal_index);
+    rra::renderer::TraversalCounterMode traversal_mode_value = filtered_traversal_modes_[traversal_index].value;
+    model_->SetTraversalCounterMode(static_cast<int>(traversal_mode_value));
+
+    ui_->content_instance_mask_hex_input_->setValue(0xFF);
+}
+
+void ViewerContainerWidget::SetupUI(QWidget* parent, rra::RRAPaneId pane)
+{
+    parent_pane_id_ = pane;
     rra::widget_util::InitializeComboBox(parent, ui_->content_bvh_coloring_mode_, {});
     rra::widget_util::InitializeComboBox(parent, ui_->content_heatmap_, {});
     rra::widget_util::InitializeComboBox(parent, ui_->content_geometry_coloring_mode_, {});
@@ -115,6 +142,8 @@ void ViewerContainerWidget::SetScene(rra::Scene* scene)
 
 void ViewerContainerWidget::BinaryCheckboxClicked(uint32_t mask)
 {
+    EvaluateInstanceMaskWarning(mask);
+
     uint32_t filter = model_->GetInstanceMaskFilter();
     filter ^= mask;
     model_->SetInstanceMaskFilter(filter);
@@ -125,6 +154,7 @@ void ViewerContainerWidget::InstanceMaskHexChanged(int mask)
 {
     uint32_t filter = (uint32_t)mask;
     model_->SetInstanceMaskFilter(filter);
+    EvaluateInstanceMaskWarning(mask);
 
     ui_->content_instance_mask_bit_7_->setChecked(filter & 0b10000000);
     ui_->content_instance_mask_bit_6_->setChecked(filter & 0b01000000);
@@ -136,67 +166,73 @@ void ViewerContainerWidget::InstanceMaskHexChanged(int mask)
     ui_->content_instance_mask_bit_0_->setChecked(filter & 0b00000001);
 }
 
+void ViewerContainerWidget::DisableMaskWidgetInteraction()
+{
+    ui_->content_instance_mask_bit_7_->DisableInteraction();
+    ui_->content_instance_mask_bit_6_->DisableInteraction();
+    ui_->content_instance_mask_bit_5_->DisableInteraction();
+    ui_->content_instance_mask_bit_4_->DisableInteraction();
+    ui_->content_instance_mask_bit_3_->DisableInteraction();
+    ui_->content_instance_mask_bit_2_->DisableInteraction();
+    ui_->content_instance_mask_bit_1_->DisableInteraction();
+    ui_->content_instance_mask_bit_0_->DisableInteraction();
+
+    ui_->content_instance_mask_hex_input_->setReadOnly(true);
+    ui_->content_instance_mask_hex_input_->setEnabled(false);
+    instance_mask_interaction_disabled_ = true;
+}
+
+void ViewerContainerWidget::UpdateMaskWidget(int mask)
+{
+    model_->SetInstanceMaskFilter(mask);
+    EvaluateInstanceMaskWarning(mask);
+
+    uint32_t filter = (uint32_t)mask;
+    ui_->content_instance_mask_hex_input_->setValue(filter);
+    ui_->content_instance_mask_bit_7_->setChecked(filter & 0b10000000);
+    ui_->content_instance_mask_bit_6_->setChecked(filter & 0b01000000);
+    ui_->content_instance_mask_bit_5_->setChecked(filter & 0b00100000);
+    ui_->content_instance_mask_bit_4_->setChecked(filter & 0b00010000);
+    ui_->content_instance_mask_bit_3_->setChecked(filter & 0b00001000);
+    ui_->content_instance_mask_bit_2_->setChecked(filter & 0b00000100);
+    ui_->content_instance_mask_bit_1_->setChecked(filter & 0b00000010);
+    ui_->content_instance_mask_bit_0_->setChecked(filter & 0b00000001);
+}
+
+void ViewerContainerWidget::SetHeatmap(HeatmapColorType heatmap_type)
+{
+    ui_->content_heatmap_->SetSelectedRow(static_cast<int>(heatmap_type));
+}
+
 void ViewerContainerWidget::SetHeatmapMode()
 {
     int row = ui_->content_heatmap_->CurrentRow();
     model_->SetHeatmapData(heatmap_generators_[row].generator_function());
-
-    if (bvh_type_ == rra::renderer::BvhTypeFlags::TopLevel)
-    {
-        rra::Settings::Get().SetTLASHeatmapColor(static_cast<HeatmapColorType>(row));
-    }
-    else
-    {
-        rra::Settings::Get().SetBLASHeatmapColor(static_cast<HeatmapColorType>(row));
-    }
+    rra::Settings::Get().SetColoringMode(parent_pane_id_, kColoringModeHeatmapColor, row);
 }
 
 void ViewerContainerWidget::SetGeometryColoringMode()
 {
     int                                 row        = ui_->content_geometry_coloring_mode_->CurrentRow();
     rra::renderer::GeometryColoringMode mode_value = filtered_color_modes_[row].value;
-
     model_->SetGeometryColoringMode(mode_value);
-    if (bvh_type_ == rra::renderer::BvhTypeFlags::TopLevel)
-    {
-        rra::Settings::Get().SetTLASGeometryColoringMode(row);
-    }
-    else
-    {
-        rra::Settings::Get().SetBLASGeometryColoringMode(row);
-    }
+    rra::Settings::Get().SetColoringMode(parent_pane_id_, kColoringModeGeometryColor, row);
 }
 
 void ViewerContainerWidget::SetBVHColoringMode()
 {
     int                            row        = ui_->content_bvh_coloring_mode_->CurrentRow();
     rra::renderer::BVHColoringMode mode_value = rra::renderer::kAvailableBVHColoringModes[row].value;
-
     model_->SetBVHColoringMode(static_cast<int>(mode_value));
-    if (bvh_type_ == rra::renderer::BvhTypeFlags::TopLevel)
-    {
-        rra::Settings::Get().SetTLASBVHColoringMode(static_cast<rra::renderer::BVHColoringMode>(mode_value));
-    }
-    else
-    {
-        rra::Settings::Get().SetBLASBVHColoringMode(static_cast<rra::renderer::BVHColoringMode>(mode_value));
-    }
+    rra::Settings::Get().SetColoringMode(parent_pane_id_, kColoringModeBVHColor, static_cast<int>(mode_value));
 }
 
 void ViewerContainerWidget::SetTraversalCounterMode()
 {
     int                                 row        = ui_->content_traversal_counter_mode_->CurrentRow();
     rra::renderer::TraversalCounterMode mode_value = filtered_traversal_modes_[row].value;
-
     model_->SetTraversalCounterMode(static_cast<int>(mode_value));
-    if (bvh_type_ == rra::renderer::BvhTypeFlags::TopLevel)
-    {
-        rra::Settings::Get().SetTLASTraversalCounterMode(row);
-    }
-    else
-    {
-        rra::Settings::Get().SetBLASTraversalCounterMode(row);
-    }
+    rra::Settings::Get().SetColoringMode(parent_pane_id_, kColoringModeTraversalCounterColor, row);
 }
 
 void ViewerContainerWidget::UpdateRenderingModes(const std::vector<rra::renderer::GeometryColoringModeInfo>& coloring_modes,
@@ -214,15 +250,14 @@ void ViewerContainerWidget::UpdateRenderingModes(const std::vector<rra::renderer
 
     // Populate the coloring modes combo box with the available modes.
     rra::widget_util::RePopulateComboBox(ui_->content_geometry_coloring_mode_, coloring_mode_names);
+    ui_->content_geometry_coloring_mode_->SetSelectedRow(rra::Settings::Get().GetColoringMode(parent_pane_id_, kColoringModeGeometryColor));
 
     if (bvh_type == rra::renderer::BvhTypeFlags::TopLevel)
     {
-        ui_->content_geometry_coloring_mode_->SetSelectedRow((int)rra::Settings::Get().GetTLASGeometryColoringMode());
         ui_->instance_mask_filter_group_->show();
     }
     else
     {
-        ui_->content_geometry_coloring_mode_->SetSelectedRow((int)rra::Settings::Get().GetBLASGeometryColoringMode());
         ui_->instance_mask_filter_group_->hide();
     }
     SetGeometryColoringMode();
@@ -245,14 +280,7 @@ void ViewerContainerWidget::UpdateRenderingModes(const std::vector<rra::renderer
 
     // Populate the coloring modes combo box with the available modes.
     rra::widget_util::RePopulateComboBox(ui_->content_bvh_coloring_mode_, bvh_coloring_mode_names);
-    if (bvh_type == rra::renderer::BvhTypeFlags::TopLevel)
-    {
-        ui_->content_bvh_coloring_mode_->SetSelectedRow((int)rra::Settings::Get().GetTLASBVHColoringMode());
-    }
-    else
-    {
-        ui_->content_bvh_coloring_mode_->SetSelectedRow((int)rra::Settings::Get().GetBLASBVHColoringMode());
-    }
+    ui_->content_bvh_coloring_mode_->SetSelectedRow(rra::Settings::Get().GetColoringMode(parent_pane_id_, kColoringModeBVHColor));
     SetBVHColoringMode();
 
     // Set a tooltip for each item with a description of the bvh coloring mode.
@@ -274,14 +302,7 @@ void ViewerContainerWidget::UpdateRenderingModes(const std::vector<rra::renderer
 
     // Populate the coloring modes combo box with the available modes.
     rra::widget_util::RePopulateComboBox(ui_->content_traversal_counter_mode_, traversal_counter_mode_names);
-    if (bvh_type == rra::renderer::BvhTypeFlags::TopLevel)
-    {
-        ui_->content_traversal_counter_mode_->SetSelectedRow((int)rra::Settings::Get().GetTLASTraversalCounterMode());
-    }
-    else
-    {
-        ui_->content_traversal_counter_mode_->SetSelectedRow((int)rra::Settings::Get().GetBLASTraversalCounterMode());
-    }
+    ui_->content_traversal_counter_mode_->SetSelectedRow(rra::Settings::Get().GetColoringMode(parent_pane_id_, kColoringModeTraversalCounterColor));
     SetTraversalCounterMode();
 
     // Set a tooltip for each item with a description of the bvh coloring mode.
@@ -293,32 +314,60 @@ void ViewerContainerWidget::UpdateRenderingModes(const std::vector<rra::renderer
     }
 
     // Initialize Heatmap modes.
-    std::vector<std::string> heatmap_mode_names_;
+    std::vector<std::string> heatmap_mode_names;
     heatmap_generators_ = rra::renderer::Heatmap::GetHeatmapGenerators();
 
     // Construct heatmap name vector.
     for (auto generator : heatmap_generators_)
     {
-        heatmap_mode_names_.push_back(generator.name);
+        heatmap_mode_names.push_back(generator.name);
     }
 
     // Populate heatmap dropdown with heatmap names.
-    rra::widget_util::RePopulateComboBox(ui_->content_heatmap_, heatmap_mode_names_);
-    if (bvh_type == rra::renderer::BvhTypeFlags::TopLevel)
-    {
-        ui_->content_heatmap_->SetSelectedRow((int)rra::Settings::Get().GetTLASHeatmapColor());
-    }
-    else
-    {
-        ui_->content_heatmap_->SetSelectedRow((int)rra::Settings::Get().GetBLASHeatmapColor());
-    }
+    rra::widget_util::RePopulateComboBox(ui_->content_heatmap_, heatmap_mode_names);
+    ui_->content_heatmap_->SetSelectedRow(rra::Settings::Get().GetColoringMode(parent_pane_id_, kColoringModeHeatmapColor));
     SetHeatmapMode();
 
     // Set heatmap tooltips.
-    int heatmap_color_count = static_cast<int>(heatmap_mode_names_.size());
+    int heatmap_color_count = static_cast<int>(heatmap_mode_names.size());
     for (int mode_index = 0; mode_index < heatmap_color_count; ++mode_index)
     {
         auto heatmap_mode_item = ui_->content_heatmap_->FindItem(mode_index);
         heatmap_mode_item->setToolTip(heatmap_generators_[mode_index].tooltip.c_str());
     }
+}
+
+void ViewerContainerWidget::EvaluateInstanceMaskWarning(int mask)
+{
+    if (mask == 0)
+    {
+        ui_->content_instance_mask_bit_7_->EnableWarningOverride();
+        ui_->content_instance_mask_bit_6_->EnableWarningOverride();
+        ui_->content_instance_mask_bit_5_->EnableWarningOverride();
+        ui_->content_instance_mask_bit_4_->EnableWarningOverride();
+        ui_->content_instance_mask_bit_3_->EnableWarningOverride();
+        ui_->content_instance_mask_bit_2_->EnableWarningOverride();
+        ui_->content_instance_mask_bit_1_->EnableWarningOverride();
+        ui_->content_instance_mask_bit_0_->EnableWarningOverride();
+    }
+    else
+    {
+        ui_->content_instance_mask_bit_7_->DisableWarningOverride();
+        ui_->content_instance_mask_bit_6_->DisableWarningOverride();
+        ui_->content_instance_mask_bit_5_->DisableWarningOverride();
+        ui_->content_instance_mask_bit_4_->DisableWarningOverride();
+        ui_->content_instance_mask_bit_3_->DisableWarningOverride();
+        ui_->content_instance_mask_bit_2_->DisableWarningOverride();
+        ui_->content_instance_mask_bit_1_->DisableWarningOverride();
+        ui_->content_instance_mask_bit_0_->DisableWarningOverride();
+    }
+
+    ui_->content_instance_mask_bit_7_->repaint();
+    ui_->content_instance_mask_bit_6_->repaint();
+    ui_->content_instance_mask_bit_5_->repaint();
+    ui_->content_instance_mask_bit_4_->repaint();
+    ui_->content_instance_mask_bit_3_->repaint();
+    ui_->content_instance_mask_bit_2_->repaint();
+    ui_->content_instance_mask_bit_1_->repaint();
+    ui_->content_instance_mask_bit_0_->repaint();
 }

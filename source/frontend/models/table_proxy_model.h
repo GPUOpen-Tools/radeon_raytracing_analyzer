@@ -56,8 +56,20 @@ namespace rra
         /// @param [in] lookup The value to find.
         /// @param [in] column The column to search.
         ///
-        /// @return the model index containing the data.
+        /// @return The model index containing the data.
         QModelIndex FindModelIndex(qulonglong lookup, int column) const;
+
+        /// @brief Find a model index corresponding to the three passed in data items.
+        /// 
+        /// @param lookup0 The first value that must match.
+        /// @param lookup1 The second value that must match.
+        /// @param lookup2 The third value that must match.
+        /// @param column0 The column to search for the first value in.
+        /// @param column1 The column to search for the second value in.
+        /// @param column2 The column to search for the third value in.
+        /// 
+        /// @return The model index containing the data.
+        QModelIndex FindModelIndex(uint32_t lookup0, uint32_t lookup1, uint32_t lookup2, int column0, int column1, int column2) const;
 
     protected:
         /// @brief Make the filter run across multiple columns.

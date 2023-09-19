@@ -68,6 +68,9 @@ SettingsPane::SettingsPane(QWidget* parent)
     connect(ui_->content_decimal_precision_, SIGNAL(valueChanged(int)), this, SLOT(DecimalPrecisionChanged(int)));
 
     ui_->small_object_culling_content_->setStyle(new AbsoluteSliderPositionStyle(ui_->small_object_culling_content_->style()));
+
+    ui_->viewer_state_checkbox_->Initialize(rra::Settings::Get().GetPersistentUIState(), rra::kCheckboxEnableColor);
+    connect(ui_->viewer_state_checkbox_, &ColoredCheckbox::Clicked, this, &SettingsPane::PersistentUIStateChanged);
 }
 
 SettingsPane::~SettingsPane()
@@ -116,6 +119,12 @@ void SettingsPane::CheckForUpdatesOnStartupStateChanged()
 void SettingsPane::CameraResetOnStyleChangeStateChanged()
 {
     rra::Settings::Get().SetCameraResetOnStyleChange(ui_->reset_camera_on_style_change_checkbox_->isChecked());
+    rra::Settings::Get().SaveSettings();
+}
+
+void SettingsPane::PersistentUIStateChanged()
+{
+    rra::Settings::Get().SetPersistentUIState(ui_->viewer_state_checkbox_->isChecked());
     rra::Settings::Get().SaveSettings();
 }
 

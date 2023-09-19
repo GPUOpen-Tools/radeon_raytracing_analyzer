@@ -102,6 +102,20 @@ RraErrorCode RraTlasGetBaseAddress(uint64_t tlas_index, uint64_t* out_address)
     return kRraOk;
 }
 
+RraErrorCode RraTlasGetAPIAddress(uint64_t tlas_index, uint64_t* out_address)
+{
+    const rta::IEncodedRtIp11Bvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+    const auto base_addr = tlas->GetVirtualAddress();
+
+    *out_address = base_addr + tlas->GetHeader().GetMetaDataSize();
+
+    return kRraOk;
+}
+
 bool RraTlasIsEmpty(uint64_t tlas_index)
 {
     const rta::IEncodedRtIp11Bvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
@@ -574,7 +588,7 @@ RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, 
     }
     dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
 
-    uint32_t instance_index     = tlas->GetInstanceIndex(node);
+    uint32_t instance_index = tlas->GetInstanceIndex(node);
     if (instance_index == UINT_MAX)
     {
         return kRraErrorIndexOutOfRange;

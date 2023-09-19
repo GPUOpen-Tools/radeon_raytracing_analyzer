@@ -48,10 +48,19 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
     button_group_.addButton(ui_->button_instance_opaque_force_opaque_, kSettingThemesAndColorsInstanceOpaqueForceOpaque);
     button_group_.addButton(ui_->button_instance_opaque_force_no_opaque_, kSettingThemesAndColorsInstanceOpaqueForceNoOpaque);
     button_group_.addButton(ui_->button_instance_opaque_both_, kSettingThemesAndColorsInstanceOpaqueBoth);
+    button_group_.addButton(ui_->button_invocation_raygen_, kSettingThemesAndColorsInvocationRaygen);
+    button_group_.addButton(ui_->button_invocation_closest_hit_, kSettingThemesAndColorsInvocationClosestHit);
+    button_group_.addButton(ui_->button_invocation_any_hit_, kSettingThemesAndColorsInvocationAnyHit);
+    button_group_.addButton(ui_->button_invocation_intersection_, kSettingThemesAndColorsInvocationIntersection);
+    button_group_.addButton(ui_->button_invocation_miss_, kSettingThemesAndColorsInvocationMiss);
+    button_group_.addButton(ui_->button_selected_ray_color_, kSettingThemesAndColorsSelectedRayColor);
+    button_group_.addButton(ui_->button_ray_color_, kSettingThemesAndColorsRayColor);
+    button_group_.addButton(ui_->button_shadow_ray_color_, kSettingThemesAndColorsShadowRayColor);
+    button_group_.addButton(ui_->button_zero_mask_ray_color_, kSettingThemesAndColorsZeroMaskRayColor);
 
     // Slot/signal connection for various widgets.
     connect(ui_->color_widget_, &ColorPickerWidget::ColorSelected, this, &ThemesAndColorsPane::PickerColorSelected);
-    connect(&button_group_, SIGNAL(buttonClicked(int)), this, SLOT(ItemButtonClicked(int)));
+    connect(&button_group_, &QButtonGroup::idClicked, this, &ThemesAndColorsPane::ItemButtonClicked);
     connect(ui_->default_settings_button_, SIGNAL(clicked(bool)), this, SLOT(DefaultSettingsButtonClicked()));
     connect(ui_->default_palette_button_, SIGNAL(clicked(bool)), this, SLOT(DefaultPaletteButtonClicked()));
     connect(ui_->spin_box_color_red_, SIGNAL(valueChanged(int)), this, SLOT(RgbValuesChanged()));
@@ -229,6 +238,15 @@ void ThemesAndColorsPane::SetSettingsPaletteId(int button_id, int palette_id)
     case kSettingThemesAndColorsInstanceOpaqueForceOpaque:
     case kSettingThemesAndColorsInstanceOpaqueForceNoOpaque:
     case kSettingThemesAndColorsInstanceOpaqueBoth:
+    case kSettingThemesAndColorsInvocationRaygen:
+    case kSettingThemesAndColorsInvocationClosestHit:
+    case kSettingThemesAndColorsInvocationAnyHit:
+    case kSettingThemesAndColorsInvocationIntersection:
+    case kSettingThemesAndColorsInvocationMiss:
+    case kSettingThemesAndColorsSelectedRayColor:
+    case kSettingThemesAndColorsRayColor:
+    case kSettingThemesAndColorsShadowRayColor:
+    case kSettingThemesAndColorsZeroMaskRayColor:
         rra::Settings::Get().SetPaletteId(static_cast<SettingID>(button_id), palette_id);
         break;
 
@@ -265,6 +283,15 @@ int ThemesAndColorsPane::GetSettingsPaletteId(int button_id) const
     case kSettingThemesAndColorsInstanceOpaqueForceOpaque:
     case kSettingThemesAndColorsInstanceOpaqueForceNoOpaque:
     case kSettingThemesAndColorsInstanceOpaqueBoth:
+    case kSettingThemesAndColorsInvocationRaygen:
+    case kSettingThemesAndColorsInvocationClosestHit:
+    case kSettingThemesAndColorsInvocationAnyHit:
+    case kSettingThemesAndColorsInvocationIntersection:
+    case kSettingThemesAndColorsInvocationMiss:
+    case kSettingThemesAndColorsSelectedRayColor:
+    case kSettingThemesAndColorsRayColor:
+    case kSettingThemesAndColorsShadowRayColor:
+    case kSettingThemesAndColorsZeroMaskRayColor:
         return rra::Settings::Get().GetPaletteId(static_cast<SettingID>(button_id));
 
     default:

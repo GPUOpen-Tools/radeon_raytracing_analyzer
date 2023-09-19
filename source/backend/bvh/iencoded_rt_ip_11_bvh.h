@@ -22,7 +22,7 @@
 #include "rdf/rdf/inc/amdrdf.h"
 
 // RawAccelStruct currently supported version numbers.
-#define GPURT_ACCEL_STRUCT_MAJOR_VERSION 15
+#define GPURT_ACCEL_STRUCT_MAJOR_VERSION 16
 #define GPURT_ACCEL_STRUCT_MINOR_VERSION 3
 #define GPURT_ACCEL_STRUCT_VERSION ((GPURT_ACCEL_STRUCT_MAJOR_VERSION << 16) | GPURT_ACCEL_STRUCT_MINOR_VERSION)
 

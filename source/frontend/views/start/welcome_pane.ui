@@ -436,7 +436,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QuickLinkButtonWidget" name="quick_link_profiler_">
+        <widget class="QuickLinkButtonWidget" name="quick_link_rgp_">
          <property name="text">
           <string>PushButton</string>
          </property>
@@ -459,7 +459,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QuickLinkButtonWidget" name="quick_link_analyzer_">
+        <widget class="QuickLinkButtonWidget" name="quick_link_rga_">
          <property name="text">
           <string>PushButton</string>
          </property>
@@ -467,6 +467,52 @@
        </item>
        <item>
         <spacer name="vertical_spacer_14_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>5</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QuickLinkButtonWidget" name="quick_link_rgd_">
+         <property name="text">
+          <string>PushButton</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_18_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>5</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QuickLinkButtonWidget" name="quick_link_rmv_">
+         <property name="text">
+          <string>PushButton</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_17_">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>

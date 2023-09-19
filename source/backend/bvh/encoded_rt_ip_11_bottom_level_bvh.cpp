@@ -12,6 +12,7 @@
 #include <vector>
 #include <cassert>
 #include <deque>
+#include <limits>
 
 namespace rta
 {
@@ -59,7 +60,7 @@ namespace rta
         for (uint32_t i = 0; i < header_->GetLeafNodeCount(); ++i)
         {
             size_t geometry_index  = 0;
-            auto primitive_index = 0;
+            auto   primitive_index = 0;
 
             if (header_->GetGeometryType() == BottomLevelBvhGeometryType::kTriangle)
             {
@@ -111,7 +112,7 @@ namespace rta
 
         if (!skip_meta_data)
         {
-            memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, chunk_header.meta_header_size);
+            memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, sizeof(dxr::amd::MetaDataV1));
         }
 
         if (buffer.size() < ((size_t)dxr::amd::kAccelerationStructureHeaderSize + chunk_header.header_offset))
@@ -189,7 +190,12 @@ namespace rta
     {
         const uint32_t byte_offset = node_ptr.GetByteOffset();
         const uint32_t leaf_nodes  = GetHeader().GetBufferOffsets().leaf_nodes;
-        const uint32_t index       = (byte_offset - leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+        if (byte_offset < leaf_nodes)
+        {
+            // Bad address for a triangle.
+            return std::numeric_limits<float>::quiet_NaN();
+        }
+        const uint32_t index = (byte_offset - leaf_nodes) / sizeof(dxr::amd::TriangleNode);
         assert(index < (leaf_nodes_.size() / sizeof(dxr::amd::TriangleNode)));
         assert(index < triangle_surface_area_heuristic_.size());
         return triangle_surface_area_heuristic_[index];

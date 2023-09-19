@@ -10,11 +10,16 @@
 #include <string.h>  // for memcpy()
 #include <stdlib.h>  // for malloc() / free()
 #include <time.h>
+#include <iterator>
+#include <fstream>
 
 #include "public/rra_assert.h"
 #include "public/rra_print.h"
+#include "public/rra_ray_history.h"
 
 #include "rdf/rdf/inc/amdrdf.h"
+
+#include "ray_history/raytracing_counter.h"
 
 #include "surface_area_heuristic.h"
 
@@ -25,18 +30,35 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+#include <map>
+#include <algorithm>
 
 static bool ContainsChunk(const char* identifier, const rdf::ChunkFile& chunk_file)
 {
     try
     {
-        chunk_file.ContainsChunk(identifier);
-        return true;
+        auto result = chunk_file.ContainsChunk(identifier);
+        return result;
     }
     catch (...)
     {
         return false;
     }
+}
+
+static std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> LaunchAsyncRayHistoryLoaders(rdf::ChunkFile& chunk_file, const char* file_path)
+{
+    std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> loaders;
+
+    int64_t dispatch_count = chunk_file.GetChunkCount(RRA_RAY_HISTORY_RAW_TOKENS_IDENTIFIER);
+
+    for (int64_t i = 0; i < dispatch_count; i++)
+    {
+        auto loader = std::make_shared<RraAsyncRayHistoryLoader>(file_path, i);
+        loaders.push_back(loader);
+    }
+
+    return loaders;
 }
 
 static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
@@ -55,6 +77,10 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     {
         data_set->asic_info.LoadChunk(chunk_file);
     }
+
+    // Launch ray history loaders.
+    data_set->async_ray_histories.clear();
+    data_set->async_ray_histories = LaunchAsyncRayHistoryLoaders(chunk_file, path);
 
     // Load the BVH chunks.
     data_set->bvh_bundle = rta::LoadBvhBundleFromFile(chunk_file, rta::BvhEncoding::kAmdRtIp_1_1, rta::BvhBundleReadOption::kDefault, &error_code);

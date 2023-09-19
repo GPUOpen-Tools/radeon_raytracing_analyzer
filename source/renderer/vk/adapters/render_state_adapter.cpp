@@ -14,6 +14,7 @@
 #include "../render_modules/bounding_volume.h"
 #include "../render_modules/traversal.h"
 #include "../render_modules/selection_module.h"
+#include "../render_modules/ray_inspector_overlay.h"
 
 #include <algorithm>
 
@@ -21,23 +22,23 @@ namespace rra
 {
     namespace renderer
     {
-        static const char* kTraversalCounterModeName_TraversalLoopCount        = "Color traversal counters by loop count";
+        static const char* kTraversalCounterModeName_TraversalLoopCount        = "Color by traversal loop count";
         static const char* kTraversalCounterModeDescription_TraversalLoopCount = "The number of iterations during traversal to get the closest hit.";
-        static const char* kTraversalCounterModeName_InstanceHit               = "Color traversal counters by instance hit";
+        static const char* kTraversalCounterModeName_InstanceHit               = "Color by traversal instance hit count";
         static const char* kTraversalCounterModeDescription_InstanceHit        = "The count of intersections on instances.";
-        static const char* kTraversalCounterModeName_BoxVolumeHit              = "Color traversal counters by box volume hit";
+        static const char* kTraversalCounterModeName_BoxVolumeHit              = "Color by traversal box volume hit count";
         static const char* kTraversalCounterModeDescription_BoxVolumeHit = "The count of intersections on box volumes. Box volumes contain smaller volumes.";
-        static const char* kTraversalCounterModeName_BoxVolumeMiss       = "Color traversal counters by box volume miss";
+        static const char* kTraversalCounterModeName_BoxVolumeMiss       = "Color by traversal box volume miss count";
         static const char* kTraversalCounterModeDescription_BoxVolumeMiss =
             "The count of intersections misses on box volumes. Box volumes contain smaller volumes.";
-        static const char* kTraversalCounterModeName_BoxVolumeTest = "Color traversal counters by box volume test";
+        static const char* kTraversalCounterModeName_BoxVolumeTest = "Color by traversal box volume test count";
         static const char* kTraversalCounterModeDescription_BoxVolumeTest =
             "The count of intersections tests performed on box volumes. Box volumes contain smaller volumes.";
-        static const char* kTraversalCounterModeName_TriangleHit         = "Color traversal counters by triangle hit";
+        static const char* kTraversalCounterModeName_TriangleHit         = "Color by traversal triangle hit count";
         static const char* kTraversalCounterModeDescription_TriangleHit  = "The count of intersections on triangles.";
-        static const char* kTraversalCounterModeName_TriangleMiss        = "Color traversal counters by triangle miss";
+        static const char* kTraversalCounterModeName_TriangleMiss        = "Color by traversal triangle miss count";
         static const char* kTraversalCounterModeDescription_TriangleMiss = "The count of intersection misses on triangles.";
-        static const char* kTraversalCounterModeName_TriangleTest        = "Color traversal counters by triangle test";
+        static const char* kTraversalCounterModeName_TriangleTest        = "Color by traversal triangle test count";
         static const char* kTraversalCounterModeDescription_TriangleTest = "The count of intersection tests performed on triangles.";
 
         /// Declaration for BVH coloring modes.
@@ -222,17 +223,19 @@ namespace rra
             return static_cast<int32_t>(mode_iter - kAvailableGeometryColoringModes.begin());
         }
 
-        RenderStateAdapter::RenderStateAdapter(RendererInterface*          renderer,
-                                               MeshRenderModule*           blas_mesh_module,
-                                               BoundingVolumeRenderModule* bounding_volume_module,
-                                               TraversalRenderModule*      traversal_render_module,
-                                               SelectionRenderModule*      selection_render_module)
+        RenderStateAdapter::RenderStateAdapter(RendererInterface*               renderer,
+                                               MeshRenderModule*                blas_mesh_module,
+                                               BoundingVolumeRenderModule*      bounding_volume_module,
+                                               TraversalRenderModule*           traversal_render_module,
+                                               SelectionRenderModule*           selection_render_module,
+                                               RayInspectorOverlayRenderModule* ray_inspector_overlay_module)
         {
-            vulkan_renderer_         = static_cast<RendererVulkan*>(renderer);
-            mesh_render_module_      = blas_mesh_module;
-            bounding_volume_module_  = bounding_volume_module;
-            traversal_render_module_ = traversal_render_module;
-            selection_render_module_ = selection_render_module;
+            vulkan_renderer_              = static_cast<RendererVulkan*>(renderer);
+            mesh_render_module_           = blas_mesh_module;
+            bounding_volume_module_       = bounding_volume_module;
+            traversal_render_module_      = traversal_render_module;
+            selection_render_module_      = selection_render_module;
+            ray_inspector_overlay_module_ = ray_inspector_overlay_module;
 
             SceneUniformBuffer& scene_ubo = vulkan_renderer_->GetSceneUbo();
             scene_ubo.wireframe_enabled   = 1;
@@ -273,7 +276,13 @@ namespace rra
             mesh_render_module_->GetRenderState().updated          = true;
             SceneUniformBuffer& scene_ubo                          = vulkan_renderer_->GetSceneUbo();
             scene_ubo.wireframe_enabled                            = render_wireframe ? 1 : 0;
-            mesh_render_module_->GetRendererInterface()->MarkAsDirty();
+
+            auto renderer_interface                                = mesh_render_module_->GetRendererInterface();
+            // If setting UI on trace load, mesh_render_module_ will be null, so no need to mark as dirty.
+            if (renderer_interface)
+            {
+                renderer_interface->MarkAsDirty();
+            }
         }
 
         bool RenderStateAdapter::GetRenderGeometry() const
@@ -393,8 +402,8 @@ namespace rra
 
         void RenderStateAdapter::SetTraversalCounterRange(uint32_t min_value, uint32_t max_value, uint32_t settings_max)
         {
-            vulkan_renderer_->GetSceneUbo().min_traversal_count_limit = static_cast<float>(min_value);
-            vulkan_renderer_->GetSceneUbo().max_traversal_count_limit = static_cast<float>(max_value);
+            vulkan_renderer_->GetSceneUbo().min_traversal_count_limit   = static_cast<float>(min_value);
+            vulkan_renderer_->GetSceneUbo().max_traversal_count_limit   = static_cast<float>(max_value);
             vulkan_renderer_->GetSceneUbo().max_traversal_count_setting = settings_max;
         }
 
@@ -452,7 +461,12 @@ namespace rra
                 bounding_volume_module_->Disable();
                 selection_render_module_->DisableOutlineRendering();
             }
-            bounding_volume_module_->GetRendererInterface()->MarkAsDirty();
+            auto renderer_interface = bounding_volume_module_->GetRendererInterface();
+            // If setting UI on trace load, bounding_volume_module_ will be null, so no need to mark as dirty.
+            if (renderer_interface)
+            {
+                renderer_interface->MarkAsDirty();
+            }
         }
 
         bool RenderStateAdapter::GetRenderBoundingVolumes() const
@@ -475,13 +489,18 @@ namespace rra
             {
                 selection_render_module_->DisableTransformRendering();
             }
-            selection_render_module_->GetRendererInterface()->MarkAsDirty();
+            auto renderer_interface = selection_render_module_->GetRendererInterface();
+            // If setting UI on trace load, selection_render_module_ will be null, so no need to mark as dirty.
+            if (renderer_interface)
+            {
+                renderer_interface->MarkAsDirty();
+            }
         }
 
-        void RenderStateAdapter::SetHeatmapData(HeatmapData heatmap_data)
+        void RenderStateAdapter::SetHeatmapData(const HeatmapData& heatmap_data)
         {
             vulkan_renderer_->SetHeatmapData(heatmap_data);
-            for (auto callback : heatmap_update_callbacks_)
+            for (auto& callback : heatmap_update_callbacks_)
             {
                 callback(heatmap_data);
             }
@@ -537,6 +556,11 @@ namespace rra
 
         void RenderStateAdapter::UpdateRayParameters()
         {
+            if (!vulkan_renderer_)
+            {
+                return;
+            }
+
             // Referencing from GPURT
             if (IsUsingNavi3())
             {
@@ -553,7 +577,6 @@ namespace rra
             {
                 if (vulkan_renderer_->GetSceneUbo().traversal_accept_first_hit)
                 {
-                    // TODO: This value may be kBoxSortHeuristicDisabled under some circumstances. Check GPURT.
                     vulkan_renderer_->GetSceneUbo().traversal_box_sort_heuristic = kBoxSortHeuristicClosest;
                 }
                 else

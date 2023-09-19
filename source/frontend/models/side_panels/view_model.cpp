@@ -22,9 +22,6 @@ namespace rra
     // Temporary for now. These will come from the view.
     static std::vector<std::string> kProjectionTypes = {"Perspective"};
 
-    /// @brief The camera controls shared between all instances of the ViewModel class.
-    ViewModel::CameraUIControls ViewModel::camera_controls_ = {};
-
     /// @brief The SliderRangeConverter namespace includes static helper functions used to map
     /// floating point values of a known min/max range to and from a consistent slider range.
     namespace SliderRangeConverter
@@ -32,8 +29,8 @@ namespace rra
         static const int32_t kSliderMinimum = 0;    ///< The minimum value a slider will reach.
         static const int32_t kSliderMaximum = 100;  ///< The maximum value a slider will reach.
 
-        static const float kFieldOfViewMinimum = 30;  ///< The minimum field of view value in degrees.
-        static const float kFieldOfViewMaximum = 90;  ///< The maximum field of view value in degrees.
+        static const float kFieldOfViewMinimum = 30;   ///< The minimum field of view value in degrees.
+        static const float kFieldOfViewMaximum = 120;  ///< The maximum field of view value in degrees.
 
         static const float kNearPlaneMinimum = 0.001f;  ///< The minimum near plane distance.
         static const float kNearPlaneMaximum = 1.0f;    ///< The maximum near plane distance.
@@ -71,7 +68,8 @@ namespace rra
         /// @returns A floating point FOV value corresponding to the selected slider value.
         float FieldOfViewFromSlider(int32_t slider_value)
         {
-            return MapFromSliderValue(slider_value, kFieldOfViewMinimum, kFieldOfViewMaximum);
+            // Directly set without using MapToSliderValue since the min and max are embedded in the slider.
+            return slider_value;
         }
 
         /// @brief Convert a field of view value to a range-clamped slider value.
@@ -81,7 +79,8 @@ namespace rra
         /// @returns A slider integer value corresponding to the selected FOV value.
         int32_t FieldOfViewValueToSliderValue(float field_of_view)
         {
-            return MapToSliderValue(field_of_view, kFieldOfViewMinimum, kFieldOfViewMaximum);
+            // Directly set without using MapToSliderValue since the min and max are embedded in the slider.
+            return field_of_view;
         }
 
         /// @brief Convert a near plane distance slider value to a valid range-clamped near plane distance value.
@@ -149,6 +148,26 @@ namespace rra
         return "-";
     }
 
+    void ViewModel::SetCameraLock(bool locked)
+    {
+        camera_lock_ = locked;
+    }
+
+    bool ViewModel::GetCameraLock() const
+    {
+        return camera_lock_;
+    }
+
+    void ViewModel::SetParentPaneId(rra::RRAPaneId pane_id)
+    {
+        parent_pane_id_ = pane_id;
+    }
+
+    rra::RRAPaneId ViewModel::GetParentPaneId() const
+    {
+        return parent_pane_id_;
+    }
+
     ViewModel::ViewModel()
         : SidePanelModel(kSidePaneViewNumWidgets)
     {
@@ -196,21 +215,17 @@ namespace rra
             SetModelData(kSidePaneViewZUp, orientation.up_axis == rra::ViewerIOUpAxis::kUpAxisZ);
 
             // Set UI sliders.
-            // For some reason QT does not properly update the ui without these two lines.
-            auto fov = view_state_adapter_->GetFieldOfView();
-            SetModelData(kSidePaneViewFieldOfViewSlider, 0);
-
+            const auto fov = view_state_adapter_->GetFieldOfView();
             SetModelData(kSidePaneViewFieldOfViewSlider, SliderRangeConverter::FieldOfViewValueToSliderValue(fov));
-            SetModelData(kSidePaneViewNearPlaneSlider, SliderRangeConverter::NearPlaneValueToSliderValue(view_state_adapter_->GetNearPlaneMultiplier()));
-            float current_movement_speed = view_state_adapter_->GetMovementSpeed();
-            if (current_movement_speed > movement_speed_maximum_)
-            {
-                view_state_adapter_->SetMovementSpeed(movement_speed_maximum_);
-            }
+            const auto near_plane = view_state_adapter_->GetNearPlaneMultiplier();
+            SetModelData(kSidePaneViewNearPlaneSlider, SliderRangeConverter::NearPlaneValueToSliderValue(near_plane));
+            const float current_movement_speed = std::clamp(view_state_adapter_->GetMovementSpeed(), movement_speed_minimum_, movement_speed_maximum_);
+            view_state_adapter_->SetMovementSpeed(current_movement_speed);
 
-            float slider_value = MovementSpeedValueToSliderValue(view_state_adapter_->GetMovementSpeed());
+            float slider_value = MovementSpeedValueToSliderValue(current_movement_speed);
+            float speed        = MovementSpeedValueFromSlider(slider_value);
             SetModelData(kSidePaneViewMovementSpeedSlider, slider_value);
-            SetModelData(kSidePaneViewMovementSpeed, QString::number(MovementSpeedValueFromSlider(slider_value), kQtFloatFormat, 0));
+            SetModelData(kSidePaneViewMovementSpeed, QString::number(speed, kQtFloatFormat, speed < 1.0 ? 3 : 0));
         }
 
         UpdateCameraTransformUI();
@@ -344,9 +359,13 @@ namespace rra
         }
     }
 
-    void ViewModel::SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function, uint32_t traversal_max_setting)
+    void ViewModel::SetHistogramUpdateFunction(std::function<void(const std::vector<uint32_t>&, uint32_t, uint32_t)> update_function,
+                                               uint32_t                                                              traversal_max_setting)
     {
-        render_state_adapter_->SetHistogramUpdateFunction(update_function, traversal_max_setting);
+        if (render_state_adapter_ != nullptr)
+        {
+            render_state_adapter_->SetHistogramUpdateFunction(update_function, traversal_max_setting);
+        }
     }
 
     bool ViewModel::IsTraversalCounterContinuousUpdateSet()
@@ -395,11 +414,22 @@ namespace rra
         }
     }
 
-    void ViewModel::SetFieldOfView(int value)
+    float ViewModel::SetFieldOfViewFromSlider(int slider_value)
     {
         if (view_state_adapter_ != nullptr)
         {
-            float fov = SliderRangeConverter::FieldOfViewFromSlider(value);
+            float fov = glm::ceil(SliderRangeConverter::FieldOfViewFromSlider(slider_value));
+            view_state_adapter_->SetFieldOfView(fov);
+            SetModelData(kSidePaneViewFieldOfView, QString::number(fov, kQtFloatFormat, 0));
+            return fov;
+        }
+        return 0.0f;
+    }
+
+    void ViewModel::SetFieldOfView(int fov)
+    {
+        if (view_state_adapter_ != nullptr)
+        {
             view_state_adapter_->SetFieldOfView(fov);
             SetModelData(kSidePaneViewFieldOfView, QString::number(fov, kQtFloatFormat, 0));
         }
@@ -413,18 +443,34 @@ namespace rra
         }
     }
 
-    void ViewModel::SetMovementSpeed(int value)
+    float ViewModel::SetMovementSpeedFromSlider(int slider_value)
     {
         if (view_state_adapter_ != nullptr)
         {
-            float speed = MovementSpeedValueFromSlider(value);
+            float speed = MovementSpeedValueFromSlider(slider_value);
             view_state_adapter_->SetMovementSpeed(speed);
-            SetModelData(kSidePaneViewMovementSpeed, QString::number(speed, kQtFloatFormat, 0));
+            SetModelData(kSidePaneViewMovementSpeed, QString::number(speed, kQtFloatFormat, speed < 1.0 ? 3 : 0));
+            return speed;
+        }
+        return 0.0f;
+    }
+
+    void ViewModel::SetMovementSpeed(float speed)
+    {
+        if (view_state_adapter_ != nullptr)
+        {
+            view_state_adapter_->SetMovementSpeed(speed);
+            SetModelData(kSidePaneViewMovementSpeed, QString::number(speed, kQtFloatFormat, speed < 1.0 ? 3 : 0));
         }
     }
 
-    void ViewModel::SetCameraControllerParameters(bool controller_changed)
+    void ViewModel::SetCameraControllerParameters(bool controller_changed, rra::RRAPaneId pane_id)
     {
+        if (parent_pane_id_ != pane_id)
+        {
+            return;
+        }
+
         if (view_state_adapter_ != nullptr)
         {
             // Check if not the same camera.
@@ -441,6 +487,7 @@ namespace rra
                 auto forward = camera->GetForward();
                 auto up      = camera->GetUp();
                 current_controller_->SetCameraOrientation(camera_controls_.orientation);
+                current_controller_->ResetArcRadius();
                 current_controller_->FitCameraParams(origin, forward, up);
             }
             else
@@ -458,7 +505,7 @@ namespace rra
     void ViewModel::SetMovementSpeedLimit(float maximum_speed)
     {
         movement_speed_maximum_ = maximum_speed;
-        movement_speed_minimum_ = kMinimumMovementSpeedMultiplier * maximum_speed;
+        movement_speed_minimum_ = 0.01f;
     }
 
     bool ViewModel::SetControlStyle(int index)
@@ -528,31 +575,55 @@ namespace rra
 
     void ViewModel::EnableRayFlagsAcceptFirstHit()
     {
+        if (!render_state_adapter_)
+        {
+            return;
+        }
         render_state_adapter_->SetRayFlagAcceptFirstHit(true);
     }
 
     void ViewModel::DisableRayFlagsAcceptFirstHit()
     {
+        if (!render_state_adapter_)
+        {
+            return;
+        }
         render_state_adapter_->SetRayFlagAcceptFirstHit(false);
     }
 
     void ViewModel::EnableRayCullBackFacingTriangles()
     {
+        if (!render_state_adapter_)
+        {
+            return;
+        }
         render_state_adapter_->SetRayFlagCullBackFacingTriangles(true);
     }
 
     void ViewModel::DisableRayCullBackFacingTriangles()
     {
+        if (!render_state_adapter_)
+        {
+            return;
+        }
         render_state_adapter_->SetRayFlagCullBackFacingTriangles(false);
     }
 
     void ViewModel::EnableRayCullFrontFacingTriangles()
     {
+        if (!render_state_adapter_)
+        {
+            return;
+        }
         render_state_adapter_->SetRayFlagCullFrontFacingTriangles(true);
     }
 
     void ViewModel::DisableRayCullFrontFacingTriangles()
     {
+        if (!render_state_adapter_)
+        {
+            return;
+        }
         render_state_adapter_->SetRayFlagCullFrontFacingTriangles(false);
     }
 

@@ -16,6 +16,7 @@ ENDIF()
 
 # Locate the Vulkan headers from the external dependencies directory.
 include_directories(${CMAKE_SOURCE_DIR}/external/third_party/vulkan/include/)
+include_directories(${CMAKE_SOURCE_DIR}/external/qt_common/source)
 
 find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
 
@@ -35,6 +36,9 @@ ELSEIF(LINUX)
     # TODO: Re-enable the Linux based warnings once we have a solution for VMA files. Windows side relies on pragma warning so it does not need to disable warnings.
     # add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-sign-compare -Wno-uninitialized)
     find_package(Threads REQUIRED)
+
+    # Include the qt version subdirectory path.
+    include_directories(AFTER ${QT_NATIVE_PATH})
 ENDIF(WIN32)
 
 set( EXTERNAL_SOURCES
@@ -112,6 +116,10 @@ set( SOURCES
     "vk/render_modules/orientation_gizmo_module.cpp"
     "vk/render_modules/selection_module.h"
     "vk/render_modules/selection_module.cpp"
+    "vk/render_modules/ray_inspector_overlay.h"
+    "vk/render_modules/ray_inspector_overlay.cpp"
+    "vk/ray_history_offscreen_renderer.h"
+    "vk/ray_history_offscreen_renderer.cpp"
 )
 
 set( LINUX_SOURCES

@@ -63,7 +63,7 @@ namespace rra
         /// @brief Set the heatmap data.
         ///
         /// @param [in] heatmap_data The raw data of the heatmap.
-        void SetHeatmapData(rra::renderer::HeatmapData heatmap_data);
+        void SetHeatmapData(const rra::renderer::HeatmapData& heatmap_data);
 
         /// @brief Set the instance mask filter.
         ///

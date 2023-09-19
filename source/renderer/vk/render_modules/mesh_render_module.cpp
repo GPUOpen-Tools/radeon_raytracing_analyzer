@@ -336,6 +336,11 @@ namespace rra
             custom_triangles_staging_guard.Cleanup(context->device);
         }
 
+        bool MeshRenderModule::ShouldCopyDepthBuffer() const
+        {
+            return true;
+        }
+
         RenderState& MeshRenderModule::GetRenderState()
         {
             return render_state_;

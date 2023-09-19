@@ -17,7 +17,7 @@
 #include <algorithm>
 #include "util/string_util.h"
 #include "constants.h"
-#include "custom_widgets/scaled_label.h"
+#include "qt_common/custom_widgets/scaled_label.h"
 
 namespace rra
 {
@@ -391,10 +391,9 @@ namespace rra
         return result;
     }
 
-    void ViewerIO::SetViewerModel(AccelerationStructureViewerModel* viewer_model, uint64_t bvh_index)
+    void ViewerIO::SetViewerCallbacks(ViewerIOCallbacks callbacks)
     {
-        viewer_model_     = viewer_model;
-        viewer_bvh_index_ = bvh_index;
+        viewer_callbacks_ = callbacks;
     }
 
     void ViewerIO::SetViewModel(ViewModel* view_model)
@@ -426,7 +425,7 @@ namespace rra
             }
 
             view_model_->SetOrientation(orientation);
-            view_model_->SetCameraControllerParameters(false);
+            view_model_->SetCameraControllerParameters(false, view_model_->GetParentPaneId());
             UpdateViewModel();
         }
     }
@@ -452,6 +451,11 @@ namespace rra
 
     void ViewerIO::HandleContextMenu(QMouseEvent* mouse_event, glm::vec2 window_size, const renderer::Camera* camera)
     {
+        if (!viewer_callbacks_.get_context_options)
+        {
+            return;
+        }
+
         QMenu menu;
         menu.setStyle(QApplication::style());
 
@@ -473,7 +477,7 @@ namespace rra
         request.origin                  = ray.origin;
         request.direction               = ray.direction;
 
-        auto context_options = viewer_model_->GetSceneContextOptions(viewer_bvh_index_, request);
+        auto context_options = viewer_callbacks_.get_context_options(request);
 
         context_options["Focus on selection"] = [&]() { should_focus_on_selection_ = true; };
 
@@ -482,8 +486,11 @@ namespace rra
             auto action = new QAction(QString::fromStdString(option_action.first));
             menu.addAction(action);
         }
-
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         QAction* action = menu.exec(mouse_event->globalPos());
+#else
+        QAction* action = menu.exec(mouse_event->globalPosition().toPoint());
+#endif
 
         if (action != nullptr)
         {
@@ -502,11 +509,13 @@ namespace rra
             camera->SetArcRadius(arc_radius_);
             camera->SetArcCenterPosition(position + forward * camera->GetArcRadius());
         }
-    }
 
-    uint64_t ViewerIO::GetSceneIndex() const
-    {
-        return viewer_bvh_index_;
+        updated_ = true;
+
+        if (view_model_)
+        {
+            view_model_->Update();
+        }
     }
 
     void ViewerIO::InvalidateLastMousePosition()
@@ -545,6 +554,14 @@ namespace rra
         return glm::distance(press_pos, release_pos) < mouse_move_delta_;
     }
 
+    void ViewerIO::ResetKeyStates()
+    {
+        for (auto& i : key_states_)
+        {
+            i.second = false;
+        }
+    }
+
     void ViewerIO::MousePressed(QMouseEvent* mouse_event)
     {
         if (last_mouse_button_pressed_ == Qt::MouseButton::NoButton)
@@ -560,6 +577,11 @@ namespace rra
                                        const renderer::Camera*         camera,
                                        SceneCollectionModelClosestHit& closest_hit) const
     {
+        if (!viewer_callbacks_.select_from_scene)
+        {
+            return;
+        }
+
         auto      mouse_pos = mouse_event->pos();
         glm::vec2 coords    = {mouse_pos.x(), mouse_pos.y()};
 
@@ -568,10 +590,7 @@ namespace rra
         coords *= 2.0f;
         coords -= 1.0f;
 
-        if (viewer_model_)
-        {
-            closest_hit = viewer_model_->SelectFromScene(viewer_bvh_index_, camera, coords);
-        }
+        closest_hit = viewer_callbacks_.select_from_scene(camera, coords);
     }
 
     SceneCollectionModelClosestHit ViewerIO::MouseDoubleClicked(QMouseEvent* mouse_event, glm::vec2 window_size, const renderer::Camera* camera, bool cast_ray)

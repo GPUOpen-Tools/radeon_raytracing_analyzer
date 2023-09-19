@@ -124,7 +124,7 @@ namespace rta
         {
             RRA_UNUSED(offset);
             RRA_ASSERT(offset != 0);
-            auto    bvh = static_cast<const EncodedRtIp11TopLevelBvh*>(this);
+            auto bvh = static_cast<const EncodedRtIp11TopLevelBvh*>(this);
             return bvh->GetInstanceNode(&node_pointer);
         }
     }
@@ -132,7 +132,7 @@ namespace rta
     const dxr::amd::TriangleNode* IEncodedRtIp11Bvh::GetTriangleNode(const dxr::amd::NodePointer node_pointer, const int offset) const
     {
         assert(node_pointer.IsTriangleNode());
-        if (header_->GetPostBuildInfo().IsBottomLevel())
+        if (header_->GetPostBuildInfo().IsBottomLevel() && node_pointer.GetByteOffset() >= header_->GetBufferOffsets().leaf_nodes)
         {
             auto bvh = static_cast<const EncodedRtIp11BottomLevelBvh*>(this);
             return reinterpret_cast<const dxr::amd::TriangleNode*>(
@@ -141,7 +141,6 @@ namespace rta
         else
         {
             // Bottom BHV cannot have instance nodes
-            assert(false);
             return nullptr;
         }
     }
@@ -369,7 +368,10 @@ namespace rta
         const auto  compression_mode  = ToDxrTriangleCompressionMode(GetHeader().GetPostBuildInfo().GetTriangleCompressionMode());
         const auto  parent_link_index = node_ptr->CalculateParentLinkIndex(parent_data.GetSizeInBytes(), compression_mode);
 
-        assert(parent_link_index < parent_data.GetLinkCount());
+        if (parent_link_index >= parent_data.GetLinkCount())
+        {
+            return {};
+        }
 
         dxr::amd::NodePointer parent_node = parent_links[parent_link_index];
 
@@ -457,9 +459,9 @@ namespace rta
 
     void IEncodedRtIp11Bvh::SetInteriorNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic)
     {
-        const uint32_t byte_offset         = node_ptr.GetByteOffset();
-        const uint32_t header_offset       = GetHeader().GetBufferOffsets().interior_nodes;
-        const uint32_t index               = (byte_offset - header_offset) / sizeof(dxr::amd::Float32BoxNode);
+        const uint32_t byte_offset   = node_ptr.GetByteOffset();
+        const uint32_t header_offset = GetHeader().GetBufferOffsets().interior_nodes;
+        const uint32_t index         = (byte_offset - header_offset) / sizeof(dxr::amd::Float32BoxNode);
         RRA_ASSERT(index < box_surface_area_heuristic_.size());
         box_surface_area_heuristic_[index] = surface_area_heuristic;
     }

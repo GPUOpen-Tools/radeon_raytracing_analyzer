@@ -149,6 +149,11 @@ namespace rra
             /// @brief Cleanup heatmap.
             void CleanupHeatmap();
 
+            /// @brief Copy the depth buffer to be read from a later render pass.
+            ///
+            /// @param [in] The command buffer rendering commands are being recorded to.
+            void CopyDepthBuffer(VkCommandBuffer cmd);
+
             SceneUniformBuffer scene_uniform_buffer_ = {};  ///< A set of data used to update the scene uniform buffer memory.
 
             /// @brief The device buffer for the scene.
@@ -160,28 +165,18 @@ namespace rra
 
             std::vector<SceneBuffer> scene_ubos_;  ///< The scene buffer ubos per each frame.
 
-            /// @brief The heatmap data for the scene.
-            struct VulkanHeatmap
-            {
-                VkImage               image      = VK_NULL_HANDLE;
-                VkImageView           image_view = VK_NULL_HANDLE;
-                VkSampler             sampler    = VK_NULL_HANDLE;
-                VmaAllocation         allocation = VK_NULL_HANDLE;
-                VkDescriptorImageInfo image_info = {};
-            };
-
             VulkanHeatmap vulkan_heatmap_ = {};  ///< The heatmap data to render with.
 
             std::vector<std::vector<VkCommandBuffer>> command_buffers_per_frame_;  ///< The command buffers for each frame in the swapchain.
 
-            Device&           device_;               ///< The renderer device.
-            SwapChain         swapchain_;            ///< The swapchain used to present images.
-            CommandBufferRing command_buffer_ring_;  ///< The ring of command buffer objects.
-            VkViewport        viewport_;             ///< The viewport dimensions.
-            VkRect2D          scissor_;              ///< The scissor rectangle.
-            float             clear_color_[4];       ///< The scene clear color.
-            uint32_t          current_frame_index_;  ///< The current frame index.
-            bool              initialized_;          ///< The flag used to track renderer initialization.
+            Device&                     device_;               ///< The renderer device.
+            SwapChain                   swapchain_;            ///< The swapchain used to present images.
+            CommandBufferRing           command_buffer_ring_;  ///< The ring of command buffer objects.
+            VkViewport                  viewport_;             ///< The viewport dimensions.
+            VkRect2D                    scissor_;              ///< The scissor rectangle.
+            float                       clear_color_[4];       ///< The scene clear color.
+            uint32_t                    current_frame_index_;  ///< The current frame index.
+            bool                        initialized_;          ///< The flag used to track renderer initialization.
 
             RenderModuleContext        render_module_context_;  ///< The render module context to use across modules.
             std::vector<RenderModule*> render_modules_;         ///< The list of render modules to aid rendering.

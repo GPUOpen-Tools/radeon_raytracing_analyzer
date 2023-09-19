@@ -106,15 +106,15 @@ void TableItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
             int spacing = std::max(rect.width() / 3, min_spacing);
             spacing     = std::min(spacing, max_spacing);
 
-            painter->drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, QString::fromStdString(vec3_string[0]));
-            rect.setLeft(rect.left() + spacing);
-            painter->drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, QString::fromStdString(vec3_string[1]));
-            rect.setLeft(rect.left() + spacing);
-            painter->drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, QString::fromStdString(vec3_string[2]));
+            painter->drawText(rect, Qt::AlignRight | Qt::AlignVCenter, QString::fromStdString(vec3_string[2]));
+            rect.setRight(rect.right() - spacing);
+            painter->drawText(rect, Qt::AlignRight | Qt::AlignVCenter, QString::fromStdString(vec3_string[1]));
+            rect.setRight(rect.right() - spacing);
+            painter->drawText(rect, Qt::AlignRight | Qt::AlignVCenter, QString::fromStdString(vec3_string[0]));
         }
     }
     else
     {
-        painter->drawText(option.rect, Qt::AlignLeft | Qt::AlignVCenter, index.data().toString());
+        painter->drawText(option.rect, Qt::AlignRight | Qt::AlignVCenter, index.data().toString());
     }
 }

@@ -64,6 +64,7 @@ namespace rra
         kBlasListColumnMaxDepth,
         kBlasListColumnAvgDepth,
         kBlasListColumnBlasIndex,
+        kBlasListColumnPadding,
 
         kBlasListColumnCount,
     };

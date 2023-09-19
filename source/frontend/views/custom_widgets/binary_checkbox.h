@@ -51,6 +51,15 @@ public:
     /// @return The button to text ratio.
     qreal GetButtonTextRatio() const;
 
+    /// @brief Disables the user interaction.
+    void DisableInteraction();
+
+    /// @brief Changes the background to red.
+    void EnableWarningOverride();
+
+    /// @brief Resumes normal coloring flow.
+    void DisableWarningOverride();
+
 signals:
     /// @brief Signal to indicate that the checkbox was clicked on.
     void Clicked();
@@ -88,8 +97,10 @@ private:
     /// @return The switch height.
     qreal GetSwitchHeight(const QFontMetricsF& font_metrics) const;
 
-    QColor color_;      ///< Primary color for checkbox. Either full color, or top half color if multicolor.
-    qreal  button_text_ratio_;  ///< The button-to-text ratio ie how much bigger the button is relative to the button text.
+    QColor color_;                         ///< Primary color for checkbox. Either full color, or top half color if multicolor.
+    qreal  button_text_ratio_;             ///< The button-to-text ratio ie how much bigger the button is relative to the button text.
+    bool   interaction_disabled_ = false;  ///< A flag to indicate if the interaction has been disabled.
+    bool   override_warning_     = false;  ///< A flag to color the background as red to indicate warning.
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_BINARY_CHECKBOX_H_

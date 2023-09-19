@@ -15,6 +15,9 @@
 #include "qt_common/custom_widgets/scaled_table_view.h"
 #include "qt_common/utils/model_view_mapper.h"
 
+#include "public/rra_error.h"
+#include "public/rra_ray_history.h"
+
 namespace rra
 {
     /// @brief Structure describing the statistics needed for the TLAS list table in the overview pane.
@@ -97,10 +100,25 @@ namespace rra
 
         /// @brief Is the specified TLAS empty.
         ///
-        /// @param [i] tlas_index The index of the TLAS to query.
+        /// @param [in] tlas_index The index of the TLAS to query.
         ///
         /// @return true if the TLAS is empty, false otherwise.
         bool IsTlasEmpty(uint64_t tlas_index) const;
+
+        /// @brief Get the number of dispatches in the trace file.
+        ///
+        /// @return The number of dispatches.
+        uint32_t GetDispatchCount() const;
+
+        /// @brief Get the dispatch dimensions.
+        ///
+        /// @param [in]  dispatch_id  The dispatch Id.
+        /// @param [out] out_width    The x dimension.
+        /// @param [out] out_height   The y dimension.
+        /// @param [out] out_depth    The z dimension.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        RraErrorCode GetDispatchDimensions(uint32_t dispatch_id, uint32_t* out_width, uint32_t* out_height, uint32_t* out_depth) const;
 
     public slots:
         /// @brief Handle what happens when the search filter changes.

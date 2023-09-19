@@ -164,6 +164,15 @@ namespace rra
                               const void*        data,
                               VkDeviceSize       size);
 
+            /// @brief Transfer CPU buffer to a device local Vulkan buffer. Handles staging buffer and transfer command.
+            /// 
+            /// @param cmd        The command buffer for the transfer command.
+            /// @param queue      The queue to submit the transfer command to.
+            /// @param buffer     The destination buffer.
+            /// @param data       The source CPU buffer.
+            /// @param size       The source buffer size.
+            void TransferBufferToDevice(VkCommandBuffer cmd, VkQueue queue, VkBuffer buffer, const void* data, VkDeviceSize size);
+
             /// @brief Create an image with the device using the given image configuration.
             ///
             /// @param [in] image_create_info The image create information.

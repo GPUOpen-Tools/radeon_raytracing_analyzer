@@ -108,6 +108,8 @@ namespace rra
                 return QString::number(cache.vertex_2.x, kQtFloatFormat, decimal_precision) + "," +
                        QString::number(cache.vertex_2.y, kQtFloatFormat, decimal_precision) + "," +
                        QString::number(cache.vertex_2.z, kQtFloatFormat, decimal_precision);
+            case kBlasTrianglesColumnPadding:
+                return QString{""};
 
             default:
                 break;
@@ -173,6 +175,8 @@ namespace rra
             case kBlasTrianglesColumnVertex1:
             case kBlasTrianglesColumnVertex2:
                 return QVariant::fromValue<uint32_t>(cache.node_id);
+            case kBlasTrianglesColumnPadding:
+                return QVariant();
 
             default:
                 break;
@@ -199,7 +203,7 @@ namespace rra
                 case kBlasTrianglesColumnGeometryFlagOpaque:
                     return "Opaque";
                 case kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit:
-                    return "No duplicate any hit invocation";
+                    return "No duplicate\nany hit invocation";
                 case kBlasTrianglesColumnPrimitiveIndex:
                     return "Primitive index";
                 case kBlasTrianglesColumnNodeAddress:
@@ -209,7 +213,7 @@ namespace rra
                 case kBlasTrianglesColumnActive:
                     return "Active";
                 case kBlasTrianglesColumnTriangleSurfaceArea:
-                    return "Triangle surface area";
+                    return "Triangle\nsurface area";
                 case kBlasTrianglesColumnSAH:
                     return "SAH";
                 case kBlasTrianglesColumnVertex0:
@@ -218,6 +222,8 @@ namespace rra
                     return "Vertex1";
                 case kBlasTrianglesColumnVertex2:
                     return "Vertex2";
+                case kBlasTrianglesColumnPadding:
+                    return "";
                 default:
                     break;
                 }
@@ -266,6 +272,10 @@ namespace rra
                 default:
                     break;
                 }
+            }
+            else if (role == Qt::TextAlignmentRole)
+            {
+                return Qt::AlignRight;
             }
         }
 

@@ -100,17 +100,27 @@ namespace rra
 
             generators.push_back({[]() -> HeatmapData {
                                       HeatmapData data;
-                                      data.push_back({0.0f, 0.0f, 0.8f, 1.0f});
-                                      data.push_back({0.0f, 0.0f, 1.0f, 1.0f});
                                       data.push_back({0.0f, 1.0f, 1.0f, 1.0f});
                                       data.push_back({0.0f, 1.0f, 0.0f, 1.0f});
                                       data.push_back({1.0f, 1.0f, 0.0f, 1.0f});
                                       data.push_back({1.0f, 0.0f, 0.0f, 1.0f});
                                       data.push_back({0.8f, 0.0f, 0.0f, 1.0f});
+
                                       return data;
                                   },
                                   "Heatmap as Spectrum",
                                   "Heatmap as a full spectrum gradient, blue to green to red."});
+
+            generators.push_back({[]() -> HeatmapData {
+                                      HeatmapData data;
+                                      data.push_back({0.1f, 0.1f, 0.1f, 1.0f});
+                                      data.push_back({0.5f, 0.5, 0.5, 1.0f});
+                                      data.push_back({0.9f, 0.9f, 0.9f, 1.0f});
+
+                                      return data;
+                                  },
+                                  "Heatmap as Grayscale",
+                                  "Heatmap as a grayscale, dark to light."});
 
             generators.push_back({[]() -> HeatmapData {
                                       HeatmapData data;

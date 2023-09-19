@@ -29,6 +29,14 @@ extern "C" {
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetBaseAddress(uint64_t tlas_index, uint64_t* out_address);
 
+/// @brief Get the api (user visible) address for the tlas_index given.
+///
+/// @param [in]  tlas_index  The index of the TLAS to use.
+/// @param [out] out_address A pointer to receive the api address of the TLAS.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetAPIAddress(uint64_t tlas_index, uint64_t* out_address);
+
 /// @brief Is the TLAS empty.
 ///
 /// @param [in]  tlas_index  The index of the TLAS to use.

@@ -10,6 +10,7 @@
 #include <cctype>
 #include <QtMath>
 #include <QTextStream>
+#include <QLocale>
 
 QString rra::string_util::ToUpperCase(const QString& string)
 {
@@ -18,7 +19,7 @@ QString rra::string_util::ToUpperCase(const QString& string)
     for (int i = 0; i < string.length(); i++)
     {
         char c = string.at(i).toLatin1();
-        out.append(c >= 'a' && c <= 'z' ? c - 32 : c);
+        out.append(c >= 'a' && c <= 'z' ? QChar(c - 32) : QChar(c));
     }
 
     return out;

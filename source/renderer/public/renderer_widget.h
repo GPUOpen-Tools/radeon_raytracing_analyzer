@@ -92,7 +92,7 @@ protected:
     /// @param [in] event The wheel event data.
     void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
 
-#if QT_VERSION >= 0x050000
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     /// @brief Override the native platform event handler implementation.
     ///
     /// @param [in] event_type The event type.
@@ -101,6 +101,9 @@ protected:
     ///
     /// \returns True if the event was recognized and handled, and false otherwise.
     bool nativeEvent(const QByteArray& event_type, void* message, long* result) Q_DECL_OVERRIDE;
+
+#elif QT_VERSION >= 0x050000
+
 #else
     /// @brief Override the Windows event handler implementation.
     ///

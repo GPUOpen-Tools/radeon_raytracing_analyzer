@@ -1,14 +1,9 @@
-Radeon Raytracing Analyzer V1.3 09/21/2023
-------------------------------------------
+Radeon Raytracing Analyzer V1.3.1 10/18/2023
+--------------------------------------------
 
-V1.3 Changes
+V1.3.1 Changes
 ------------------------------------
-1) Addition of a RAY tab, to enable the ability to visualize dispatches and individual rays.
-2) Ray Dispatches pane added to visualize ray dispatches and allow selection of pixels within those dispatches.
-3) Ray Inspector pane added to visualize individual rays and their collisions with scene objects.
-4) Reset button added to TLAS/BLAS viewer panes and Inspector pane to reset the UI to its default settings.
-5) Allow viewer UI state to be persistent between RRA sessions via a checkbox in the general settings.
-6) Bugs/stability fixes.
+1) A bugfix has been made to use the correct dispatch size for future versions of RRA to ensure backwards compatibility.
 
 Known Issues
 ------------------------------------
@@ -26,6 +21,15 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.3 Changes
+------------------------------------
+1) Addition of a RAY tab, to enable the ability to visualize dispatches and individual rays.
+2) Ray Dispatches pane added to visualize ray dispatches and allow selection of pixels within those dispatches.
+3) Ray Inspector pane added to visualize individual rays and their collisions with scene objects.
+4) Reset button added to TLAS/BLAS viewer panes and Inspector pane to reset the UI to its default settings.
+5) Allow viewer UI state to be persistent between RRA sessions via a checkbox in the general settings.
+6) Bugs/stability fixes.
 
 V1.2 Changes
 ------------------------------------

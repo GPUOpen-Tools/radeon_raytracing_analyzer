@@ -31,9 +31,9 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
         load_status_.incomplete_data = true;
     }
 
-    dim_x_ = std::max(metadata_.counter.dispatchRayDimensionX, metadata_.dispatchDims.dimX);
-    dim_y_ = std::max(metadata_.counter.dispatchRayDimensionY, metadata_.dispatchDims.dimY);
-    dim_z_ = std::max(metadata_.counter.dispatchRayDimensionZ, metadata_.dispatchDims.dimZ);
+    dim_x_ = metadata_.counter.dispatchRayDimensionX;
+    dim_y_ = metadata_.counter.dispatchRayDimensionY;
+    dim_z_ = metadata_.counter.dispatchRayDimensionZ;
 
     total_dispatch_indices_ = dim_x_ * dim_y_ * dim_z_;
 

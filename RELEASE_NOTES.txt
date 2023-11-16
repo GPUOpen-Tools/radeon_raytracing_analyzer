@@ -1,19 +1,20 @@
-Radeon Raytracing Analyzer V1.3.1 10/18/2023
---------------------------------------------
+Radeon Raytracing Analyzer V1.4 12/07/2023
+------------------------------------------
 
-V1.3.1 Changes
+V1.4 Changes
 ------------------------------------
-1) A bugfix has been made to use the correct dispatch size for future versions of RRA to ensure backwards compatibility.
+1) Ray direction visualization added to dispatch pane.
+2) Bugs/stability fixes.
 
 Known Issues
 ------------------------------------
-(1) When capturing raytracing applications, it is strongly recommended not to reuse buffers immediately after a DispatchRays() call, since the capture process can take quite a bit of time and this will lead to partially created BVH data being written out. This will show up in RRA as missing BLAS/TLAS data. The trace should still load but certain parts of the scene will be missing.
+(1) When capturing raytracing applications, it is strongly recommended not to reuse buffers immediately after a DispatchRays() call, since the capture process can take quite a bit of time and this will lead to partially created BVH data being written out. This will show up in RRA as missing BLAS/TLAS data. The scene should still load but certain parts of the scene will be missing.
 (2) RRA is very memory-intensive, particularly for large scenes. To reduce the memory footprint as much as possible, please limit the number of concurrent instances of RRA. This will be dependent on the amount of video and system memory available, and in most uses-cases will not be an issue.
-(3) Radeon Developer Panel will NOT capture RRA traces from AMD multi-GPU configurations (e.g. two AMD GPUs). It will work with one AMD GPU and other non-AMD cards installed in the same machine. Please note that the primary monitor will need to be configured for the AMD GPU/monitor combination. For systems consisting of an AMD APU and AMD discrete GPU, capturing profiles should work, but an error may be logged in the Radeon Developer Panel regarding not being able to set peak clock mode. It is recommended that the GPU in the APU be disabled in the BIOS.
-(4) Radeon Developer Panel can only capture an RRA trace on a single AMD GPU at a time.
-(5) Radeon Developer Panel cannot capture RRA traces from non-AMD GPUs.
+(3) Radeon Developer Panel will NOT capture RRA scenes from AMD multi-GPU configurations (e.g. two AMD GPUs). It will work with one AMD GPU and other non-AMD cards installed in the same machine. Please note that the primary monitor will need to be configured for the AMD GPU/monitor combination. For systems consisting of an AMD APU and AMD discrete GPU, capturing profiles should work, but an error may be logged in the Radeon Developer Panel regarding not being able to set peak clock mode. It is recommended that the GPU in the APU be disabled in the BIOS.
+(4) Radeon Developer Panel can only capture an RRA scene on a single AMD GPU at a time.
+(5) Radeon Developer Panel cannot capture RRA scenes from non-AMD GPUs.
 (6) Unicode folders and filenames are currently not supported.
-(7) There is currently no default "Application 'up' axis" in the viewer panes. When loading or reloading RRA traces, orient your scene and press the "U" key to automatically set the up axis.
+(7) There is currently no default "Application 'up' axis" in the viewer panes. When loading or reloading RRA scenes, orient your scene and press the "U" key to automatically set the up axis.
 (8) The axis free camera does not properly "Jump to ray" when the view is reset with 'F' key press.
 (9) Only the X dimension is captured for the applications that use indirect dispatches.
 (10) The fov and camera speed does not get properly transmitted when jumping from ray inspector to TLAS viewer via the links on the left panel.
@@ -21,6 +22,10 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.3.1 Changes
+------------------------------------
+1) A bugfix has been made to use the correct dispatch size for future versions of RRA to ensure backwards compatibility.
 
 V1.3 Changes
 ------------------------------------
@@ -46,7 +51,7 @@ V1.1.1 Changes
 V1.1 Changes
 ------------------------------------
 1) Addition of an axis-free camera.
-2) Camera placed at 45 degrees above the scene on trace load.
+2) Camera placed at 45 degrees above the scene on scene load.
 3) Support for rebraided instances:
   a) Coloring mode to show which instances are rebraided.
   b) Allow selection of rebraided siblings.

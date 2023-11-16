@@ -81,3 +81,4 @@ When a split triangle is selected, the left-side pane will indicate that the tri
 A list of the split triangle siblings is also shown, allowing easy selection.
 
 .. image:: media/blas/split_triangles_stats_1.png
+

@@ -48,3 +48,4 @@ sorting is in ascending or descending order.
 
 Double-clicking an item in the table will jump to the BLAS Viewer pane and show
 the selected BLAS.
+

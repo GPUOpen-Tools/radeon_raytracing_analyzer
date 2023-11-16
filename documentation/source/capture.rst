@@ -1,9 +1,9 @@
-How to generate a BVH trace
+How to generate a BVH scene
 ---------------------------
 
-The first thing you will need to do is generate a BVH trace. Currently,
+The first thing you will need to do is generate a BVH scene. Currently,
 this is done via the Radeon Developer Panel. Please read the documentation
-provided with this distribution for information on how to create a BVH trace.
+provided with this distribution for information on how to create a BVH scene.
 This can be obtained from within the Radeon Developer Panel or from the link
 on the Radeon Raytracing Analyzer “Welcome” view. The documentation is also
 available online at:

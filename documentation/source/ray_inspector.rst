@@ -50,3 +50,4 @@ These controls function almost identically to those in the TLAS and BLAS viewer 
 A notable difference is that this pane contains a lock button to the right of the Camera position label. When locked,
 the camera will preserve its position when changing the selected dispatch coordinate in the Dispatches tab instead of
 focusing on the first ray in that coordinate's ray list.
+

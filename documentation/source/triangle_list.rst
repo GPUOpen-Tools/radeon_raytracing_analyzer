@@ -38,3 +38,4 @@ The following fields are displayed:
 The columns can be sorted by clicking on the column header, apart from the vertex
 columns; sorting is disabled for these columns. The arrow in the heading shows if
 sorting is in ascending or descending order.
+

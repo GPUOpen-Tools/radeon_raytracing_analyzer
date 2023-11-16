@@ -24,20 +24,20 @@ The table columns can be sorted to help highlight problematic areas, for example
 to find coordinates that cast too many rays. Note that only the coordinates with at least 1 ray cast
 will be displayed.
 
-The Heatmap section
+The Image section
 ~~~~~~~~~~~~~~~~~~~
-On the right hand side is a heatmap visualizing traversal statistics of the dispatch. A typical heatmap
+On the right hand side is an image visualizing traversal statistics of the dispatch. A typical
 image will be a 2D image that correlates closely to the final 2D rendered image in the capture application.
 However, applications are free to use 1D, 2D, or 3D dispatches in an arbitrary way that may or may not be
 easily mappable to the final rendered image. For 3D dispatches, they can be displayed as a series of 2D
 'slices' by changing the **XY image with Z index at** dropdown to change the slice plane displayed, and
 index into the slices by editing the number to the right of the dropdown.
 
-The image can visualize each column of the dispatch coordinates table using the **Color heatmap by ..**
-dropdown, and the color palette of the heatmap can be changed using the **Heatmap as ..** dropdown.
+The image can visualize each column of the ray table as a heatmap. It can visualize the ray direction as well. 
+Ray directions will be mapped from the normalized directions into color space. The coloring mode of the image can be changed by using the dropdown above the viewer. 
 
 A slider bar below the image can be used to adjust the heatmap range, which enables potential problems to be
-seen easier.
+seen easier. In the case of ray directions, the slider will allow the selection of the ray index for each dispatch coordinate.
 
 The rendered image can be manipulated with the mouse. An area of interest can be selected by holding down
 the left mouse button and dragging the mouse. Repeating this process will select a new rectangle. When
@@ -87,3 +87,4 @@ An area of interest is shown in the image below:
 After selecting a region, the dispatch table will be updated to only contain the rays within the dispatch
 coordinates of the selected region and the dispatch counters statistics will be updated as well. Double-clicking
 on an entry in the table or a pixel in the heatmap image will navigate to the **Ray Inspector** pane.
+

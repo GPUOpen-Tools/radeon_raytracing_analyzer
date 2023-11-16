@@ -43,3 +43,4 @@ Typically, instances are created with their own local co-ordinate system. When
 placed in the scene, each instance requires a transformation from its local
 co-ordinate system to the world co-ordinate system. This is shown by the
 position and transform matrix in the table.
+

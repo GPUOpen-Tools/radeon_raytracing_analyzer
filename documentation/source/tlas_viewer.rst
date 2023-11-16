@@ -248,17 +248,12 @@ The **Camera controls** section allows selection of the camera controls.
   selected control style and are primarily used to drive the camera. 
   Common keyboard shortcuts are also described in the keyboard shortcuts section in the settings menu. 
 
-.. only:: internal
-
-   * The **Copy camera params** and **paste camera params** allow the camera position to be
-     saved and restored. This can be helpful to return to a point of interest in a scene later.
-
 * The **Projection** combo box allows selection of the projection mode, switching between
   perspective and orthographic viewing modes. The default is perspective.
 
 * The **Up axis** radio buttons allow the orientation of the scene to be changed according to
   the specified **up** axis. This will be dependent on the coordinate system of the application
-  from where the trace file originated. Alternatively, the scene can be oriented in the 3D view
+  from where the scene originated. Alternatively, the scene can be oriented in the 3D view
   so it looks correct, then the "U" key can be pressed. RRA will then set the up axis automatically.
 
 * The **Coordinate system** checkboxes allow the inversion of the horizontal and vertical axes.
@@ -267,11 +262,6 @@ The **Camera controls** section allows selection of the camera controls.
   edited manually if needed. The reset icon can be clicked to move the camera to the origin.
 
 * The **Field of view** slider changes the camera's field of view.
-
-.. only:: internal
-
-    * The **Near plane** slider changes the near clipping plane. (The far plane is set to a
-      large constant.)
 
 * The **Movement speed** slider changes the speed of the camera. The maximum speed can be set in the
   **General** section of the settings under **Maximum camera movement speed**.
@@ -441,11 +431,6 @@ The coloring modes are available in a row above the scene rendering.
    * Technical drawing
       Directionally lit Gooch shading.
 
-     .. only:: internal
-
-      * Leaf node triangle index (Triangle)
-         The triangle index within a leaf node.
-
 #. **Traversal counters** is only available when the traversal rendering mode is
    enabled, and allows for different hit and test counters to be used when colorizing
    the scene. Each pixel shows how many bounding volume tests or hits were performed.
@@ -569,3 +554,4 @@ Rebraided instances will be clearly marked on the left-side pane when an instanc
 If the instance has been rebraided, the sibling nodes will be listed, allowing for easy selection.
 
 .. image:: media/tlas/rebraiding_stats_1.png
+

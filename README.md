@@ -18,7 +18,7 @@ to reduce performance bottlenecks.
    * Radeon Developer Service CLI (RDS headless)
    * Radeon Developer Panel (RDP)
    * Radeon Raytracing Analyzer (RRA)
-3. To capture a trace from a game, run the Radeon Developer Panel and follow the instructions in the Help. Help can be found in the following locations:
+3. To capture a scene from a game, run the Radeon Developer Panel and follow the instructions in the Help. Help can be found in the following locations:
    * Help web pages exist in the "help" sub directory
    * Help web pages can be accessed from the **Help** button in the Developer Panel
    * Help web pages can be accessed from the Welcome screen in the Radeon Raytracing Analyzer, or from the **Help** menu
@@ -46,6 +46,9 @@ to reduce performance bottlenecks.
 
 ## Build instructions
 See [BUILD.md](BUILD.md) for more details.
+
+## Support ##
+For support, please visit the RRA repository github page: https://github.com/GPUOpen-Tools/radeon_raytracing_analyzer
 
 ## License ##
 Radeon Raytracing Analyzer is licensed under the MIT license. See the [LICENSE.txt](LICENSE.txt) file for complete license information.

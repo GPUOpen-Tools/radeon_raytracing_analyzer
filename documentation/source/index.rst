@@ -40,35 +40,35 @@ Radeon Raytracing Analyzer - Quick Start
 Starting the Radeon Raytracing Analyzer
 ---------------------------------------
 
-Start **RadeonRaytracingAnalyzer.exe** (this is the tool used to view RRA trace data).
+Start **RadeonRaytracingAnalyzer.exe** (this is the tool used to view RRA scene data).
 
-How to load a trace
+How to load a scene
 -------------------
 
-There are a few ways to load a trace into RRA.
+There are a few ways to load a scene into RRA.
 
-1) Use the “File/Open trace” pull down menu, or the “File/Recent
-   trace” pull down menu item.
+1) Use the "File/Open scene" pull down menu, or the "File/Recent
+   scene" pull down menu item.
 
-2) Go to the “Welcome” view and click on the “Open a Radeon Raytracing Analyzer file…”
+2) Go to the "Welcome" view and click on the "Open a Radeon Raytracing Analyzer file…"
 
-3) Go to the “Welcome” view and click on a trace that you have
+3) Go to the "Welcome" view and click on a scene that you have
    previously loaded in the Recent list.
 
 .. image:: media/welcome_1.png
 
-4) Go to the Recent traces view to see a full list of all your recent traces.
+4) Go to the Recent scenes view to see a full list of all your recent scenes.
 
-  Notice that there is additional information provided for each trace when
-  viewed in this pane, such as the date when the trace was last accessed. It is
-  also possible to remove recent traces from the list using the "Remove from list"
+  Notice that there is additional information provided for each scene when
+  viewed in this pane, such as the date when the scene was last accessed. It is
+  also possible to remove recent scenes from the list using the "Remove from list"
   link button. Note that they will only be removed from the list; they won't be
   deleted from the file system. There is also a link button, "Open file location"
-  to open the folder where that trace file is on the disk.
+  to open the folder where that scene file is on the disk.
 
 .. image:: media/recent_traces_1.png
 
-5) Drag and drop an RRA trace file onto the **Radeon Raytracing Analyzer**
+5) Drag and drop an RRA scene file onto the **Radeon Raytracing Analyzer**
    executable, or onto an already open RRA instance.
 
 The Radeon Raytracing Analyzer user interface
@@ -80,20 +80,20 @@ number of sub-windows..
 1. **START**
 
    a. **Welcome** - Shows links to help documentation, and a list of
-      recently opened traces.
+      recently opened scenes.
 
-   b. **Recent traces** - Displays a list of the recently opened
-      traces.
+   b. **Recent scenes** - Displays a list of the recently opened
+      scenes.
 
    c. **About** - Shows build information about RRA and useful links.
 
 2. **OVERVIEW**
 
-   a. **Summary** - Gives an overview of the trace, showing the number
+   a. **Summary** - Gives an overview of the scene, showing the number
       of acceleration structures, the resources they use and their memory usage.
 
    b. **Device configuration** - Provides details of the GPU used to
-      record the trace.
+      record the scene.
 
 3. **TLAS**
 
@@ -223,3 +223,4 @@ Windows is a registered trademark of Microsoft Corporation in the US and other j
 
 
 © 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+

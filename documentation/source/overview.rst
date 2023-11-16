@@ -1,33 +1,33 @@
-These panes show the overview of the trace and the system.
+These panes show the overview of the scene and the system.
 
 Summary
 -------
 The summary pane presents a high-level view of the acceleration structures in
-a trace. If dispatches was specified when taking a capture, the dispatches
+a scene. If dispatches was specified when taking a capture, the dispatches
 that shot rays will also be shown.
 
 At the top, a small table will show the number of acceleration structures by type
 and if there are any acceleration structures that are empty or missing.
 
-* **Total TLASes** is the total number of top-level acceleration structures in the trace.
+* **Total TLASes** is the total number of top-level acceleration structures in the scene.
 
-* **Total BLASes** is the total number of bottom-level acceleration structures in the trace.
+* **Total BLASes** is the total number of bottom-level acceleration structures in the scene.
 
 * **Empty BLASes** is the number of BLASes which have no geometry data.
 
 * **Missing BLASes** is the number of instances which contain a reference to a BLAS that isn't
-  present in the trace file.
+  present in the scene file.
 
 * **Inactive instances** is the number of instances which either have a null handle in place of their
   BLAS reference or have an instance mask of 0x0. This does not exactly match the DirectX 12 and Vulkan
   specification definitions of inactive instances in which an instance mask of 0x0 is not considered
   inactive. The reason for this is that the driver internally converts inactive instances to have an
-  instance mask of 0x0 so they are indistinguishable in the trace file.
+  instance mask of 0x0 so they are indistinguishable in the scene file.
 
 The **Total memory** is the memory used for all the acceleration structures.
 
 The **TLAS list** shows a list of all Top-level acceleration structures in
-the trace. It is split into several sections:
+the scene. It is split into several sections:
 
 * The left section shows a high level diagram of the TLAS, showing the number
   of instances and BLASes. Also shown is the memory used by the TLAS and the total
@@ -62,7 +62,8 @@ Clicking on the Dispatch name (text in blue) will navigate to the RAY Dispatches
 Device configuration
 --------------------
 This pane will show some of the parameters of the video hardware on which the
-memory trace was taken, showing such things as the name of the video card and
+scene was recorded, showing such things as the name of the video card and
 the memory bandwidth.
 
 .. image:: media/overview/device_config_1.png
+

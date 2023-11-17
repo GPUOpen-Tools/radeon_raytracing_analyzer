@@ -54,7 +54,7 @@ namespace rta
         ///
         /// @return true if any of the BVH structures contain the same encoding as that passed in,
         /// false if not.
-        bool HasEncoding(const BvhEncoding encoding) const;
+        bool HasEncoding(const RayTracingIpLevel encoding) const;
 
         /// @brief Get the format of the bundle.
         ///
@@ -127,9 +127,17 @@ namespace rta
     ///
     /// @return A pointer to the bundle information of the loaded file, or nullptr if the load failed.
     std::unique_ptr<BvhBundle> LoadBvhBundleFromFile(rdf::ChunkFile&           chunk_file,
-                                                     const BvhEncoding         encoding,
+                                                     const RayTracingIpLevel   encoding,
                                                      const BvhBundleReadOption import_option,
                                                      RraErrorCode*             io_error_code);
+
+    /// @brief Get ray tracing IP level of chunk file.
+    /// 
+    /// @param [in]     chunk_file     A Reference to a ChunkFile object which describes the file chunk being loaded.
+    /// @param [in,out] io_error_code  An error code indicating whether the file loaded successfully.
+    /// 
+    /// @return The ray tracing IP level.
+    RayTracingIpLevel GetRtIpLevel(rdf::ChunkFile& chunk_file, RraErrorCode* io_error_code);
 
 }  // namespace rta
 

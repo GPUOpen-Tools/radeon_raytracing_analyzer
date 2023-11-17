@@ -15,7 +15,7 @@ namespace rra
 {
     namespace renderer
     {
-        static VkValidationFeaturesEXT      validation_features_ext       = {VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT};
+        static VkValidationFeaturesEXT      validation_features_ext       = {};
         static VkValidationFeatureEnableEXT enabled_validation_features[] = {VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT};
 
         bool ExtGPUValidationCheckExtensions(InstanceProperties* instance_properties)
@@ -31,6 +31,7 @@ namespace rra
                 }
             }
 
+            validation_features_ext.sType                         = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
             validation_features_ext.enabledValidationFeatureCount = 1;
             validation_features_ext.pEnabledValidationFeatures    = enabled_validation_features;
             validation_features_ext.pNext                         = instance_properties->GetNext();

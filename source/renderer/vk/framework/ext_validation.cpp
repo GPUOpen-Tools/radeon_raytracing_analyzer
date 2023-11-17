@@ -92,7 +92,8 @@ namespace rra
         {
             if (vkCreateDebugReportCallbackEXT)
             {
-                VkDebugReportCallbackCreateInfoEXT debugReportCallbackInfo = {VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT};
+                VkDebugReportCallbackCreateInfoEXT debugReportCallbackInfo = {};
+                debugReportCallbackInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
                 debugReportCallbackInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
                 debugReportCallbackInfo.pfnCallback = MyDebugReportCallback;
 

@@ -72,12 +72,7 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
     connect(ui_->content_ray_acceleration_structure_address_, &ScaledPushButton::clicked, this, &RayInspectorPane::GotoTlasPaneFromSelectedRay);
     connect(ui_->content_ray_result_instance_index_, &ScaledPushButton::clicked, this, &RayInspectorPane::GotoTlasPaneFromSelectedRayWithInstance);
 
-    connect(ui_->content_origin_, &ScaledPushButton::clicked, [=]() {
-        if (last_camera_controller_)
-        {
-            last_camera_controller_->FocusOnSelection();
-        }
-    });
+    connect(ui_->content_origin_, &ScaledPushButton::clicked, this, &RayInspectorPane::FocusOnRayOrigin);
 
     connect(ui_->content_ray_result_hit_distance_, &ScaledPushButton::clicked, this, &RayInspectorPane::FocusOnHitLocation);
     connect(ui_->selected_ray_focus_, &ScaledPushButton::clicked, this, &RayInspectorPane::FocusOnSelectedRay);
@@ -976,7 +971,8 @@ void RayInspectorPane::GotoTlasPaneFromSelectedRay()
         return;
     }
 
-    emit rra::MessageManager::Get().TlasAssumeCamera(camera->GetPosition(), camera->GetForward(), camera->GetUp());
+    emit rra::MessageManager::Get().TlasAssumeCamera(
+        camera->GetPosition(), camera->GetForward(), camera->GetUp(), camera->GetFieldOfView(), camera->GetMovementSpeed());
 }
 
 void RayInspectorPane::GotoTlasPaneFromSelectedRayWithInstance()
@@ -1016,7 +1012,8 @@ void RayInspectorPane::GotoTlasPaneFromSelectedRayWithInstance()
         return;
     }
 
-    emit rra::MessageManager::Get().TlasAssumeCamera(camera->GetPosition(), camera->GetForward(), camera->GetUp());
+    emit rra::MessageManager::Get().TlasAssumeCamera(
+        camera->GetPosition(), camera->GetForward(), camera->GetUp(), camera->GetFieldOfView(), camera->GetMovementSpeed());
 }
 
 void RayInspectorPane::FocusOnHitLocation()
@@ -1055,6 +1052,36 @@ void RayInspectorPane::FocusOnHitLocation()
         glm::vec3(ray.origin[0], ray.origin[1], ray.origin[2]) + glm::vec3(ray.direction[0], ray.direction[1], ray.direction[2]) * ray_result.hit_t;
 
     last_camera_controller_->FitCameraParams(camera_pos, glm::normalize(hit_location - camera_pos), camera->GetUp());
+}
+
+void RayInspectorPane::FocusOnRayOrigin()
+{
+    auto selected_ray_index = model_->GetSelectedRayIndex();
+    auto opt_ray            = model_->GetRay(selected_ray_index);
+
+    if (!opt_ray)
+    {
+        return;
+    }
+
+    auto& ray = opt_ray.value();
+
+    UpdateCameraController();
+    if (!last_camera_controller_)
+    {
+        return;
+    }
+
+    auto camera = last_camera_controller_->GetCamera();
+    if (!camera)
+    {
+        return;
+    }
+
+    auto camera_pos = camera->GetPosition();
+    auto origin     = glm::vec3(ray.origin[0], ray.origin[1], ray.origin[2]);
+
+    last_camera_controller_->FitCameraParams(camera_pos, glm::normalize(origin - camera_pos), camera->GetUp());
 }
 
 bool RayInspectorPane::event(QEvent* event)

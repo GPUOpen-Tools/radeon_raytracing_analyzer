@@ -29,6 +29,7 @@ namespace rra
         kBlasStatsPrimitiveIndexTriangle2,
         kBlasStatsGeometryIndex,
         kBlasStatsParent,
+        kBlasStatsFocus,
 
         kBlasStatsNumWidgets,
     };

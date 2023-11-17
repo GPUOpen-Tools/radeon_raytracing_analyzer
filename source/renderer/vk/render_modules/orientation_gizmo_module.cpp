@@ -393,6 +393,8 @@ namespace rra
             case OrientationGizmoHitType::kBackground:
                 background_circle.color = background_color_highlight;
                 break;
+            default:
+                break;
             }
 
             /// Letters.

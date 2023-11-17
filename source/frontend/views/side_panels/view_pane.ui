@@ -546,7 +546,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="ScaledPushButton" name="traversal_adapt_to_view_">
+              <widget class="RraIconButton" name="traversal_adapt_to_view_">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -1638,5 +1638,6 @@
  <buttongroups>
   <buttongroup name="button_group_up_axis_"/>
   <buttongroup name="button_group_rendering_modes_"/>
+  <buttongroup name="button_group_architecture_"/>
  </buttongroups>
 </ui>

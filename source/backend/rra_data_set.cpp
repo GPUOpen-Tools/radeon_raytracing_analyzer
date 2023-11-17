@@ -83,7 +83,8 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     data_set->async_ray_histories = LaunchAsyncRayHistoryLoaders(chunk_file, path);
 
     // Load the BVH chunks.
-    data_set->bvh_bundle = rta::LoadBvhBundleFromFile(chunk_file, rta::BvhEncoding::kAmdRtIp_1_1, rta::BvhBundleReadOption::kDefault, &error_code);
+    rta::RayTracingIpLevel rtip_level = rta::GetRtIpLevel(chunk_file, &error_code);
+    data_set->bvh_bundle         = rta::LoadBvhBundleFromFile(chunk_file, rtip_level, rta::BvhBundleReadOption::kDefault, &error_code);
 
     return error_code;
 }

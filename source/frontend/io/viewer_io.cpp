@@ -479,7 +479,11 @@ namespace rra
 
         auto context_options = viewer_callbacks_.get_context_options(request);
 
-        context_options["Focus on selection"] = [&]() { should_focus_on_selection_ = true; };
+        // If the callback does not provide a focus on selection option, use the default.
+        if (context_options.find(kFocusOnSelectionName) == context_options.end())
+        {
+            context_options[kFocusOnSelectionName] = [&]() { should_focus_on_selection_ = true; };
+        }
 
         for (const auto& option_action : context_options)
         {
@@ -498,13 +502,21 @@ namespace rra
         }
     }
 
-    void ViewerIO::FitCameraParams(glm::vec3 position, glm::vec3 forward, glm::vec3 up)
+    void ViewerIO::FitCameraParams(glm::vec3 position, glm::vec3 forward, glm::vec3 up, std::optional<float> opt_fov, std::optional<float> opt_speed)
     {
         RRA_UNUSED(up);
         auto orientation = GetCameraOrientation();
         auto camera      = GetCamera();
         if (camera)
         {
+            if (opt_fov)
+            {
+                camera->SetFieldOfView(opt_fov.value());
+            }
+            if (opt_speed)
+            {
+                camera->SetMovementSpeed(opt_speed.value());
+            }
             euler_angles_ = orientation.GetEulerByForward(forward);
             camera->SetArcRadius(arc_radius_);
             camera->SetArcCenterPosition(position + forward * camera->GetArcRadius());

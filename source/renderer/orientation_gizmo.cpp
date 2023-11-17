@@ -141,10 +141,10 @@ namespace rra
                 return glm::vec3(0.0f, 1.0f, 0.0f);
             case OrientationGizmoHitType::kMinusZ:
                 return glm::vec3(0.0f, 0.0f, 1.0f);
+            default:
+                // Unknown hit type.
+                return glm::vec3(0.0f, 0.0f, 0.0f);
             }
-
-            // Unknown hit type.
-            return glm::vec3(0.0f, 0.0f, 0.0f);
         }
 
         void SetOrientationGizmoSelected(OrientationGizmoHitType gizmo_hit)

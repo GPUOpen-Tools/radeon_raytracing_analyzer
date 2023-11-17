@@ -522,7 +522,7 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Recent traces pane</string>
+                   <string>Recent scenes pane</string>
                   </property>
                  </widget>
                 </item>
@@ -697,7 +697,7 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Open trace</string>
+                   <string>Open scene</string>
                   </property>
                  </widget>
                 </item>
@@ -723,7 +723,7 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Close trace</string>
+                   <string>Close scene</string>
                   </property>
                  </widget>
                 </item>

@@ -11,28 +11,18 @@
 #include <assert.h>
 
 #include "bvh/dxr_definitions.h"
-#include "bvh/irt_ip_11_acceleration_structure_post_build_info.h"
+#include "bvh/rtip11/irt_ip_11_acceleration_structure_post_build_info.h"
 #include "bvh/rt_binary_file_defs.h"
+#include "../rtip_common/gpurt_accel_struct.h"
 
 #include "public/rra_macro.h"
 
 namespace rta
 {
-    /// @brief Offsets into the node data of the acceleration structure to separate the
-    /// different interior / leaf node buffers and geometry descriptions.
-    struct AccelerationStructureBufferOffsets
-    {
-        std::uint32_t interior_nodes;
-        std::uint32_t leaf_nodes;
-        std::uint32_t geometry_info;
-        std::uint32_t prim_node_ptrs;
-    };
-
     /// @brief Represents the universal identifier of the BVH acceleration structure defined
     /// during the BVH build assigned to each BVH when built using the Vulkan API.
-    class VulkanUniversalIdentifier final
+    struct VulkanUniversalIdentifier final
     {
-    public:
         /// @brief Constructor.
         VulkanUniversalIdentifier() = default;
 
@@ -42,7 +32,6 @@ namespace rta
         /// @brief Destructor.
         ~VulkanUniversalIdentifier() = default;
 
-    private:
         std::uint32_t gfx_ip_          = 0;  ///< The graphics IP version.
         std::uint32_t build_time_hash_ = 0;  ///< The hash generated at build time.
     };

@@ -18,8 +18,6 @@ ENDIF()
 include_directories(${CMAKE_SOURCE_DIR}/external/third_party/vulkan/include/)
 include_directories(${CMAKE_SOURCE_DIR}/external/qt_common/source)
 
-find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
-
 # volk
 if(WIN32)
     set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
@@ -28,18 +26,12 @@ elseif(LINUX)
 endif()
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/third_party/volk volk)
 
-IF(WIN32)
-    # Warnings as errors for Windows
-    add_compile_options(/W4 /WX)
-ELSEIF(LINUX)
-    # Remove warnings for Linux
-    # TODO: Re-enable the Linux based warnings once we have a solution for VMA files. Windows side relies on pragma warning so it does not need to disable warnings.
-    # add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-sign-compare -Wno-uninitialized)
+IF(UNIX)
     find_package(Threads REQUIRED)
 
     # Include the qt version subdirectory path.
     include_directories(AFTER ${QT_NATIVE_PATH})
-ENDIF(WIN32)
+ENDIF(UNIX)
 
 set( EXTERNAL_SOURCES
     "${CMAKE_SOURCE_DIR}/external/vma/include/vk_mem_alloc.h"
@@ -47,6 +39,7 @@ set( EXTERNAL_SOURCES
 
 set( SOURCES
     "public/camera.h"
+    "public/include_vma.h"
     "public/shared.h"
     "public/heatmap.h"
     "public/renderer_widget.h"
@@ -130,11 +123,14 @@ set(SOURCES ${SOURCES} ${EXTERNAL_SOURCES})
 # Specify output library name
 IF(WIN32)
     add_library(${PROJECT_NAME} ${SOURCES})
-    target_link_libraries(${PROJECT_NAME} Qt5::Widgets Backend volk)
+    target_link_libraries(${PROJECT_NAME} Qt::Widgets Backend volk)
 ELSEIF(UNIX)
     add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
-    target_link_libraries(${PROJECT_NAME} Qt5::Widgets Backend volk ${CMAKE_DL_LIBS})
+    target_link_libraries(${PROJECT_NAME} Qt::Widgets Backend volk ${CMAKE_DL_LIBS})
 ENDIF(WIN32)
+
+# Apply common developer tools target options and definitions
+devtools_target_options(${PROJECT_NAME})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

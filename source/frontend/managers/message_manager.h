@@ -80,7 +80,9 @@ namespace rra
         /// @param [in] origin The origin to place the camera.
         /// @param [in] forward The direction of the camera
         /// @param [in] up The up axis of the camera.
-        void TlasAssumeCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up);
+        /// @param [in] fov The field of view of the camera.
+        /// @param [in] speed The speed of the camera.
+        void TlasAssumeCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up, float fov, float speed);
 
         /// @brief Signal to indicate that the user has selected a triangle in the BLAS viewer.
         ///

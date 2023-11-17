@@ -10,8 +10,9 @@
 
 #include "ui_ray_history_pane.h"
 
-#include "qt_common/utils/zoom_icon_group_manager.h"
+#include <QTimer>
 
+#include "qt_common/utils/zoom_icon_group_manager.h"
 #include "models/ray/ray_history_model.h"
 #include "models/ray/ray_list_table_item_delegate.h"
 #include "views/base_pane.h"
@@ -78,6 +79,13 @@ private slots:
     /// Interrogates the UI control and passes the data off to the model.
     void SetTraversalCounterRange(int min_value, int max_value);
 
+    /// @brief Set the current ray index.
+    ///
+    /// @param [in] ray_index The ray index.
+    ///
+    /// Interrogates the UI control and passes the data off to the model.
+    void SetCurrentRayIndex(int ray_index);
+
     /// @brief Set the slice of a 3D dispatch to inspect.
     ///
     /// @param slice_index The index of the dimension not shown in the heatmap image.
@@ -135,10 +143,22 @@ private:
     /// @brief Clear the currently selected ray.
     void ClearRaySelection();
 
+    /// @brief Called repeatedly by timer_ while the dispatch is loading.
+    void TimerUpdate();
+
+    /// @brief Loads the dispatches using backend.
+    void LoadDispatches();
+
+    /// @brief Updates the reshaped dimensions for a given dispatch id.
+    ///
+    /// @param dispatch_id The dispatch ID.
+    void UpdateReshapedDimensions(uint64_t dispatch_id);
+
 private:
     Ui::RayHistoryPane*                          ui_{};                          ///< Pointer to the Qt UI design.
     rra::RayHistoryModel*                        model_{};                       ///< The ray history model.
     uint32_t                                     dispatch_id_{0xFFFFFFFF};       ///< The current dispatch ID.
+    std::vector<bool>                            dispatches_loaded_;             ///< A flag indicating if all dispatches are loaded.
     TableItemDelegate*                           table_delegate_{};              ///< The delegate to draw the table rows.
     Ui_RayHistoryViewerWidget                    ray_history_viewer_{};          ///< The viewer widget for the ray history image.
     bool                                         show_event_occured_{};          ///< True if showEvent() has been called.
@@ -146,6 +166,7 @@ private:
     rra::renderer::DispatchIdData                max_statistics_{};              ///< The maximum of each statistic type in the current heatmap image.
     ZoomIconGroupManager*                        zoom_icon_manager_;             ///< The object responsible for the zoom icon status.
     std::vector<GlobalInvocationID>              dispatch_reshaped_dimensions_;  ///< The reshaped dimensions of 1D dispatches.
+    QTimer                                       timer_;                         ///< A timer used to redraw the widget at a specific rate.
 
     // Choose the color mode names and the order they're displayed in.
     const std::vector<std::pair<rra::renderer::RayHistoryColorMode, std::string>> color_modes_and_names_{
@@ -153,6 +174,7 @@ private:
         {rra::renderer::kRayHistoryColorModeInstanceIntersectionCount, "Color heatmap by instance intersection count"},
         {rra::renderer::kRayHistoryColorModeRayCount, "Color heatmap by ray count"},
         {rra::renderer::kRayHistoryColorModeAnyHitInvocationCount, "Color heatmap by any hit invocation count"},
+        {rra::renderer::kRayHistoryColorModeRayDirection, "Color by ray direction"},
     };
 };
 

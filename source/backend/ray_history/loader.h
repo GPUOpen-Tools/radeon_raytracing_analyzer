@@ -25,7 +25,7 @@ namespace rta
     static constexpr auto RayTracingBinaryHeaderSizeRayHistory       = sizeof(GpuRt::RayTracingBinaryHeaderRayHistory);
     static constexpr auto RayTracingBinaryHeaderSizeTraversalCounter = sizeof(GpuRt::RayTracingBinaryHeaderTraversalCounter);
 
-    static_assert(sizeof(GpuRt::CounterInfo) == 64);
+    static_assert(sizeof(GpuRt::CounterInfo) == 72);
 
     // Loader for binary ray history or ray traversal counter files.
     // Supports loading single (partial or non-partial) binary file or

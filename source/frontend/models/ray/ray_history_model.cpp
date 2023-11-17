@@ -202,9 +202,15 @@ namespace rra
         GraphicsContextCreateRayHistoryStatsBuffer(dispatch_id, out_max_count);
     }
 
-    QImage RayHistoryModel::RenderRayHistoryImage(uint32_t heatmap_min, uint32_t heatmap_max, uint32_t reshaped_x, uint32_t reshaped_y, uint32_t reshaped_z)
+    QImage RayHistoryModel::RenderRayHistoryImage(uint32_t heatmap_min,
+                                                  uint32_t heatmap_max,
+                                                  uint32_t ray_index,
+                                                  uint32_t reshaped_x,
+                                                  uint32_t reshaped_y,
+                                                  uint32_t reshaped_z)
     {
-        return GraphicsContextRenderRayHistoryImage(heatmap_min, heatmap_max, reshaped_x, reshaped_y, reshaped_z, color_mode_, slice_index_, slice_plane_);
+        return GraphicsContextRenderRayHistoryImage(
+            heatmap_min, heatmap_max, ray_index, reshaped_x, reshaped_y, reshaped_z, color_mode_, slice_index_, slice_plane_);
     }
 
     void RayHistoryModel::SetHeatmapData(rra::renderer::HeatmapData heatmap_data)

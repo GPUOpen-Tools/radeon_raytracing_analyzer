@@ -133,7 +133,8 @@ namespace rra
             CheckResult(create_result, "Failed to create pipeline.");
 
             // Create the compute pipeline.
-            VkComputePipelineCreateInfo compute_pipeline_create_info = {VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
+            VkComputePipelineCreateInfo compute_pipeline_create_info = {};
+            compute_pipeline_create_info.sType                       = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
             compute_pipeline_create_info.layout                      = trace_traversal_pipeline_layout_;
             compute_pipeline_create_info.stage                       = compute_shader_stage;
             compute_pipeline_create_info.basePipelineIndex           = -1;
@@ -143,7 +144,8 @@ namespace rra
             CheckResult(create_result, "Failed to create compute pipeline.");
 
             // Create the subsample pipeline.
-            VkComputePipelineCreateInfo subsample_pipeline_create_info = {VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
+            VkComputePipelineCreateInfo subsample_pipeline_create_info = {};
+            subsample_pipeline_create_info.sType                       = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
             subsample_pipeline_create_info.layout                      = trace_traversal_pipeline_layout_;
             subsample_pipeline_create_info.stage                       = subsample_stage;
             subsample_pipeline_create_info.basePipelineIndex           = -1;

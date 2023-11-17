@@ -26,9 +26,9 @@ namespace rta
     // for interior and leaf nodes.
     struct BvhFormat
     {
-        BvhEncoding  encoding;
-        std::int32_t interior_node_branching_factor;
-        std::int32_t leaf_node_branching_factor;
+        RayTracingIpLevel encoding;
+        std::int32_t      interior_node_branching_factor;
+        std::int32_t      leaf_node_branching_factor;
     };
 
     // Version of chunk files

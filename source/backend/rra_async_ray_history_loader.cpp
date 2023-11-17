@@ -12,9 +12,25 @@
 
 struct AsyncLoaderRayHistoryData
 {
-    rta::RayHistoryMetadata               metadata          = {};
     std::shared_ptr<rta::RayHistoryTrace> ray_history_trace = nullptr;
 };
+
+// Is the chunk version less than the version passed in.
+//
+// @param chunk_version  The chunk version.
+// @param major_version  The major version requested.
+// @param minor_version  The minor version requested.
+//
+// @return true if chunk_version < requested version, false otherwise.
+static bool ChunkVersionLessThan(uint32_t chunk_version, uint32_t major_version, uint32_t minor_version)
+{
+    uint32_t requested_version = (major_version << 16) | minor_version;
+    if (chunk_version < requested_version)
+    {
+        return true;
+    }
+    return false;
+}
 
 RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_t dispatch_index)
 {
@@ -22,18 +38,75 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
     {
         auto           file       = rdf::Stream::OpenFile(file_path);
         rdf::ChunkFile chunk_file = rdf::ChunkFile(file);
-        chunk_file.ReadChunkDataToBuffer(RRA_RAY_HISTORY_TOKENS_METADATA_IDENTIFIER, (int)dispatch_index, &metadata_);
+
+        // Get chunk version number.
+        uint32_t version = chunk_file.GetChunkVersion(RRA_RAY_HISTORY_TOKENS_METADATA_IDENTIFIER);
+
+        // Read chunk into a buffer.
+        auto                   metadata_chunk_size = chunk_file.GetChunkDataSize(RRA_RAY_HISTORY_TOKENS_METADATA_IDENTIFIER);
+        std::vector<std::byte> metadata_buffer(metadata_chunk_size);
+        chunk_file.ReadChunkDataToBuffer(RRA_RAY_HISTORY_TOKENS_METADATA_IDENTIFIER, (int)dispatch_index, metadata_buffer.data());
+
+        // Offset to keep track of where we are.
+        int64_t offset = 0;
+
+        // Iterate through each metadata field and load them if possible.
+        while (offset <= metadata_chunk_size)
+        {
+            rta::RayHistoryMetadataInfo current_info = {};
+            std::memcpy(&current_info, metadata_buffer.data() + offset, sizeof(rta::RayHistoryMetadataInfo));
+            offset += sizeof(rta::RayHistoryMetadataInfo);
+
+            if (current_info.kind == rta::RayHistoryMetadataKind::DXC_RayTracingCounterInfo)
+            {
+                // Copy CounterInfo struct.
+                if (ChunkVersionLessThan(version, 1, 1))
+                {
+                    // Back compat. file versions < 1.1
+                    struct CounterInfo_V0
+                    {
+                        GpuRt::uint32 dispatchRayDimensionX;      // DispatchRayDimension X
+                        GpuRt::uint32 dispatchRayDimensionY;      // DispatchRayDimension Y
+                        GpuRt::uint32 dispatchRayDimensionZ;      // DispatchRayDimension Z
+                        GpuRt::uint32 hitGroupShaderRecordCount;  // Hit-group shader record count
+                        GpuRt::uint32 missShaderRecordCount;      // Miss shader record count
+                        GpuRt::uint32 pipelineShaderCount;        // Pipeline per-shader count
+                        GpuRt::uint64 stateObjectHash;            // State object hash
+                        GpuRt::uint32 counterMode;                // Counter mode
+                        GpuRt::uint32 counterMask;                // Traversal counter mask
+                        GpuRt::uint32 counterStride;              // Ray tracing counter stride
+                        GpuRt::uint32 rayCounterDataSize;         // Per-ray counter data
+                        GpuRt::uint32 lostTokenBytes;             // Total lost token bytes
+                        GpuRt::uint32 counterRayIdRangeBegin;     // Partial rayID range begin
+                        GpuRt::uint32 counterRayIdRangeEnd;       // Partial rayID range end
+                        GpuRt::uint32 pipelineType;               // Pipeline type (native RT or RayQuery). RayTracing=0, Compute=1, Graphics=2
+                    };
+                    std::memcpy(&counter_info_, metadata_buffer.data() + offset, sizeof(CounterInfo_V0));
+                    counter_info_.isIndirect = 0;
+                }
+                else
+                {
+                    std::memcpy(&counter_info_, metadata_buffer.data() + offset, sizeof(GpuRt::CounterInfo));
+                }
+
+                // For now we can break when we have lodaded the counter info as we do not use any other information from the metadata chunk.
+                // In the future, once all the alignment issues have been fixed we can remove the break from here.
+                break;
+            }
+
+            offset += current_info.sizeInByte;
+        }
     }
 
-    if (metadata_.counter.lostTokenBytes > 0)
+    if (counter_info_.lostTokenBytes > 0)
     {
         error_state_                 = true;
         load_status_.incomplete_data = true;
     }
 
-    dim_x_ = metadata_.counter.dispatchRayDimensionX;
-    dim_y_ = metadata_.counter.dispatchRayDimensionY;
-    dim_z_ = metadata_.counter.dispatchRayDimensionZ;
+    dim_x_ = counter_info_.dispatchRayDimensionX;
+    dim_y_ = counter_info_.dispatchRayDimensionY;
+    dim_z_ = counter_info_.dispatchRayDimensionZ;
 
     total_dispatch_indices_ = dim_x_ * dim_y_ * dim_z_;
 
@@ -166,9 +239,9 @@ std::shared_ptr<rta::RayHistoryTrace> RraAsyncRayHistoryLoader::GetRayHistoryTra
     return ray_history_trace_;
 }
 
-rta::RayHistoryMetadata RraAsyncRayHistoryLoader::GetMetadata()
+GpuRt::CounterInfo RraAsyncRayHistoryLoader::GetCounterInfo()
 {
-    return metadata_;
+    return counter_info_;
 }
 
 RayDispatchData& RraAsyncRayHistoryLoader::GetDispatchData()
@@ -410,8 +483,8 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
     const DispatchSize dispatchSize = {dx, dy, dz};
 
     // Sanity check: #dispatched pixels = #rays
-    if (const auto rayCount = result->GetRayCount(RayHistoryTrace::IncludeEmptyRays);
-        (dispatchSize.width * dispatchSize.height * dispatchSize.depth) != (uint32_t)rayCount)
+    const auto rayCount = result->GetRayCount(RayHistoryTrace::IncludeEmptyRays);
+    if ((dispatchSize.width * dispatchSize.height * dispatchSize.depth) != (uint32_t)rayCount)
     {
         std::scoped_lock<std::mutex> plock(process_mutex_);
         if (total_dispatch_indices_ > 0)

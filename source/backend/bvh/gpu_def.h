@@ -15,11 +15,12 @@ namespace rta
     // Virtual address on the GPU
     using GpuVirtualAddress = std::uint64_t;
 
-    // Defines the type of encoding supported by RRA.
-    enum class BvhEncoding : int32_t
+    enum class RayTracingIpLevel : uint32_t
     {
-        kUnknown     = 0,
-        kAmdRtIp_1_1 = 1  // == Navi2x
+        _None = 0,
+
+        RtIp1_0 = 0x1,  ///< First Implementation of HW RT
+        RtIp1_1 = 0x2,  ///< Added computation of triangle barycentrics into HW
     };
 
     // Defines the generic type of a BVH.

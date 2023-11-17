@@ -22,15 +22,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER ../backend ../frontend ../renderer)
 IF(UNIX)
     include_directories(AFTER ../backend/Linux)
-ENDIF(UNIX)
-
-find_package(Qt5 COMPONENTS Core Gui Widgets Svg REQUIRED)
-
-IF(WIN32)
-    # Warnings as errors for Windows
-    add_compile_options(/W4 /WX)
-ELSEIF(UNIX)
-    add_compile_options(-D_LINUX -Wall -Wextra -Werror)
 
     # Include the qt version subdirectory path.
     set(result "")
@@ -43,15 +34,14 @@ ELSEIF(UNIX)
             include_directories(AFTER ${QT_NATIVE_PATH})
         endif()
     endforeach(path)
-ENDIF(WIN32)
 
-IF(UNIX)
     find_package(Threads REQUIRED)
     find_package(XCB REQUIRED)
 ENDIF(UNIX)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 set( SOURCES
     "constants.h"
     "main.cpp"
@@ -331,7 +321,7 @@ set( WINDOWS_SOURCES
 # Filter out the UI files and get the list of generated files
 set(UI_FILES ${SOURCES})
 list(FILTER UI_FILES INCLUDE REGEX "\.ui$")
-qt5_wrap_ui (GENERATED_UI ${UI_FILES})
+qt_wrap_ui (GENERATED_UI ${UI_FILES})
 set(SOURCES ${SOURCES} ${GENERATED_UI})
 
 # searching for library file
@@ -364,6 +354,8 @@ ELSEIF(UNIX)
     #)
 ENDIF(WIN32)
 
+# Apply common developer tools target options and definitions
+devtools_target_options(${PROJECT_NAME})
 
 IF (WIN32 OR APPLE)
 SOURCE_GROUP_BY_FOLDER(${PROJECT_NAME})
@@ -379,9 +371,9 @@ ENDIF(CMAKE_RELEASE_POSTFIX)
 
 # executable file library dependency list
 IF(WIN32)
-    target_link_libraries(${PROJECT_NAME} Backend Renderer rdf Qt5::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} Backend Renderer rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
 ELSEIF(UNIX)
-    target_link_libraries(${PROJECT_NAME} Backend Renderer rdf Qt5::Widgets QtCustomWidgets QtUtils Threads::Threads ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} Backend Renderer rdf Qt::Widgets QtCustomWidgets QtUtils Threads::Threads ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
 ENDIF()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -401,32 +393,6 @@ IF(APPLE)
 ENDIF(APPLE)
 
 IF(WIN32)
-    ## Not using windeployqt currently as it copies more files than necessary. Leaving the command
-    ## here for future reference
-    #
-    # Run windeployqt if it can be found
-    #    find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt)
-    #    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    #        COMMAND ${WINDEPLOYQT_EXECUTABLE} $<TARGET_FILE:${PROJECT_NAME}> --no-translations --no-angle --no-opengl-sw --no-system-d3d-compiler --no-compiler-runtime --no-plugins
-    #    )
-
-    # Copy the QT files to the output directory
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-         # TBD - can windows use the same subdirectory layout as Linux (i.e. files in qt subfolder references via qt.conf)"
-         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/imageformats
-         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/platforms
-         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/iconengines
-         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/styles
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Core> $<TARGET_FILE_DIR:${PROJECT_NAME}>
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Gui> $<TARGET_FILE_DIR:${PROJECT_NAME}>
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Svg> $<TARGET_FILE_DIR:${PROJECT_NAME}>
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Widgets> $<TARGET_FILE_DIR:${PROJECT_NAME}>
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::QSvgPlugin> $<TARGET_FILE_DIR:${PROJECT_NAME}>/imageformats
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::QSvgIconPlugin> $<TARGET_FILE_DIR:${PROJECT_NAME}>/iconengines
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::QWindowsIntegrationPlugin> $<TARGET_FILE_DIR:${PROJECT_NAME}>/platforms
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::QWindowsVistaStylePlugin> $<TARGET_FILE_DIR:${PROJECT_NAME}>/styles
-     )
-
     # Copy the VisualStudio redist files
     # the list of all redist files is contained in the variable CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS. We only want to copy
     # a subset of these so we extract the directory from the first entry and then manually copy the files we want
@@ -451,70 +417,20 @@ IF(WIN32)
 
 ENDIF(WIN32)
 
+# Copy QT components into appropriate location in build destination
+if (WIN32)
+    DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
+elseif (UNIX AND NOT APPLE)
+    DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
+elseif (APPLE)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG})
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+        DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE})
+    endif()
+endif()
+
 IF(UNIX AND NOT APPLE)
-    # define some variables for the source and destination of the QT lib copy
-    set(QT_LIB_SRC "$<TARGET_FILE_DIR:Qt5::Core>")
-    set(QT_LIB_DST "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
-    set(QT_PLATFORM_SRC "$<TARGET_FILE_DIR:Qt5::QXcbIntegrationPlugin>")
-    set(QT_PLATFORM_DST "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms")
-    set(QT_IMAGEFORMATS_SRC "$<TARGET_FILE_DIR:Qt5::QSvgPlugin>")
-    set(QT_IMAGEFORMATS_DST "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/imageformats")
-    set(QT_ICONENGINES_SRC "$<TARGET_FILE_DIR:Qt5::QSvgIconPlugin>")
-    set(QT_ICONENGINES_DST "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/iconengines")
-
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E echo "copying QT libs from ${QT_LIB_SRC} to ${QT_LIB_DST}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_LIB_DST}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_ICONENGINES_DST}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_IMAGEFORMATS_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Core.so.5         ${QT_LIB_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Gui.so.5          ${QT_LIB_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Svg.so.5          ${QT_LIB_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5Widgets.so.5      ${QT_LIB_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5XcbQpa.so.5       ${QT_LIB_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5X11Extras.so.5    ${QT_LIB_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libQt5DBus.so.5         ${QT_LIB_DST}
-    )
-
-    # Copy Additional Qt 5.15.2 library files if needed.
-    IF(NOT DISABLE_EXTRA_QT_LIB_DEPLOY)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicudata.so.50        ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicui18n.so.50        ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libicuuc.so.50          ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb.so.1             ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-icccm.so.4       ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-image.so.0       ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-keysyms.so.1     ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-randr.so.0       ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-render.so.0      ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-render-util.so.0 ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-shape.so.0       ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-shm.so.0         ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-sync.so.1        ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-util.so.1        ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xfixes.so.0      ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xinerama.so.0    ${QT_LIB_DST}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_LIB_SRC}/libxcb-xkb.so.1         ${QT_LIB_DST}
-        )
-    ENDIF(NOT DISABLE_EXTRA_QT_LIB_DEPLOY)
-
-    set(SO_POSTFIX $<$<CONFIG:Debug>:${CMAKE_DEBUG_POSTFIX}>$<$<CONFIG:Release>:${CMAKE_RELEASE_POSTFIX}>)
-
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E echo "copying QT platform plugins from ${QT_PLATFORM_SRC} to ${QT_PLATFORM_DST}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_PLATFORM_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_PLATFORM_SRC}/libqxcb.so    ${QT_PLATFORM_DST}
-        COMMAND ${CMAKE_COMMAND} -E echo "copying QT imageformat plugins from ${QT_IMAGEFORMATS_SRC} to ${QT_IMAGEFORMATS_DST}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_IMAGEFORMATS_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_IMAGEFORMATS_SRC}/libqsvg.so  ${QT_IMAGEFORMATS_DST}
-        COMMAND ${CMAKE_COMMAND} -E echo "copying QT iconengine plugins from ${QT_ICONENGINES_SRC} to ${QT_ICONENGINES_DST}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_ICONENGINES_DST}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QT_ICONENGINES_SRC}/libqsvgicon.so  ${QT_ICONENGINES_DST}
-        COMMAND ${CMAKE_COMMAND} -E echo "copying qt.conf to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../../build/qt.conf $<TARGET_FILE_DIR:${PROJECT_NAME}>
-    )
-
     IF(NOT QT_SYSTEM)
         # Call chrpath on system to override executable file RPATH.
         find_program(CHRPATH_EXECUTABLE NAMES chrpath)
@@ -525,3 +441,4 @@ IF(UNIX AND NOT APPLE)
     ENDIF(NOT QT_SYSTEM)
 
 ENDIF(UNIX AND NOT APPLE)
+

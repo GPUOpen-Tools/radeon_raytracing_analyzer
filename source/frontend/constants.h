@@ -57,26 +57,26 @@ namespace rra
     {
         // @brief Delete recent file pop up dialog.
         static const QString kDeleteRecentTraceTitle      = "Error";
-        static const QString kDeleteRecentTraceTextFailed = "The trace failed to load.\n";
+        static const QString kDeleteRecentTraceTextFailed = "The scene failed to load.\n";
         static const QString kDeleteRecentTraceTextNoAS =
-            "\nThere are no acceleration structures present in the trace file. "
-            "Please ensure that the application being traced has ray tracing enabled "
+            "\nThere are no acceleration structures present in the scene file. "
+            "Please ensure that the application being captured has ray tracing enabled "
             "and ray tracing is taking place at the time of capture. "
             "Also ensure that acceleration structures are not destroyed, cleared, or "
             "reused in the same frame they are created in.\n";
         static const QString kDeleteRecentTraceTextMalformedData =
-            "\nThe trace file contains malformed data. If RRA captures are required, "
+            "\nThe scene file contains malformed data. If RRA captures are required, "
             "please ensure that raytracing buffers are not reused immediately after "
             "a DispatchRays call and defer reusing buffers until after a Present call.\n";
 
-        static const QString kRemoveRecentTraceText = "\nThe trace is in the recent files list. Would you like to remove it?";
+        static const QString kRemoveRecentTraceText = "\nThe scene is in the recent files list. Would you like to remove it?";
 
         // @brief Message box text displayed to a user when the viewport renderer fails to initialize.
         static const QString kRendererInitializationFailedTitle = "Renderer failure";
 
         // @brief Open recent trace missing pop up dialog.
-        static const QString kOpenRecentTraceTitle = "Trace not opened";
-        static const QString kOpenRecentTraceStart = "Trace \"";
+        static const QString kOpenRecentTraceTitle = "Scene not opened";
+        static const QString kOpenRecentTraceStart = "Scene \"";
         static const QString kOpenRecentTraceEnd   = "\"  does not exist!";
 
         // @brief The file extension for RRA trace files, and generic RDF files.
@@ -87,7 +87,7 @@ namespace rra
         static const QString kHelpFile            = "/help/rra/index.html";
         static const QString kLicenseFile         = "/LICENSE.txt";
         static const QString kSampleTraceLocation = "/samples/sample_trace" + kRRATraceFileExtension;
-        static const QString kFileOpenFileTypes = "RRA trace files (*" + kRRATraceFileExtension + ")";
+        static const QString kFileOpenFileTypes = "RRA scene files (*" + kRRATraceFileExtension + ")";
         static const QString kMissingHelpFile = "Missing RRA help file: ";
 
         // @brief External links.

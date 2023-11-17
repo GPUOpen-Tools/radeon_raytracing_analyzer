@@ -322,6 +322,7 @@ namespace rra
             kRayHistoryColorModeTraversalCount,
             kRayHistoryColorModeInstanceIntersectionCount,
             kRayHistoryColorModeAnyHitInvocationCount,
+            kRayHistoryColorModeRayDirection,
         };
 
         // Ray history dispatch ID data.
@@ -331,6 +332,13 @@ namespace rra
             uint32_t traversal_count;
             uint32_t instance_intersection_count;
             uint32_t any_hit_invocation_count;
+            uint32_t first_ray_index;
+        };
+
+        struct DispatchRayData
+        {
+            glm::vec3 direction;
+            float     placeholder;
         };
 
         struct RayInspectorRay

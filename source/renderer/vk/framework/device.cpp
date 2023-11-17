@@ -14,11 +14,6 @@
 
 #define VMA_IMPLEMENTATION
 
-// VMA recommends disabling warnings for "warnings as errors" compilations.
-#pragma warning(push, 3)
-#include <vma/include/vk_mem_alloc.h>
-#pragma warning(pop)
-
 #include "device.h"
 #include "instance.h"
 #include "instance_properties.h"
@@ -460,7 +455,8 @@ namespace rra
         {
             RRA_ASSERT(buffer == VK_NULL_HANDLE);
 
-            VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+            VkBufferCreateInfo buffer_info = {};
+            buffer_info.sType              = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             buffer_info.size               = size;
             buffer_info.usage              = usage_flags;
 
@@ -488,7 +484,8 @@ namespace rra
 
             vkResetCommandBuffer(cmd, 0);
 
-            VkCommandBufferBeginInfo begin_info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+            VkCommandBufferBeginInfo begin_info{};
+            begin_info.sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             begin_info.flags            = 0;
             begin_info.pInheritanceInfo = nullptr;
 

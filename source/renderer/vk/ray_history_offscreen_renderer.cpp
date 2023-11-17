@@ -18,6 +18,7 @@ namespace rra
         constexpr uint32_t STATS_BUFFER_BINDING{0};
         constexpr uint32_t HEATMAP_BINDING{1};
         constexpr uint32_t COLOR_BUFFER_BINDING{2};
+        constexpr uint32_t RAY_BUFFER_BINDING{3};
 
         void RayHistoryOffscreenRenderer::Initialize(Device* device)
         {
@@ -32,6 +33,8 @@ namespace rra
         void RayHistoryOffscreenRenderer::CleanUp()
         {
             device_->DestroyBuffer(stats_buffer_.buffer, stats_buffer_.allocation);
+            device_->DestroyBuffer(ray_data_buffer_.buffer, ray_data_buffer_.allocation);
+
             delete qt_image_data_;
 
             // Destroy heatmap image.
@@ -54,14 +57,15 @@ namespace rra
         {
             RraRayGetDispatchDimensions(dispatch_id, &width_, &height_, &depth_);
 
-             // The dims are 0 so no buffer can be created here.
+            // The dims are 0 so no buffer can be created here.
             if (width_ * height_ * depth_ == 0)
             {
                 return;
             }
 
-            uint32_t                    data_count{width_ * height_ * depth_};
-            std::vector<DispatchIdData> data(data_count);
+            uint32_t                     data_count{width_ * height_ * depth_};
+            std::vector<DispatchIdData>  data(data_count);
+            std::vector<DispatchRayData> ray_data;
 
             *out_max_count = {};
 
@@ -111,8 +115,29 @@ namespace rra
                         {
                             out_max_count->any_hit_invocation_count = total_any_hit_count;
                         }
+
+                        std::vector<Ray> rays;
+                        rays.resize(ray_count);
+
+                        RraRayGetRays(dispatch_id, {x, y, z}, rays.data());
+                        data[data_idx].first_ray_index = (uint32_t)ray_data.size();
+
+                        for (auto& ray : rays)
+                        {
+                            DispatchRayData individual_ray_data = {};
+                            individual_ray_data.direction.x     = ray.direction[0];
+                            individual_ray_data.direction.y     = ray.direction[1];
+                            individual_ray_data.direction.z     = ray.direction[2];
+                            ray_data.push_back(individual_ray_data);
+                        }
                     }
                 }
+            }
+
+            if (ray_data.empty())
+            {
+                // There are no rays so we can't proceed.
+                return;
             }
 
             // Destroy old buffers if they exist.
@@ -135,23 +160,57 @@ namespace rra
             stats_buffer_info.offset = 0;
             stats_buffer_info.range  = VK_WHOLE_SIZE;
 
-            VkWriteDescriptorSet write_stats{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-            write_stats.dstSet           = descriptor_set_;
-            write_stats.dstBinding       = STATS_BUFFER_BINDING;
-            write_stats.dstArrayElement  = 0;
-            write_stats.descriptorCount  = 1;
-            write_stats.descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            write_stats.pImageInfo       = nullptr;
-            write_stats.pBufferInfo      = &stats_buffer_info;
-            write_stats.pTexelBufferView = nullptr;
+            VkWriteDescriptorSet write_stats = {};
+            write_stats.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_stats.dstSet               = descriptor_set_;
+            write_stats.dstBinding           = STATS_BUFFER_BINDING;
+            write_stats.dstArrayElement      = 0;
+            write_stats.descriptorCount      = 1;
+            write_stats.descriptorType       = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            write_stats.pImageInfo           = nullptr;
+            write_stats.pBufferInfo          = &stats_buffer_info;
+            write_stats.pTexelBufferView     = nullptr;
 
-            std::vector<VkWriteDescriptorSet> writes{write_stats};
+            // Destroy old buffers if they exist.
+            device_->DestroyBuffer(ray_data_buffer_.buffer, ray_data_buffer_.allocation);
+
+            // Create new buffers.
+            device_->CreateBuffer(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                  VMA_MEMORY_USAGE_GPU_ONLY,
+                                  ray_data_buffer_.buffer,
+                                  ray_data_buffer_.allocation,
+                                  nullptr,  // Can't write directly to the GPU buffer.
+                                  ray_data.size() * sizeof(DispatchRayData));
+
+            // Copy data to GPU buffer.
+            device_->TransferBufferToDevice(
+                cmd_, device_->GetComputeQueue(), ray_data_buffer_.buffer, ray_data.data(), ray_data.size() * sizeof(DispatchRayData));
+
+            // Link buffers to descriptor set.
+            VkDescriptorBufferInfo ray_buffer_info{};
+            ray_buffer_info.buffer = ray_data_buffer_.buffer;
+            ray_buffer_info.offset = 0;
+            ray_buffer_info.range  = VK_WHOLE_SIZE;
+
+            VkWriteDescriptorSet write_rays = {};
+            write_rays.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_rays.dstSet               = descriptor_set_;
+            write_rays.dstBinding           = RAY_BUFFER_BINDING;
+            write_rays.dstArrayElement      = 0;
+            write_rays.descriptorCount      = 1;
+            write_rays.descriptorType       = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            write_rays.pImageInfo           = nullptr;
+            write_rays.pBufferInfo          = &ray_buffer_info;
+            write_rays.pTexelBufferView     = nullptr;
+
+            std::vector<VkWriteDescriptorSet> writes{write_stats, write_rays};
 
             vkUpdateDescriptorSets(device_->GetDevice(), (uint32_t)writes.size(), writes.data(), 0, nullptr);
         }
 
         QImage RayHistoryOffscreenRenderer::Render(uint32_t            heatmap_min,
                                                    uint32_t            heatmap_max,
+                                                   uint32_t            ray_index,
                                                    uint32_t            reshaped_x,
                                                    uint32_t            reshaped_y,
                                                    uint32_t            reshaped_z,
@@ -173,8 +232,9 @@ namespace rra
             // Temporary host-visible buffer to render to, which will be copied to CPU for QT.
             ImageBuffer color_buffer{CreateAndLinkColorBuffer(slice_plane)};
 
-            VkCommandBufferBeginInfo begin_info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-            begin_info.flags = 0;
+            VkCommandBufferBeginInfo begin_info = {};
+            begin_info.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            begin_info.flags                    = 0;
             vkBeginCommandBuffer(cmd_, &begin_info);
             vkCmdBindPipeline(cmd_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline_);
             vkCmdBindDescriptorSets(cmd_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline_layout_, 0, 1, &descriptor_set_, 0, nullptr);
@@ -188,12 +248,14 @@ namespace rra
             push_constant.slice_plane               = (uint32_t)slice_plane;
             push_constant.min_traversal_count_limit = heatmap_min;
             push_constant.max_traversal_count_limit = heatmap_max;
+            push_constant.ray_index                 = ray_index;
 
             vkCmdPushConstants(cmd_, pipeline_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstant), &push_constant);
             vkCmdDispatch(cmd_, GetColorBufferWidth(slice_plane), GetColorBufferHeight(slice_plane), 1);
             vkEndCommandBuffer(cmd_);
 
-            VkSubmitInfo submit_info{VK_STRUCTURE_TYPE_SUBMIT_INFO};
+            VkSubmitInfo submit_info         = {};
+            submit_info.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             submit_info.waitSemaphoreCount   = 0;
             submit_info.pWaitSemaphores      = nullptr;
             submit_info.pWaitDstStageMask    = nullptr;
@@ -233,15 +295,16 @@ namespace rra
             vulkan_heatmap_ = GetVkGraphicsContext()->CreateVulkanHeatmapResources(cmd_, heatmap_, true);
 
             // Link new resources to descriptor set.
-            VkWriteDescriptorSet write_color{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-            write_color.dstSet           = descriptor_set_;
-            write_color.dstBinding       = HEATMAP_BINDING;
-            write_color.dstArrayElement  = 0;
-            write_color.descriptorCount  = 1;
-            write_color.descriptorType   = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            write_color.pImageInfo       = &vulkan_heatmap_.image_info;
-            write_color.pBufferInfo      = nullptr;
-            write_color.pTexelBufferView = nullptr;
+            VkWriteDescriptorSet write_color = {};
+            write_color.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_color.dstSet               = descriptor_set_;
+            write_color.dstBinding           = HEATMAP_BINDING;
+            write_color.dstArrayElement      = 0;
+            write_color.descriptorCount      = 1;
+            write_color.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            write_color.pImageInfo           = &vulkan_heatmap_.image_info;
+            write_color.pBufferInfo          = nullptr;
+            write_color.pTexelBufferView     = nullptr;
 
             std::vector<VkWriteDescriptorSet> writes{write_color};
 
@@ -268,12 +331,19 @@ namespace rra
             image_buffer_binding.descriptorCount = 1;
             image_buffer_binding.stageFlags      = VK_SHADER_STAGE_COMPUTE_BIT;
 
-            std::vector<VkDescriptorSetLayoutBinding> bindings{stats_buffer_binding, heatmap_binding, image_buffer_binding};
+            VkDescriptorSetLayoutBinding ray_buffer_binding{};
+            ray_buffer_binding.binding         = RAY_BUFFER_BINDING;
+            ray_buffer_binding.descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            ray_buffer_binding.descriptorCount = 1;
+            ray_buffer_binding.stageFlags      = VK_SHADER_STAGE_COMPUTE_BIT;
 
-            VkDescriptorSetLayoutCreateInfo set_layout_info{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-            set_layout_info.flags        = 0;
-            set_layout_info.bindingCount = (uint32_t)bindings.size();
-            set_layout_info.pBindings    = bindings.data();
+            std::vector<VkDescriptorSetLayoutBinding> bindings{stats_buffer_binding, heatmap_binding, image_buffer_binding, ray_buffer_binding};
+
+            VkDescriptorSetLayoutCreateInfo set_layout_info = {};
+            set_layout_info.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            set_layout_info.flags                           = 0;
+            set_layout_info.bindingCount                    = (uint32_t)bindings.size();
+            set_layout_info.pBindings                       = bindings.data();
 
             VkResult result = vkCreateDescriptorSetLayout(device_->GetDevice(), &set_layout_info, nullptr, &descriptor_set_layout_);
             CheckResult(result, "Failed to create ray history offscreen renderer descriptor set layout.");
@@ -285,12 +355,13 @@ namespace rra
 
             std::vector<VkPushConstantRange> push_constant_ranges{constant_range};
 
-            VkPipelineLayoutCreateInfo layout_info{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-            layout_info.flags                  = 0;
-            layout_info.setLayoutCount         = 1;
-            layout_info.pSetLayouts            = &descriptor_set_layout_;
-            layout_info.pushConstantRangeCount = (uint32_t)push_constant_ranges.size();
-            layout_info.pPushConstantRanges    = push_constant_ranges.data();
+            VkPipelineLayoutCreateInfo layout_info = {};
+            layout_info.sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            layout_info.flags                      = 0;
+            layout_info.setLayoutCount             = 1;
+            layout_info.pSetLayouts                = &descriptor_set_layout_;
+            layout_info.pushConstantRangeCount     = (uint32_t)push_constant_ranges.size();
+            layout_info.pPushConstantRanges        = push_constant_ranges.data();
 
             result = vkCreatePipelineLayout(device_->GetDevice(), &layout_info, nullptr, &pipeline_layout_);
             CheckResult(result, "Failed to create ray history offscreen renderer pipeline layout.");
@@ -299,22 +370,24 @@ namespace rra
         void RayHistoryOffscreenRenderer::CreateDescriptorSet()
         {
             // Descriptor pool.
-            std::vector<VkDescriptorPoolSize> pool_sizes{{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2}, {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}};
+            std::vector<VkDescriptorPoolSize> pool_sizes{{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}, {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}};
 
-            VkDescriptorPoolCreateInfo pool_info{VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
-            pool_info.flags         = 0;
-            pool_info.maxSets       = 1;
-            pool_info.poolSizeCount = (uint32_t)pool_sizes.size();
-            pool_info.pPoolSizes    = pool_sizes.data();
+            VkDescriptorPoolCreateInfo pool_info = {};
+            pool_info.sType                      = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            pool_info.flags                      = 0;
+            pool_info.maxSets                    = 1;
+            pool_info.poolSizeCount              = (uint32_t)pool_sizes.size();
+            pool_info.pPoolSizes                 = pool_sizes.data();
 
             VkResult result{vkCreateDescriptorPool(device_->GetDevice(), &pool_info, nullptr, &descriptor_pool_)};
             CheckResult(result, "Failed to create ray history offscreen renderer descriptor pool.");
 
             // Descriptor set.
-            VkDescriptorSetAllocateInfo alloc_info{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
-            alloc_info.descriptorPool     = descriptor_pool_;
-            alloc_info.descriptorSetCount = 1;
-            alloc_info.pSetLayouts        = &descriptor_set_layout_;
+            VkDescriptorSetAllocateInfo alloc_info = {};
+            alloc_info.sType                       = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            alloc_info.descriptorPool              = descriptor_pool_;
+            alloc_info.descriptorSetCount          = 1;
+            alloc_info.pSetLayouts                 = &descriptor_set_layout_;
 
             result = vkAllocateDescriptorSets(device_->GetDevice(), &alloc_info, &descriptor_set_);
             CheckResult(result, "Failed to allocate ray history offscreen renderer descriptor set.");
@@ -328,12 +401,13 @@ namespace rra
             VkPipelineShaderStageCreateInfo shader_stage_info{};
             LoadShader(compute_shader_path, device_, VK_SHADER_STAGE_COMPUTE_BIT, "CSMain", shader_stage_info);
 
-            VkComputePipelineCreateInfo pipeline_info{VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
-            pipeline_info.flags              = 0;
-            pipeline_info.stage              = shader_stage_info;
-            pipeline_info.layout             = pipeline_layout_;
-            pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
-            pipeline_info.basePipelineIndex  = -1;
+            VkComputePipelineCreateInfo pipeline_info = {};
+            pipeline_info.sType                       = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+            pipeline_info.flags                       = 0;
+            pipeline_info.stage                       = shader_stage_info;
+            pipeline_info.layout                      = pipeline_layout_;
+            pipeline_info.basePipelineHandle          = VK_NULL_HANDLE;
+            pipeline_info.basePipelineIndex           = -1;
 
             VkResult result = vkCreateComputePipelines(device_->GetDevice(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &pipeline_);
             CheckResult(result, "Failed to create ray history offscreen renderer compute pipeline.");
@@ -344,18 +418,20 @@ namespace rra
         void RayHistoryOffscreenRenderer::AllocateCommandBuffer()
         {
             // Create command pool.
-            VkCommandPoolCreateInfo pool_info{VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
-            pool_info.flags            = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-            pool_info.queueFamilyIndex = device_->GetComputeQueueFamilyIndex();
+            VkCommandPoolCreateInfo pool_info = {};
+            pool_info.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            pool_info.flags                   = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+            pool_info.queueFamilyIndex        = device_->GetComputeQueueFamilyIndex();
 
             VkResult result{vkCreateCommandPool(device_->GetDevice(), &pool_info, nullptr, &command_pool_)};
             CheckResult(result, "Failed to create ray history offscreen renderer command pool.");
 
             // Allocate the command buffer.
-            VkCommandBufferAllocateInfo alloc_info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-            alloc_info.commandPool        = command_pool_;
-            alloc_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-            alloc_info.commandBufferCount = 1;
+            VkCommandBufferAllocateInfo alloc_info = {};
+            alloc_info.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            alloc_info.commandPool                 = command_pool_;
+            alloc_info.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            alloc_info.commandBufferCount          = 1;
 
             result = vkAllocateCommandBuffers(device_->GetDevice(), &alloc_info, &cmd_);
             CheckResult(result, "Failed to allocate ray history offscreen renderer command buffer.");
@@ -363,8 +439,9 @@ namespace rra
 
         void RayHistoryOffscreenRenderer::CreateFence()
         {
-            VkFenceCreateInfo fence_info{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
-            fence_info.flags = 0;
+            VkFenceCreateInfo fence_info = {};
+            fence_info.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+            fence_info.flags             = 0;
 
             VkResult result{vkCreateFence(device_->GetDevice(), &fence_info, nullptr, &fence_)};
             CheckResult(result, "Failed to create ray history offscreen renderer fence.");
@@ -387,15 +464,16 @@ namespace rra
             color_buffer_info.offset = 0;
             color_buffer_info.range  = VK_WHOLE_SIZE;
 
-            VkWriteDescriptorSet write_color{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-            write_color.dstSet           = descriptor_set_;
-            write_color.dstBinding       = COLOR_BUFFER_BINDING;
-            write_color.dstArrayElement  = 0;
-            write_color.descriptorCount  = 1;
-            write_color.descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            write_color.pImageInfo       = nullptr;
-            write_color.pBufferInfo      = &color_buffer_info;
-            write_color.pTexelBufferView = nullptr;
+            VkWriteDescriptorSet write_color = {};
+            write_color.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_color.dstSet               = descriptor_set_;
+            write_color.dstBinding           = COLOR_BUFFER_BINDING;
+            write_color.dstArrayElement      = 0;
+            write_color.descriptorCount      = 1;
+            write_color.descriptorType       = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            write_color.pImageInfo           = nullptr;
+            write_color.pBufferInfo          = &color_buffer_info;
+            write_color.pTexelBufferView     = nullptr;
 
             std::vector<VkWriteDescriptorSet> writes{write_color};
 

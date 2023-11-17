@@ -87,6 +87,13 @@ if (Qt5_DIR OR Qt6_DIR)
                         ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${EXTERNAL_DIR}/libtraceevent/lib:${EXTERNAL_DIR}/libtracefs/lib:${_qt_bin_dir}/../lib
                         ${DEPLOYQT_EXECUTABLE} $<TARGET_FILE:${target}> -qmake=${QT_QMAKE_EXECUTABLE} -verbose=0 -unsupported-allow-new-glibc
                         WORKING_DIRECTORY ${output_directory})
+                # If Qt5, install X11Extras
+                if (Qt5_DIR)
+                    add_custom_command(
+                        TARGET ${target} POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_qt_bin_dir}/../lib/libQt5X11Extras.so.5 $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib)
+                endif()
             elseif (include_mac)
 
                 set(DEPLOYQT_POST_BUILD_COMMAND

@@ -340,21 +340,21 @@ namespace rra
         }
     }
 
-    void ViewModel::ToggleTraversalCounterContinuousUpdate(std::function<void(uint32_t min, uint32_t max)> update_function)
+    void ViewModel::SetTraversalCounterContinuousUpdate(bool continous_update, std::function<void(uint32_t min, uint32_t max)> update_function)
     {
         if (render_state_adapter_ != nullptr)
         {
-            if (render_state_adapter_->IsTraversalCounterContinuousUpdateFunctionSet())
-            {
-                render_state_adapter_->SetTraversalCounterContinuousUpdateFunction(nullptr);
-                Update();
-            }
-            else
+            if (continous_update)
             {
                 render_state_adapter_->SetTraversalCounterContinuousUpdateFunction([=](uint32_t min, uint32_t max) {
                     update_function(min, max);
                     Update();
                 });
+            }
+            else
+            {
+                render_state_adapter_->SetTraversalCounterContinuousUpdateFunction(nullptr);
+                Update();
             }
         }
     }

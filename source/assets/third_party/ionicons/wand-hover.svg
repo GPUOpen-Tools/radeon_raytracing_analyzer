@@ -1,72 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
-   class="ionicon"
-   viewBox="0 0 512 512"
+   width="116.11005mm"
+   height="116.11054mm"
+   viewBox="0 0 116.11005 116.11054"
    version="1.1"
-   id="svg2"
-   sodipodi:docname="wand-hover.svg"
-   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   id="svg1"
+   xml:space="preserve"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:dc="http://purl.org/dc/elements/1.1/">
-  <defs
-     id="defs2" />
-  <sodipodi:namedview
-     id="namedview2"
-     pagecolor="#505050"
-     bordercolor="#eeeeee"
-     borderopacity="1"
-     inkscape:showpageshadow="0"
-     inkscape:pageopacity="0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#505050"
-     inkscape:zoom="2.0136719"
-     inkscape:cx="256"
-     inkscape:cy="256"
-     inkscape:window-width="1649"
-     inkscape:window-height="1266"
-     inkscape:window-x="1319"
-     inkscape:window-y="509"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="svg2" />
-  <title
-     id="title1">Color Wand</title>
-  <rect
-     fill="none"
-     stroke="currentColor"
-     stroke-miterlimit="10"
-     stroke-width="32"
-     x="280.48"
-     y="122.9"
-     width="63.03"
-     height="378.2"
-     rx="31.52"
-     transform="rotate(-45 312.002 311.994)"
-     id="rect1"
-     style="stroke:#ff8000;stroke-opacity:1" />
-  <path
-     d="M178.38 178.38a31.64 31.64 0 000 44.75L223.25 268 268 223.25l-44.87-44.87a31.64 31.64 0 00-44.75 0z"
-     id="path1"
-     style="stroke:#ff8000;stroke-opacity:1;fill:#ff8000;fill-opacity:1" />
-  <path
-     stroke="currentColor"
-     stroke-miterlimit="10"
-     stroke-width="32"
-     stroke-linecap="round"
-     d="M48 192h48M90.18 90.18l33.94 33.94M192 48v48M293.82 90.18l-33.94 33.94M124.12 259.88l-33.94 33.94"
-     id="path2"
-     style="stroke:#ff8000;stroke-opacity:1" />
-  <metadata
-     id="metadata2">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:title>Color Wand</dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-</svg>
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><g
+     id="layer1"
+     transform="translate(-46.866159,-90.44473)"><g
+       id="g1"
+       transform="matrix(0.26458333,0,0,0.26458333,38.399494,81.97806)"
+       style="stroke:#ff8000;stroke-opacity:1"><rect
+         fill="none"
+         stroke="0x0000ff"
+         stroke-miterlimit="10"
+         stroke-width="32"
+         x="280.48001"
+         y="122.9"
+         width="63.029999"
+         height="378.20001"
+         rx="31.52"
+         transform="rotate(-45,312.002,311.994)"
+         id="rect1"
+         style="stroke:#ff8000;stroke-opacity:1" /><path
+         d="m 178.38,178.38 a 31.64,31.64 0 0 0 0,44.75 L 223.25,268 268,223.25 223.13,178.38 a 31.64,31.64 0 0 0 -44.75,0 z"
+         id="path1"
+         style="fill:#ff8000;fill-opacity:1;stroke:#ff8000;stroke-opacity:1" /><path
+         stroke="0x0000ff"
+         stroke-miterlimit="10"
+         stroke-width="32"
+         stroke-linecap="round"
+         d="M 48,192 H 96 M 90.18,90.18 124.12,124.12 M 192,48 v 48 m 101.82,-5.82 -33.94,33.94 M 124.12,259.88 90.18,293.82"
+         id="path2"
+         style="stroke:#ff8000;stroke-opacity:1" /></g></g></svg>

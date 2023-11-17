@@ -275,7 +275,7 @@ RraErrorCode RraRayGetDispatchType(uint32_t dispatch_id, DispatchType* type)
         return kRraErrorIndexOutOfRange;
     }
 
-    *type = static_cast<DispatchType>(data_set_.async_ray_histories[dispatch_id]->GetMetadata().counter.pipelineType);
+    *type = static_cast<DispatchType>(data_set_.async_ray_histories[dispatch_id]->GetCounterInfo().pipelineType);
 
     return kRraOk;
 }

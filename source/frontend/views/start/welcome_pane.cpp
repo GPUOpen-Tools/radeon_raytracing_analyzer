@@ -69,8 +69,8 @@ WelcomePane::WelcomePane(QWidget* parent)
     ui_->quick_link_rmv_->SetDescLineOne("Dig into your GPU memory usage and open the door to new");
     ui_->quick_link_rmv_->SetDescLineTwo("optimization opportunities! Available right now at GPUOpen.");
 
-    ui_->quick_link_sample_trace_->SetTitle("Sample trace");
-    ui_->quick_link_sample_trace_->SetDescLineOne("Still got your training wheels on? Check out a sample trace to see");
+    ui_->quick_link_sample_trace_->SetTitle("Sample scene");
+    ui_->quick_link_sample_trace_->SetDescLineOne("Still got your training wheels on? Check out a sample scene to see");
     ui_->quick_link_sample_trace_->SetDescLineTwo("what we can do!");
 
     ui_->quick_link_rdna_performance_->SetTitle("RDNA performance guide");

@@ -166,6 +166,11 @@ private slots:
     /// @brief Toggles traversal counter continuous update.
     void ToggleTraversalCounterContinuousUpdate();
 
+    /// @brief Set the traversal counter continuous update.
+    ///
+    /// @param continuous_update Whether continuous update should be enabled or not.
+    void SetTraversalCounterContinuousUpdate(bool continuous_update);
+
     /// @brief Check whether paste was successful, and pop dialogue box if not.
     ///
     /// @param status Result code of pasting camera state.

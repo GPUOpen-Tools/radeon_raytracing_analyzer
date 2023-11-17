@@ -11,7 +11,7 @@
 
 #include <math.h>  // for sqrt
 
-#include "bvh/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
 #include "bvh/flags_util.h"
 #include "public/rra_assert.h"
 #include "rra_bvh_impl.h"
@@ -227,18 +227,17 @@ RraErrorCode RraBlasGetNodeBaseAddress(uint64_t blas_index, uint32_t node_ptr, u
     return kRraOk;
 }
 
-RraErrorCode RraBlasGetNodeParentBaseAddress(uint64_t blas_index, uint32_t node_ptr, uint64_t* out_address)
+RraErrorCode RraBlasGetNodeParent(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_parent_node_ptr)
 {
     const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
-    const auto                   base_addr   = blas->GetVirtualAddress();
     const dxr::amd::NodePointer* node        = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-    const dxr::amd::NodePointer  parent_node = blas->GetParentNode(node);
+    dxr::amd::NodePointer  parent_node = blas->GetParentNode(node);
 
-    *out_address = base_addr + blas->GetHeader().GetMetaDataSize() + parent_node.GetGpuVirtualAddress();
+    *out_parent_node_ptr = *reinterpret_cast<uint32_t*>(&parent_node);
 
     return kRraOk;
 }

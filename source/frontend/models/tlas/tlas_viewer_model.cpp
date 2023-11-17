@@ -147,6 +147,9 @@ namespace rra
         // Show Node name and base address.
         SetModelData(kTlasStatsType, node_type.c_str());
 
+        // Show the focus button.
+        SetModelData(kTlasStatsFocus, true);
+
         SetModelData(kTlasStatsAddress, AddressString(tlas_index, node_id));
 
         // Show instance node info.
@@ -209,10 +212,10 @@ namespace rra
             SetModelData(kTlasStatsInstanceHitGroupIndex, "");
         }
 
-        uint64_t parent_address{};
-        RraTlasGetNodeParentBaseAddress(tlas_index, node_id, &parent_address);
-        QString parent_string = "0x" + QString("%1").arg(parent_address, 0, 16);
-        SetModelData(kTlasStatsParent, parent_string);
+
+        uint32_t parent_id{};
+        RraTlasGetNodeParent(tlas_index, node_id, &parent_id);
+        SetModelData(kTlasStatsParent, AddressString(tlas_index, parent_id));
 
         // Show bounding box extents.
         BoundingVolumeExtents bounding_volume_extents;
@@ -313,6 +316,7 @@ namespace rra
     void TlasViewerModel::ResetModelValues(bool reset_scene)
     {
         SetModelData(kTlasStatsType, "No node selected.");
+        SetModelData(kTlasStatsFocus, false);
         SetModelData(kTlasStatsAddress, "");
         SetModelData(kTlasStatsBlasAddress, "-");
         SetModelData(kTlasStatsParent, "-");

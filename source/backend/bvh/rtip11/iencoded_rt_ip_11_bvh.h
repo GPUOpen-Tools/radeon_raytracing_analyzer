@@ -10,7 +10,7 @@
 
 #include "bvh/ibvh.h"
 
-#include "bvh/irt_ip_11_acceleration_structure_header.h"
+#include "bvh/rtip11/irt_ip_11_acceleration_structure_header.h"
 #include "bvh/node_types/float16_box_node.h"
 #include "bvh/node_types/float32_box_node.h"
 #include "bvh/node_types/instance_node.h"
@@ -82,7 +82,7 @@ namespace rta
         // Interior node branching factor is required for the
         // box node per interior node count.
         // Maybe also for later if we need to interpret this differently
-        BvhFormat format = {BvhEncoding::kAmdRtIp_1_1, 0, 0 /*, 4, 1*/};
+        BvhFormat format = {RayTracingIpLevel::RtIp1_1, 0, 0 /*, 4, 1*/};
     };
 
     // Fixed byte sizes for the RT IP 1.1 chunk headers.

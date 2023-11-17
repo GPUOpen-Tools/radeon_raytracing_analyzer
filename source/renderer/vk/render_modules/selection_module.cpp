@@ -204,8 +204,8 @@ namespace rra
                 return;
             }
 
-            if (context->scene_info && (context->scene_info->scene_iteration != last_scene_iteration_ || last_scene_ != context->scene_info) ||
-                last_render_state_ != render_state_)
+            if (context->scene_info &&
+                (context->scene_info->scene_iteration != last_scene_iteration_ || last_scene_ != context->scene_info || last_render_state_ != render_state_))
             {
                 std::vector<SelectedVolumeInstance> selected_volume_instances;
                 selected_volume_instances.reserve(context->scene_info->selected_volume_instances.size());

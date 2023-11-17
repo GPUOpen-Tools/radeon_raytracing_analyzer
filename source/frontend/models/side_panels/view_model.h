@@ -140,8 +140,9 @@ namespace rra
 
         /// @brief Toggles the traversal counter continuous updates.
         ///
-        /// @param [in] update_function The callback to use when the range has been acquired.
-        void ToggleTraversalCounterContinuousUpdate(std::function<void(uint32_t min, uint32_t max)> update_function);
+        /// @param [in] continuous_update Whether continous update is enabled or not.
+        /// @param [in] update_function   The callback to use when the range has been acquired.
+        void SetTraversalCounterContinuousUpdate(bool continous_update, std::function<void(uint32_t min, uint32_t max)> update_function);
 
         /// @brief Sets the histogram data update function to populate histogram from traversal counter.
         ///

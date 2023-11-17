@@ -258,6 +258,8 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
     connect(ray_history_viewer_.rh_traversal_counter_slider_, &DoubleSliderHeatmapWidget::SpanChanged, this, &RayHistoryPane::SetTraversalCounterRange);
     connect(ui_->ray_table_, &QAbstractItemView::doubleClicked, this, &RayHistoryPane::SelectRayAndSwitchPane);
 
+    connect(ray_history_viewer_.content_ray_index_, &QSlider::valueChanged, this, &RayHistoryPane::SetCurrentRayIndex);
+
     connect(ui_->ray_table_->selectionModel(), SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)), this, SLOT(SelectRayCoordinate()));
     connect(ray_history_viewer_.dispatch_plane_spin_box_, SIGNAL(valueChanged(int)), this, SLOT(DispatchSliceChanged(int)));
     connect(ray_history_viewer_.x_wrap_spin_box_, SIGNAL(valueChanged(int)), this, SLOT(ReshapeDimensionChanged(int)));
@@ -292,6 +294,8 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
         ray_history_viewer_.zoom_to_selection_button_, &QPushButton::pressed, ray_history_viewer_.ray_graphics_view_, &RayHistoryGraphicsView::ZoomToSelection);
     connect(ray_history_viewer_.ray_graphics_view_, &RayHistoryGraphicsView::UpdateZoomButtons, this, &RayHistoryPane::UpdateZoomButtons);
 
+    connect(&timer_, &QTimer::timeout, this, &RayHistoryPane::TimerUpdate);
+
     // Hide the shader binding table for now until correct data is parsed from the backend.
     ui_->shader_binding_table_container_->hide();
 }
@@ -303,23 +307,7 @@ RayHistoryPane::~RayHistoryPane()
 
 void RayHistoryPane::OnTraceOpen()
 {
-    ClearRaySelection();
-
-    uint32_t dispatch_count{};
-    RraRayGetDispatchCount(&dispatch_count);
-    std::vector<std::string> dispatch_options{};
-    for (uint32_t id{0}; id < dispatch_count; ++id)
-    {
-        uint32_t x{};
-        uint32_t y{};
-        uint32_t z{};
-        RraRayGetDispatchDimensions(id, &x, &y, &z);
-
-        std::string trace_rays_str = RraApiInfoIsVulkan() ? "vkCmdTraceRaysKHR" : "DispatchRays";
-        dispatch_options.push_back(std::to_string(id) + ": " + trace_rays_str + "(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) +
-                                   ")");
-    }
-    rra::widget_util::InitializeComboBox(this, ui_->dispatch_combo_box_, dispatch_options);
+    timer_.start(10);  // Update every 10 msec.
 
     // Initialize Heatmap modes.
     std::vector<std::string> heatmap_mode_names;
@@ -333,15 +321,20 @@ void RayHistoryPane::OnTraceOpen()
 
     rra::widget_util::InitializeComboBox(this, ray_history_viewer_.heatmap_combo_box_, heatmap_mode_names);
 
-    ray_history_viewer_.ray_graphics_view_->ResetZoom();
+    InitializeReshapedDimensions();
 
-    // Initialize reshaping only if there are dispatches.
-    if (dispatch_count > 0)
-    {
-        InitializeReshapedDimensions();
-    }
+    ClearRaySelection();
+
+    // We set the flag to false here to instruct loading the dispatch correctly.
+    uint32_t dispatch_count{};
+    RraRayGetDispatchCount(&dispatch_count);
+
+    dispatches_loaded_.resize(dispatch_count, false);
+    LoadDispatches();
 
     SetDispatchId(0);
+
+    ray_history_viewer_.ray_graphics_view_->ResetZoom();
 }
 
 void RayHistoryPane::OnTraceClose()
@@ -366,6 +359,10 @@ void RayHistoryPane::UpdateSliderRange()
     ray_history_viewer_.rh_traversal_counter_slider_->SetLowerPosition(0);
     ray_history_viewer_.rh_traversal_max_value_->setText(QString::number(GetCurrentColorModeMaxStatistic()));
     ray_history_viewer_.rh_traversal_min_value_->setText(QString::number(0));
+
+    int max_ray_count = max_statistics_.ray_count - 1;
+    max_ray_count     = std::max(max_ray_count, 0);
+    ray_history_viewer_.content_ray_index_->setMaximum(max_ray_count);
 }
 
 void RayHistoryPane::UpdateDispatchSpinBoxRanges()
@@ -391,9 +388,15 @@ void RayHistoryPane::UpdateDispatchSpinBoxRanges()
     RraRayGetDispatchDimensions(dispatch_id_, &x, &y, &z);
 
     uint32_t max_dimension = std::max(x, std::max(y, z));
+    ray_history_viewer_.x_wrap_spin_box_->blockSignals(true);
+    ray_history_viewer_.y_wrap_spin_box_->blockSignals(true);
+    ray_history_viewer_.z_wrap_spin_box_->blockSignals(true);
     ray_history_viewer_.x_wrap_spin_box_->setRange(1, max_dimension);
     ray_history_viewer_.y_wrap_spin_box_->setRange(1, max_dimension);
     ray_history_viewer_.z_wrap_spin_box_->setRange(1, max_dimension);
+    ray_history_viewer_.x_wrap_spin_box_->blockSignals(false);
+    ray_history_viewer_.y_wrap_spin_box_->blockSignals(false);
+    ray_history_viewer_.z_wrap_spin_box_->blockSignals(false);
 }
 
 void RayHistoryPane::InitializeReshapedDimensions()
@@ -401,17 +404,8 @@ void RayHistoryPane::InitializeReshapedDimensions()
     uint32_t dispatch_count{};
     RraRayGetDispatchCount(&dispatch_count);
 
-    dispatch_reshaped_dimensions_.resize(dispatch_count);
-
-    for (uint32_t dispatch_id{0}; dispatch_id < dispatch_count; ++dispatch_id)
-    {
-        uint32_t x{};
-        uint32_t y{};
-        uint32_t z{};
-        RraRayGetDispatchDimensions(dispatch_id, &x, &y, &z);
-
-        dispatch_reshaped_dimensions_[dispatch_id] = {x, y, z};
-    }
+    dispatch_reshaped_dimensions_.clear();
+    dispatch_reshaped_dimensions_.resize(dispatch_count, {});
 }
 
 uint32_t RayHistoryPane::Get1DCoordinate(uint32_t x, uint32_t y)
@@ -438,8 +432,113 @@ void RayHistoryPane::ClearRaySelection()
     ui_->ray_table_->selectionModel()->clear();
 }
 
+void RayHistoryPane::TimerUpdate()
+{
+    uint32_t dispatch_count = 0;
+    RraRayGetDispatchCount(&dispatch_count);
+
+    if (dispatch_count == 0)
+    {
+        timer_.stop();
+        return;
+    }
+
+    RraDispatchLoadStatus load_status = {};
+    RraRayGetDispatchStatus(dispatch_id_, &load_status);
+
+    DispatchType dispatch_type = kRayTracingPipeline;
+
+    RraRayHistoryStats stats = {};
+
+    RraRayGetDispatchType(dispatch_id_, &dispatch_type);
+    RraRayGetDispatchStats(dispatch_id_, &stats);
+
+    // Start of with the dispatch region and error label hidden.
+    ui_->loading_bar_->SetText("Loading dispatch");
+    if (load_status.raw_data_parsed)
+    {
+        // First phase is complete
+        ui_->loading_bar_->SetText("Indexing dispatch");
+    }
+
+    // We have indexed everything, time to gather stats.
+    // Show the dispatch region as the numbers count up.
+    if (load_status.data_indexed)
+    {
+        ui_->loading_bar_->SetText("Gathering stats");
+    }
+
+    bool all_dispatches_loaded    = true;
+    bool should_reload_dispatches = false;
+
+    for (uint32_t i = 0; i < dispatch_count; i++)
+    {
+        RraDispatchLoadStatus individual_load_status = {};
+        RraRayGetDispatchStatus(i, &individual_load_status);
+        if (!individual_load_status.loading_complete)
+        {
+            all_dispatches_loaded = false;
+        }
+        else
+        {
+            // Update internal status.
+            if (!dispatches_loaded_[i])
+            {
+                uint32_t x{};
+                uint32_t y{};
+                uint32_t z{};
+                RraRayGetDispatchDimensions(i, &x, &y, &z);
+
+                dispatch_reshaped_dimensions_[i].x = x;
+                dispatch_reshaped_dimensions_[i].y = y;
+                dispatch_reshaped_dimensions_[i].z = z;
+
+                if (i == dispatch_id_)
+                {
+                    UpdateReshapedDimensions(i);
+                    UpdateSelectedDispatch();
+                }
+
+                dispatches_loaded_[i]    = true;
+                should_reload_dispatches = true;
+            }
+        }
+    }
+
+    if (should_reload_dispatches)
+    {
+        LoadDispatches();
+    }
+
+    if (all_dispatches_loaded)
+    {
+        timer_.stop();  // We are done with updating.
+    }
+
+    // We are done with loading. Hide away!
+    if (load_status.loading_complete && !load_status.has_errors)
+    {
+        ui_->dispatch_valid_switch_->setCurrentIndex(0);
+    }
+
+    // If there are errors at any stage we should raise them to the user.
+    if (load_status.has_errors)
+    {
+        ui_->dispatch_valid_switch_->setCurrentIndex(1);
+    }
+    else
+    {
+        ui_->loading_bar_->SetFillPercentage(load_status.load_percentage);
+    }
+
+    // Repaint some elements.
+    ui_->loading_bar_->repaint();
+}
+
 void RayHistoryPane::SetDispatchId(uint64_t dispatch_id)
 {
+    dispatch_id_ = dispatch_id;
+
     uint32_t dispatch_count = 0;
     RraRayGetDispatchCount(&dispatch_count);
     if (dispatch_count <= dispatch_id)
@@ -456,6 +555,11 @@ void RayHistoryPane::SetDispatchId(uint64_t dispatch_id)
         ui_->dispatch_valid_switch_->setCurrentIndex(1);
         return;
     }
+    else if (!load_status.loading_complete)
+    {
+        ui_->dispatch_valid_switch_->setCurrentIndex(2);
+        return;
+    }
 
     // Valid dispatch, display the actual data instead of an error screen.
     ui_->dispatch_valid_switch_->setCurrentIndex(0);
@@ -467,20 +571,11 @@ void RayHistoryPane::SetDispatchId(uint64_t dispatch_id)
         return;
     }
 
-    dispatch_id_ = dispatch_id;
     UpdateDispatchSpinBoxRanges();
 
     // Load the saved reshaped dispatch size of the dispatch we're switching to.
     // Block signals to avoid rendering heatmap image while setting these values.
-    ray_history_viewer_.x_wrap_spin_box_->blockSignals(true);
-    ray_history_viewer_.y_wrap_spin_box_->blockSignals(true);
-    ray_history_viewer_.z_wrap_spin_box_->blockSignals(true);
-    ray_history_viewer_.x_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].x);
-    ray_history_viewer_.y_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].y);
-    ray_history_viewer_.z_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].z);
-    ray_history_viewer_.x_wrap_spin_box_->blockSignals(false);
-    ray_history_viewer_.y_wrap_spin_box_->blockSignals(false);
-    ray_history_viewer_.z_wrap_spin_box_->blockSignals(false);
+    UpdateReshapedDimensions(dispatch_id);
 
     ray_history_viewer_.dispatch_plane_spin_box_->setValue(0);
 
@@ -588,10 +683,79 @@ void RayHistoryPane::SelectRayAndSwitchPane(const QModelIndex& index)
     emit rra::MessageManager::Get().PaneSwitchRequested(rra::kPaneIdRayInspector);
 }
 
+void RayHistoryPane::LoadDispatches()
+{
+    uint32_t dispatch_count{};
+    RraRayGetDispatchCount(&dispatch_count);
+    std::vector<std::string> dispatch_options{};
+    for (uint32_t id{0}; id < dispatch_count; ++id)
+    {
+        RraDispatchLoadStatus load_status = {};
+        RraRayGetDispatchStatus(id, &load_status);
+
+        std::string trace_rays_str = RraApiInfoIsVulkan() ? "vkCmdTraceRaysKHR" : "DispatchRays";
+
+        if (load_status.loading_complete)
+        {
+            uint32_t x{};
+            uint32_t y{};
+            uint32_t z{};
+            RraRayGetDispatchDimensions(id, &x, &y, &z);
+
+            dispatch_options.push_back(std::to_string(id) + ": " + trace_rays_str + "(" + std::to_string(x) + ", " + std::to_string(y) + ", " +
+                                       std::to_string(z) + ")");
+        }
+        else
+        {
+            dispatch_options.push_back(std::to_string(id) + " (Loading)");
+        }
+    }
+    ui_->dispatch_combo_box_->blockSignals(true);
+    rra::widget_util::InitializeComboBox(this, ui_->dispatch_combo_box_, dispatch_options);
+    ui_->dispatch_combo_box_->SetSelectedRow(dispatch_id_);
+    ui_->dispatch_combo_box_->blockSignals(false);
+}
+
+void RayHistoryPane::UpdateReshapedDimensions(uint64_t dispatch_id)
+{
+    // Block signals to avoid rendering heatmap image while setting these values.
+    ray_history_viewer_.x_wrap_spin_box_->blockSignals(true);
+    ray_history_viewer_.y_wrap_spin_box_->blockSignals(true);
+    ray_history_viewer_.z_wrap_spin_box_->blockSignals(true);
+    ray_history_viewer_.x_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].x);
+    ray_history_viewer_.y_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].y);
+    ray_history_viewer_.z_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].z);
+    ray_history_viewer_.x_wrap_spin_box_->blockSignals(false);
+    ray_history_viewer_.y_wrap_spin_box_->blockSignals(false);
+    ray_history_viewer_.z_wrap_spin_box_->blockSignals(false);
+    ray_history_viewer_.x_wrap_spin_box_->repaint();
+    ray_history_viewer_.y_wrap_spin_box_->repaint();
+    ray_history_viewer_.z_wrap_spin_box_->repaint();
+}
+
 void RayHistoryPane::SetColorMode()
 {
     int row = ray_history_viewer_.color_mode_combo_box_->CurrentRow();
     model_->SetColorMode(color_modes_and_names_[row].first);
+
+    if (color_modes_and_names_[row].first == rra::renderer::RayHistoryColorMode::kRayHistoryColorModeRayDirection)
+    {
+        ray_history_viewer_.content_ray_index_->show();
+        ray_history_viewer_.rh_traversal_ray_index_value_->show();
+        ray_history_viewer_.rh_traversal_min_value_->hide();
+        ray_history_viewer_.rh_traversal_max_value_->hide();
+        ray_history_viewer_.rh_traversal_counter_slider_->hide();
+        ray_history_viewer_.heatmap_combo_box_->hide();
+    }
+    else
+    {
+        ray_history_viewer_.content_ray_index_->hide();
+        ray_history_viewer_.rh_traversal_ray_index_value_->hide();
+        ray_history_viewer_.rh_traversal_min_value_->show();
+        ray_history_viewer_.rh_traversal_max_value_->show();
+        ray_history_viewer_.rh_traversal_counter_slider_->show();
+        ray_history_viewer_.heatmap_combo_box_->show();
+    }
 
     if (show_event_occured_)
     {
@@ -623,6 +787,17 @@ void RayHistoryPane::SetTraversalCounterRange(int min_value, int max_value)
     {
         ray_history_viewer_.rh_traversal_min_value_->setText(QString::number(min_value));
         ray_history_viewer_.rh_traversal_max_value_->setText(QString::number(max_value));
+
+        QImage heatmap_image{RenderRayHistoryImage()};
+        ray_history_viewer_.ray_graphics_view_->SetHeatmapImage(heatmap_image);
+    }
+}
+
+void RayHistoryPane::SetCurrentRayIndex(int ray_index)
+{
+    if (show_event_occured_)
+    {
+        ray_history_viewer_.rh_traversal_ray_index_value_->setText(QString::number(ray_index));
 
         QImage heatmap_image{RenderRayHistoryImage()};
         ray_history_viewer_.ray_graphics_view_->SetHeatmapImage(heatmap_image);
@@ -670,12 +845,14 @@ QImage RayHistoryPane::RenderRayHistoryImage()
 {
     uint32_t min_val{(uint32_t)ray_history_viewer_.rh_traversal_min_value_->text().toInt()};
     uint32_t max_val{(uint32_t)ray_history_viewer_.rh_traversal_max_value_->text().toInt()};
+    uint32_t ray_index = ray_history_viewer_.content_ray_index_->value();
 
     return model_->RenderRayHistoryImage(min_val,
                                          max_val,
-                                         ray_history_viewer_.x_wrap_spin_box_->value(),
-                                         ray_history_viewer_.y_wrap_spin_box_->value(),
-                                         ray_history_viewer_.z_wrap_spin_box_->value());
+                                         ray_index,
+                                         dispatch_reshaped_dimensions_[dispatch_id_].x,
+                                         dispatch_reshaped_dimensions_[dispatch_id_].y,
+                                         dispatch_reshaped_dimensions_[dispatch_id_].z);
 }
 
 uint32_t RayHistoryPane::GetCurrentColorModeMaxStatistic()
@@ -690,6 +867,8 @@ uint32_t RayHistoryPane::GetCurrentColorModeMaxStatistic()
         return max_statistics_.instance_intersection_count;
     case rra::renderer::kRayHistoryColorModeAnyHitInvocationCount:
         return max_statistics_.any_hit_invocation_count;
+    case rra::renderer::kRayHistoryColorModeRayDirection:
+        return max_statistics_.ray_count;
     }
 
     return 0xFFFFFFFF;
@@ -704,28 +883,18 @@ void RayHistoryPane::showEvent(QShowEvent* event)
 {
     if (!show_event_occured_)
     {
-        uint64_t dispatch_id = (uint64_t)ui_->dispatch_combo_box_->CurrentRow();
-
         // The reshape spin box needs to start with the correct dimensions since SetDispatchId() will save its current state and
         // load the new state. If we don't set it here, it will be saved with reshape dimensions (1, 1, 1).
-        if (dispatch_id < dispatch_reshaped_dimensions_.size())
+        if (dispatch_id_ < dispatch_reshaped_dimensions_.size())
         {
-            // Block signals to avoid rendering heatmap image while setting these values.
-            ray_history_viewer_.x_wrap_spin_box_->blockSignals(true);
-            ray_history_viewer_.y_wrap_spin_box_->blockSignals(true);
-            ray_history_viewer_.z_wrap_spin_box_->blockSignals(true);
-            ray_history_viewer_.x_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].x);
-            ray_history_viewer_.y_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].y);
-            ray_history_viewer_.z_wrap_spin_box_->setValue((int)dispatch_reshaped_dimensions_[dispatch_id].z);
-            ray_history_viewer_.x_wrap_spin_box_->blockSignals(false);
-            ray_history_viewer_.y_wrap_spin_box_->blockSignals(false);
-            ray_history_viewer_.z_wrap_spin_box_->blockSignals(false);
+            UpdateReshapedDimensions(dispatch_id_);
         }
 
         show_event_occured_ = true;
-        SetDispatchId(dispatch_id);
         SetColorMode();
     }
+
+    SetDispatchId(dispatch_id_);
 
     BasePane::showEvent(event);
 }

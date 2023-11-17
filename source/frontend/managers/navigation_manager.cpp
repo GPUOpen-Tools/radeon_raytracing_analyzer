@@ -229,7 +229,7 @@ namespace rra
             out = "Welcome";
             break;
         case kPaneIdStartRecentTraces:
-            out = "Recent traces";
+            out = "Recent scenes";
             break;
         case kPaneIdStartAbout:
             out = "About";

@@ -5,7 +5,7 @@
 /// @brief  Implementation of the acceleration structure build info class.
 //=============================================================================
 
-#include "bvh/irt_ip_11_acceleration_structure_post_build_info.h"
+#include "bvh/rtip11/irt_ip_11_acceleration_structure_post_build_info.h"
 #include "bvh/dxr_type_conversion.h"
 
 #include <string.h>  // for memcpy()

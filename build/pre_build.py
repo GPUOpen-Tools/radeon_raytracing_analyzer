@@ -63,7 +63,6 @@ elif sys.platform == "darwin":
     parser.add_argument("--qt-root", default="~/Qt", help="specify the root directory for locating QT on this system (default: ~/Qt) ")
 else:
     parser.add_argument("--qt-root", default="~/Qt", help="specify the root directory for locating QT on this system (default: ~/Qt) ")
-    parser.add_argument("--disable-extra-qt-lib-deploy", action="store_true", help="prevent extra Qt library files (XCB and ICU libs) from being copied during post build step")
     parser.add_argument("--qt-system", action="store_true", help="use the system-installed version of QT")
 parser.add_argument("--qt", default="5.15.2", help="specify the version of QT to be used with the script (default: 5.15.2)" )
 parser.add_argument("--clean", action="store_true", help="delete any directories created by this script")
@@ -264,8 +263,6 @@ def generate_config(config):
 
 
     if sys.platform.startswith('linux'):
-        if args.disable_extra_qt_lib_deploy:
-            cmake_args.extend(["-DDISABLE_EXTRA_QT_LIB_DEPLOY:BOOL=TRUE"])
         if args.qt_system:
             cmake_args.extend(["-DQT_SYSTEM:BOOL=TRUE"])
 

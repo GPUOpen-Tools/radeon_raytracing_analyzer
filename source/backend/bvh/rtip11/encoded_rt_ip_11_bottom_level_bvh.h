@@ -10,7 +10,7 @@
 #define RRA_BACKEND_BVH_ENCODED_RT_IP_11_BOTTOM_LEVEL_BVH_H_
 
 #include "bvh/geometry_info.h"
-#include "bvh/iencoded_rt_ip_11_bvh.h"
+#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 #include "bvh/node_types/triangle_node.h"
 #include "bvh/node_types/procedural_node.h"
 

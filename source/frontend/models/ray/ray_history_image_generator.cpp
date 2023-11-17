@@ -19,6 +19,7 @@ namespace rra
 
     QImage GraphicsContextRenderRayHistoryImage(uint32_t                      heatmap_min,
                                                 uint32_t                      heatmap_max,
+                                                uint32_t                      ray_index,
                                                 uint32_t                      reshaped_x,
                                                 uint32_t                      reshaped_y,
                                                 uint32_t                      reshaped_z,
@@ -27,7 +28,8 @@ namespace rra
                                                 renderer::SlicePlane          slice_plane)
     {
         auto vk_graphics_context = rra::renderer::GetVkGraphicsContext();
-        return vk_graphics_context->RenderRayHistoryImage(heatmap_min, heatmap_max, reshaped_x, reshaped_y, reshaped_z, color_mode, slice_index, slice_plane);
+        return vk_graphics_context->RenderRayHistoryImage(
+            heatmap_min, heatmap_max, ray_index, reshaped_x, reshaped_y, reshaped_z, color_mode, slice_index, slice_plane);
     }
 
     void GraphicsContextSetRayHistoryHeatmapData(const renderer::HeatmapData& heatmap_data)

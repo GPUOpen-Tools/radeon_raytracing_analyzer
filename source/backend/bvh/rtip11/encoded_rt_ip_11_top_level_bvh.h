@@ -11,7 +11,7 @@
 
 #include <unordered_map>
 
-#include "bvh/iencoded_rt_ip_11_bvh.h"
+#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 #include "bvh/node_types/instance_node.h"
 
 namespace rta

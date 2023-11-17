@@ -5,14 +5,6 @@ project(Backend)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER ../backend)
 
-IF(WIN32)
-    # Warnings as errors for Windows
-    add_compile_options(/W4 /WX)
-ELSEIF(UNIX)
-    # Remove warnings for Linux in backend. Unused function used by flags_util.h
-    add_compile_options(-D_LINUX -Wall -Wextra -Werror -Wno-unused-function -Wno-class-memaccess)
-ENDIF(WIN32)
-
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
 set( SOURCES
@@ -65,22 +57,12 @@ set( SOURCES
     "bvh/dxr_definitions.h"
     "bvh/dxr_type_conversion.cpp"
     "bvh/dxr_type_conversion.h"
-    "bvh/encoded_rt_ip_11_bottom_level_bvh.cpp"
-    "bvh/encoded_rt_ip_11_bottom_level_bvh.h"
-    "bvh/encoded_rt_ip_11_top_level_bvh.cpp"
-    "bvh/encoded_rt_ip_11_top_level_bvh.h"
     "bvh/flags_util.h"
     "bvh/geometry_info.cpp"
     "bvh/geometry_info.h"
     "bvh/gpu_def.h"
     "bvh/ibvh.cpp"
     "bvh/ibvh.h"
-    "bvh/iencoded_rt_ip_11_bvh.cpp"
-    "bvh/iencoded_rt_ip_11_bvh.h"
-    "bvh/irt_ip_11_acceleration_structure_header.cpp"
-    "bvh/irt_ip_11_acceleration_structure_header.h"
-    "bvh/irt_ip_11_acceleration_structure_post_build_info.cpp"
-    "bvh/irt_ip_11_acceleration_structure_post_build_info.h"
     "bvh/metadata_v1.cpp"
     "bvh/metadata_v1.h"
     "bvh/node_pointer.cpp"
@@ -103,6 +85,17 @@ set( SOURCES
     "bvh/node_types/procedural_node.h"
     "bvh/node_types/triangle_node.cpp"
     "bvh/node_types/triangle_node.h"
+    "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.cpp"
+    "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+    "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.cpp"
+    "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
+    "bvh/rtip11/iencoded_rt_ip_11_bvh.cpp"
+    "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
+    "bvh/rtip11/irt_ip_11_acceleration_structure_header.cpp"
+    "bvh/rtip11/irt_ip_11_acceleration_structure_header.h"
+    "bvh/rtip11/irt_ip_11_acceleration_structure_post_build_info.cpp"
+    "bvh/rtip11/irt_ip_11_acceleration_structure_post_build_info.h"
+    "bvh/rtip_common/gpurt_accel_struct.h"
 
     # Ray history
     "ray_history/ray_history.h"
@@ -118,16 +111,6 @@ set( LINUX_SOURCES
     "linux/safe_crt.cpp"
 )
 
-add_definitions(-DRDF_CXX_BINDINGS)
-IF (WIN32)
-    add_definitions(-DRDF_PLATFORM_WINDOWS)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-
-ELSEIF(UNIX)
-    add_definitions(-DRDF_PLATFORM_UNIX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -mavx2 -mf16c")
-ENDIF(WIN32)
-
 # specify output library name
 IF(WIN32)
     add_library(${PROJECT_NAME} ${SOURCES})
@@ -135,7 +118,16 @@ ELSEIF(UNIX)
     add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
 ENDIF(WIN32)
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+# Apply common developer tools target options and definitions
+devtools_target_options(${PROJECT_NAME})
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_CXX_BINDINGS)
+IF (WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_PLATFORM_WINDOWS -D_CRT_SECURE_NO_WARNINGS)
+ELSEIF(UNIX)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_PLATFORM_UNIX)
+    target_compile_options(${PROJECT_NAME} PRIVATE -mavx2 -mf16c)
+ENDIF(WIN32)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

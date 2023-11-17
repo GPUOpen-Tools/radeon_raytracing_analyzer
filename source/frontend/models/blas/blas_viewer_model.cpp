@@ -153,6 +153,9 @@ namespace rra
 
         SetModelData(kBlasStatsType, node_name.c_str());
 
+        // Show the focus button.
+        SetModelData(kBlasStatsFocus, true);
+
         int decimal_precision = rra::Settings::Get().GetDecimalPrecision();
 
         SetModelData(kBlasStatsAddress, AddressString(blas_index, node_id));
@@ -225,10 +228,9 @@ namespace rra
                 }
             }
         }
-        uint64_t parent_address{};
-        RraBlasGetNodeParentBaseAddress(blas_index, node_id, &parent_address);
-        QString parent_string = "0x" + QString("%1").arg(parent_address, 0, 16);
-        SetModelData(kBlasStatsParent, parent_string);
+        uint32_t parent_id{};
+        RraBlasGetNodeParent(blas_index, node_id, &parent_id);
+        SetModelData(kBlasStatsParent, AddressString(blas_index, parent_id));
 
         // Show surface area heuristic.
         float surface_area_heuristic = 0.0;
@@ -345,6 +347,7 @@ namespace rra
     void BlasViewerModel::ResetModelValues(bool reset_scene)
     {
         SetModelData(kBlasStatsType, "No node selected.");
+        SetModelData(kBlasStatsFocus, false);
         SetModelData(kBlasStatsAddress, "");
         SetModelData(kBlasStatsCurrentSAH, "-");
         SetModelData(kBlasStatsSAHSubTreeMax, "-");

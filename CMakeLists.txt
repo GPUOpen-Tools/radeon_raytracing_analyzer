@@ -1,15 +1,16 @@
 cmake_minimum_required(VERSION 3.11)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/source/renderer/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+include(dev_tools)
 
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
 project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 3)
+set(RRA_MINOR_VERSION 4)
 if (NOT RRA_BUGFIX_NUMBER)
-    set(RRA_BUGFIX_NUMBER 1)
+    set(RRA_BUGFIX_NUMBER 0)
 endif ()
 if (NOT RRA_BUILD_NUMBER)
     set(RRA_BUILD_NUMBER 0)
@@ -39,6 +40,7 @@ IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(ADT_PLATFORM_POSTFIX "-x64")
 ENDIF()
 
+# As default for RRA, include the debug status in filename - but not the platform bitness
 set (CMAKE_DEBUG_POSTFIX -d)
 set (CMAKE_RELEASE_POSTFIX)
 
@@ -53,9 +55,6 @@ ENDIF(WIN32)
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
-# Define C++ standard for RRA
-set(CMAKE_CXX_STANDARD 17)
-
 include_directories("${PROJECT_SOURCE_DIR}/external/")
 include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
 include_directories("${PROJECT_SOURCE_DIR}/external/third_party/")
@@ -63,19 +62,10 @@ include_directories("${PROJECT_SOURCE_DIR}/external/third_party/vulkan/include/"
 
 # Global compiler options
 IF(WIN32)
-    add_compile_options(/MP)
-    # disable warning C4201: nonstandard extension used: nameless struct/union
-    add_compile_options(/wd4201)
-    # this warning is caused by the QT header files - use pragma to disable at source
-    # disable warning C4127: conditional expression is constant
-    add_compile_options(/wd4127)
-    # this warning is caused by QT header files and has been introduced by VS2019 16.9.6
-    # disable warning C5240: 'nodiscard': attribute is ignored in this syntactic position
-    add_compile_options(/wd5240)
     # bump the stack size
     add_link_options(/STACK:16777216)
 ELSEIF(UNIX)
-    add_compile_options(-D_LINUX -mno-avx2)
+    add_compile_options(-mno-avx2)
     # Allow executable to be double clicked.
     add_link_options(-no-pie)
     # Use _DEBUG on Unix for Debug Builds (defined automatically on Windows)

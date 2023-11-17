@@ -30,11 +30,8 @@ function(devtools_target_options name)
                 -Wall
                 -Werror
                 -Wextra
-                -Wno-deprecated-declarations
-                -Wno-unused-variable
-                -Wno-missing-field-initializers
-                -Wno-unknown-pragmas
                 )
+
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(${name}
                 PRIVATE
@@ -50,8 +47,12 @@ function(devtools_target_options name)
                 /wd4127
 
                 # Disable warnings about deprecated features
-                # This happens when using later versions of Qt than RDP defaults to.
+                # This happens when using later versions of Qt than RRA defaults to.
                 /wd4996
+
+                # this warning is caused by QT header files and has been introduced by VS2019 16.9.6
+                # disable warning C5240: 'nodiscard': attribute is ignored in this syntactic position
+                /wd5240
                 )
     else ()
 

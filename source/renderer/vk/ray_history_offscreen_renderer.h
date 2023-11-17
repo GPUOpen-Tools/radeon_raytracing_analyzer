@@ -12,7 +12,7 @@
 #include <QImage>
 #include <volk/volk.h>
 
-#include "vma/include/vk_mem_alloc.h"
+#include "public/include_vma.h"
 #include "public/rra_ray_history.h"
 #include "public/renderer_types.h"
 #include "public/renderer_interface.h"
@@ -44,6 +44,7 @@ namespace rra
             /// @param cmd         The command buffer.
             /// @param heatmap_min The minimum heatmap slider value.
             /// @param heatmap_max The maximum heatmap slider value.
+            /// @param ray_index   The index of the current ray.
             /// @param reshaped_x  The dispatch width, after reshaping for 1D dispatches.
             /// @param reshaped_y  The dispatch height, after reshaping for 1D dispatches.
             /// @param reshaped_z  The dispatch depth, after reshaping for 1D dispatches.
@@ -54,6 +55,7 @@ namespace rra
             /// @return The rendered image in the form of a QImage, to be loaded by the QPixMap.
             QImage Render(uint32_t            heatmap_min,
                           uint32_t            heatmap_max,
+                          uint32_t            ray_index,
                           uint32_t            reshaped_x,
                           uint32_t            reshaped_y,
                           uint32_t            reshaped_z,
@@ -77,6 +79,7 @@ namespace rra
                 uint32_t slice_plane;
                 uint32_t min_traversal_count_limit;
                 uint32_t max_traversal_count_limit;
+                uint32_t ray_index;
             };
 
             /// @brief Create the pipeline layout.
@@ -116,7 +119,7 @@ namespace rra
             QImage ImageBufferToQImage(ImageBuffer image_buffer, SlicePlane slice_plane);
 
             /// @brief Get the width of the color image output.
-            /// 
+            ///
             /// @param slice_plane The plane of the 3D dispatch to render.
             ///
             /// @return The width.
@@ -125,11 +128,12 @@ namespace rra
             /// @brief Get the height of the color image output.
             ///
             /// @param slice_plane The plane of the 3D dispatch to render.
-            /// 
+            ///
             /// @return The height.
             uint32_t GetColorBufferHeight(SlicePlane slice_plane) const;
 
-            ImageBuffer stats_buffer_{};  ///< The non-color ray history statisitcs that is used to draw the different heatmap color modes.
+            ImageBuffer stats_buffer_{};     ///< The non-color ray history statisitcs that is used to draw the different heatmap color modes.
+            ImageBuffer ray_data_buffer_{};  ///< The raw ray data that is used to draw the ray related color modes.
 
             uint32_t              width_{};                  ///< The x dimension of the RH image.
             uint32_t              height_{};                 ///< The y dimension of the RH image.

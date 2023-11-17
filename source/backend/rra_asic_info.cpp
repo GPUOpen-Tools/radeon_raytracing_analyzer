@@ -8,7 +8,7 @@
 #include "public/rra_asic_info.h"
 
 #include "rra_data_set.h"
-#include "bvh/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
 #include "rra_tlas_impl.h"
 
 // External reference to the global dataset.
@@ -111,8 +111,8 @@ RraErrorCode RraAsicInfoGetRaytracingVersion(uint16_t* out_version_major, uint16
     const rta::IRtIp11AccelerationStructureHeader& header  = tlas->GetHeader();
     rta::RayTracingBinaryVersion                   version = header.GetGpuRtDriverInterfaceVersion();
 
-    *out_version_major = version.version_major;
-    *out_version_minor = version.version_minor;
+    *out_version_major = version.GetMajor();
+    *out_version_minor = version.GetMinor();
 
     return kRraOk;
 }

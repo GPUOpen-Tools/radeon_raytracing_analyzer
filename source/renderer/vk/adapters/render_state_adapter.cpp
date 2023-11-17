@@ -114,15 +114,6 @@ namespace rra
         static const char* kGeometryColoringModeName_Technical                = "Color geometry by technical drawing";
         static const char* kGeometryColoringModeDescription_Technical         = "Directionally lit Gooch shading.";
 
-        static const char* kGeometryColoringModeName_AverageEPO           = "Color geometry by average EPO (Triangle)";
-        static const char* kGeometryColoringModeDescription_AverageEPO    = "Shows the average endpoint overlap from the triangle up to the BLAS root.";
-        static const char* kGeometryColoringModeName_MaxEPO               = "Color geometry by maximum EPO (Triangle)";
-        static const char* kGeometryColoringModeDescription_MaxEPO        = "Shows the maximum endpoint overlap from the triangle up to the BLAS root.";
-        static const char* kGeometryColoringModeName_TriangleIndex        = "Color geometry by leaf node triangle index (Triangle)";
-        static const char* kGeometryColoringModeDescription_TriangleIndex = "The triangle index within a leaf node.";
-        static const char* kGeometryColoringModeName_TriangleCount        = "Color geometry by leaf node triangle count (Triangle)";
-        static const char* kGeometryColoringModeDescription_TriangleCount = "The triangle count within a leaf node.";
-
         // A declaration of all available coloring modes.
         static const std::vector<GeometryColoringModeInfo> kAvailableGeometryColoringModes = {
             {GeometryColoringMode::kBlasAverageSAH,

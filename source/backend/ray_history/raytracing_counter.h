@@ -81,6 +81,12 @@ namespace GpuRt
         uint32 counterRayIdRangeBegin;     // Partial rayID range begin
         uint32 counterRayIdRangeEnd;       // Partial rayID range end
         uint32 pipelineType;               // Pipeline type (native RT or RayQuery). RayTracing=0, Compute=1, Graphics=2
+        struct
+        {
+            uint32 isIndirect : 1;  // Execute indirect
+            uint32 reserved : 31;
+        };
+        uint32 padding;  // Pad to 64-bit alignment
     };
 #ifdef __cplusplus
 #pragma pack(pop)

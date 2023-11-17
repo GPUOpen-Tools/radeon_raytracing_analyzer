@@ -223,7 +223,7 @@
           </font>
          </property>
          <property name="text">
-          <string>See more recent traces...</string>
+          <string>See more recent scenes...</string>
          </property>
         </widget>
        </item>
@@ -299,7 +299,7 @@
             </font>
            </property>
            <property name="text">
-            <string>How to capture a trace</string>
+            <string>How to capture a scene</string>
            </property>
           </widget>
          </item>

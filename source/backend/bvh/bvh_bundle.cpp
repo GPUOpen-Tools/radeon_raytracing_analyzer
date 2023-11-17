@@ -14,8 +14,8 @@
 #include <unordered_set>
 
 #include "rdf/rdf/inc/amdrdf.h"
-#include "bvh/encoded_rt_ip_11_bottom_level_bvh.h"
-#include "bvh/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
 
 #include "public/rra_assert.h"
 #include "public/rra_error.h"
@@ -52,7 +52,7 @@ namespace rta
     {
     }
 
-    bool BvhBundle::HasEncoding(const BvhEncoding encoding) const
+    bool BvhBundle::HasEncoding(const RayTracingIpLevel encoding) const
     {
         for (const auto& tlas : top_level_bvhs_)
         {
@@ -317,17 +317,67 @@ namespace rta
         return std::make_unique<BvhBundle>(std::move(top_level_bvhs), std::move(bottom_level_bvhs), true, missing_blas_set.size(), inactive_instance_count);
     }
 
+    RayTracingIpLevel GetRtIpLevel(rdf::ChunkFile& chunk_file, RraErrorCode* io_error_code)
+    {
+        // Check if all expected identifiers are contained in the chunk file
+        const char* bvh_identifier = nullptr;
+        if (IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kAccelChunkIdentifier1}, chunk_file))
+        {
+            bvh_identifier = IEncodedRtIp11Bvh::kAccelChunkIdentifier1;
+        }
+        else if (IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kAccelChunkIdentifier2}, chunk_file))
+        {
+            bvh_identifier = IEncodedRtIp11Bvh::kAccelChunkIdentifier2;
+        }
+        else
+        {
+            *io_error_code = kRraErrorNoASChunks;
+            return RayTracingIpLevel::_None;
+        }
+
+        const auto bvh_chunk_count = chunk_file.GetChunkCount(bvh_identifier);
+
+        for (auto ci = 0; ci < bvh_chunk_count; ++ci)
+        {
+            uint64_t header_size = chunk_file.GetChunkHeaderSize(bvh_identifier, ci);
+
+            RRA_ASSERT(header_size > 0);
+
+            if (header_size > 0)
+            {
+                RawAccelStructRdfChunkHeader header;
+                chunk_file.ReadChunkHeaderToBuffer(bvh_identifier, ci, &header);
+
+                if (header.flags.blas != 1)
+                {
+                    const auto data_size = chunk_file.GetChunkDataSize(bvh_identifier, static_cast<uint32_t>(ci));
+
+                    std::vector<std::uint8_t> buffer(data_size);
+                    if (data_size > 0)
+                    {
+                        chunk_file.ReadChunkDataToBuffer(bvh_identifier, static_cast<uint32_t>(ci), buffer.data());
+                    }
+
+                    *io_error_code      = kRraOk;
+                    size_t rt_ip_offset = offsetof(AccelStructHeader, rtIpLevel);
+                    return *reinterpret_cast<RayTracingIpLevel*>((char*)buffer.data() + header.header_offset + rt_ip_offset);
+                }
+            }
+        }
+
+        *io_error_code = kRraErrorNoASChunks;
+        return RayTracingIpLevel::_None;
+    }
+
     std::unique_ptr<BvhBundle> LoadBvhBundleFromFile(rdf::ChunkFile&           chunk_file,
-                                                     const BvhEncoding         encoding,
+                                                     const RayTracingIpLevel   encoding,
                                                      const BvhBundleReadOption import_option,
                                                      RraErrorCode*             io_error_code)
     {
-        if (encoding == BvhEncoding::kAmdRtIp_1_1)
+        RRA_UNUSED(encoding);
         {
             return LoadRtIp11RawAccelStructBundleFromFile(chunk_file, import_option, io_error_code);
         }
-
-        return nullptr;
     }
 
 }  // namespace rta

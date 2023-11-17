@@ -38,6 +38,9 @@ const char* kLockOpenHoverIcon     = ":/Resources/assets/third_party/ionicons/lo
 const char* kLockClosedClickableIcon = ":/Resources/assets/third_party/ionicons/lock-closed-outline-clickable.svg";
 const char* kLockClosedHoverIcon     = ":/Resources/assets/third_party/ionicons/lock-closed-outline-hover.svg";
 
+const char* kWandClickableIcon = ":/Resources/assets/third_party/ionicons/wand-clickable.svg";
+const char* kWandHoverIcon     = ":/Resources/assets/third_party/ionicons/wand-hover.svg";
+
 const char* kKBDMouseClickableIcon = ":/Resources/assets/kbd_mouse_clickable.svg";
 const char* kKBDMouseHoverIcon     = ":/Resources/assets/kbd_mouse_hover.svg";
 
@@ -246,6 +249,10 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_show_hide_control_style_hotkeys_->SetNormalIcon(QIcon(kKBDMouseClickableIcon));
     ui_->content_show_hide_control_style_hotkeys_->SetHoverIcon(QIcon(kKBDMouseHoverIcon));
     ui_->content_show_hide_control_style_hotkeys_->setBaseSize(QSize(47, 17));
+
+    ui_->traversal_adapt_to_view_->SetNormalIcon(QIcon(kWandClickableIcon));
+    ui_->traversal_adapt_to_view_->SetHoverIcon(QIcon(kWandHoverIcon));
+    ui_->traversal_adapt_to_view_->setBaseSize(QSize(23, 23));
 }
 
 ViewPane::~ViewPane()
@@ -408,6 +415,8 @@ void ViewPane::ApplyUIStateFromSettings(rra::RRAPaneId pane)
 
     model_->SetInvertVertical(rra::Settings::Get().GetInvertVertical());
     model_->SetInvertHorizontal(rra::Settings::Get().GetInvertHorizontal());
+
+    SetTraversalCounterContinuousUpdate(rra::Settings::Get().GetContinuousUpdateState());
 
     switch (rra::Settings::Get().GetUpAxis())
     {
@@ -575,11 +584,16 @@ void ViewPane::ToggleCameraLock()
 
 void ViewPane::ToggleTraversalCounterContinuousUpdate()
 {
-    model_->ToggleTraversalCounterContinuousUpdate([=](uint32_t min, uint32_t max) { ui_->traversal_counter_slider_->SetSpan(min, max); });
-    rra::Settings::Get().SetContinuousUpdateState(ui_->traversal_continuous_update_->isChecked());
-    auto should_disable_manual_functions = model_->IsTraversalCounterContinuousUpdateSet();
-    ui_->traversal_adapt_to_view_->setDisabled(should_disable_manual_functions);
-    ui_->traversal_counter_slider_->setDisabled(should_disable_manual_functions);
+    SetTraversalCounterContinuousUpdate(!model_->IsTraversalCounterContinuousUpdateSet());
+}
+
+void ViewPane::SetTraversalCounterContinuousUpdate(bool continuous_update)
+{
+    model_->SetTraversalCounterContinuousUpdate(continuous_update, [=](uint32_t min, uint32_t max) { ui_->traversal_counter_slider_->SetSpan(min, max); });
+    rra::Settings::Get().SetContinuousUpdateState(continuous_update);
+    ui_->traversal_continuous_update_->setChecked(continuous_update);
+    ui_->traversal_adapt_to_view_->setDisabled(continuous_update);
+    ui_->traversal_counter_slider_->setDisabled(continuous_update);
 }
 
 void ViewPane::CheckPasteResult(rra::ViewerIOCameraPasteResult result)

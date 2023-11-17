@@ -11,7 +11,7 @@
 #define RRA_BACKEND_RRA_BVH_IMPL_H_
 
 #include "bvh/dxr_definitions.h"
-#include "bvh/iencoded_rt_ip_11_bvh.h"
+#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 #include "public/rra_bvh.h"
 
 /// @brief Get the child node count for a given node.

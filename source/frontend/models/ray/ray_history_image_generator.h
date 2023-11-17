@@ -27,6 +27,7 @@ namespace rra
     ///
     /// @param heatmap_min The minimum heatmap value.
     /// @param heatmap_max The maximum heatmap value.
+    /// @param ray_index   The index of the current ray.
     /// @param reshaped_x  The dispatch width, after reshaping for 1D dispatches.
     /// @param reshaped_y  The dispatch height, after reshaping for 1D dispatches.
     /// @param reshaped_z  The dispatch depth, after reshaping for 1D dispatches.
@@ -37,6 +38,7 @@ namespace rra
     /// @return The rendered image.
     QImage GraphicsContextRenderRayHistoryImage(uint32_t                      heatmap_min,
                                                 uint32_t                      heatmap_max,
+                                                uint32_t                      ray_index,
                                                 uint32_t                      reshaped_x,
                                                 uint32_t                      reshaped_y,
                                                 uint32_t                      reshaped_z,

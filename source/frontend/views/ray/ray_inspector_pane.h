@@ -125,6 +125,9 @@ private slots:
     /// @brief Focus on the hit location.
     void FocusOnHitLocation();
 
+    /// @brief Focus on ray origin.
+    void FocusOnRayOrigin();
+
     /// @brief Called when a ray is selected from the ray table.
     void SelectRay();
 

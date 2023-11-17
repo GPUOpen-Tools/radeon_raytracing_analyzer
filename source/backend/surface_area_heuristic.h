@@ -8,7 +8,7 @@
 #ifndef RRA_BACKEND_SURFACE_AREA_HEURISTIC_H_
 #define RRA_BACKEND_SURFACE_AREA_HEURISTIC_H_
 
-#include "bvh/iencoded_rt_ip_11_bvh.h"
+#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 #include "rra_data_set.h"
 
 // Surface area heuristic calculator functions. Used only by the backend; no public interface.

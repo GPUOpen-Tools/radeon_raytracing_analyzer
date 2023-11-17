@@ -21,7 +21,7 @@
 const static int     kRecentTraceSpacing            = 20;
 const static int     kRecentTracePaneMargin         = 10;
 const static int     kRecentTracesTextPixelFontSize = 14;
-const static QString kRecentTracesNoTracesString    = "There are no recently opened BVH traces";
+const static QString kRecentTracesNoTracesString    = "There are no recently opened BVH scenes";
 
 RecentTracesPane::RecentTracesPane(QWidget* parent)
     : BasePane(parent)

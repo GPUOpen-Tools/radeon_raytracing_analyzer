@@ -29,6 +29,11 @@ namespace rta
 
     // Set and clear flag helper for int and uint
 
+#ifndef _WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
     static void SetFlag(uint32_t& flagField, const uint32_t flag)
     {
         flagField = flagField | flag;
@@ -97,6 +102,10 @@ namespace rta
             ClearFlag(flagField, flag);
         }
     }
+
+#ifndef _WIN32
+#pragma GCC diagnostic pop
+#endif
 
     template <typename T>
     static bool IsFlagSet(const T flagField, const T flag)

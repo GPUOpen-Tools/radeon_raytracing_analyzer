@@ -157,6 +157,7 @@ namespace rra
 
         QImage VkGraphicsContext::RenderRayHistoryImage(uint32_t             heatmap_min,
                                                         uint32_t             heatmap_max,
+                                                        uint32_t             ray_index,
                                                         uint32_t             reshaped_x,
                                                         uint32_t             reshaped_y,
                                                         uint32_t             reshaped_z,
@@ -164,7 +165,7 @@ namespace rra
                                                         uint32_t             slice_index,
                                                         renderer::SlicePlane slice_plane)
         {
-            return rh_renderer_->Render(heatmap_min, heatmap_max, reshaped_x, reshaped_y, reshaped_z, color_mode, slice_index, slice_plane);
+            return rh_renderer_->Render(heatmap_min, heatmap_max, ray_index, reshaped_x, reshaped_y, reshaped_z, color_mode, slice_index, slice_plane);
         }
 
         void VkGraphicsContext::SetRayHistoryHeatmapData(const HeatmapData& heatmap_data)
@@ -178,7 +179,8 @@ namespace rra
 
             VkDeviceSize buffer_size = data.size() * sizeof(glm::vec4);
 
-            VkImageCreateInfo image_create_info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+            VkImageCreateInfo image_create_info = {};
+            image_create_info.sType             = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             image_create_info.format            = VK_FORMAT_R32G32B32A32_SFLOAT;
             image_create_info.usage             = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
             image_create_info.imageType         = VK_IMAGE_TYPE_1D;
@@ -197,11 +199,13 @@ namespace rra
 
             device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, staging_buffer, staging_allocation, data.data(), buffer_size);
 
-            VkCommandBufferBeginInfo begin_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+            VkCommandBufferBeginInfo begin_info = {};
+            begin_info.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             auto                     result     = vkBeginCommandBuffer(cmd, &begin_info);
             CheckResult(result, "Upload command buffer failed to begin during heatmap upload.");
 
-            VkImageMemoryBarrier undefined_to_transfer_barrier        = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+            VkImageMemoryBarrier undefined_to_transfer_barrier        = {};
+            undefined_to_transfer_barrier.sType                       = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
             undefined_to_transfer_barrier.oldLayout                   = VK_IMAGE_LAYOUT_UNDEFINED;
             undefined_to_transfer_barrier.newLayout                   = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             undefined_to_transfer_barrier.srcQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
@@ -226,7 +230,8 @@ namespace rra
 
             vkCmdCopyBufferToImage(cmd, staging_buffer, vulkan_heatmap.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_region);
 
-            VkImageMemoryBarrier transfer_to_read_barrier        = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+            VkImageMemoryBarrier transfer_to_read_barrier        = {};
+            transfer_to_read_barrier.sType                       = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
             transfer_to_read_barrier.oldLayout                   = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             transfer_to_read_barrier.newLayout                   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             transfer_to_read_barrier.srcQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
@@ -251,7 +256,8 @@ namespace rra
             result = vkEndCommandBuffer(cmd);
             CheckResult(result, "Upload command buffer failed to end during heatmap upload.");
 
-            VkSubmitInfo submit_info       = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+            VkSubmitInfo submit_info       = {};
+            submit_info.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             submit_info.commandBufferCount = 1;
             submit_info.pCommandBuffers    = &cmd;
 
@@ -263,7 +269,8 @@ namespace rra
 
             device_.DestroyBuffer(staging_buffer, staging_allocation);
 
-            VkImageViewCreateInfo image_view_create_info       = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+            VkImageViewCreateInfo image_view_create_info       = {};
+            image_view_create_info.sType                       = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             image_view_create_info.image                       = vulkan_heatmap.image;
             image_view_create_info.format                      = VK_FORMAT_R32G32B32A32_SFLOAT;
             image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -273,7 +280,8 @@ namespace rra
             result = vkCreateImageView(device_.GetDevice(), &image_view_create_info, nullptr, &vulkan_heatmap.image_view);
             CheckResult(result, "Failed to create heatmap image view.");
 
-            VkSamplerCreateInfo sampler_create_info = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+            VkSamplerCreateInfo sampler_create_info = {};
+            sampler_create_info.sType               = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
             sampler_create_info.magFilter           = VK_FILTER_LINEAR;
             sampler_create_info.minFilter           = VK_FILTER_LINEAR;
             sampler_create_info.addressModeU        = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
@@ -303,13 +311,15 @@ namespace rra
                 VkCommandPool   command_pool;
                 VkCommandBuffer command_buffer;
 
-                VkCommandPoolCreateInfo pool_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+                VkCommandPoolCreateInfo pool_info = {};
+                pool_info.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
                 pool_info.queueFamilyIndex        = device_.GetGraphicsQueueFamilyIndex();
 
                 result = vkCreateCommandPool(device_.GetDevice(), &pool_info, nullptr, &command_pool);
                 PRE_RENDER_CHECK_RESULT(result, "Failed to create global upload command buffer pool.");
 
-                VkCommandBufferAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+                VkCommandBufferAllocateInfo alloc_info = {};
+                alloc_info.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
                 alloc_info.commandPool                 = command_pool;
                 alloc_info.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
                 alloc_info.commandBufferCount          = 1;
@@ -317,7 +327,8 @@ namespace rra
                 result = vkAllocateCommandBuffers(device_.GetDevice(), &alloc_info, &command_buffer);
                 PRE_RENDER_CHECK_RESULT(result, "Failed to allocate global upload command buffer.");
 
-                VkCommandBufferBeginInfo begin_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+                VkCommandBufferBeginInfo begin_info = {};
+                begin_info.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                 result                              = vkBeginCommandBuffer(command_buffer, &begin_info);
                 PRE_RENDER_CHECK_RESULT(result, "Failed to begin global upload command buffer recording.");
 
@@ -410,7 +421,8 @@ namespace rra
                 result = vkEndCommandBuffer(command_buffer);
                 PRE_RENDER_CHECK_RESULT(result, "Failed to end global upload command buffer recording.");
 
-                VkSubmitInfo submit_info       = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+                VkSubmitInfo submit_info       = {};
+                submit_info.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                 submit_info.commandBufferCount = 1;
                 submit_info.pCommandBuffers    = &command_buffer;
 

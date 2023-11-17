@@ -81,7 +81,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Analyze a breakdown of resources in the trace.</string>
+          <string>Analyze a breakdown of resources in the scene.</string>
          </property>
         </widget>
        </item>

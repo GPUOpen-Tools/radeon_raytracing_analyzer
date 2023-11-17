@@ -11,8 +11,8 @@
 
 #include <limits.h>
 
-#include "bvh/encoded_rt_ip_11_top_level_bvh.h"
-#include "bvh/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
 #include "public/rra_assert.h"
 #include "math_util.h"
 #include "rra_blas_impl.h"
@@ -207,18 +207,17 @@ RraErrorCode RraTlasGetNodeBaseAddress(uint64_t tlas_index, uint32_t node_ptr, u
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetNodeParentBaseAddress(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_address)
+RraErrorCode RraTlasGetNodeParent(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_parent_node_ptr)
 {
     const rta::IEncodedRtIp11Bvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
-    const auto                   base_addr   = tlas->GetVirtualAddress();
     const dxr::amd::NodePointer* node        = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-    const dxr::amd::NodePointer  parent_node = tlas->GetParentNode(node);
+    dxr::amd::NodePointer  parent_node = tlas->GetParentNode(node);
 
-    *out_address = base_addr + tlas->GetHeader().GetMetaDataSize() + parent_node.GetGpuVirtualAddress();
+    *out_parent_node_ptr = *reinterpret_cast<uint32_t*>(&parent_node);
 
     return kRraOk;
 }

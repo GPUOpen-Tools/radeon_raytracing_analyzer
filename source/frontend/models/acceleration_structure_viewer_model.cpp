@@ -142,11 +142,14 @@ namespace rra
 
     uint64_t AccelerationStructureViewerModel::FindAccelerationStructureIndex(ArrowIconComboBox* combo_box)
     {
-        int selected_row = combo_box->CurrentRow();
-        if (selected_row >= 0)
+        if (combo_box->RowCount() > 0)
         {
-            QListWidgetItem* item = combo_box->FindItem(selected_row);
-            return item->data(Qt::UserRole).toULongLong();
+            int selected_row = combo_box->CurrentRow();
+            if (selected_row >= 0)
+            {
+                QListWidgetItem* item = combo_box->FindItem(selected_row);
+                return item->data(Qt::UserRole).toULongLong();
+            }
         }
         return UINT64_MAX;
     }

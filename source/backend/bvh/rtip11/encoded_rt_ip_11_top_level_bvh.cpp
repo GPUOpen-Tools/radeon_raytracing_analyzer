@@ -6,7 +6,7 @@
 /// implementation.
 //=============================================================================
 
-#include "bvh/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
 
 #include <iostream>
 #include <vector>

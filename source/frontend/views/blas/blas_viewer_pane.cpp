@@ -58,6 +58,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
 
     model_->InitializeModel(ui_->content_node_address_, rra::kBlasStatsAddress, "text");
     model_->InitializeModel(ui_->content_node_type_, rra::kBlasStatsType, "text");
+    model_->InitializeModel(ui_->content_focus_selected_volume_, rra::kBlasStatsFocus, "visible");
     model_->InitializeModel(ui_->content_current_sah_, rra::kBlasStatsCurrentSAH, "text");
     model_->InitializeModel(ui_->content_subtree_min_, rra::kBlasStatsSAHSubTreeMax, "text");
     model_->InitializeModel(ui_->content_subtree_mean_, rra::kBlasStatsSAHSubTreeMean, "text");
@@ -121,6 +122,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     ui_->content_focus_selected_volume_->SetHoverIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-hover.svg"));
     ui_->content_focus_selected_volume_->setBaseSize(QSize(25, 25));
     connect(ui_->content_focus_selected_volume_, &ScaledPushButton::clicked, [&]() { model_->GetCameraController()->FocusOnSelection(); });
+    ui_->content_focus_selected_volume_->setCursor(QCursor(Qt::PointingHandCursor));
 }
 
 BlasViewerPane::~BlasViewerPane()

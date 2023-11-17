@@ -5,7 +5,7 @@
 /// @brief  RT IP 1.1 (Navi2x) specific base class implementation.
 //=============================================================================
 
-#include "bvh/iencoded_rt_ip_11_bvh.h"
+#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 
 #include <iostream>
 #include <vector>
@@ -18,10 +18,10 @@
 
 #include "bvh/dxr_type_conversion.h"
 #include "bvh/flags_util.h"
-#include "bvh/irt_ip_11_acceleration_structure_header.h"
+#include "bvh/rtip11/irt_ip_11_acceleration_structure_header.h"
 
-#include "bvh/encoded_rt_ip_11_bottom_level_bvh.h"
-#include "bvh/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
 
 namespace rta
 {
@@ -93,7 +93,7 @@ namespace rta
     BvhFormat IEncodedRtIp11Bvh::GetFormat() const
     {
         BvhFormat format = {};
-        format.encoding  = BvhEncoding::kAmdRtIp_1_1;
+        format.encoding  = RayTracingIpLevel::RtIp1_1;
         return format;
     }
 

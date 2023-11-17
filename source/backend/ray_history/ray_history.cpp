@@ -23,27 +23,6 @@
 
 namespace
 {
-
-    std::uint64_t GetNodePtr(std::uint64_t data, const std::uint64_t root)
-    {
-        if (root == 0)
-        {
-            // Clear top 3 bits, then subtract the fixed offset, then
-            // shift left to get the full pointer
-            return ((data & (~(0b111ULL << 61))) - 0x15 /* fixed offset */) << 3;
-        }
-        else
-        {
-            data -= (root >> 3);
-            // Clear top 3 bits
-            data &= (~(0b111ULL << 61));
-            // Clear bottom 3 bits
-            data &= ~0b111ULL;
-
-            return data;
-        }
-    }
-
     struct MetadataStore
     {
     public:

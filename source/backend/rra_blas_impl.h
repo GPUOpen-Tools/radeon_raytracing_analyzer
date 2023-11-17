@@ -11,7 +11,7 @@
 #define RRA_BACKEND_RRA_BLAS_IMPL_H_
 
 #include "bvh/dxr_definitions.h"
-#include "bvh/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
 #include "public/rra_blas.h"
 
 /// @brief Get a pointer to the BLAS from the blas index passed in.

@@ -341,7 +341,11 @@ namespace rra
 
         viewer_callbacks.get_context_options = [=](rra::SceneContextMenuRequest request) -> rra::SceneContextMenuOptions {
             RRA_UNUSED(request);
-            return {};
+            rra::SceneContextMenuOptions options{};
+            options[kFocusOnSelectionName] = [&]() {
+                BurstResetCamera();
+            };
+            return options;
         };
 
         viewer_callbacks.select_from_scene = [=](const rra::renderer::Camera* camera, glm::vec2 coords) -> rra::SceneCollectionModelClosestHit {

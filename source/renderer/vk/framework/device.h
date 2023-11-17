@@ -18,7 +18,7 @@
 #include "../../public/renderer_types.h"
 #include "../util_vulkan.h"
 
-#include <vma/include/vk_mem_alloc.h>
+#include "../../public/include_vma.h"
 
 namespace rra
 {

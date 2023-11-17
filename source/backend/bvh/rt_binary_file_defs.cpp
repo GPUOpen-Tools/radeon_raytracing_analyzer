@@ -2,7 +2,7 @@
 // Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief  Implementatin of the binary file definitions class.
+/// @brief  Implementation of the binary file definitions class.
 //=============================================================================
 
 #include "rt_binary_file_defs.h"
@@ -16,19 +16,18 @@ namespace rta
 {
     RayTracingBinaryVersion::RayTracingBinaryVersion(const std::uint32_t version)
     {
-        version_minor = static_cast<std::uint16_t>(version);
-        version_major = static_cast<std::uint16_t>(version >> 16);
+        this->version = version;
     }
 
     std::int32_t RayTracingBinaryVersion::Compare(const RayTracingBinaryVersion& left, const RayTracingBinaryVersion& right)
     {
-        if (left.version_major != right.version_major)
+        if (left.GetMajor() != right.GetMajor())
         {
-            return (left.version_major < right.version_major) ? -1 : 1;
+            return (left.GetMajor() < right.GetMajor()) ? -1 : 1;
         }
-        if (left.version_minor != right.version_minor)
+        if (left.GetMinor() != right.GetMinor())
         {
-            return (left.version_minor < right.version_minor) ? -1 : 1;
+            return (left.GetMinor() < right.GetMinor()) ? -1 : 1;
         }
 
         return 0;
@@ -62,6 +61,16 @@ namespace rta
     bool RayTracingBinaryVersion::operator>(const RayTracingBinaryVersion& rhs) const
     {
         return Compare(*this, rhs) > 0;
+    }
+
+    std::uint16_t RayTracingBinaryVersion::GetMinor() const
+    {
+        return static_cast<std::uint16_t>(version);
+    }
+
+    std::uint16_t RayTracingBinaryVersion::GetMajor() const
+    {
+        return static_cast<std::uint16_t>(version >> 16);
     }
 
     struct GpuRtDriverBinaryFileVersionTuple

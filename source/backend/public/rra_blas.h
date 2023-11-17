@@ -123,14 +123,14 @@ RraErrorCode RraBlasGetChildNodePtr(uint64_t blas_index, uint32_t parent_node, u
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetNodeBaseAddress(uint64_t blas_index, uint32_t node_ptr, uint64_t* out_address);
 
-/// @brief Get the base address for a given node's parent.
+/// @brief Get the parent of a given node.
 ///
-/// @param [in]  blas_index     The index of the BLAS to use.
-/// @param [in]  node_ptr       The node whose parent base address is to be found.
-/// @param [out] out_address    The base address of the node's parent.
+/// @param [in]  blas_index          The index of the BLAS to use.
+/// @param [in]  node_ptr            The node whose parent base address is to be found.
+/// @param [out] out_parent_node_ptr The parent's node pointer.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetNodeParentBaseAddress(uint64_t blas_index, uint32_t node_ptr, uint64_t* out_address);
+RraErrorCode RraBlasGetNodeParent(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_parent_node_ptr);
 
 /// @brief Get the surface area of a given node.
 ///

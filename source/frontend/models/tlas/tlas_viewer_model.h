@@ -28,6 +28,7 @@ namespace rra
         kTlasStatsInstanceId,
         kTlasStatsInstanceMask,
         kTlasStatsInstanceHitGroupIndex,
+        kTlasStatsFocus,
 
         kTlasStatsNumWidgets,
     };

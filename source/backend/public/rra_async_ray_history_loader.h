@@ -33,9 +33,9 @@ public:
     /// @return The trace.
     std::shared_ptr<rta::RayHistoryTrace> GetRayHistoryTrace();
 
-    /// @brief Get the metadata of the dispatch.
-    /// @return The metadata.
-    rta::RayHistoryMetadata GetMetadata();
+    /// @brief Get the counter info of the dispatch.
+    /// @return The counter info.
+    GpuRt::CounterInfo GetCounterInfo();
 
     /// @brief Get the indexed dispatch data.
     /// @return The dispatch data.
@@ -97,7 +97,8 @@ private:
 
     size_t total_ray_count_ = 0;  ///< Number of rays. (not pixels)
 
-    rta::RayHistoryMetadata               metadata_          = {};       ///< Metadata of the dispatch.
+    GpuRt::CounterInfo counter_info_;  ///< The counter info from the metadata chunk.
+
     std::shared_ptr<rta::RayHistoryTrace> ray_history_trace_ = nullptr;  ///< The actual trace data.
 
     RayDispatchData       dispatch_data_     = {};  ///< All of the indexing and individual stats that we've gathered.

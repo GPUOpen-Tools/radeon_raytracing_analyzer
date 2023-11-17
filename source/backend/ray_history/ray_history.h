@@ -221,27 +221,21 @@ namespace rta
 
     using RayHistoryTokenFilter = std::unordered_set<RayHistoryTokenType>;
 
+#pragma pack(push, 4)
     struct RayHistoryMetadataInfo
     {
         rta::RayHistoryMetadataKind kind;
+        uint32_t                    placeholder;
         uint64_t                    sizeInByte;
     };
+#pragma pack(pop)
 
     struct DispatchDimensions
     {
         uint32_t dimX;
         uint32_t dimY;
         uint32_t dimZ;
-    };
-
-    struct RayHistoryMetadata
-    {
-        RayHistoryMetadataInfo          counterInfo;
-        GpuRt::CounterInfo              counter;
-        RayHistoryMetadataInfo          dispatchDimsInfo;
-        DispatchDimensions              dispatchDims;
-        RayHistoryMetadataInfo          traversalFlagsInfo;
-        GpuRt::RayHistoryTraversalFlags traversalFlags;
+        uint32_t padding;  // Pad to 64-bit Alignment
     };
 
     class RayHistory;

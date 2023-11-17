@@ -10,13 +10,15 @@
 
 #include <QWidget>
 #include <functional>
+#include <optional>
 #include "public/camera.h"
 #include "models/acceleration_structure_viewer_model.h"
 
 namespace rra
 {
-    const float  kViewerIOFarPlaneMultiplier = 100.0f;          // The far plane radius is multiplied by this value.
-    const QPoint kInvalidPosition            = QPoint(-1, -1);  ///< A point representing an invalid position.
+    const float       kViewerIOFarPlaneMultiplier = 100.0f;          ///< The far plane radius is multiplied by this value.
+    const QPoint      kInvalidPosition            = QPoint(-1, -1);  ///< A point representing an invalid position.
+    const std::string kFocusOnSelectionName{"Focus on selection"};   ///< The key for the focus on selection context option.
 
     class ViewModel;  ///< Forward declaration to manipulate camera orientation from the controller.
 
@@ -233,7 +235,13 @@ namespace rra
         /// @param [in] position The absolute camera position.
         /// @param [in] forward The camera forward direction.
         /// @param [in] up The camera up direction.
-        virtual void FitCameraParams(glm::vec3 position, glm::vec3 forward, glm::vec3 up);
+        /// @param [in] fov The field of view of the camera.
+        /// @param [in] speed The speed of the camera.
+        virtual void FitCameraParams(glm::vec3            position,
+                                     glm::vec3            forward,
+                                     glm::vec3            up,
+                                     std::optional<float> opt_fov   = std::nullopt,
+                                     std::optional<float> opt_speed = std::nullopt);
 
         /// @brief Rotate the camera such that its new forward vector matches the forward parameter.
         ///

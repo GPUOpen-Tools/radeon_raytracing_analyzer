@@ -157,7 +157,7 @@ namespace rra
 
             DestroyRenderPass();
 
-            for (int image_index = 0; image_index < command_buffer_executed_fences_.size(); image_index++)
+            for (size_t image_index = 0; image_index < command_buffer_executed_fences_.size(); image_index++)
             {
                 vkDestroyFence(device_->GetDevice(), command_buffer_executed_fences_[image_index], nullptr);
                 vkDestroySemaphore(device_->GetDevice(), image_available_semaphores_[image_index], nullptr);

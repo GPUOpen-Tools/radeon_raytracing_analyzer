@@ -67,6 +67,7 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
 
     model_->InitializeModel(ui_->content_node_address_, rra::kTlasStatsAddress, "text");
     model_->InitializeModel(ui_->content_node_type_, rra::kTlasStatsType, "text");
+    model_->InitializeModel(ui_->content_focus_selected_volume_, rra::kTlasStatsFocus, "visible");
     model_->InitializeModel(ui_->content_blas_address_, rra::kTlasStatsBlasAddress, "text");
     model_->InitializeModel(ui_->content_parent_, rra::kTlasStatsParent, "text");
     model_->InitializeModel(ui_->content_instance_index_, rra::kTlasStatsInstanceIndex, "text");
@@ -127,6 +128,7 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     ui_->content_focus_selected_volume_->SetHoverIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-hover.svg"));
     ui_->content_focus_selected_volume_->setBaseSize(QSize(25, 25));
     connect(ui_->content_focus_selected_volume_, &ScaledPushButton::clicked, [&]() { model_->GetCameraController()->FocusOnSelection(); });
+    ui_->content_focus_selected_volume_->setCursor(QCursor(Qt::PointingHandCursor));
 }
 
 TlasViewerPane::~TlasViewerPane()
@@ -138,6 +140,7 @@ void TlasViewerPane::showEvent(QShowEvent* event)
 {
     ui_->label_bvh_->setText("TLAS:");
     ui_->side_panel_container_->GetViewPane()->SetControlStyle(rra::Settings::Get().GetControlStyle(rra::kPaneIdTlasViewer));
+    UpdateRebraidUI();
     AccelerationStructureViewerPane::showEvent(event);
 }
 
@@ -211,59 +214,77 @@ void TlasViewerPane::SelectBlasFromTree(const QModelIndex& index, const bool nav
     }
 }
 
-void TlasViewerPane::UpdateRebraidUI(rra::Scene* scene, uint32_t tlas_index, uint32_t instance_index, uint32_t node_id)
+void TlasViewerPane::UpdateRebraidUI()
 {
-    if (derived_model_->SelectedNodeIsLeaf())
+    rra::TlasViewerModel* model = dynamic_cast<rra::TlasViewerModel*>(model_);
+    RRA_ASSERT(model != nullptr);
+    if (model != nullptr)
     {
-        if (scene->IsInstanceRebraided(instance_index))
+        uint64_t tlas_index = model_->FindAccelerationStructureIndex(acceleration_structure_combo_box_);
+        if (tlas_index != UINT64_MAX)
         {
-            const auto& rebraid_siblings = scene->GetRebraidedInstances(instance_index);
-
-            // Delete previous buttons.
-            for (ScaledPushButton* button : rebraid_sibling_buttons_)
+            auto scene = model->GetSceneCollectionModel()->GetSceneByIndex(tlas_index);
+            if (!scene)
             {
-                ui_->rebraid_siblings_list_->removeWidget(button);
-                delete button;
+                return;
             }
-            rebraid_sibling_buttons_.clear();
 
-            uint32_t           row{0};
-            uint32_t           col{0};
-            constexpr uint32_t col_count{2};
-            for (rra::SceneNode* sibling : rebraid_siblings)
+            auto     node_id        = scene->GetMostRecentSelectedNodeId();
+            uint32_t instance_index = model->GetInstanceIndexFromNode(tlas_index, node_id);
+
+            if (derived_model_->SelectedNodeIsLeaf())
             {
-                ScaledPushButton* rebraid_sibling_button = new ScaledPushButton();
-                rebraid_sibling_buttons_.push_back(rebraid_sibling_button);
-                rebraid_sibling_button->setText(model_->AddressString(tlas_index, sibling->GetId()));
-                rebraid_sibling_button->setObjectName(QString::fromUtf8("rebraid_button_"));
-                QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
-                sizePolicy.setHorizontalStretch(0);
-                sizePolicy.setVerticalStretch(0);
-                sizePolicy.setHeightForWidth(rebraid_sibling_button->sizePolicy().hasHeightForWidth());
-                rebraid_sibling_button->setSizePolicy(sizePolicy);
-
-                if (sibling->GetId() != node_id)
+                if (scene->IsInstanceRebraided(instance_index))
                 {
-                    rebraid_sibling_button->setCursor(Qt::PointingHandCursor);
+                    const auto& rebraid_siblings = scene->GetRebraidedInstances(instance_index);
 
-                    QModelIndex sibling_model_index = derived_model_->GetModelIndexForNode(sibling->GetId());
-                    connect(rebraid_sibling_button, &ScaledPushButton::clicked, this, [=]() {
-                        ui_->tlas_tree_->selectionModel()->reset();
-                        ui_->tlas_tree_->selectionModel()->setCurrentIndex(sibling_model_index, QItemSelectionModel::Select);
-                        HandleSceneSelectionChanged();
-                    });
-                }
-                else
-                {
-                    rebraid_sibling_button->setDisabled(true);
-                }
+                    // Delete previous buttons.
+                    for (ScaledPushButton* button : rebraid_sibling_buttons_)
+                    {
+                        ui_->rebraid_siblings_list_->removeWidget(button);
+                        delete button;
+                    }
+                    rebraid_sibling_buttons_.clear();
 
-                ui_->rebraid_siblings_list_->addWidget(rebraid_sibling_button, row, col);
+                    uint32_t           row{0};
+                    uint32_t           col{0};
+                    constexpr uint32_t col_count{2};
+                    for (rra::SceneNode* sibling : rebraid_siblings)
+                    {
+                        ScaledPushButton* rebraid_sibling_button = new ScaledPushButton();
+                        rebraid_sibling_buttons_.push_back(rebraid_sibling_button);
+                        rebraid_sibling_button->setText(model_->AddressString(tlas_index, sibling->GetId()));
+                        rebraid_sibling_button->setObjectName(QString::fromUtf8("rebraid_button_"));
+                        QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+                        sizePolicy.setHorizontalStretch(0);
+                        sizePolicy.setVerticalStretch(0);
+                        sizePolicy.setHeightForWidth(rebraid_sibling_button->sizePolicy().hasHeightForWidth());
+                        rebraid_sibling_button->setSizePolicy(sizePolicy);
 
-                if (++col == col_count)
-                {
-                    col = 0;
-                    ++row;
+                        if (sibling->GetId() != node_id)
+                        {
+                            rebraid_sibling_button->setCursor(Qt::PointingHandCursor);
+
+                            QModelIndex sibling_model_index = derived_model_->GetModelIndexForNode(sibling->GetId());
+                            connect(rebraid_sibling_button, &ScaledPushButton::clicked, this, [=]() {
+                                ui_->tlas_tree_->selectionModel()->reset();
+                                ui_->tlas_tree_->selectionModel()->setCurrentIndex(sibling_model_index, QItemSelectionModel::Select);
+                                HandleSceneSelectionChanged();
+                            });
+                        }
+                        else
+                        {
+                            rebraid_sibling_button->setDisabled(true);
+                        }
+
+                        ui_->rebraid_siblings_list_->addWidget(rebraid_sibling_button, row, col);
+
+                        if (++col == col_count)
+                        {
+                            col = 0;
+                            ++row;
+                        }
+                    }
                 }
             }
         }
@@ -284,9 +305,8 @@ void TlasViewerPane::HandleSceneSelectionChanged()
             auto     scene                 = model->GetSceneCollectionModel()->GetSceneByIndex(acceleration_structure_index);
             auto     selection             = scene->GetMostRecentSelectedNodeId();
             uint32_t unique_instance_index = model->GetInstanceUniqueIndexFromNode(acceleration_structure_index, selection);
-            uint32_t instance_index        = model->GetInstanceIndexFromNode(acceleration_structure_index, selection);
 
-            UpdateRebraidUI(scene, acceleration_structure_index, instance_index, selection);
+            UpdateRebraidUI();
 
             // Emit a signal to update the selection list if TLAS.
             emit rra::MessageManager::Get().InstanceSelected(unique_instance_index);
@@ -327,12 +347,12 @@ void TlasViewerPane::TreeNodeChanged(const QItemSelection& selected, const QItem
     AccelerationStructureViewerPane::SelectedTreeNodeChanged(selected, deselected);
 }
 
-void TlasViewerPane::SetTlasCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up)
+void TlasViewerPane::SetTlasCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up, float fov, float speed)
 {
     UpdateCameraController();
     if (last_camera_controller_)
     {
-        last_camera_controller_->FitCameraParams(origin, forward, up);
+        last_camera_controller_->FitCameraParams(origin, forward, up, fov, speed);
         renderer_interface_->MarkAsDirty();
     }
 }
@@ -387,6 +407,7 @@ void TlasViewerPane::UpdateWidgets(const QModelIndex& index)
     if (model_)
     {
         ui_->rebraid_group_->setVisible(model_->IsRebraidedNode(last_selected_as_id_));
+        UpdateRebraidUI();
     }
 }
 

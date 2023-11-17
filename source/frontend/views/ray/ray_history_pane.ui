@@ -523,6 +523,55 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="ray_loading_">
+          <layout class="QVBoxLayout" name="ray_loading_layout_">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <spacer>
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Minimum</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="DispatchLoadingBar" name="loading_bar_">
+            </widget>
+           </item>
+           <item>
+            <spacer>
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -552,6 +601,11 @@
    <extends>QPushButton</extends>
    <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DispatchLoadingBar</class>
+   <extends>QWidget</extends>
+   <header>views/custom_widgets/dispatch_loading_bar.h</header>
   </customwidget>
  </customwidgets>
  <resources>

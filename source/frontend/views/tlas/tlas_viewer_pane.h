@@ -51,7 +51,9 @@ public:
     /// @param [in] origin The origin to place the camera.
     /// @param [in] forward The direction of the camera
     /// @param [in] up The up axis of the camera.
-    void SetTlasCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up);
+    /// @param [in] fov The field of view of the camera.
+    /// @param [in] speed The camera speed.
+    void SetTlasCamera(glm::vec3 origin, glm::vec3 forward, glm::vec3 up, float fov, float speed);
 
     /// @brief Select the given instance.
     ///
@@ -121,12 +123,7 @@ private:
     void SelectBlasFromTree(const QModelIndex& index, const bool navigate_to_blas_pane);
 
     /// @brief Show the buttons linking to the rebraided instance's siblings.
-    ///
-    /// @param [in] scene The current scene.
-    /// @param [in] tlas_index The current TLAS index.
-    /// @param [in] instance_index Index of the selected instance.
-    /// @param [in] node_id The ID of the selected node.
-    void UpdateRebraidUI(rra::Scene* scene, uint32_t tlas_index, uint32_t instance_index, uint32_t node_id);
+    void UpdateRebraidUI();
 
     /// @brief Handle the selection changed signal.
     void HandleSceneSelectionChanged();

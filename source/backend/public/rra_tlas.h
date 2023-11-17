@@ -94,14 +94,14 @@ RraErrorCode RraTlasGetChildNodePtr(uint64_t tlas_index, uint32_t parent_node, u
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetNodeBaseAddress(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_address);
 
-/// @brief Get the base address for a given node's parent.
+/// @brief Get the node_ptr to a given node's parent.
 ///
-/// @param [in]  tlas_index     The index of the TLAS to use.
-/// @param [in]  node_ptr       The node whose parent base address is to be found.
-/// @param [out] out_address    The base address of the node's parent.
+/// @param [in]  tlas_index          The index of the TLAS to use.
+/// @param [in]  node_ptr            The node whose parent base address is to be found.
+/// @param [out] out_parent_node_ptr The node pointer to the parent.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeParentBaseAddress(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_address);
+RraErrorCode RraTlasGetNodeParent(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_parent_node_ptr);
 
 /// @brief Get the instance information for an instance node.
 ///

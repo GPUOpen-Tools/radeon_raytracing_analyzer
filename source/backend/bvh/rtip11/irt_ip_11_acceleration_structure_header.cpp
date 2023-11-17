@@ -5,10 +5,11 @@
 /// @brief  Implementation of the RT IP 1.1 acceleration structure header class.
 //=============================================================================
 
-#include "bvh/irt_ip_11_acceleration_structure_header.h"
+#include "bvh/rtip11/irt_ip_11_acceleration_structure_header.h"
 #include "bvh/rt_binary_file_defs.h"
 #include "bvh/dxr_type_conversion.h"
 #include "bvh/utils.h"
+#include "bvh/rtip_common/gpurt_accel_struct.h"
 
 #include <string.h>  // for memcpy()
 
@@ -328,7 +329,7 @@ namespace rta
         bool IsValidImpl() const override;
 
     private:
-        DxrAccelerationStructureHeader                             header_     = {};
+        AccelStructHeader                                          header_     = {};
         std::unique_ptr<IRtIp11AccelerationStructurePostBuildInfo> build_info_ = nullptr;
     };
 
@@ -344,32 +345,32 @@ namespace rta
 
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetMetaDataSizeImpl() const
     {
-        return header_.meta_data_size_in_bytes;
+        return header_.metadataSizeInBytes;
     }
 
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetFileSizeImpl() const
     {
-        return header_.file_size_in_bytes;
+        return header_.sizeInBytes;
     }
 
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetPrimitiveCountImpl() const
     {
-        return header_.primitive_count;
+        return header_.numPrimitives;
     }
 
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetActivePrimitiveCountImpl() const
     {
-        return header_.active_primitive_count;
+        return header_.numActivePrims;
     }
 
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetGeometryDescriptionCountImpl() const
     {
-        return header_.desc_count;
+        return header_.numDescs;
     }
 
     BottomLevelBvhGeometryType DxrRtIp11AccelerationStructureHeader::GetGeometryTypeImpl() const
     {
-        return ToBottomLevelBvhGeometryType(header_.geometry_type);
+        return ToBottomLevelBvhGeometryType((dxr::GeometryType)header_.geometryType);
     }
 
     const AccelerationStructureBufferOffsets& DxrRtIp11AccelerationStructureHeader::GetBufferOffsetsImpl() const
@@ -384,43 +385,43 @@ namespace rta
 
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetInteriorFp32NodeCountImpl() const
     {
-        return header_.interior_fp32_node_count;
+        return header_.numInternalNodesFp32;
     }
 
     void DxrRtIp11AccelerationStructureHeader::SetInteriorFp32NodeCountImpl(const std::uint32_t interior_node_count)
     {
-        header_.interior_fp32_node_count = interior_node_count;
+        header_.numInternalNodesFp32 = interior_node_count;
     }
 
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetInteriorFp16NodeCountImpl() const
     {
-        return header_.interior_fp16_node_count;
+        return header_.numInternalNodesFp16;
     }
 
     void DxrRtIp11AccelerationStructureHeader::SetInteriorFp16NodeCountImpl(const std::uint32_t interior_node_count)
     {
-        header_.interior_fp16_node_count = interior_node_count;
+        header_.numInternalNodesFp16 = interior_node_count;
     }
 
     RayTracingBinaryVersion DxrRtIp11AccelerationStructureHeader::GetGpuRtDriverInterfaceVersionImpl() const
     {
-        return header_.driver_gpu_rt_interface_version;
+        return header_.accelStructVersion;
     }
 
     std::uint32_t DxrRtIp11AccelerationStructureHeader::GetLeafNodeCountImpl() const
     {
-        return header_.leaf_node_count;
+        return header_.numLeafNodes;
     }
 
     void DxrRtIp11AccelerationStructureHeader::SetLeafNodeCountImpl(const std::uint32_t leaf_node_count)
     {
-        header_.leaf_node_count = leaf_node_count;
+        header_.numLeafNodes = leaf_node_count;
     }
 
     std::uint64_t DxrRtIp11AccelerationStructureHeader::CalculateInteriorNodeBufferSizeImpl() const
     {
-        return static_cast<std::uint64_t>(header_.interior_fp16_node_count) * dxr::amd::kFp16BoxNodeSize +
-               static_cast<std::uint64_t>(header_.interior_fp32_node_count) * dxr::amd::kFp32BoxNodeSize;
+        return static_cast<std::uint64_t>(header_.numInternalNodesFp16) * dxr::amd::kFp16BoxNodeSize +
+               static_cast<std::uint64_t>(header_.numInternalNodesFp32) * dxr::amd::kFp32BoxNodeSize;
     }
 
     std::uint64_t DxrRtIp11AccelerationStructureHeader::CalculateWorstCaseInteriorNodeBufferSizeImpl(const std::uint32_t branching_factor) const
@@ -433,11 +434,11 @@ namespace rta
     {
         if (build_info_->IsTopLevel())
         {
-            return static_cast<std::uint64_t>(header_.leaf_node_count) * dxr::amd::kInstanceNodeSize;
+            return static_cast<std::uint64_t>(header_.numLeafNodes) * dxr::amd::kInstanceNodeSize;
         }
         else
         {
-            return static_cast<std::uint64_t>(header_.leaf_node_count) * dxr::amd::kLeafNodeSize;
+            return static_cast<std::uint64_t>(header_.numLeafNodes) * dxr::amd::kLeafNodeSize;
         }
     }
 
@@ -511,12 +512,42 @@ namespace rta
                                                                   const void*                    buffer,
                                                                   const RayTracingBinaryVersion& rt_binary_header_version)
     {
-        size_t struct_size = sizeof(DxrAccelerationStructureHeader);
         RRA_UNUSED(size);
         RRA_UNUSED(rt_binary_header_version);
+
+        DxrAccelerationStructureHeader old_header{};
+        size_t                         struct_size = sizeof(DxrAccelerationStructureHeader);
         assert(size == struct_size);
-        memcpy(&header_, buffer, struct_size);
-        build_info_->LoadFromBuffer(sizeof(header_.build_info), &header_.build_info);
+        memcpy(&old_header, buffer, struct_size);
+
+        header_.info.u32All          = old_header.build_info;
+        header_.metadataSizeInBytes  = old_header.meta_data_size_in_bytes;
+        header_.sizeInBytes          = old_header.file_size_in_bytes;
+        header_.numPrimitives        = old_header.primitive_count;
+        header_.numActivePrims       = old_header.active_primitive_count;
+        header_.taskIdCounter        = old_header.task_id_counter;
+        header_.numDescs             = old_header.desc_count;
+        header_.geometryType         = (uint32_t)old_header.geometry_type;
+        header_.offsets              = old_header.offsets;
+        header_.numInternalNodesFp32 = old_header.interior_fp32_node_count;
+        header_.numInternalNodesFp16 = old_header.interior_fp16_node_count;
+        header_.numLeafNodes         = old_header.leaf_node_count;
+        header_.accelStructVersion   = old_header.driver_gpu_rt_interface_version.version;
+        header_.uuidLo               = old_header.universal_identifier.gfx_ip_;
+        header_.uuidHi               = old_header.universal_identifier.build_time_hash_;
+        memcpy(header_.numChildPrims, old_header.num_child_prims, 4 * sizeof(uint32_t));
+
+        /*
+        The following fields have no equivalent in old_header:
+
+        header_.rtIpLevel;
+        header_.fp32RootBoundingBox[6];
+        header_.info2;
+        header_.packedFlags;
+        header_.compactedSizeInBytes;
+        */
+
+        build_info_->LoadFromBuffer(sizeof(header_.info), &header_.info);
 
     }
 
@@ -530,21 +561,21 @@ namespace rta
         static constexpr std::uint32_t kMinimumFileSize = dxr::amd::kMetaDataAlignment + dxr::amd::kAccelerationStructureHeaderSize;
 
         // The minimum file size for RT IP 1.1 BVHs is 256B.
-        if (header_.file_size_in_bytes < kMinimumFileSize)
+        if (header_.sizeInBytes < kMinimumFileSize)
         {
             return false;
         }
         // Meta data needs to be aligned with 128B.
-        if (header_.meta_data_size_in_bytes < dxr::amd::kMetaDataAlignment)
+        if (header_.metadataSizeInBytes < dxr::amd::kMetaDataAlignment)
         {
             return false;
         }
         // Check if there is any root node defined in this header.
-        const bool has_root_node = (header_.interior_fp32_node_count > 0);
+        const bool has_root_node = (header_.numInternalNodesFp32 > 0);
 
         // If there are any active primitives in this BVH, make sure that the root node is allocated for this
         // BVH. Otherwise, it's invalid.
-        if ((header_.file_size_in_bytes > kMinimumFileSize) && (header_.active_primitive_count > 0) && !has_root_node)
+        if ((header_.sizeInBytes > kMinimumFileSize) && (header_.numActivePrims > 0) && !has_root_node)
         {
             return false;
         }
@@ -567,7 +598,7 @@ namespace rta
             return false;
         }
         // We cannot have more active primitives than stored in the BVH.
-        if (header_.primitive_count < header_.active_primitive_count)
+        if (header_.numPrimitives < header_.numActivePrims)
         {
             return false;
         }

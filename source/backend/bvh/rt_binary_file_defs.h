@@ -43,9 +43,10 @@ namespace rta
         /// @param [in] major The major version number.
         /// @param [in] minor The minor version number.
         constexpr RayTracingBinaryVersion(const std::uint16_t major, const std::uint16_t minor)
-            : version_minor(minor)
-            , version_major(major)
         {
+            version = major;
+            version = version << 16;
+            version = version | minor;
         }
 
         /// @brief Compare two ray tracing binary file header versions.
@@ -75,8 +76,17 @@ namespace rta
         /// @brief greater than operator.
         bool operator>(const RayTracingBinaryVersion& rhs) const;
 
-        std::uint16_t version_minor = 0;  ///< minor version number.
-        std::uint16_t version_major = 0;  ///< major version number.
+        /// @brief Get the minor version.
+        ///
+        /// @return The minor version.
+        std::uint16_t GetMinor() const;
+
+        /// @brief Get the major version.
+        ///
+        /// @return The major version.
+        std::uint16_t GetMajor() const;
+
+        std::uint32_t version = 0;  // version number.
     };
 
     constexpr RayTracingBinaryVersion kSupportedRayTracingBinaryHeaderVersion =

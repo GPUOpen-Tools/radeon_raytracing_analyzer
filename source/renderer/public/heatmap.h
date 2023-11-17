@@ -15,13 +15,7 @@
 #include <string>
 #include <volk/volk.h>
 
-#ifdef _WIN32
-#pragma warning(push, 3)
-#endif
-#include <vma/include/vk_mem_alloc.h>
-#ifdef _WIN32
-#pragma warning(pop)
-#endif
+#include "include_vma.h"
 
 namespace rra
 {

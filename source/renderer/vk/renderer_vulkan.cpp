@@ -37,9 +37,9 @@ namespace rra
     namespace renderer
     {
         RendererVulkan::RendererVulkan(std::vector<RenderModule*> render_modules)
-            : current_frame_index_(0)
+            : device_(GetVkGraphicsContext()->GetDevice())
+            , current_frame_index_(0)
             , initialized_(false)
-            , device_(GetVkGraphicsContext()->GetDevice())
         {
             render_modules_                                            = render_modules;
             scene_uniform_buffer_.traversal_counter_use_custom_min_max = 1;

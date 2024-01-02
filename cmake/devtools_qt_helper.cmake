@@ -5,25 +5,6 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-# linuxdeployqt
-if (UNIX AND NOT APPLE)
-    include(FetchContent)
-    FetchContent_Declare(
-            linuxdeployqt
-            URL "http://bdcartifactory.amd.com/artifactory/DevToolsBDC/Assets/radeon_developer_panel/qt6/linuxdeployqt.zip"
-            SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/linuxdeployqt
-            DOWNLOAD_EXTRACT_TIMESTAMP true
-    )
-    FetchContent_MakeAvailable(linuxdeployqt)
-
-    find_program(LINUXDEPLOYQT "linuxdeployqt" HINTS "${PROJECT_SOURCE_DIR}/external/linuxdeployqt")
-    if (LINUXDEPLOYQT)
-        message(STATUS "Found linuxdeployqt: ${LINUXDEPLOYQT}")
-    else ()
-        message(ERROR "linuxdeployqt not found but is required for build")
-    endif ()
-endif ()
-
 # Attempt to automatically find Qt on the local machine
 if (UNIX AND NOT APPLE)
     find_package(Qt6 QUIET COMPONENTS Core Widgets Network Gui Svg Test GuiPrivate CorePrivate)

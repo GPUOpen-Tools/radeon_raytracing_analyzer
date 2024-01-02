@@ -56,19 +56,16 @@ As an alternative, the Qt 5.12.6 offline installer can be used [here][qt-offline
 to ~/Qt/Qt5.12.6 (the default of ~/Qt5.12.6 will not work).
 
 XCB libraries are required for Qt v5.15.x (they are not needed for older Qt versions). By default, the CMake configuration will attempt to copy
-these files from the Qt lib folder. If these files are installed elsewhere on the system or an older version of Qt is being used to build RRA,
-the --disable-extra-qt-lib-deploy pre_build.py script argument may be used. This will prevent the build configuration scripts from attempting to copy
-the libraries in the post build step. If needed, the XCB library files (libxcb*) can be obtained from the /lib folder of the Radeon Developer Tool
+these files from the Qt lib folder. If needed, the XCB library files (libxcb*) can be obtained from the /lib folder of the Radeon Developer Tool
 Suite download found [here](https://gpuopen.com/tools/).
 
 Run the python pre_build.py in the build folder.
 ```bash
 python3 pre_build.py
 ```
-Or run the pre_build.py script with the -qt option to specify another version of Qt (also use the --disable-extra-qt-lib-deploy flag since the XCB
-libraries aren't needed). For example:
+Or run the pre_build.py script with the -qt option to specify another version of Qt. For example:
 ```bash
-python3 pre_build.py --qt 5.12.6 --disable-extra-qt-lib-deploy
+python3 pre_build.py --qt 5.12.6
 ```
 The pre_build.py script will construct the output folders and build the necessary makefiles.
 To build the release build, use:
@@ -92,7 +89,7 @@ mkdir -p ~/Qt/Qt5.15.3/5.15.3/gcc_64
 sudo ln -s /usr/lib/x86_64-linux-gnu ~/Qt/Qt5.15.3/5.15.3/gcc_64/lib
 sudo ln -s /usr/include/x86_64-linux-gnu/qt5 ~/Qt/Qt5.15.3/5.15.3/gcc_64/include
 ```
-python3 pre_build.py --qt 5.15.3 --qt-system --disable-extra-qt-lib-deploy --build
+python3 pre_build.py --qt 5.15.3 --qt-system --build
 
 Some additional Qt components may be required, so install those:
 

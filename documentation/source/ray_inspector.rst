@@ -10,8 +10,9 @@ The left section shows a summary of the currently selected dispatch coordinate f
 
 .. image:: media/ray/ray_inspector_2.png
 
-In the top-left is the **Ray table**. The ray index provides the order in which the rays were cast in the
-application's shaders; index 0 will be the first ray generated.
+In the top-left is the **Ray tree**. The ray index provides the order in which the rays were cast in the
+application's shaders; index 0 will be the first ray generated. The rays that are shifted to the right are child rays,
+these rays were likely shot/invoked directly from a closest-hit shader which was invoked by the parent ray.
 
 Rays can be chosen by clicking on an entry in the table. The selected ray will be outlined in yellow by default. The ray
 colors can be changed in the Themes and colors settings pane.

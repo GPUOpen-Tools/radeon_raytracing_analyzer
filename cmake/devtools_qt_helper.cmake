@@ -1,9 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2019-2021 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
 cmake_minimum_required(VERSION 3.10)
+
 
 # Attempt to automatically find Qt on the local machine
 if (UNIX AND NOT APPLE)
@@ -150,3 +151,4 @@ if (Qt5_DIR OR Qt6_DIR)
         endif ()
     endfunction()
 endif ()
+

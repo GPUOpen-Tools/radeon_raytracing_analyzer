@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -45,6 +45,8 @@ namespace rra
     // @brief App colors.
     static const QColor kCheckboxEnableColor   = QColor(0, 122, 217);
     static const QColor kTableRowSelectedColor = QColor(204, 232, 255);
+    static const QColor kBackgroundColor       = QColor(255, 255, 255);
+    static const QColor kBackgroundListColor   = QColor(240, 240, 240);
 
     /// @brief Control print formatting.
     static const int  kQtTooltipFloatPrecision = 7;    ///< Decimal place precision for tooltip of printed floating point values.
@@ -68,6 +70,9 @@ namespace rra
             "\nThe scene file contains malformed data. If RRA captures are required, "
             "please ensure that raytracing buffers are not reused immediately after "
             "a DispatchRays call and defer reusing buffers until after a Present call.\n";
+        static const QString kDeleteRecentTraceTextIncompatible =
+            "\nThe scene file contains newer data structures that are incompatible with this version of RRA. "
+            "Please ensure that you have the latest version of Radeon Developer Tool Suite to continue.\n";
 
         static const QString kRemoveRecentTraceText = "\nThe scene is in the recent files list. Would you like to remove it?";
 

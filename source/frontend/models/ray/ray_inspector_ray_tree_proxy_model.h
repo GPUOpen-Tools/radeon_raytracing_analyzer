@@ -1,8 +1,8 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief  Header for a proxy filter that processes the ray inspector ray list.
+/// @brief  Header for a proxy filter that processes the ray inspector ray tree.
 //=============================================================================
 
 #ifndef RRA_MODELS_RAY_INSPECTOR_RAY_LIST_PROXY_MODEL_H_
@@ -10,13 +10,13 @@
 
 #include <QTableView>
 
-#include "models/table_proxy_model.h"
-#include "models/ray/ray_inspector_ray_list_item_model.h"
+#include "models/tree_view_proxy_model.h"
+#include "models/ray/ray_inspector_ray_tree_model.h"
 
 namespace rra
 {
     /// @brief Class to filter out and sort the BLAS list table.
-    class RayInspectorRayListProxyModel : public TableProxyModel
+    class RayInspectorRayTreeProxyModel : public TreeViewProxyModel
     {
         Q_OBJECT
 
@@ -24,10 +24,10 @@ namespace rra
         /// @brief Constructor.
         ///
         /// @param [in] parent The parent widget.
-        explicit RayInspectorRayListProxyModel(QObject* parent = nullptr);
+        explicit RayInspectorRayTreeProxyModel(QObject* parent = nullptr);
 
         /// @brief Destructor.
-        virtual ~RayInspectorRayListProxyModel();
+        virtual ~RayInspectorRayTreeProxyModel();
 
         /// @brief Initialize the ray table model.
         ///
@@ -36,7 +36,7 @@ namespace rra
         /// @param [in] num_columns The table column count.
         ///
         /// @return the model for the ray table model.
-        RayInspectorRayListItemModel* InitializeRayTableModels(QTableView* view, int num_rows, int num_columns);
+        RayInspectorRayTreeModel* InitializeRayTreeModels(ScaledTreeView* view);
 
     protected:
         /// @brief Make the filter run across multiple columns.

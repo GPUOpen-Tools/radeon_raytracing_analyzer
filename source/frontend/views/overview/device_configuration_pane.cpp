@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Device configuration pane.
@@ -23,6 +23,12 @@ DeviceConfigurationPane::DeviceConfigurationPane(QWidget* parent)
 
     model_ = new rra::DeviceConfigurationModel();
 
+    model_->InitializeModel(ui_->content_processor_brand_, rra::kDeviceConfigurationCPUName, "text");
+    model_->InitializeModel(ui_->content_processor_speed_, rra::kDeviceConfigurationCPUSpeed, "text");
+    model_->InitializeModel(ui_->content_physical_cores_, rra::kDeviceConfigurationCPUPhysicalCores, "text");
+    model_->InitializeModel(ui_->content_logical_cores_, rra::kDeviceConfigurationCPULogicalCores, "text");
+    model_->InitializeModel(ui_->content_system_memory_, rra::kDeviceConfigurationSystemMemorySize, "text");
+
     model_->InitializeModel(ui_->content_api_name_, rra::kDeviceConfigurationApiName, "text");
     model_->InitializeModel(ui_->content_raytracing_version_, rra::kDeviceConfigurationRaytracingVersion, "text");
     model_->InitializeModel(ui_->content_device_name_, rra::kDeviceConfigurationDeviceName, "text");
@@ -33,6 +39,9 @@ DeviceConfigurationPane::DeviceConfigurationPane(QWidget* parent)
     model_->InitializeModel(ui_->content_local_memory_bandwidth_, rra::kDeviceConfigurationLocalMemoryBandwidth, "text");
     model_->InitializeModel(ui_->content_local_memory_type_, rra::kDeviceConfigurationLocalMemoryType, "text");
     model_->InitializeModel(ui_->content_local_memory_bus_width_, rra::kDeviceConfigurationLocalMemoryBusWidth, "text");
+
+    model_->InitializeModel(ui_->content_driver_packaging_version_, rra::kDeviceConfigurationDriverPackagingVersion, "text");
+    model_->InitializeModel(ui_->content_driver_software_version_, rra::kDeviceConfigurationDriverSoftwareVersion, "text");
 
     ui_->label_raytracing_version_->hide();
     ui_->content_raytracing_version_->hide();
@@ -48,6 +57,32 @@ void DeviceConfigurationPane::showEvent(QShowEvent* event)
 {
     Refresh();
     QWidget::showEvent(event);
+
+    bool visible = model_->SystemInfoAvailable();
+
+    ui_->label_title_system_->setVisible(visible);
+    ui_->label_processor_brand_->setVisible(visible);
+    ui_->content_processor_brand_->setVisible(visible);
+    ui_->label_processor_speed_->setVisible(visible);
+    ui_->content_processor_speed_->setVisible(visible);
+    ui_->label_physical_cores_->setVisible(visible);
+    ui_->content_physical_cores_->setVisible(visible);
+    ui_->label_logical_cores_->setVisible(visible);
+    ui_->content_logical_cores_->setVisible(visible);
+    ui_->label_system_memory_->setVisible(visible);
+    ui_->content_system_memory_->setVisible(visible);
+
+    ui_->label_driver_information_->setVisible(visible);
+    ui_->label_driver_packaging_version_->setVisible(visible);
+    ui_->content_driver_packaging_version_->setVisible(visible);
+#ifdef WIN32
+    // Driver software version is Windows only.
+    ui_->label_driver_software_version_->setVisible(visible);
+    ui_->content_driver_software_version_->setVisible(visible);
+#else
+    ui_->label_driver_software_version_->setVisible(false);
+    ui_->content_driver_software_version_->setVisible(false);
+#endif
 }
 
 void DeviceConfigurationPane::Refresh()

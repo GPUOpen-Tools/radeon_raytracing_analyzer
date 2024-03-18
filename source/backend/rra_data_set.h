@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a data set.
@@ -20,6 +20,7 @@
 #include "public/rra_async_ray_history_loader.h"
 #include "api_info.h"
 #include "asic_info.h"
+#include "system_info_utils/source/system_info_reader.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,9 +34,10 @@ typedef struct RraDataSet
     size_t                                                 file_size_in_bytes;  ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
     time_t                                                 create_time;         ///< The time the trace was created.
     std::unique_ptr<rta::BvhBundle>                        bvh_bundle;  ///< The BVH bundle class encapsulating all the BLAS and TLAS for the loaded trace.
-    std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> async_ray_histories;  ///< The ray histories made available per asnyc work.
-    rra::ApiInfo                                           api_info  = {};       ///< The API info.
-    rra::AsicInfo                                          asic_info = {};       ///< The ASIC info.
+    std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> async_ray_histories;    ///< The ray histories made available per asnyc work.
+    rra::ApiInfo                                           api_info    = {};       ///< The API info.
+    rra::AsicInfo                                          asic_info   = {};       ///< The ASIC info.
+    system_info_utils::SystemInfo*                         system_info = nullptr;  ///< The System Info.
 } RraDataSet;
 
 /// Initialize the RRA data set from a file path.

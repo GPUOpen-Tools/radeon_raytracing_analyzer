@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the ray inspector model.
@@ -13,8 +13,8 @@
 #include "qt_common/custom_widgets/scaled_table_view.h"
 #include "qt_common/utils/model_view_mapper.h"
 
-#include "models/ray/ray_inspector_ray_list_item_model.h"
-#include "models/ray/ray_inspector_ray_list_proxy_model.h"
+#include "models/ray/ray_inspector_ray_tree_model.h"
+#include "models/ray/ray_inspector_ray_tree_proxy_model.h"
 #include "public/rra_ray_history.h"
 #include "public/renderer_interface.h"
 
@@ -59,7 +59,7 @@ namespace rra
         /// @param [in] table_view  The view to the table.
         /// @param [in] num_rows    Total rows of the table.
         /// @param [in] num_columns Total columns of the table.
-        void InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns);
+        void InitializeTreeModel(ScaledTreeView* tree_view);
 
         /// @brief Update the ray list table.
         ///
@@ -92,7 +92,7 @@ namespace rra
         /// @brief Get the proxy model. Used to set up a connection between the table being sorted and the UI update.
         ///
         /// @return the proxy model.
-        RayInspectorRayListProxyModel* GetProxyModel() const;
+        RayInspectorRayTreeProxyModel* GetProxyModel() const;
 
         /// @brief Toggle the instance transform wireframe rendering.
         void ToggleInstanceTransformWireframe();
@@ -161,11 +161,6 @@ namespace rra
         std::function<ViewerFitParams(rra::renderer::Camera*)> GetCameraFitFunction();
 
     public slots:
-        /// @brief Handle what happens when the search filter changes.
-        ///
-        /// @param [in] filter The search text filter.
-        void SearchTextChanged(const QString& filter);
-
         /// @brief Connect the incoming map of RendererAdapter instances with the model.
         ///
         /// @param [in] adapters A renderer adapter map used to alter various render states.
@@ -181,8 +176,8 @@ namespace rra
         std::vector<renderer::RayInspectorRay> GetRenderableRays(uint32_t* out_first_ray_outline, uint32_t* out_outline_count);
 
         RayInspectorKey                        key_ = {};                           ///< Dispatch identifiers
-        RayInspectorRayListItemModel*          table_model_;                        ///< Holds the BLAS list table data.
-        RayInspectorRayListProxyModel*         proxy_model_;                        ///< Proxy model for the BLAS list table.
+        RayInspectorRayTreeModel*              tree_model_;                         ///< Holds the ray tree data.
+        RayInspectorRayTreeProxyModel*         proxy_model_;                        ///< Proxy model for the ray tree.
         RayInspectorSceneCollectionModel*      scene_collection_model_;             ///< The scene collection model.
         QStandardItemModel*                    stats_table_model_ = nullptr;        ///< Model associated with the stats table.
         std::vector<Ray>                       rays_{};                             ///< The rays currently being shown in inspector.

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Device configuration model.
@@ -17,6 +17,12 @@ namespace rra
     /// Used to map UI widgets to their corresponding model data.
     enum DeviceConfigurationWidgets
     {
+        kDeviceConfigurationCPUName,
+        kDeviceConfigurationCPUSpeed,
+        kDeviceConfigurationCPUPhysicalCores,
+        kDeviceConfigurationCPULogicalCores,
+        kDeviceConfigurationSystemMemorySize,
+
         kDeviceConfigurationApiName,
         kDeviceConfigurationRaytracingVersion,
         kDeviceConfigurationDeviceName,
@@ -27,6 +33,9 @@ namespace rra
         kDeviceConfigurationLocalMemoryBandwidth,
         kDeviceConfigurationLocalMemoryType,
         kDeviceConfigurationLocalMemoryBusWidth,
+
+        kDeviceConfigurationDriverPackagingVersion,
+        kDeviceConfigurationDriverSoftwareVersion,
 
         kDeviceConfigurationNumWidgets
     };
@@ -46,6 +55,18 @@ namespace rra
 
         /// @brief Update the model with data from the back end.
         void Update();
+
+        /// @brief Is the SystemInfo chunk available.
+        ///
+        /// @return true if SystemInfo available, false if not.
+        bool SystemInfoAvailable();
+
+    private:
+        /// @brief Update the device information from the system info chunk.
+        void UpdateSystemInfo();
+
+        /// @brief Update the device information from the ASIC info chunk.
+        void UpdateAsicInfo();
     };
 
 }  // namespace rra

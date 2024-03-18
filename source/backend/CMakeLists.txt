@@ -1,16 +1,23 @@
+#######################################################################################################################
+### Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+### @author AMD Developer Tools Team
+#######################################################################################################################
+
 cmake_minimum_required(VERSION 3.11)
 
 project(Backend)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-include_directories(AFTER ../backend)
+include_directories(AFTER ../backend ../../external/rdf/rdf/inc)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 set( SOURCES
     # common interface include files
     "public/rra_api_info.h"
     "public/rra_asic_info.h"
+    "public/rra_system_info.h"
     "public/rra_assert.h"
     "public/rra_blas.h"
     "public/rra_bvh.h"
@@ -41,10 +48,10 @@ set( SOURCES
     "rra_data_set.h"
     "rra_print.cpp"
     "rra_ray_history.cpp"
+    "rra_system_info.cpp"
     "rra_tlas.cpp"
     "rra_tlas_impl.h"
     "rra_trace_loader.cpp"
-    "rra_ray_history.cpp"
     "surface_area_heuristic.cpp"
     "surface_area_heuristic.h"
     "rra_async_ray_history_loader.cpp"
@@ -111,6 +118,7 @@ set( LINUX_SOURCES
     "linux/safe_crt.cpp"
 )
 
+
 # specify output library name
 IF(WIN32)
     add_library(${PROJECT_NAME} ${SOURCES})
@@ -122,6 +130,8 @@ ENDIF(WIN32)
 devtools_target_options(${PROJECT_NAME})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_CXX_BINDINGS)
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DSYSTEM_INFO_ENABLE_RDF)
+
 IF (WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_PLATFORM_WINDOWS -D_CRT_SECURE_NO_WARNINGS)
 ELSEIF(UNIX)
@@ -139,4 +149,5 @@ foreach(source IN LISTS SOURCES)
     source_group("${source_path_msvc}" FILES "${source}")
 endforeach()
 ENDIF(WIN32)
+
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the main window.
@@ -11,6 +11,7 @@
 #include <QFileDialog>
 #include <QMimeData>
 #include <QScreen>
+#include <QtCore>
 
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
@@ -407,7 +408,7 @@ void MainWindow::CreateActions()
 
     close_trace_action_ = new QAction(tr("Close trace"), this);
     close_trace_action_->setShortcut(Qt::CTRL | Qt::Key_F4);
-    connect(close_trace_action_, &QAction::triggered, this, &MainWindow::CloseTrace);
+    connect(close_trace_action_, &QAction::triggered, this, &MainWindow::CloseTraceAndCycle);
     close_trace_action_->setDisabled(true);
 
     exit_action_ = new QAction(tr("Exit"), this);
@@ -548,6 +549,12 @@ void MainWindow::CloseTrace()
     setWindowTitle(GetTitleBarString());
 }
 
+void MainWindow::CloseTraceAndCycle()
+{
+    OpenNewInstance();
+    CloseTool();
+}
+
 void MainWindow::ResetUI()
 {
     // Default to first tab.
@@ -568,6 +575,30 @@ void MainWindow::ResetUI()
 
     UpdateTitlebar();
     pane_manager_.Reset();
+}
+
+void MainWindow::OpenNewInstance()
+{
+    // Fire up a new instance if desired trace is different than current.
+    const QString executable_name = qApp->applicationDirPath() + rra::TraceManager::Get().GetDefaultExeName();
+
+    // If the executable does not exist, put up a message box.
+    QFileInfo file(executable_name);
+    if (file.exists())
+    {
+        QProcess* process = new QProcess(this);
+        if (process != nullptr)
+        {
+            QStringList args;
+            process->startDetached(executable_name, args);
+        }
+    }
+    else
+    {
+        // If the executable does not exist, put up a message box.
+        const QString text = executable_name + " does not exist. Perhaps it was moved or deleted?";
+        QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, "Missing executable", text);
+    }
 }
 
 void MainWindow::OpenHelp()

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the View side pane.
@@ -253,6 +253,8 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->traversal_adapt_to_view_->SetNormalIcon(QIcon(kWandClickableIcon));
     ui_->traversal_adapt_to_view_->SetHoverIcon(QIcon(kWandHoverIcon));
     ui_->traversal_adapt_to_view_->setBaseSize(QSize(23, 23));
+
+    ui_->content_movement_speed_->installEventFilter(this);
 }
 
 ViewPane::~ViewPane()
@@ -859,4 +861,16 @@ void ViewPane::SetMovementSpeed(int slider_value)
 {
     float speed = model_->SetMovementSpeedFromSlider(slider_value);
     rra::Settings::Get().SetMovementSpeed(parent_pane_id_, static_cast<int>(speed));
+}
+
+bool ViewPane::eventFilter(QObject* obj, QEvent* event)
+{
+    RRA_UNUSED(obj);
+    if (event->type() == QEvent::Wheel)
+    {
+        // Accept event but do not act.
+        event->accept();
+        return true;
+    }
+    return false;
 }

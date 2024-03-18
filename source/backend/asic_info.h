@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the ASIC Info class.
@@ -154,8 +154,52 @@ namespace rra
             Lpddr5
         };
 
+        struct TraceChunkAsicInfo_v1
+        {
+            uint64_t        shader_core_clock_frequency;                 ///< Gpu core clock frequency in Hz.
+            uint64_t        memory_clock_frequency;                      ///< Memory clock frequency in Hz.
+            uint64_t        gpu_timestamp_frequency;                     ///< Frequency of the gpu timestamp clock in Hz.
+            uint64_t        max_shader_core_clock;                       ///< Maximum shader core clock frequency in Hz.
+            uint64_t        max_memory_clock;                            ///< Maximum memory clock frequency in Hz.
+            int32_t         device_id;                                   ///< Device ID.
+            int32_t         device_revision_id;                          ///< Device revision ID.
+            int32_t         vgprs_per_simd;                              ///< Number of VGPRs per SIMD.
+            int32_t         sgprs_per_simd;                              ///< Number of SGPRs per SIMD.
+            int32_t         shader_engines;                              ///< Number of shader engines.
+            int32_t         compute_units_per_shader_engine;             ///< Number of compute units per shader engine.
+            int32_t         simds_per_compute_unit;                      ///< Number of SIMDs per compute unit.
+            int32_t         wavefronts_per_simd;                         ///< Number of wavefronts per SIMD.
+            int32_t         minimum_vgpr_allocation;                     ///< Minimum number of VGPRs per wavefront.
+            int32_t         vgpr_allocation_granularity;                 ///< Allocation granularity of VGPRs.
+            int32_t         minimum_sgpr_allocation;                     ///< Minimum number of SGPRs per wavefront.
+            int32_t         sgpr_allocation_granularity;                 ///< Allocation granularity of SGPRs.
+            int32_t         hardware_contexts;                           ///< Number of hardware contexts.
+            TraceGpuType    gpu_type;                                    ///< The GPU type.
+            TraceGfxIpLevel gfx_ip_level;                                ///< The graphics IP level.
+            uint32_t        gpu_index;                                   ///< The GPU Index.
+            int32_t         ce_ram_size;                                 ///< Max size in bytes of CE RAM space available.
+            int32_t         ce_ram_size_graphics;                        ///< Max CE RAM size available to graphics engine in bytes.
+            int32_t         ce_ram_size_compute;                         ///< Max CE RAM size available to Compute engine in bytes.
+            int32_t         max_number_of_dedicatedc_us;                 ///< Number of CUs dedicated to real time audio queue.
+            int64_t         vram_size;                                   ///< Total number of bytes to VRAM.
+            int32_t         vram_bus_width;                              ///< Width of the bus to VRAM.
+            int32_t         l2_cache_size;                               ///< Total number of bytes in L2 Cache.
+            int32_t         l1_cache_size;                               ///< Total number of L1 cache bytes per CU.
+            int32_t         lds_size;                                    ///< Total number of LDS bytes per CU.
+            char            gpu_name[TRACE_GPU_NAME_MAX_SIZE];           ///< Name of the GPU, padded to 256 bytes.
+            float           alu_per_clock;                               ///< Number of ALUs per clock.
+            float           texture_per_clock;                           ///< Number of texture per clock.
+            float           prims_per_clock;                             ///< Number of primitives per clock.
+            float           pixels_per_clock;                            ///< Number of pixels per clock.
+            uint32_t        memory_ops_per_clock;                        ///< Number of memory operations per memory clock cycle.
+            TraceMemoryType memory_chip_type;                            ///< The GPU memory type.
+            uint32_t        lds_allocation_granularity;                  ///< LDS allocation granularity expressed in bytes.
+            uint16_t        cu_mask[TRACE_MAX_NUM_SE][TRACE_SA_PER_SE];  ///< Mask of present, non-harvested CUs (physical layout).
+        };
+
         struct TraceChunkAsicInfo
         {
+            uint32_t        pci_id;                                      ///< The ID of the GPU queried.
             uint64_t        shader_core_clock_frequency;                 ///< Gpu core clock frequency in Hz.
             uint64_t        memory_clock_frequency;                      ///< Memory clock frequency in Hz.
             uint64_t        gpu_timestamp_frequency;                     ///< Frequency of the gpu timestamp clock in Hz.

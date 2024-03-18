@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for RTA ray history counters.
@@ -10,6 +10,8 @@
 
 #include <memory>
 #include <stdexcept>
+
+#define GPURT_COUNTER_MAJOR_VERSION 2
 
 namespace rta
 {

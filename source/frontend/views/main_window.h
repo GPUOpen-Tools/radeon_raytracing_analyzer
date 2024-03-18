@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the main window.
@@ -69,12 +69,18 @@ public:
     /// This include references to models or event indices that rely on backend data.
     void ResetUI();
 
+    /// @brief  Open new RRA instance.
+    void OpenNewInstance();
+
 public slots:
     /// @brief Called when trace file finished loading.
     void OpenTrace();
 
     /// @brief Close an RRA trace file.
     void CloseTrace();
+
+    /// @brief Close the RRA trace file and cycle the app.
+    void CloseTraceAndCycle();
 
     /// @brief Open an RRA trace file via the file menu.
     ///

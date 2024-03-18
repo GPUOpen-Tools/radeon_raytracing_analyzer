@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for miscellaneous GPU definitions.
@@ -9,6 +9,11 @@
 #define RRA_BACKEND_BVH_GPU_DEF_H_
 
 #include <string>
+
+// RawAccelStruct currently supported version numbers.
+#define GPURT_ACCEL_STRUCT_MAJOR_VERSION 16
+#define GPURT_ACCEL_STRUCT_MINOR_VERSION 3
+#define GPURT_ACCEL_STRUCT_VERSION ((GPURT_ACCEL_STRUCT_MAJOR_VERSION << 16) | GPURT_ACCEL_STRUCT_MINOR_VERSION)
 
 namespace rta
 {

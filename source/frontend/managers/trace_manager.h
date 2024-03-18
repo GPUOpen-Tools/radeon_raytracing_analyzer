@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for the Trace Manager.
@@ -26,8 +26,9 @@ enum TraceLoadReturnCode
     kTraceLoadReturnSuccess,
     kTraceLoadReturnFailNoAS,
     kTraceLoadReturnFailMissingAS,
+    kTraceLoadReturnFailIncompatible,
     kTraceLoadReturnFail,
-    kTraceLoadReturnAlreadyOpened
+    kTraceLoadReturnAlreadyOpened,
 };
 
 Q_DECLARE_METATYPE(TraceLoadReturnCode)
@@ -94,6 +95,11 @@ namespace rra
         /// @param [in] clear_trace_callback The callback to be executed after the trace has been closed.
         void SetClearTraceCallback(std::function<void()> clear_trace_callback);
 
+        /// @brief Get the default executable name (OS-aware).
+        ///
+        /// @return The default name string.
+        QString GetDefaultExeName() const;
+
     public slots:
         /// @brief Load a trace.
         ///
@@ -134,11 +140,6 @@ namespace rra
         ///
         /// @return true if both traces are the same.
         bool SameTrace(const QFileInfo& new_trace) const;
-
-        /// @brief Get the default executable name (OS-aware).
-        ///
-        /// @return The default name string.
-        QString GetDefaultExeName() const;
 
         /// @brief Show a message box dependent on whether the active_trace_path is in the recent file list.
         ///

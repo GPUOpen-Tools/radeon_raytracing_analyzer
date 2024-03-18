@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ray history interface.
@@ -93,7 +93,7 @@ RraErrorCode RraRayGetRays(uint32_t dispatch_id, GlobalInvocationID invocation_i
 
         if (rta_ray.GetTokenCount() > 0 && (rta_ray.GetToken(begin_identifier.begin_token_index).IsBegin()))
         {
-            auto begin_data = reinterpret_cast<const rta::RayHistoryTokenBeginData*>(rta_ray.GetToken(begin_identifier.begin_token_index).GetPayload());
+            auto begin_data = reinterpret_cast<const rta::RayHistoryTokenBeginDataV2*>(rta_ray.GetToken(begin_identifier.begin_token_index).GetPayload());
             out_rays[i].tlas_address      = ((uint64_t)begin_data->accelStructAddrHi << 32) | begin_data->accelStructAddrLo;
             out_rays[i].ray_flags         = begin_data->rayFlags;
             out_rays[i].cull_mask         = begin_data->instanceInclusionMask;
@@ -111,6 +111,9 @@ RraErrorCode RraRayGetRays(uint32_t dispatch_id, GlobalInvocationID invocation_i
             out_rays[i].payload           = 0;  // This data does not seem available.
             out_rays[i].wave_id           = begin_data->hwWaveId;
             out_rays[i].id                = rta_ray.GetRayId();
+            out_rays[i].dynamic_id        = begin_data->dynamicId;
+            out_rays[i].parent_id         = begin_data->parentId;
+
         }
         else
         {

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH base class definitions.
@@ -53,6 +53,10 @@ namespace rta
     class IBvh
     {
     public:
+        // Global identifier of acceleration structure data in chunk files.
+        static constexpr const char* kAccelChunkIdentifier1 = "RawAccelStruc";
+        static constexpr const char* kAccelChunkIdentifier2 = "RawAccelStruct";
+
         /// @brief Constructor.
         IBvh() = default;
 

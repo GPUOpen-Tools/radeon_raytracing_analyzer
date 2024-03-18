@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ASIC Info class.
@@ -9,7 +9,7 @@
 
 #include "rdf/rdf/inc/amdrdf.h"
 
-static_assert(sizeof(rra::AsicInfo::TraceChunkAsicInfo) == 568, "AsicInfo does not have the expected byte size.");
+static_assert(sizeof(rra::AsicInfo::TraceChunkAsicInfo) == 576, "AsicInfo does not have the expected byte size.");
 
 namespace rra
 {
@@ -32,33 +32,48 @@ namespace rra
             return kRraErrorMalformedData;
         }
 
-        // Load in ASIC info chunk.
+        // Load in ASIC info chunks.
         const auto chunk_count = chunk_file.GetChunkCount(identifier);
-        if (chunk_count != 1)
+        if (chunk_count > 0)
         {
-            return kRraErrorMalformedData;
+            //  For now, just load in the first chunk seen.
+            auto chunk_index = 0;
+
+            std::uint32_t chunk_version = chunk_file.GetChunkVersion(identifier, chunk_index);
+
+            uint64_t header_size  = chunk_file.GetChunkHeaderSize(identifier, chunk_index);
+            uint64_t payload_size = chunk_file.GetChunkDataSize(identifier, chunk_index);
+
+            std::vector<std::uint8_t> header(header_size);
+
+            if (header_size > 0)
+            {
+                chunk_file.ReadChunkHeaderToBuffer(identifier, header.data());
+            }
+
+            if (payload_size > 0 && payload_size <= sizeof(TraceChunkAsicInfo))
+            {
+                if (chunk_version == 1)
+                {
+                    // copy old data to new chunk data format.
+                    chunk_file.ReadChunkDataToBuffer(identifier, chunk_index, &chunk_data_.shader_core_clock_frequency);
+                    chunk_data_.pci_id = 0;
+                }
+                else
+                {
+                    chunk_file.ReadChunkDataToBuffer(identifier, chunk_index, &chunk_data_);
+                }
+
+                chunk_data_valid_ = true;
+                return kRraOk;
+            }
+            else
+            {
+                return kRraMajorVersionIncompatible;
+            }
         }
 
-        std::uint32_t chunk_version = chunk_file.GetChunkVersion(identifier);
-        RRA_UNUSED(chunk_version);
-
-        uint64_t header_size  = chunk_file.GetChunkHeaderSize(identifier);
-        uint64_t payload_size = chunk_file.GetChunkDataSize(identifier);
-
-        std::vector<std::uint8_t> header(header_size);
-
-        if (header_size > 0)
-        {
-            chunk_file.ReadChunkHeaderToBuffer(identifier, header.data());
-        }
-
-        if (payload_size > 0)
-        {
-            chunk_file.ReadChunkDataToBuffer(identifier, &chunk_data_);
-        }
-
-        chunk_data_valid_ = true;
-        return kRraOk;
+        return kRraErrorMalformedData;
     }
 
     const char* AsicInfo::GetDeviceName() const

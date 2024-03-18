@@ -1,60 +1,51 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief  Implementation of a proxy filter that processes the ray list
+/// @brief  Implementation of a proxy filter that processes the ray tree
 /// table.
 //=============================================================================
 
 #include <math.h>
 
-#include "models/ray/ray_inspector_ray_list_proxy_model.h"
+#include "models/ray/ray_inspector_ray_tree_proxy_model.h"
 
-#include <QTableView>
+#include <QTreeView>
 
 #include "public/rra_assert.h"
 
-#include "models/ray/ray_inspector_ray_list_item_model.h"
+#include "models/ray/ray_inspector_ray_tree_model.h"
 #include "util/string_util.h"
 
 namespace rra
 {
-    RayInspectorRayListProxyModel::RayInspectorRayListProxyModel(QObject* parent)
-        : TableProxyModel(parent)
+    RayInspectorRayTreeProxyModel::RayInspectorRayTreeProxyModel(QObject* parent)
+        : TreeViewProxyModel(parent)
     {
     }
 
-    RayInspectorRayListProxyModel::~RayInspectorRayListProxyModel()
+    RayInspectorRayTreeProxyModel::~RayInspectorRayTreeProxyModel()
     {
     }
 
-    RayInspectorRayListItemModel* RayInspectorRayListProxyModel::InitializeRayTableModels(QTableView* view, int num_rows, int num_columns)
+    RayInspectorRayTreeModel* RayInspectorRayTreeProxyModel::InitializeRayTreeModels(ScaledTreeView* view)
     {
-        RayInspectorRayListItemModel* model = new RayInspectorRayListItemModel();
-        model->SetRowCount(num_rows);
-        model->SetColumnCount(num_columns);
+        RayInspectorRayTreeModel* model = new RayInspectorRayTreeModel();
 
         setSourceModel(model);
-        SetFilterKeyColumns({
-            kRayInspectorRayListColumnTraversalLoopCount,
-            kRayInspectorRayListColumnInstanceIntersections,
-            kRayInspectorRayListColumnAnyHitInvocations,
-            kRayInspectorRayListColumnHit,
-        });
-
         view->setModel(this);
 
         return model;
     }
 
-    bool RayInspectorRayListProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
+    bool RayInspectorRayTreeProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
     {
         RRA_UNUSED(source_row);
         RRA_UNUSED(source_parent);
         return true;
     }
 
-    bool RayInspectorRayListProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
+    bool RayInspectorRayTreeProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
     {
         int left_column  = left.column();
         int right_column = right.column();

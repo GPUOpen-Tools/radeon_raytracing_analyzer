@@ -1,12 +1,12 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief  Definitions for latest GPURT acceleration structure definitions.
+/// @brief  Definitions for rtip3 (Navi 4 BVH definitions).
 //=============================================================================
 
-#ifndef RRA_BACKEND_GPURT_TYPES_H_
-#define RRA_BACKEND_GPURT_TYPES_H_
+#ifndef RRA_BACKEND_RTIP3_TYPES_H_
+#define RRA_BACKEND_RTIP3_TYPES_H_
 
 #include <stdint.h>
 #include "../rt_binary_file_defs.h"
@@ -36,9 +36,6 @@ union AccelStructHeaderInfo
         uint32_t rebraid : 1;                 // Enable Rebraid
         uint32_t fusedInstanceNode : 1;       // Enable fused instance nodes
 
-        uint32_t highPrecisionBoxNodeEnable : 1;  // Internal nodes are encoded as high precision box nodes
-        uint32_t hwInstanceNodeEnable : 1;        // Instance nodes are formatted in hardware instance node format
-
         uint32_t flags : 16;  // AccelStructBuildFlags
     };
 
@@ -52,9 +49,7 @@ union AccelStructHeaderInfo2
     struct
     {
         uint32_t compacted : 1;  // This BVH has been compacted
-
-        uint32_t reserved : 1;  // Reserved for future use.
-
+        uint32_t reserved : 1;  // Unused bits
         uint32_t reserved2 : 30;  // Unused bits
     };
 
@@ -126,6 +121,7 @@ struct AccelStructHeader
     {
         return ((GetInfo() >> ACCEL_STRUCT_HEADER_INFO_REBRAID_FLAGS_SHIFT) & ACCEL_STRUCT_HEADER_INFO_REBRAID_FLAGS_MASK);
     }
+
 };
 
-#endif  // RRA_BACKEND_GPURT_ACCEL_STRUCT_H
+#endif  // RRA_BACKEND_RTIP3_TYPES_H_

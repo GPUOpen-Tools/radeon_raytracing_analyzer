@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan swapchain object.
@@ -245,8 +245,6 @@ namespace rra
 
         uint32_t SwapChain::WaitForSwapChain()
         {
-            vkAcquireNextImageKHR(device_->GetDevice(), swapchain_, UINT64_MAX, image_available_semaphores_[semaphore_index_], VK_NULL_HANDLE, &image_index_);
-
             prev_semaphore_index_ = semaphore_index_;
             semaphore_index_++;
 
@@ -257,6 +255,9 @@ namespace rra
 
             vkWaitForFences(device_->GetDevice(), 1, &command_buffer_executed_fences_[semaphore_index_], VK_TRUE, UINT64_MAX);
             vkResetFences(device_->GetDevice(), 1, &command_buffer_executed_fences_[semaphore_index_]);
+
+            vkAcquireNextImageKHR(
+                device_->GetDevice(), swapchain_, UINT64_MAX, image_available_semaphores_[prev_semaphore_index_], VK_NULL_HANDLE, &image_index_);
 
             return image_index_;
         }

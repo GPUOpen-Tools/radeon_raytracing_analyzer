@@ -1,4 +1,12 @@
+#######################################################################################################################
+### Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+### @author AMD Developer Tools Team
+#######################################################################################################################
+
 cmake_minimum_required(VERSION 3.11)
+
+set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
+
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 include(dev_tools)
@@ -8,7 +16,7 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 4)
+set(RRA_MINOR_VERSION 5)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()
@@ -51,6 +59,7 @@ ELSE(WIN32)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug)
 ENDIF(WIN32)
+
 
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
@@ -102,6 +111,7 @@ ENDMACRO(SOURCE_GROUP_BY_FOLDER)
 add_subdirectory(external/qt_common qt_common)
 add_subdirectory(external/rdf/imported/zstd)
 add_subdirectory(external/rdf/rdf)
+add_subdirectory(external/system_info_utils)
 add_subdirectory(source/backend backend)
 add_subdirectory(source/frontend frontend)
 add_subdirectory(source/renderer renderer)
@@ -187,4 +197,5 @@ add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/landscape.rra  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rra
 )
+
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH bundle definition.
@@ -132,12 +132,21 @@ namespace rta
                                                      RraErrorCode*             io_error_code);
 
     /// @brief Get ray tracing IP level of chunk file.
-    /// 
+    ///
     /// @param [in]     chunk_file     A Reference to a ChunkFile object which describes the file chunk being loaded.
     /// @param [in,out] io_error_code  An error code indicating whether the file loaded successfully.
-    /// 
+    ///
     /// @return The ray tracing IP level.
     RayTracingIpLevel GetRtIpLevel(rdf::ChunkFile& chunk_file, RraErrorCode* io_error_code);
+
+    /// @brief Get maximum major versions from the chunk file.
+    ///
+    /// @param [in]     chunk_file     A Reference to a ChunkFile object which describes the file chunk being loaded.
+    /// @param [in,out] max_as_major_version The maximum major version of acceleration structures in the file.
+    /// @param [in,out] max_dispatch_major_version The maximum major version of dispatches in the file.
+    ///
+    /// @return An error code indicating whether the file loaded successfully.
+    RraErrorCode GetMaxMajorVersions(rdf::ChunkFile& chunk_file, int* max_as_major_version, int* max_dispatch_major_version);
 
 }  // namespace rta
 

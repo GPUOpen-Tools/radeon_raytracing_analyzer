@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the View side pane.
@@ -241,6 +241,14 @@ private slots:
     void SetMovementSpeed(int value);
 
 private:
+    /// @brief An even filter to catch and discard some UI events.
+    ///
+    /// @param obj The object that the event came from.
+    /// @param event The event.
+    ///
+    /// @return True if the event was filtered.
+    bool eventFilter(QObject* obj, QEvent* event);
+
     /// @brief Updates the orientation widgets.
     void UpdateOrientationWidgets();
 

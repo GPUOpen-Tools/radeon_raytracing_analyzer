@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the API Info class.
@@ -42,7 +42,7 @@ namespace rra
         bool IsVulkan() const;
 
         /// @brief enum of API types.
-        enum class TraceApiType : uint32_t
+        enum class TraceApiType_v1 : uint32_t
         {
             DIRECTX_9  = 0,
             DIRECTX_11 = 1,
@@ -52,6 +52,20 @@ namespace rra
             OPENCL     = 5,
             MANTLE     = 6,
             GENERIC    = 7
+        };
+
+        enum class TraceApiType : uint32_t
+        {
+            GENERIC    = 0,
+            DIRECTX_9  = 1,
+            DIRECTX_11 = 2,
+            DIRECTX_12 = 3,
+            VULKAN     = 4,
+            OPENGL     = 5,
+            OPENCL     = 6,
+            MANTLE     = 7,
+            HIP        = 8,
+            METAL      = 9
         };
 
         /// @brief The API Info chunk data format.

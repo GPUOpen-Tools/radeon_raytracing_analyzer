@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan device object.
@@ -115,6 +115,7 @@ namespace rra
         {
             device_properties->AddDeviceExtensionName(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
             device_properties->AddDeviceExtensionName(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
+            device_properties->AddDeviceExtensionName(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME);
         }
 
         void Device::OnCreateEx(VkInstance instance, VkPhysicalDevice physical_device, DeviceProperties* device_properties, const WindowInfo* window_info)

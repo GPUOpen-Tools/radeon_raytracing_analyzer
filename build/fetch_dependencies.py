@@ -1,6 +1,6 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2020-2023 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief Script to fetch all external git and/or downloadable dependencies
@@ -21,6 +21,11 @@ import zipfile
 import tarfile
 import platform
 import argparse
+
+# Indices for fields in the git_mapping struct.
+kDestinationIndex = 0
+kCommitIndex = 1
+kShallowCloneIndex = 2
 
 # Check for the python 3.x name and import it as the 2.x name
 try:
@@ -48,19 +53,23 @@ from dependency_map import git_mapping
 def update_git_dependencies(git_mapping, update):
     for git_repo in git_mapping:
         # add script directory to path
-        tmp_path = os.path.join(script_root, git_mapping[git_repo][0])
+        tmp_path = os.path.join(script_root, git_mapping[git_repo][kDestinationIndex])
 
         # clean up path, collapsing any ../ and converting / to \ for Windows
         path = os.path.normpath(tmp_path)
 
         # required commit
-        reqd_commit = git_mapping[git_repo][1]
+        reqd_commit = git_mapping[git_repo][kCommitIndex]
+        shallow_clone = git_mapping[git_repo][kShallowCloneIndex]
 
         do_checkout = False
         if not os.path.isdir(path):
             # directory doesn't exist - clone from git
             log_print("Directory %s does not exist, using 'git clone' to get latest from %s" % (path, git_repo))
-            p = subprocess.Popen((["git", "clone", git_repo ,path]), stderr=subprocess.STDOUT)
+            if (shallow_clone):
+                p = subprocess.Popen((["git", "clone", "--depth", "1", "--branch", reqd_commit, git_repo ,path]), stderr=subprocess.STDOUT)
+            else:
+                p = subprocess.Popen((["git", "clone", git_repo ,path]), stderr=subprocess.STDOUT)
             p.wait()
             if(p.returncode == 0):
                 do_checkout = True

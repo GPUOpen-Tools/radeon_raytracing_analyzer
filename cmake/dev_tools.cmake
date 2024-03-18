@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2019-2023 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2024 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -76,3 +76,4 @@ function(devtools_target_options name)
     endif ()
 
 endfunction()
+

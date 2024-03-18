@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Error codes.
@@ -33,7 +33,9 @@ static const RraErrorCode kRraErrorOutOfMemory            = 0x80000008;  /// The
 static const RraErrorCode kRraErrorIndexOutOfRange        = 0x80000009;  /// The operation failed because an index was out of range.
 static const RraErrorCode kRraErrorPlatformFunctionFailed = 0x8000000a;  /// The operation failed because a platform-specific function failed.
 static const RraErrorCode kRraErrorInvalidChildNode       = 0x8000000b;  /// The operation failed because the child node was invalid.
-static const RraErrorCode kRraErrorNoASChunks             = 0x8000000c;  /// The operation failed because there were no acceleration structure chunks in the loaded trace.
+static const RraErrorCode kRraErrorNoASChunks = 0x8000000c;  /// The operation failed because there were no acceleration structure chunks in the loaded trace.
+static const RraErrorCode kRraMajorVersionIncompatible =
+    0x8000000d;  /// The operation failed because the major version across the data set had an incompatibility.
 
 /// Helper macro to return error code y from a function when a specific condition, x, is not met.
 #define RRA_RETURN_ON_ERROR(x, y) \

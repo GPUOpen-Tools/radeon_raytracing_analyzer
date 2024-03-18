@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Ray inspector pane.
@@ -8,11 +8,13 @@
 #include "views/ray/ray_inspector_pane.h"
 
 #include "views/widget_util.h"
-#include "models/ray/ray_inspector_ray_list_item_delegate.h"
 #include <settings/settings.h>
 #include "util/string_util.h"
 #include "managers/message_manager.h"
 #include "constants.h"
+#include "models/ray/ray_inspector_ray_tree_item.h"
+#include "models/ray/ray_inspector_ray_tree_model.h"
+
 #include <qt_common/utils/scaling_manager.h>
 
 RayInspectorPane::RayInspectorPane(QWidget* parent)
@@ -26,12 +28,20 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
     rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
 
     model_ = new rra::RayInspectorModel(rra::kRayInspectorRayListNumWidgets);
-    model_->InitializeTableModel(ui_->ray_table_, 0, rra::kRayInspectorRayListColumnCount);
+    model_->InitializeTreeModel(ui_->ray_tree_);
 
-    table_delegate_ = new RayInspectorRayTableItemDelegate();
-    ui_->ray_table_->setMinimumWidth(ScalingManager::Get().Scaled(375));
-    ui_->ray_table_->setItemDelegate(table_delegate_);
-    ui_->ray_table_->setSortingEnabled(false);
+    table_delegate_ = new RayInspectorRayTreeItemDelegate(this);
+    ui_->ray_tree_->setItemDelegate(table_delegate_);
+    ui_->ray_tree_->setMinimumWidth(ScalingManager::Get().Scaled(390));
+    ui_->ray_tree_->setSortingEnabled(false);
+    ui_->ray_tree_->SetFocusOnSelectedRayCallback([&]() { FocusOnSelectedRay(); });
+    ui_->ray_tree_->SetResetSceneCallback([&]() {
+        UpdateCameraController();
+        if (last_camera_controller_)
+        {
+            last_camera_controller_->ResetCameraPosition();
+        }
+    });
 
     QList<int> splitter_sizes = {1, 10000};
     ui_->ray_splitter_->setSizes(splitter_sizes);
@@ -42,14 +52,8 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
         this->SetRayCoordinate(dispatch_id, x, y, z);
     });
 
-    connect(ui_->ray_table_->selectionModel(), SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)), this, SLOT(SelectRay()));
-    connect(ui_->ray_table_, &QAbstractItemView::doubleClicked, [&]() {
-        UpdateCameraController();
-        if (last_camera_controller_)
-        {
-            last_camera_controller_->ResetCameraPosition();
-        }
-    });
+    connect(ui_->ray_tree_->selectionModel(), SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)), this, SLOT(SelectRay()));
+    connect(ui_->ray_tree_, &QAbstractItemView::doubleClicked, [&]() { FocusOnSelectedRay(); });
 
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=](bool geometry_mode) {
         ui_->viewer_container_widget_->ShowColoringMode(geometry_mode);
@@ -121,6 +125,8 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
 
 RayInspectorPane::~RayInspectorPane()
 {
+    delete table_delegate_;
+
     // Destroy the renderer interface if it was created.
     if (renderer_interface_ != nullptr)
     {
@@ -131,8 +137,15 @@ RayInspectorPane::~RayInspectorPane()
 
 void RayInspectorPane::SelectRay()
 {
-    QModelIndex index     = ui_->ray_table_->currentIndex();
-    auto        ray_index = index.row();
+    QModelIndex index = ui_->ray_tree_->currentIndex();
+    if (!index.isValid())
+    {
+        return;
+    }
+
+    QVariant variant_data = index.data(Qt::UserRole);
+    auto     ray_index    = variant_data.toInt();
+
     model_->SelectRayIndex(ray_index);
     UpdateRayValues();
     if (renderer_interface_ != nullptr)
@@ -282,7 +295,7 @@ void RayInspectorPane::DeselectRay()
 {
     ui_->selected_ray_label_->setText("No ray selected");
     ui_->ray_details_container_->hide();
-    ui_->ray_table_->clearSelection();
+    ui_->ray_tree_->clearSelection();
 }
 
 void RayInspectorPane::resizeEvent(QResizeEvent* event)
@@ -319,6 +332,15 @@ void RayInspectorPane::showEvent(QShowEvent* event)
         // No ray(s) selected, show an empty page.
         ui_->ray_valid_switch_->setCurrentIndex(1);
     }
+
+    auto proxy_model = model_->GetProxyModel();
+    if (proxy_model)
+    {
+        proxy_model->invalidate();
+        proxy_model->sort(0);
+    }
+    ui_->ray_tree_->expandAll();
+    ui_->ray_tree_->repaint();
 
     BasePane::showEvent(event);
 }
@@ -379,7 +401,6 @@ void RayInspectorPane::SetRayCoordinate(uint32_t dispatch_id, uint32_t x, uint32
     ui_->dispatch_indices_label_->setText(s);
     model_->SetKey({dispatch_id, x, y, z});
     UpdateRayValues();
-    ui_->ray_table_->selectRow(model_->GetSelectedRayIndex());
 
     auto opt_ray = model_->GetRay(0);
     if (opt_ray)
@@ -406,6 +427,8 @@ void RayInspectorPane::SetRayCoordinate(uint32_t dispatch_id, uint32_t x, uint32
     {
         renderer_interface_->MarkAsDirty();
     }
+
+    ui_->ray_tree_->expandAll();
 }
 
 void RayInspectorPane::InitializeRendererWidget(RendererWidget* renderer_widget, SidePaneContainer* side_panel_container)
@@ -684,6 +707,28 @@ std::optional<uint32_t> RayInspectorPane::CheckRayClick(rra::renderer::Camera& c
     return closest_ray_index;
 }
 
+// Helps iterate over tree model.
+void Iterate(const QModelIndex& index, const QAbstractItemModel* model, const std::function<void(const QModelIndex&)>& step_function)
+{
+    if (index.isValid())
+    {
+        step_function(index);
+    }
+    if ((index.flags() & Qt::ItemNeverHasChildren) || !model->hasChildren(index))
+    {
+        return;
+    }
+    auto rows = model->rowCount(index);
+    auto cols = model->columnCount(index);
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            Iterate(model->index(i, j, index), model, step_function);
+        }
+    }
+}
+
 void RayInspectorPane::MouseReleased(QMouseEvent* mouse_event)
 {
     UpdateCameraController();
@@ -723,8 +768,13 @@ void RayInspectorPane::MouseReleased(QMouseEvent* mouse_event)
                 auto ray_index = opt_ray_index.value();
                 model_->SelectRayIndex(ray_index);
 
-                auto model_index = ui_->ray_table_->model()->index(ray_index, 0);
-                ui_->ray_table_->setCurrentIndex(model_index);
+                // Search for model index and set to tree.
+                Iterate(ui_->ray_tree_->rootIndex(), ui_->ray_tree_->model(), [&](const QModelIndex& model_index) {
+                    if (model_index.data(Qt::UserRole).toInt() == int(ray_index))
+                    {
+                        ui_->ray_tree_->setCurrentIndex(model_index);
+                    }
+                });
             }
         }
     }

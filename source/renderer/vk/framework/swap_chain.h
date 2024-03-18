@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Vulkan swapchain object.
@@ -132,9 +132,9 @@ namespace rra
             const VkImageView& GetDepthInputImageView() const;
 
             /// @brief Get the size of the swapchain image.
-            /// 
+            ///
             /// @return The swapchain extent.
-            VkExtent2D  GetSwapchainExtent() const;
+            VkExtent2D GetSwapchainExtent() const;
 
         private:
             /// @brief Create a render target view for each back buffer image.

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Device configuration model.
@@ -11,6 +11,7 @@
 
 #include "public/rra_api_info.h"
 #include "public/rra_asic_info.h"
+#include "public/rra_system_info.h"
 
 #include "managers/trace_manager.h"
 #include "util/string_util.h"
@@ -29,6 +30,12 @@ namespace rra
 
     void DeviceConfigurationModel::ResetModelValues()
     {
+        SetModelData(kDeviceConfigurationCPUName, "-");
+        SetModelData(kDeviceConfigurationCPUSpeed, "-");
+        SetModelData(kDeviceConfigurationCPUPhysicalCores, "-");
+        SetModelData(kDeviceConfigurationCPULogicalCores, "-");
+        SetModelData(kDeviceConfigurationSystemMemorySize, "-");
+
         SetModelData(kDeviceConfigurationApiName, "-");
         SetModelData(kDeviceConfigurationRaytracingVersion, "-");
         SetModelData(kDeviceConfigurationDeviceName, "-");
@@ -39,12 +46,24 @@ namespace rra
         SetModelData(kDeviceConfigurationLocalMemoryBandwidth, "-");
         SetModelData(kDeviceConfigurationLocalMemoryType, "-");
         SetModelData(kDeviceConfigurationLocalMemoryBusWidth, "-");
+
+        SetModelData(kDeviceConfigurationDriverPackagingVersion, "-");
+        SetModelData(kDeviceConfigurationDriverSoftwareVersion, "-");
     }
 
     void DeviceConfigurationModel::Update()
     {
         ResetModelValues();
 
+        UpdateAsicInfo();
+        if (SystemInfoAvailable())
+        {
+            UpdateSystemInfo();
+        }
+    }
+
+    void DeviceConfigurationModel::UpdateAsicInfo()
+    {
         const char* api_name = RraApiInfoGetApiName();
         if (api_name != nullptr)
         {
@@ -107,4 +126,37 @@ namespace rra
             SetModelData(kDeviceConfigurationLocalMemoryBusWidth, QString::number(bus_width) + QString("-bit"));
         }
     }
+
+    void DeviceConfigurationModel::UpdateSystemInfo()
+    {
+        // CPU/System information.
+        SetModelData(kDeviceConfigurationCPUName, QString(RraSystemInfoGetCpuName()));
+        uint32_t cpu_clock_speed = 0;
+        RraSystemInfoGetCpuClockSpeed(&cpu_clock_speed);
+        SetModelData(kDeviceConfigurationCPUSpeed, rra::string_util::LocalizedValue(cpu_clock_speed) + QString(" MHz"));
+
+        uint32_t num_physical_cores = 0;
+        RraSystemInfoGetCpuPhysicalCores(&num_physical_cores);
+        SetModelData(kDeviceConfigurationCPUPhysicalCores, QString::number(num_physical_cores));
+
+        uint32_t num_logical_cores = 0;
+        RraSystemInfoGetCpuLogicalCores(&num_logical_cores);
+        SetModelData(kDeviceConfigurationCPULogicalCores, QString::number(num_logical_cores));
+
+        uint64_t physical_memory_size = 0;
+        RraSystemInfoGetSystemMemorySize(&physical_memory_size);
+
+        SetModelData(kDeviceConfigurationSystemMemorySize,
+                     rra::string_util::LocalizedValueMemory(physical_memory_size, false, true) + " " + RraSystemInfoGetSystemMemoryType());
+
+        // Driver information.
+        SetModelData(kDeviceConfigurationDriverPackagingVersion, QString(RraSystemInfoGetDriverPackagingVersion()));
+        SetModelData(kDeviceConfigurationDriverSoftwareVersion, QString(RraSystemInfoGetDriverSoftwareVersion()));
+    }
+
+    bool DeviceConfigurationModel::SystemInfoAvailable()
+    {
+        return RraSystemInfoAvailable();
+    }
+
 }  // namespace rra

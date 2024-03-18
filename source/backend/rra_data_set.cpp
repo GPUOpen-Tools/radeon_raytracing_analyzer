@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
@@ -61,6 +61,21 @@ static std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> LaunchAsyncRayHist
     return loaders;
 }
 
+RraErrorCode CheckMajorVersions(int as_major, int dispatch_major)
+{
+    if (as_major > GPURT_ACCEL_STRUCT_MAJOR_VERSION)
+    {
+        return kRraMajorVersionIncompatible;
+    }
+
+    if (dispatch_major > GPURT_COUNTER_MAJOR_VERSION)
+    {
+        return kRraMajorVersionIncompatible;
+    }
+
+    return kRraOk;
+}
+
 static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
 {
     auto         file       = rdf::Stream::OpenFile(path);
@@ -71,12 +86,37 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     // Load the API Info and ASIC info chunks if they exist in the file.
     if (ContainsChunk(rra::ApiInfo::kChunkIdentifier, chunk_file))
     {
-        data_set->api_info.LoadChunk(chunk_file);
+        error_code = data_set->api_info.LoadChunk(chunk_file);
+        if (error_code != kRraOk)
+        {
+            return error_code;
+        }
     }
     if (ContainsChunk(rra::AsicInfo::kChunkIdentifier, chunk_file))
     {
-        data_set->asic_info.LoadChunk(chunk_file);
+        error_code = data_set->asic_info.LoadChunk(chunk_file);
+        if (error_code != kRraOk)
+        {
+            return error_code;
+        }
     }
+
+    int max_as_major_version       = 0;
+    int max_dispatch_major_version = 0;
+    error_code                     = rta::GetMaxMajorVersions(chunk_file, &max_as_major_version, &max_dispatch_major_version);
+    if (error_code != kRraOk)
+    {
+        return error_code;
+    }
+
+    error_code = CheckMajorVersions(max_as_major_version, max_dispatch_major_version);
+    if (error_code != kRraOk)
+    {
+        return error_code;
+    }
+
+    bool system_info_result = system_info_utils::SystemInfoReader::Parse(chunk_file, *data_set->system_info);
+    RRA_UNUSED(system_info_result);
 
     // Launch ray history loaders.
     data_set->async_ray_histories.clear();
@@ -84,7 +124,7 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
 
     // Load the BVH chunks.
     rta::RayTracingIpLevel rtip_level = rta::GetRtIpLevel(chunk_file, &error_code);
-    data_set->bvh_bundle         = rta::LoadBvhBundleFromFile(chunk_file, rtip_level, rta::BvhBundleReadOption::kDefault, &error_code);
+    data_set->bvh_bundle              = rta::LoadBvhBundleFromFile(chunk_file, rtip_level, rta::BvhBundleReadOption::kDefault, &error_code);
 
     return error_code;
 }
@@ -102,6 +142,7 @@ RraErrorCode RraDataSetInitialize(const char* path, RraDataSet* data_set)
     memcpy(data_set->file_path, path, RRA_MINIMUM(RRA_MAXIMUM_FILE_PATH, path_length));
 
     data_set->file_loaded = false;
+    data_set->system_info = new system_info_utils::SystemInfo();
 
     // Error-checking to make sure the chunk file is valid.
     rdfChunkFile* chunk_file = nullptr;
@@ -129,5 +170,8 @@ RraErrorCode RraDataSetDestroy(RraDataSet* data_set)
 {
     data_set->file_loaded = false;
     data_set->bvh_bundle.reset();
+    delete data_set->system_info;
+    data_set->system_info = nullptr;
+
     return kRraOk;
 }

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific base class definition.
@@ -20,11 +20,6 @@
 #include "bvh/parent_block.h"
 
 #include "rdf/rdf/inc/amdrdf.h"
-
-// RawAccelStruct currently supported version numbers.
-#define GPURT_ACCEL_STRUCT_MAJOR_VERSION 16
-#define GPURT_ACCEL_STRUCT_MINOR_VERSION 3
-#define GPURT_ACCEL_STRUCT_VERSION ((GPURT_ACCEL_STRUCT_MAJOR_VERSION << 16) | GPURT_ACCEL_STRUCT_MINOR_VERSION)
 
 namespace rta
 {
@@ -100,10 +95,6 @@ namespace rta
     class IEncodedRtIp11Bvh : public IBvh
     {
     public:
-        // Global identifier of acceleration structure data in chunk files.
-        static constexpr const char* kAccelChunkIdentifier1 = "RawAccelStruc";
-        static constexpr const char* kAccelChunkIdentifier2 = "RawAccelStruct";
-
         /// @brief Definition for minimum file size.
         static constexpr std::uint32_t kMinimumFileSize = dxr::amd::kMetaDataAlignment + dxr::amd::kAccelerationStructureHeaderSize;
 

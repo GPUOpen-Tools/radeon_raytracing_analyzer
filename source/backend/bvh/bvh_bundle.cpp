@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH bundle implementation.
@@ -19,6 +19,7 @@
 
 #include "public/rra_assert.h"
 #include "public/rra_error.h"
+#include <public/rra_ray_history.h>
 
 namespace rta
 {
@@ -203,13 +204,13 @@ namespace rta
     {
         // Check if all expected identifiers are contained in the chunk file
         const char* bvh_identifier = nullptr;
-        if (IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kAccelChunkIdentifier1}, chunk_file))
+        if (IdentifiersContainedInChunkFile({IBvh::kAccelChunkIdentifier1}, chunk_file))
         {
-            bvh_identifier = IEncodedRtIp11Bvh::kAccelChunkIdentifier1;
+            bvh_identifier = IBvh::kAccelChunkIdentifier1;
         }
-        else if (IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kAccelChunkIdentifier2}, chunk_file))
+        else if (IdentifiersContainedInChunkFile({IBvh::kAccelChunkIdentifier2}, chunk_file))
         {
-            bvh_identifier = IEncodedRtIp11Bvh::kAccelChunkIdentifier2;
+            bvh_identifier = IBvh::kAccelChunkIdentifier2;
         }
         else
         {
@@ -321,13 +322,13 @@ namespace rta
     {
         // Check if all expected identifiers are contained in the chunk file
         const char* bvh_identifier = nullptr;
-        if (IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kAccelChunkIdentifier1}, chunk_file))
+        if (IdentifiersContainedInChunkFile({IBvh::kAccelChunkIdentifier1}, chunk_file))
         {
-            bvh_identifier = IEncodedRtIp11Bvh::kAccelChunkIdentifier1;
+            bvh_identifier = IBvh::kAccelChunkIdentifier1;
         }
-        else if (IdentifiersContainedInChunkFile({IEncodedRtIp11Bvh::kAccelChunkIdentifier2}, chunk_file))
+        else if (IdentifiersContainedInChunkFile({IBvh::kAccelChunkIdentifier2}, chunk_file))
         {
-            bvh_identifier = IEncodedRtIp11Bvh::kAccelChunkIdentifier2;
+            bvh_identifier = IBvh::kAccelChunkIdentifier2;
         }
         else
         {
@@ -367,6 +368,51 @@ namespace rta
 
         *io_error_code = kRraErrorNoASChunks;
         return RayTracingIpLevel::_None;
+    }
+
+    RraErrorCode GetMaxMajorVersions(rdf::ChunkFile& chunk_file, int* max_as_major_version, int* max_dispatch_major_version)
+    {
+        // Check if all expected identifiers are contained in the chunk file
+        const char* bvh_identifier = nullptr;
+        if (IdentifiersContainedInChunkFile({IBvh::kAccelChunkIdentifier1}, chunk_file))
+        {
+            bvh_identifier = IBvh::kAccelChunkIdentifier1;
+        }
+        else if (IdentifiersContainedInChunkFile({IBvh::kAccelChunkIdentifier2}, chunk_file))
+        {
+            bvh_identifier = IBvh::kAccelChunkIdentifier2;
+        }
+        else
+        {
+            return kRraErrorNoASChunks;
+        }
+
+        auto dispatch_identifier = RRA_RAY_HISTORY_RAW_TOKENS_IDENTIFIER;
+
+        const auto bvh_chunk_count      = chunk_file.GetChunkCount(bvh_identifier);
+        const auto dispatch_chunk_count = chunk_file.GetChunkCount(dispatch_identifier);
+
+        std::uint32_t max_as_mv   = 0;  // Acceleration structures.
+        std::uint32_t max_disp_mv = 0;  // Dispatches
+
+        for (auto ci = 0; ci < bvh_chunk_count; ++ci)
+        {
+            const std::uint32_t version       = chunk_file.GetChunkVersion(bvh_identifier, ci);
+            std::uint32_t       major_version = version >> 16;
+            max_as_mv                         = std::max(max_as_mv, major_version);
+        }
+
+        for (auto ci = 0; ci < dispatch_chunk_count; ++ci)
+        {
+            const std::uint32_t version = chunk_file.GetChunkVersion(dispatch_identifier, ci);
+            std::uint32_t       major_version = version >> 16;
+            max_disp_mv                       = std::max(max_disp_mv, major_version);
+        }
+
+        *max_as_major_version = max_as_mv;
+        *max_dispatch_major_version = max_disp_mv;
+
+        return kRraOk;
     }
 
     std::unique_ptr<BvhBundle> LoadBvhBundleFromFile(rdf::ChunkFile&           chunk_file,

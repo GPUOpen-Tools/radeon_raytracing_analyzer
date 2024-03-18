@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public ray history interface.
@@ -38,6 +38,9 @@ struct Ray
 
     uint32_t wave_id;
     uint32_t id;
+
+    uint32_t dynamic_id;
+    uint32_t parent_id;
 };
 
 enum RayEventType : uint32_t

@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Implementation of a QPushButton with vector based icons for various states.
@@ -79,7 +79,11 @@ void RraIconButton::paintEvent(QPaintEvent* event)
     }
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 void RraIconButton::enterEvent(QEvent* event)
+#else
+void RraIconButton::enterEvent(QEnterEvent* event)
+#endif
 {
     QPushButton::enterEvent(event);
     setAttribute(Qt::WA_UnderMouse, true);

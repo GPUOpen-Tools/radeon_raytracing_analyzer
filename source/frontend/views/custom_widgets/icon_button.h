@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Header file for a QPushButton derived widget with vector based icons
@@ -57,7 +57,11 @@ protected:
 
     /// Event triggered when the mouse is over the button.
     /// @param event Pointer to the event object.
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     virtual void enterEvent(QEvent* event) Q_DECL_OVERRIDE;
+#else
+    virtual void enterEvent(QEnterEvent* event) Q_DECL_OVERRIDE;
+#endif
 
     /// Event triggered when the mouse is no longer over the button.
     /// @param event Pointer to the event object.

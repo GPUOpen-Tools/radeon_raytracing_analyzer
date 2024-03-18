@@ -1,3 +1,8 @@
+#######################################################################################################################
+### Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+### @author AMD Developer Tools Team
+#######################################################################################################################
+
 cmake_minimum_required(VERSION 3.11)
 project(RadeonRaytracingAnalyzer)
 
@@ -41,6 +46,7 @@ ENDIF(UNIX)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
+
 
 set( SOURCES
     "constants.h"
@@ -158,12 +164,14 @@ set( SOURCES
     "models/ray/ray_list_table_item_delegate.h"
     "models/ray/ray_history_image_generator.cpp"
     "models/ray/ray_history_image_generator.h"
-    "models/ray/ray_inspector_ray_list_item_delegate.cpp"
-    "models/ray/ray_inspector_ray_list_item_delegate.h" 
-    "models/ray/ray_inspector_ray_list_item_model.cpp"
-    "models/ray/ray_inspector_ray_list_item_model.h"
-    "models/ray/ray_inspector_ray_list_proxy_model.cpp"
-    "models/ray/ray_inspector_ray_list_proxy_model.h"
+    "models/ray/ray_inspector_ray_tree_item_delegate.cpp"
+    "models/ray/ray_inspector_ray_tree_item_delegate.h" 
+    "models/ray/ray_inspector_ray_tree_item.cpp"
+    "models/ray/ray_inspector_ray_tree_item.h"
+    "models/ray/ray_inspector_ray_tree_model.cpp"
+    "models/ray/ray_inspector_ray_tree_model.h"
+    "models/ray/ray_inspector_ray_tree_proxy_model.cpp"
+    "models/ray/ray_inspector_ray_tree_proxy_model.h"
     "models/ray/ray_inspector_scene_collection_model.cpp"
     "models/ray/ray_inspector_scene_collection_model.h"
     "models/ray/ray_counters_item_model.cpp"
@@ -293,6 +301,8 @@ set( SOURCES
     "views/tlas/tlas_viewer_pane.cpp"
     "views/tlas/tlas_viewer_pane.h"
     "views/tlas/tlas_viewer_pane.ui"
+    "views/ray/ray_inspector_tree_view.cpp"
+    "views/ray/ray_inspector_tree_view.h"
     "views/ray/ray_inspector_pane.cpp"
     "views/ray/ray_inspector_pane.h"
     "views/ray/ray_inspector_pane.ui"
@@ -317,6 +327,7 @@ set( WINDOWS_SOURCES
     "windows/rra.rc"
     "windows/rra_icon.ico"
 )
+
 
 # Filter out the UI files and get the list of generated files
 set(UI_FILES ${SOURCES})
@@ -371,9 +382,9 @@ ENDIF(CMAKE_RELEASE_POSTFIX)
 
 # executable file library dependency list
 IF(WIN32)
-    target_link_libraries(${PROJECT_NAME} Backend Renderer rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} Backend Renderer system_info rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
 ELSEIF(UNIX)
-    target_link_libraries(${PROJECT_NAME} Backend Renderer rdf Qt::Widgets QtCustomWidgets QtUtils Threads::Threads ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} Backend Renderer system_info rdf Qt::Widgets QtCustomWidgets QtUtils Threads::Threads ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
 ENDIF()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -415,6 +426,7 @@ IF(WIN32)
         )
     ENDIF()
 
+
 ENDIF(WIN32)
 
 # Copy QT components into appropriate location in build destination
@@ -441,4 +453,5 @@ IF(UNIX AND NOT APPLE)
     ENDIF(NOT QT_SYSTEM)
 
 ENDIF(UNIX AND NOT APPLE)
+
 

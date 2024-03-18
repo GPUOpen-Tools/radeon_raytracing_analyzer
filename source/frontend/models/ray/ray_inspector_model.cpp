@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ray inspector model.
@@ -32,7 +32,7 @@ namespace rra
 {
     RayInspectorModel::RayInspectorModel(int32_t num_model_widgets)
         : ModelViewMapper(num_model_widgets)
-        , table_model_(nullptr)
+        , tree_model_(nullptr)
         , proxy_model_(nullptr)
     {
         scene_collection_model_ = new RayInspectorSceneCollectionModel();
@@ -40,19 +40,18 @@ namespace rra
 
     RayInspectorModel::~RayInspectorModel()
     {
-        delete table_model_;
+        delete tree_model_;
         delete proxy_model_;
         delete scene_collection_model_;
     }
 
     void RayInspectorModel::ResetModelValues()
     {
-        table_model_->removeRows(0, table_model_->rowCount());
-        table_model_->SetRowCount(0);
+        tree_model_->removeRows(0, tree_model_->rowCount());
         scene_collection_model_->ResetModelValues();
     }
 
-    void RayInspectorModel::InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns)
+    void RayInspectorModel::InitializeTreeModel(ScaledTreeView* tree_view)
     {
         if (proxy_model_ != nullptr)
         {
@@ -60,9 +59,9 @@ namespace rra
             proxy_model_ = nullptr;
         }
 
-        proxy_model_ = new RayInspectorRayListProxyModel();
-        table_model_ = proxy_model_->InitializeRayTableModels(table_view, num_rows, num_columns);
-        table_model_->Initialize(table_view);
+        proxy_model_ = new RayInspectorRayTreeProxyModel();
+        tree_model_  = proxy_model_->InitializeRayTreeModels(tree_view);
+        tree_model_->Initialize(tree_view);
     }
 
     void RayInspectorModel::SetKey(RayInspectorKey key)
@@ -77,7 +76,9 @@ namespace rra
         rays_.resize(ray_count);
         RraRayGetRays(key.dispatch_id, key.invocation_id, rays_.data());
 
-        for (uint32_t i{0}; i < ray_count; ++i)
+        std::unordered_map<uint32_t, std::shared_ptr<RayInspectorRayTreeItemData>> dynamic_id_to_ray_data;
+
+        for (uint32_t i = 0; i < ray_count; ++i)
         {
             IntersectionResult intersection_result{};
             RraRayGetIntersectionResult(key.dispatch_id, key.invocation_id, i, &intersection_result);
@@ -86,19 +87,56 @@ namespace rra
             AnyHitRayResult any_hit_result{};
             RraRayGetAnyHitInvocationData(key.dispatch_id, key.invocation_id, i, &any_hit_count, &any_hit_result);
 
-            RayInspectorRayListStatistics stats{};
-            stats.ray_event_count              = intersection_result.num_iterations;
-            stats.ray_instance_intersections   = intersection_result.num_instance_intersections;
-            stats.ray_any_hit_invocations      = any_hit_count;
-            stats.hit                          = intersection_result.hit_t >= 0.0;
-            intersection_result.any_hit_result = any_hit_result;
+            auto item_data                        = std::make_shared<RayInspectorRayTreeItemData>();
+            item_data->row_index                  = i;
+            item_data->ray_event_count            = intersection_result.num_iterations;
+            item_data->ray_instance_intersections = intersection_result.num_instance_intersections;
+            item_data->ray_any_hit_invocations    = any_hit_count;
+            item_data->hit                        = intersection_result.hit_t >= 0.0;
+            intersection_result.any_hit_result    = any_hit_result;
+
+            item_data->dynamic_id = rays_[i].dynamic_id;
+            item_data->parent_id  = rays_[i].parent_id;
 
             results_.push_back(intersection_result);
 
-            table_model_->AddRow(stats);
+            dynamic_id_to_ray_data[item_data->dynamic_id] = item_data;
         }
 
-        proxy_model_->invalidate();
+        using data_handle = std::shared_ptr<RayInspectorRayTreeItemData>;
+
+        // Create ray hierarchies.
+        for (auto& [dynamic_id, item_data] : dynamic_id_to_ray_data)
+        {
+            for (auto& [other_dynamic_id, other_item_data] : dynamic_id_to_ray_data)
+            {
+                // Am I the parent of the other item ?
+                if (dynamic_id == other_item_data->parent_id)
+                {
+                    item_data->child_rays.push_back(other_item_data);
+                }
+            }
+
+            // Sort child rays.
+            std::sort(item_data->child_rays.begin(), item_data->child_rays.end(), [](const data_handle& a, const data_handle& b) {
+                return a->row_index < b->row_index;
+            });
+        }
+
+        std::vector<std::shared_ptr<RayInspectorRayTreeItemData>> root_rays;
+        for (auto& [dynamic_id, item_data] : dynamic_id_to_ray_data)
+        {
+            if (item_data->parent_id == 0xFFFFFFFF || item_data->parent_id == 0)
+            {
+                root_rays.push_back(item_data);
+            }
+        }
+
+        // Sort root rays
+        std::sort(root_rays.begin(), root_rays.end(), [](const data_handle& a, const data_handle& b) { return a->row_index < b->row_index; });
+
+        tree_model_->ClearRays();
+        tree_model_->AddNewRays(root_rays);
 
         SelectRayIndex(0);
     }
@@ -108,7 +146,6 @@ namespace rra
         ResetModelValues();
         rays_.clear();
         results_.clear();
-        proxy_model_->invalidate();
         SelectRayIndex(0);
     }
 
@@ -160,13 +197,7 @@ namespace rra
         return tlas_index;
     }
 
-    void RayInspectorModel::SearchTextChanged(const QString& filter)
-    {
-        proxy_model_->SetSearchFilter(filter);
-        proxy_model_->invalidate();
-    }
-
-    RayInspectorRayListProxyModel* RayInspectorModel::GetProxyModel() const
+    RayInspectorRayTreeProxyModel* RayInspectorModel::GetProxyModel() const
     {
         return proxy_model_;
     }
@@ -342,9 +373,7 @@ namespace rra
         viewer_callbacks.get_context_options = [=](rra::SceneContextMenuRequest request) -> rra::SceneContextMenuOptions {
             RRA_UNUSED(request);
             rra::SceneContextMenuOptions options{};
-            options[kFocusOnSelectionName] = [&]() {
-                BurstResetCamera();
-            };
+            options[kFocusOnSelectionName] = [&]() { BurstResetCamera(); };
             return options;
         };
 

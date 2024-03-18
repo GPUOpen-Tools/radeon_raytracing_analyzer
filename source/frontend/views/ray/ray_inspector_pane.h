@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Ray inspector pane.
@@ -15,6 +15,9 @@
 #include "views/base_pane.h"
 #include <public/orientation_gizmo.h>
 #include <models/acceleration_structure_flags_table_item_delegate.h>
+#include "ray_inspector_tree_view.h"
+#include "models/ray/ray_inspector_ray_tree_item_delegate.h"
+
 
 /// @brief Class declaration.
 class RayInspectorPane : public BasePane
@@ -164,7 +167,7 @@ private:
     Ui::RayInspectorPane*             ui_{};                                 ///< Pointer to the Qt UI design.
     rra::RayInspectorModel*           model_{};                              ///< The ray inspector model.
     FlagTableItemDelegate*            flag_table_delegate_;                  ///< Delegate for drawing the ray flags table.
-    TableItemDelegate*                table_delegate_{};                     ///< The delegate to draw the table rows.
+    RayInspectorRayTreeItemDelegate* table_delegate_         = nullptr;     ///< The delegate to draw the table rows.
     rra::renderer::RendererInterface* renderer_interface_     = nullptr;     ///< The renderer used to draw frames of the scene.
     RendererWidget*                   renderer_widget_        = nullptr;     ///< The renderer widget instance used to draw the scene.
     rra::ViewerIO*                    last_camera_controller_ = nullptr;     ///< The last camera controller.

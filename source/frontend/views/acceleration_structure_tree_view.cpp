@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2021-2023 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Implementation of an acceleration structure tree view.
@@ -91,5 +91,5 @@ bool AccelerationStructureTreeView::event(QEvent* event)
         break;
     }
 
-    return QWidget::event(event);
+    return ScaledTreeView::event(event);
 }

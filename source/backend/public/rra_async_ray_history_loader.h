@@ -31,7 +31,7 @@ public:
 
     /// @brief Get the raw trace.
     /// @return The trace.
-    std::shared_ptr<rta::RayHistoryTrace> GetRayHistoryTrace();
+    rta::RayHistoryTrace* GetRayHistoryTrace();
 
     /// @brief Get the counter info of the dispatch.
     /// @return The counter info.
@@ -82,10 +82,11 @@ private:
     /// @brief Find dispatch dims from token data.
     void FindDispatchDimsFromTokens();
 
-    int64_t           dispatch_index_ = 0;        ///< The dispatch index to load.
-    std::future<void> process_;                   ///< The future of the loading process.
-    std::mutex        process_mutex_;             ///< A mutex to manage loading steps and feedback.
-    bool              process_complete_ = false;  ///< A flag to indicate if the loading is complete.
+    int64_t           dispatch_index_ = 0;              ///< The dispatch index to load.
+    std::future<void> process_;                         ///< The future of the loading process.
+    std::mutex        process_mutex_;                   ///< A mutex to manage loading steps and feedback.
+    bool              process_complete_       = false;  ///< A flag to indicate if the loading is complete.
+    bool              process_complete_local_ = false;  ///< A thread-local flag to check if the process is complete, so it can be accessed without a lock.
 
     size_t bytes_required_  = 0;  ///< Number of bytes required to finish loading.
     size_t bytes_processed_ = 0;  ///< Number of bytes processed.

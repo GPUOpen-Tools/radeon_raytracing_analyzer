@@ -61,7 +61,7 @@ namespace rra
         instance_intersections_per_ray_ = instance_intersections_per_ray;
 
         QModelIndex top_left     = createIndex(0, 0);
-        QModelIndex bottom_right = createIndex(num_rows_, num_columns_);
+        QModelIndex bottom_right = createIndex(num_rows_ - 1, num_columns_ - 1);
         emit        dataChanged(top_left, bottom_right);
     }
 

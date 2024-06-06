@@ -14,7 +14,6 @@
 #include <QFileInfo>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "constants.h"
 #include "version.h"
@@ -261,8 +260,8 @@ void WelcomePane::NotifyOfNewVersion(UpdateCheck::ThreadController* thread, cons
         // This dialog will get deleted when the WelcomePane is deleted.
         UpdateCheckResultsDialog* results_dialog = new UpdateCheckResultsDialog(this);
         results_dialog->setWindowFlags((results_dialog->windowFlags() & ~Qt::WindowContextHelpButtonHint) | Qt::MSWindowsFixedSizeDialogHint);
-        results_dialog->setFixedSize(ScalingManager::Get().Scaled(rra::kUpdatesResultsDialogWidth),
-                                     ScalingManager::Get().Scaled(rra::kUpdatesResultsDialogHeight));
+        results_dialog->setFixedSize(rra::kUpdatesResultsDialogWidth,
+                                     rra::kUpdatesResultsDialogHeight);
         results_dialog->SetShowTags(false);
         results_dialog->SetResults(update_check_results);
 

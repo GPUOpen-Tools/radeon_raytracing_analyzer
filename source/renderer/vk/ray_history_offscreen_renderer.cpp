@@ -7,6 +7,11 @@
 
 #include "ray_history_offscreen_renderer.h"
 
+#undef emit
+#include <execution>
+#include <algorithm>
+#define emit
+
 #include "framework/device.h"
 #include "vk_graphics_context.h"
 
@@ -63,12 +68,14 @@ namespace rra
                 return;
             }
 
-            uint32_t                     data_count{width_ * height_ * depth_};
-            std::vector<DispatchIdData>  data(data_count);
-            std::vector<DispatchRayData> ray_data;
+            uint32_t                    data_count{width_ * height_ * depth_};
+            std::vector<DispatchIdData> data(data_count);
 
             *out_max_count = {};
 
+            // Get ray counts.
+            uint32_t ray_data_size{0};
+            uint32_t max_ray_count{0};
             for (uint32_t x{0}; x < width_; ++x)
             {
                 for (uint32_t y{0}; y < height_; ++y)
@@ -78,7 +85,26 @@ namespace rra
                         uint32_t ray_count{};
                         RraRayGetRayCount(dispatch_id, {x, y, z}, &ray_count);
                         uint32_t data_idx{x + y * width_ + z * width_ * height_};
-                        data[data_idx].ray_count = ray_count;
+                        data[data_idx].ray_count       = ray_count;
+                        data[data_idx].first_ray_index = ray_data_size;
+                        ray_data_size += ray_count;
+                        max_ray_count = std::max(ray_count, max_ray_count);
+                    }
+                }
+            }
+
+            std::vector<DispatchRayData> ray_data(ray_data_size);
+            std::vector<uint32_t>        x_coords(width_);
+            std::iota(x_coords.begin(), x_coords.end(), 0);
+            std::for_each(std::execution::par, x_coords.begin(), x_coords.end(), [&](uint32_t x) {
+                std::vector<Ray> rays{};
+                rays.resize(max_ray_count);
+                for (uint32_t y{0}; y < height_; ++y)
+                {
+                    for (uint32_t z{0}; z < depth_; ++z)
+                    {
+                        uint32_t data_idx{x + y * width_ + z * width_ * height_};
+                        uint32_t ray_count{data[data_idx].ray_count};
 
                         if (ray_count > out_max_count->ray_count)
                         {
@@ -116,23 +142,20 @@ namespace rra
                             out_max_count->any_hit_invocation_count = total_any_hit_count;
                         }
 
-                        std::vector<Ray> rays;
-                        rays.resize(ray_count);
 
                         RraRayGetRays(dispatch_id, {x, y, z}, rays.data());
-                        data[data_idx].first_ray_index = (uint32_t)ray_data.size();
 
-                        for (auto& ray : rays)
+                        for (uint32_t ray_idx{0}; ray_idx < ray_count; ++ray_idx)
                         {
-                            DispatchRayData individual_ray_data = {};
-                            individual_ray_data.direction.x     = ray.direction[0];
-                            individual_ray_data.direction.y     = ray.direction[1];
-                            individual_ray_data.direction.z     = ray.direction[2];
-                            ray_data.push_back(individual_ray_data);
+                            DispatchRayData individual_ray_data                        = {};
+                            individual_ray_data.direction.x                            = rays[ray_idx].direction[0];
+                            individual_ray_data.direction.y                            = rays[ray_idx].direction[1];
+                            individual_ray_data.direction.z                            = rays[ray_idx].direction[2];
+                            ray_data[(size_t)data[data_idx].first_ray_index + ray_idx] = individual_ray_data;
                         }
                     }
                 }
-            }
+            });
 
             if (ray_data.empty())
             {

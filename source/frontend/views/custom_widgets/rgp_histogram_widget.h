@@ -73,11 +73,6 @@ public slots:
     /// @param [in] max_value       The upper bound of the selection range.
     void SetSelectionAttributes(int32_t min_value, int32_t max_value);
 
-private slots:
-
-    /// @brief Handles DPI scale changes and adjusts the widget size accordingly.
-    void OnScaleFactorChanged();
-
 protected:
     /// @brief Handles window resize events
     ///

@@ -52,9 +52,6 @@ protected:
     virtual void UpdateWidgets(const QModelIndex& index) override;
 
 private slots:
-    /// @brief Called when DPI changes.
-    void OnScaleFactorChanged();
-
     /// @brief Slot to handle whan happens when one of the slider handles is moved.
     ///
     /// @param [in] min_value The value of the left (minimum) slider handle.

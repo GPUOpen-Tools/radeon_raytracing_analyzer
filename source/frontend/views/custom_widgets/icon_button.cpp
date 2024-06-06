@@ -15,16 +15,12 @@
 #include <QStylePainter>
 #include <QStyleOptionButton>
 
-#include "qt_common/utils/scaling_manager.h"
-
 RraIconButton::RraIconButton(QWidget* parent)
     : QPushButton(parent)
 {
     setFlat(true);
 
     setBaseSize(QSize(kDefaultIconSize, kDefaultIconSize));
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &RraIconButton::updateGeometry);
 }
 
 RraIconButton::RraIconButton(QWidget* parent, const QString& normal_icon_resource, const QString& hover_icon_resource)
@@ -35,13 +31,10 @@ RraIconButton::RraIconButton(QWidget* parent, const QString& normal_icon_resourc
     setFlat(true);
 
     setBaseSize(QSize(kDefaultIconSize, kDefaultIconSize));
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &RraIconButton::updateGeometry);
 }
 
 RraIconButton::~RraIconButton()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &RraIconButton::updateGeometry);
 }
 
 void RraIconButton::SetNormalIcon(const QIcon& icon)
@@ -57,8 +50,6 @@ void RraIconButton::SetHoverIcon(const QIcon& icon)
 QSize RraIconButton::sizeHint() const
 {
     QSize size_hint(baseSize());
-
-    size_hint = ScalingManager::Get().Scaled(size_hint);
 
     return size_hint;
 }

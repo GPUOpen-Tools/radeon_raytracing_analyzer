@@ -9,8 +9,6 @@
 
 #include <QApplication>
 
-#include "qt_common/utils/scaling_manager.h"
-
 namespace rra
 {
     /// The single instance of the file loading animation manager.
@@ -95,7 +93,7 @@ namespace rra
             file_load_animation_->setGeometry(parent->x(), parent->y() + height_offset, width, height);
 
             // Set the contents margin so that the animated bars only cover a small area in the middle of the screen.
-            const int desired_loading_dimension = ScalingManager::Get().Scaled(200);
+            const int desired_loading_dimension = 200;
             int       vertical_margin           = (height - desired_loading_dimension) / 2;
             int       horizontal_margin         = (width - desired_loading_dimension) / 2;
             file_load_animation_->setContentsMargins(horizontal_margin, vertical_margin, horizontal_margin, vertical_margin);

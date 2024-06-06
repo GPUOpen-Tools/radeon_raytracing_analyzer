@@ -16,8 +16,6 @@
 #include "public/renderer_types.h"
 #include "public/orientation_gizmo.h"
 
-constexpr int kTargetFps            = 512.0f;
-constexpr int kMillisecondsPerFrame = static_cast<int>((1.0f / kTargetFps) * 1000.0f);
 const char*   kFocusInBorderStyle   = "border-style: solid; border-width: 3px; border-color: rgb(0, 122, 217);";
 const char*   kFocusOutBorderStyle  = "border-style: solid; border-width: 3px; border-color: rgb(200,200,200);";
 
@@ -42,45 +40,45 @@ RendererWidget::RendererWidget(QWidget* parent)
     setAttribute(Qt::WA_NoSystemBackground);
 
     parent->setStyleSheet(kFocusOutBorderStyle);
+
+    // Use a queued connection to request the renderer to update. Use a queued connection so that we don't interrupt any work already being done.
+    // Ask the renderer to update once the application is finished processing pending events.
+    connect(this, &RendererWidget::RequestRenderFrame, this, &RendererWidget::RenderFrame, Qt::ConnectionType::QueuedConnection);
 }
 
 void RendererWidget::Run()
 {
-    timer_.start(kMillisecondsPerFrame);
     render_active_ = started_ = true;
 }
 
 void RendererWidget::PauseFrames()
 {
-    if (!timer_.isActive() || !started_)
+    if (!started_)
     {
         return;
     }
 
-    disconnect(&timer_, &QTimer::timeout, this, &RendererWidget::RenderFrame);
-    timer_.stop();
     render_active_ = false;
 
-    renderer_interface_->WaitForGpu();
+    if (renderer_interface_)
+    {
+        renderer_interface_->WaitForGpu();
+    }
 }
 
 void RendererWidget::ContinueFrames()
 {
-    if (timer_.isActive() || !started_)
+    if (!started_)
     {
         return;
     }
 
-    connect(&timer_, &QTimer::timeout, this, &RendererWidget::RenderFrame);
-    timer_.start(kMillisecondsPerFrame);
     render_active_ = true;
 }
 
 void RendererWidget::Release()
 {
     device_initialized_ = false;
-    disconnect(&timer_, &QTimer::timeout, this, &RendererWidget::RenderFrame);
-    timer_.stop();
 
     assert(renderer_interface_ != nullptr);
     if (renderer_interface_ != nullptr)
@@ -109,6 +107,7 @@ void RendererWidget::SetRendererInterface(rra::renderer::RendererInterface* rend
         window_info_.connection = connection;
 #endif
         renderer_interface_->SetWindowInfo(&window_info_);
+        HandleRenderFrameRequest();
     }
     else
     {
@@ -148,10 +147,6 @@ void RendererWidget::showEvent(QShowEvent* event)
 bool RendererWidget::Initialize()
 {
     bool result = CreateDevice();
-    if (result)
-    {
-        connect(&timer_, &QTimer::timeout, this, &RendererWidget::RenderFrame);
-    }
 
     // Tracks mouse even if no buttons are being pressed. Needed when hovering over orientation gizmo.
     setMouseTracking(true);
@@ -180,7 +175,6 @@ bool RendererWidget::CreateDevice()
 
 void RendererWidget::RenderFrame()
 {
-    assert(renderer_interface_ != nullptr);
     if (renderer_interface_ != nullptr)
     {
         if (render_active_)
@@ -189,7 +183,13 @@ void RendererWidget::RenderFrame()
 
             renderer_interface_->DrawFrame();
         }
+        HandleRenderFrameRequest();
     }
+}
+
+void RendererWidget::HandleRenderFrameRequest()
+{
+    emit RequestRenderFrame();
 }
 
 void RendererWidget::ResizeSwapChain(int width, int height)

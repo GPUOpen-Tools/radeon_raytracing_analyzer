@@ -280,6 +280,27 @@ namespace rra
         /// @brief Called when the user changes control styles.
         virtual void ControlStyleChanged();
 
+    protected:
+        // Stores the internal state of ViewerIO objects that is needed to serialize/deserialize.
+        // We don't change the controller's state as we read the string since we may return an
+        // error code and don't want to leave the camera in a partially changed state.
+        // So temporarily store the values in this struct until we know there are no errors.
+        struct ReadableStringState
+        {
+            glm::vec3           euler_angles;
+            glm::mat4           axis_free_rotation;
+            glm::vec3           arc_center_position;
+            float               arc_radius;
+            ViewerIOOrientation orientation;
+            float               fov;
+            bool                orthographic;
+        };
+
+        /// @brief After parsing the readable string, this function will update the state of the ViewerIO.
+        /// 
+        /// @param state The parsed readable string.
+        virtual void UpdateFromReadableStringState(const ReadableStringState& state);
+
     private:
         /// @brief Whether the mouse moved a small enough distance between press and release to cast a ray.
         ///

@@ -9,8 +9,6 @@
 #include <QPen>
 #include <QPainter>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "util/rra_util.h"
 #include "views/custom_widgets/themes_and_colors_item_button.h"
 
@@ -35,12 +33,11 @@ void ThemesAndColorsItemButton::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
 
-    ScalingManager& sm = ScalingManager::Get();
     QPainter        painter(this);
 
-    const int position_adjust = sm.Scaled(1);
+    const int position_adjust = 1;
     const int size_adjust     = position_adjust * 2;
-    const int outline_width   = sm.Scaled(2);
+    const int outline_width   = 2;
 
     // Rectangles used for drawing button and its border.
     QRect r1(position_adjust, position_adjust, this->size().width() - size_adjust, this->size().height() - size_adjust);

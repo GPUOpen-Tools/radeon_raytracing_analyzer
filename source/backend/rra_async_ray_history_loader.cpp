@@ -153,7 +153,13 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
 
 bool RraAsyncRayHistoryLoader::IsDone()
 {
+    if (process_complete_local_)
+    {
+        return true;
+    }
+
     std::scoped_lock<std::mutex> plock(process_mutex_);
+    process_complete_local_ = process_complete_;
     return process_complete_;
 }
 
@@ -185,10 +191,16 @@ bool RraAsyncRayHistoryLoader::HasErrors()
 
 void RraAsyncRayHistoryLoader::WaitProcess()
 {
+    if (process_complete_local_)
+    {
+        return;
+    }
+
     bool get_the_future = false;
     {
         std::scoped_lock<std::mutex> plock(process_mutex_);
         get_the_future = !process_complete_;
+        process_complete_local_ = process_complete_;
     }
 
     if (get_the_future)
@@ -232,11 +244,10 @@ void RraAsyncRayHistoryLoader::FindDispatchDimsFromTokens()
     total_dispatch_indices_ = dim_x_ * dim_y_ * dim_z_;
 }
 
-std::shared_ptr<rta::RayHistoryTrace> RraAsyncRayHistoryLoader::GetRayHistoryTrace()
+rta::RayHistoryTrace* RraAsyncRayHistoryLoader::GetRayHistoryTrace()
 {
     WaitProcess();
-
-    return ray_history_trace_;
+    return ray_history_trace_.get();
 }
 
 GpuRt::CounterInfo RraAsyncRayHistoryLoader::GetCounterInfo()

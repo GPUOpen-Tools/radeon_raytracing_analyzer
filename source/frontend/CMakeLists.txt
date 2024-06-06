@@ -31,7 +31,7 @@ IF(UNIX)
     # Include the qt version subdirectory path.
     set(result "")
     set(QT_NATIVE_PATH "")
-    foreach(path ${Qt5Gui_INCLUDE_DIRS})
+    foreach(path ${Qt6Gui_INCLUDE_DIRS})
         string(FIND ${path} "QtGui" result)
         if (NOT ${result} STREQUAL "-1")
             set(QT_NATIVE_PATH ${path}/${QT_VERSION}/QtGui)
@@ -384,7 +384,7 @@ ENDIF(CMAKE_RELEASE_POSTFIX)
 IF(WIN32)
     target_link_libraries(${PROJECT_NAME} Backend Renderer system_info rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
 ELSEIF(UNIX)
-    target_link_libraries(${PROJECT_NAME} Backend Renderer system_info rdf Qt::Widgets QtCustomWidgets QtUtils Threads::Threads ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} Backend Renderer system_info rdf Qt::Widgets QtCustomWidgets QtUtils Threads::Threads tbb ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
 ENDIF()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -417,6 +417,7 @@ IF(WIN32)
         COMMAND ${CMAKE_COMMAND} -E echo "copying Visual Studio redist files from ${VSREDISTDIR} to $<TARGET_FILE_DIR:${PROJECT_NAME}>"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_1.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/msvcp140_2.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/concrt140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VSREDISTDIR}/vcruntime140.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
@@ -443,6 +444,11 @@ elseif (APPLE)
 endif()
 
 IF(UNIX AND NOT APPLE)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "copying Linux runtime binaries"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different /usr/lib/x86_64-linux-gnu/libtbb.so.12 $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib/libtbb.so.12
+    )
+
     IF(NOT QT_SYSTEM)
         # Call chrpath on system to override executable file RPATH.
         find_program(CHRPATH_EXECUTABLE NAMES chrpath)

@@ -15,8 +15,6 @@
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "models/ray/ray_list_item_model.h"
 #include "util/string_util.h"
 #include "public/rra_ray_history.h"
@@ -170,7 +168,9 @@ namespace rra
         }
 
         UpdateStatsTable();
+        proxy_model_->SetFilterAcceptsAll(true);
         proxy_model_->invalidate();
+        proxy_model_->SetFilterAcceptsAll(false);
     }
 
     void RayHistoryModel::InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns)

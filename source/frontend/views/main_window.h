@@ -110,9 +110,6 @@ private slots:
     /// @brief Update the title bar based on app state.
     void UpdateTitlebar();
 
-    /// @brief Resize UI elements when the DPI scale factor changes.
-    void OnScaleFactorChanged();
-
     /// @brief Close the trace and display a message indicating that the graphics context has failed to initialize.
     void OnGraphicsContextFailedToInitialize(const QString& failure_message);
 

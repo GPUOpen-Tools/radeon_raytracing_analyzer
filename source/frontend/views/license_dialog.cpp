@@ -13,8 +13,6 @@
 #include <QScrollBar>
 #include <QDir>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "public/rra_macro.h"
 
 #include "settings/settings.h"

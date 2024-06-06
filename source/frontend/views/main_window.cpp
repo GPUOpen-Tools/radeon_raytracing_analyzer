@@ -15,7 +15,6 @@
 
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "public/rra_trace_loader.h"
 
@@ -148,9 +147,6 @@ MainWindow::MainWindow(QWidget* parent)
     connect(&rra::TraceManager::Get(), &rra::TraceManager::TraceOpened, this, &MainWindow::OpenTrace);
     connect(&rra::TraceManager::Get(), &rra::TraceManager::TraceClosed, this, &MainWindow::CloseTrace);
 
-    // Connect to ScalingManager for notifications.
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MainWindow::OnScaleFactorChanged);
-
     connect(&rra::MessageManager::Get(), &rra::MessageManager::GraphicsContextFailedToInitialize, this, &MainWindow::OnGraphicsContextFailedToInitialize);
 
     // Add a reset UI button to the right side of the TLAS, BLAS and RAY tab bar
@@ -169,8 +165,6 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &MainWindow::OnScaleFactorChanged);
-
     disconnect(ui_->tlas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
     disconnect(ui_->blas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
     disconnect(ui_->ray_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
@@ -179,12 +173,6 @@ MainWindow::~MainWindow()
     delete license_dialog_;
 #endif  // BETA_LICENSE
     delete ui_;
-}
-
-void MainWindow::OnScaleFactorChanged()
-{
-    ResizeNavigationLists();
-    ResizeNavigationLists();
 }
 
 RraIconButton* MainWindow::CreateUIResetButton()

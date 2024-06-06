@@ -13,8 +13,6 @@
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "models/ray/ray_list_item_model.h"
 #include "util/string_util.h"
 #include "views/widget_util.h"

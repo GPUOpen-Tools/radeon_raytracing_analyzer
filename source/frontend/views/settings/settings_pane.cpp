@@ -7,8 +7,6 @@
 
 #include "views/settings/settings_pane.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "managers/message_manager.h"
 #include "settings/settings.h"
 #include "views/custom_widgets/colored_checkbox.h"

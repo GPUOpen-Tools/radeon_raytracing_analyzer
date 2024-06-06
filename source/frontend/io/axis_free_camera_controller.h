@@ -64,6 +64,12 @@ namespace rra
         /// @returns The radius of the volume to be used for various camera attributes.
         virtual float FocusCameraOnVolume(renderer::Camera* camera, BoundingVolumeExtents volume) override;
 
+        /// @brief Generate a readable string containing internal state of camera controller.
+        ///
+        /// Intended for copy/paste functionality of camera's transform.
+        /// @returns A readable string describing state of camera controller.
+        virtual std::string GetReadableString() const override;
+
         /// @brief Process the user inputs to manipulate the camera.
         void ProcessUserInputs() override;
 
@@ -117,6 +123,12 @@ namespace rra
 
         /// @brief Called when the user changes control styles.
         virtual void ControlStyleChanged() override;
+
+    protected:
+        /// @brief After parsing the readable string, this function will update the state of the ViewerIO.
+        ///
+        /// @param state The parsed readable string.
+        virtual void UpdateFromReadableStringState(const ReadableStringState& state) override;
 
     private:
         float     movement_speed_scroll_multiplier_ = 1.0f;  ///< The movement multiplier for the camera speed.

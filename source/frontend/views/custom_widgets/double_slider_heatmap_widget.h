@@ -36,12 +36,6 @@ public:
     /// Destructor
     virtual ~DoubleSliderHeatmapWidget();
 
-    /// The DoubleSliderWidget can shrink / expand to fill whatever amount of space
-    /// is allocated by the layout, so simply return a default sizeHint that is
-    /// scaled according to the ScalingManager.
-    /// \return A default size hint.
-    virtual QSize sizeHint() const Q_DECL_OVERRIDE;
-
     enum HandleMovementModeType
     {
         kFreeMovement,

@@ -59,6 +59,11 @@ namespace rra
         /// @param filter_max_out Maximum filter extents.
         void GetFilterMinAndMax(GlobalInvocationID* filter_min_out, GlobalInvocationID* filter_max_out);
 
+        /// @brief Set whether or not the row filter will accept all rows.
+        /// 
+        /// @param accepts_all Will accept all if true.
+        void SetFilterAcceptsAll(bool accepts_all);
+
     protected:
         /// @brief Make the filter run across multiple columns.
         ///
@@ -77,10 +82,11 @@ namespace rra
         virtual bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
 
     private:
-        uint32_t           reshape_width_{1};     ///< The reshaped x dimension.
-        uint32_t           reshape_height_{1};    ///< The reshaped y dimension.
-        uint32_t           reshape_depth_{1};     ///< The reshaped z dimension.
-        GlobalInvocationID filter_min_{0, 0, 0};  ///< Hide rows with a global invocaion ID less than this value.
+        bool               filter_accept_all_{false};  ///< When set, filterAcceptsRow() will always return true.
+        uint32_t           reshape_width_{1};          ///< The reshaped x dimension.
+        uint32_t           reshape_height_{1};         ///< The reshaped y dimension.
+        uint32_t           reshape_depth_{1};          ///< The reshaped z dimension.
+        GlobalInvocationID filter_min_{0, 0, 0};       ///< Hide rows with a global invocaion ID less than this value.
         GlobalInvocationID filter_max_{std::numeric_limits<uint32_t>::max(),
                                        std::numeric_limits<uint32_t>::max(),
                                        std::numeric_limits<uint32_t>::max()};  ///< Hide rows with a global invocaion ID greater than this value.

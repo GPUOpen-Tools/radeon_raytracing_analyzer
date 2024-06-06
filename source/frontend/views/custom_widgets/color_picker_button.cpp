@@ -11,19 +11,15 @@
 #include <QPainter>
 #include <QPainterPath>
 
-#include "qt_common/utils/scaling_manager.h"
-
 static const int kDefaultButtonDimension = 60;
 
 ColorPickerButton::ColorPickerButton(QWidget* parent)
     : QPushButton(parent)
 {
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QPushButton::updateGeometry);
 }
 
 ColorPickerButton::~ColorPickerButton()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QPushButton::updateGeometry);
 }
 
 void ColorPickerButton::SetColor(const QColor& color)
@@ -38,7 +34,7 @@ int ColorPickerButton::heightForWidth(int width) const
 
 QSize ColorPickerButton::sizeHint() const
 {
-    return ScalingManager::Get().Scaled(minimumSizeHint());
+    return minimumSizeHint();
 }
 
 QSize ColorPickerButton::minimumSizeHint() const
@@ -50,12 +46,11 @@ void ColorPickerButton::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
 
-    ScalingManager& sm = ScalingManager::Get();
     QPainter        painter(this);
 
-    const int pos_adj       = sm.Scaled(1);
+    const int pos_adj       = 1;
     const int size_adj      = pos_adj * 2;
-    const int outline_width = sm.Scaled(2);
+    const int outline_width = 2;
 
     // Rectangle used for drawing button and its border.
     QRect r1(pos_adj, pos_adj, this->size().width() - size_adj, this->size().height() - size_adj);

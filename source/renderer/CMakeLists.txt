@@ -1,3 +1,8 @@
+#######################################################################################################################
+### Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+### @author AMD Developer Tools Team
+#######################################################################################################################
+
 cmake_minimum_required(VERSION 3.11)
 project(Renderer)
 
@@ -117,6 +122,7 @@ set( SOURCES
 
 set( LINUX_SOURCES
 )
+
 
 set(SOURCES ${SOURCES} ${EXTERNAL_SOURCES})
 

@@ -68,11 +68,21 @@ namespace rra
         *filter_max_out = filter_max_;
     }
 
+    void RayListProxyModel::SetFilterAcceptsAll(bool accepts_all)
+    {
+        filter_accept_all_ = accepts_all;
+    }
+
     bool RayListProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
     {
-        uint32_t x = (uint32_t)sourceModel()->index(source_row, kRayListColumnInvocationX, source_parent).data().value<int>();
-        uint32_t y = (uint32_t)sourceModel()->index(source_row, kRayListColumnInvocationY, source_parent).data().value<int>();
-        uint32_t z = (uint32_t)sourceModel()->index(source_row, kRayListColumnInvocationZ, source_parent).data().value<int>();
+        if (filter_accept_all_)
+        {
+            return true;
+        }
+
+        uint32_t x = sourceModel()->index(source_row, kRayListColumnInvocationX, source_parent).data(Qt::UserRole).toUInt();
+        uint32_t y = sourceModel()->index(source_row, kRayListColumnInvocationY, source_parent).data(Qt::UserRole).toUInt();
+        uint32_t z = sourceModel()->index(source_row, kRayListColumnInvocationZ, source_parent).data(Qt::UserRole).toUInt();
 
         uint32_t dimension = std::max((x > 1 ? 1 : 0) + (y > 1 ? 1 : 0) + (z > 1 ? 1 : 0), 1);
 

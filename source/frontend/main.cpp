@@ -8,8 +8,10 @@
 #include <QApplication>
 #include <QFileInfo>
 #include <QDir>
+#include <QStyleFactory>
 #include <stdarg.h>
 
+#include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
 #include "public/rra_print.h"
@@ -60,6 +62,7 @@ int main(int argc, char* argv[])
 #endif
 
     QApplication a(argc, argv);
+    a.setStyle(QStyleFactory::create("fusion"));
 
     // Load application stylesheet.
     QFile style_sheet(rra::resource::kStylesheet);
@@ -68,11 +71,11 @@ int main(int argc, char* argv[])
         a.setStyleSheet(style_sheet.readAll());
     }
 
-    // Set the default font size.
-    QFont font;
-    font.setFamily(font.defaultFamily());
-    font.setPointSize(8);
-    a.setFont(font);
+    // Force a light theme for now. When we remove all the places that manually set the
+    // background color to white and the text to black, and create a custom dark stylesheet
+    // for widgets that have been customized in the stylesheet for light theme, we can set
+    // the palette to the OS theme.
+    a.setPalette(QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette());
 
     MainWindow* window = new (std::nothrow) MainWindow();
     int         result = -1;
@@ -80,10 +83,11 @@ int main(int argc, char* argv[])
     {
         window->show();
 
-        rra::TraceManager::Get().Initialize(window);
-
-        // Scaling manager object registration.
+        // Initialize scaling manager and call ScaleFactorChanged at least once, so that
+        // any existing Scaled classes run their initialization as well.
         ScalingManager::Get().Initialize(window);
+
+        rra::TraceManager::Get().Initialize(window);
 
         // Once the trace has been loaded initialize graphics context and upload data to the device via this callback.
         rra::TraceManager::Get().SetLoadingFinishedCallback([window]() {

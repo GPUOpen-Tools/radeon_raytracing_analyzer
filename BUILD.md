@@ -7,17 +7,21 @@ Clone the project radeon_raytracing_analyzer from github.com
 git clone https://github.com/GPUOpen-Tools/radeon_raytracing_analyzer.git
 ```
 
+### Get Qt6
+Qt V6.7.0 can be installed using the Qt online installer available from the Qt 6.7.0 release page [here][qt-online].
+As an alternative, the Qt 6.7.0 offline installer can be used [here][qt-offline].
+Packages for Windows and Linux are provided.
+
 ### Building on Windows
 As a preliminary step, make sure that you have the following installed on your system:
 * CMake 3.11 or above.
 * Python 3.7 or above.
-* Qt® 5 or above (5.15.2 is the default and recommended).
-* Visual Studio® 2015 or above (2019 is the default).
+* Qt® 6 or above (6.7.0 is the default and recommended).
+* Visual Studio® 2019 or above (2022 is the default).
 
-Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page [here][qt-online].
-As an alternative, the Qt 5.12.6 offline installer can be used [here][qt-offline].
-Qt should be installed to the default location (C:\Qt\Qt5.xx.x).
+Qt should be installed to the default location (C:\Qt\Qt6.xx.x).
 Be sure to select msvc2017/msvc2019 64-bit during Qt installation, depending on the compiler you decide to use.
+Select msvc2019 if using Visual Studio 2022.
 A reboot is required after Qt is installed.
 
 CMake can be downloaded from [here](https://cmake.org/download/).
@@ -27,17 +31,19 @@ This can be installed once Python is installed, as follows:
 * pip install -U sphinx
 * pip install sphinx_rtd_theme
 
-Run the python pre_build.py script in the build folder from a command prompt. If no command line options are provided, the defaults will be used (Qt 5.15.2 and Visual Studio 2019)
+Run the python pre_build.py script in the build folder from a command prompt. If no command line options are provided, the defaults will be used (Qt 6.7.0 and Visual Studio 2022)
 
 Some useful options of the pre_build.py script:
 * --vs <Visual Studio version>: generate the solution files for a specific Visual Studio version. For example, to target Visual Studio 2017, add --vs 2017 to the command.
 * --qt <path>: full path to the folder from where you would like the Qt binaries to be retrieved. By default, CMake would try to auto-detect Qt on the system.
 
-Once the script has finished, in the case of Visual Studio 2019, a sub-folder called 'vs2019' will be created containing the necessary build files.
-Go into the 'vs2019' folder (build/win/vs2019) and double click on the RRA.sln file and build the 64-bit Debug and Release builds.
+Once the script has finished, in the case of Visual Studio 2022, a sub-folder called 'vs2022' will be created containing the necessary build files.
+Go into the 'vs2022' folder (build/win/vs2022) and double click on the RRA.sln file and build the 64-bit Debug and Release builds.
 The Release and Debug builds of RRA will be available in the build/release and build/debug folders.
 
 ### Building on Ubuntu
+If Qt is installed from a Qt installer, it should be installed to ~/Qt/Qt6.7.0 (the default of ~/Qt6.7.0 will not work).
+
 Required dependencies can be installed as follows:
 ```bash
 sudo apt-get update
@@ -50,14 +56,20 @@ sudo apt-get install git-lfs
 sudo apt-get install python3-sphinx
 sudo apt-get install libxcb-xinerama0
 sudo apt-get install mesa-common-dev libglu1-mesa-dev
+sudo apt install libtbb-dev
 ```
-Qt V5.15.2 can be installed using the Qt online installer available from the Qt 5.15.2 release page [here][qt-online].
-As an alternative, the Qt 5.12.6 offline installer can be used [here][qt-offline] (the .run file) and installed
-to ~/Qt/Qt5.12.6 (the default of ~/Qt5.12.6 will not work).
 
-XCB libraries are required for Qt v5.15.x (they are not needed for older Qt versions). By default, the CMake configuration will attempt to copy
-these files from the Qt lib folder. If needed, the XCB library files (libxcb*) can be obtained from the /lib folder of the Radeon Developer Tool
-Suite download found [here](https://gpuopen.com/tools/).
+Qt6 can be installed from the package manager using:
+```bash
+sudo apt-get install qt6-base-dev
+sudo apt-get install qt6-base-private-dev
+```
+As of this writing, this package on Ubuntu 2204 is 6.2.4
+
+XCB libraries are required for Qt v5 and above. These can be installed by using:
+```bash
+sudo apt-get install libxcb-cursor-dev
+```
 
 Run the python pre_build.py in the build folder.
 ```bash
@@ -65,7 +77,7 @@ python3 pre_build.py
 ```
 Or run the pre_build.py script with the -qt option to specify another version of Qt. For example:
 ```bash
-python3 pre_build.py --qt 5.12.6
+python3 pre_build.py --qt 6.7.0
 ```
 The pre_build.py script will construct the output folders and build the necessary makefiles.
 To build the release build, use:
@@ -81,25 +93,14 @@ Alternatively, building can be done directly from the prebuild script with the -
 python3 pre_build.py --build
 ```
 
-It is possible to use the system-installed version of Qt rather than using a Qt installer described above. At the time of this writing, Ubuntu 22.04 LTS
-comes with Qt 5.15.3. To use the system Qt, a fake Qt package is needed. For Qt 5.15.3, this can be made by creating the required directory structure
+If Qt is not installed from a Qt installer, a fake Qt package is needed. This can be made by creating the required directory structure
 and setting up symbolic links to point to the system Qt lib and include directories:
 ```bash
-mkdir -p ~/Qt/Qt5.15.3/5.15.3/gcc_64
-sudo ln -s /usr/lib/x86_64-linux-gnu ~/Qt/Qt5.15.3/5.15.3/gcc_64/lib
-sudo ln -s /usr/include/x86_64-linux-gnu/qt5 ~/Qt/Qt5.15.3/5.15.3/gcc_64/include
+mkdir -p ~/Qt/Qt6.7.0/6.7.0/gcc_64
+sudo ln -s /usr/lib/x86_64-linux-gnu ~/Qt/Qt6.7.0/6.7.0/gcc_64/lib
+sudo ln -s /usr/include/x86_64-linux-gnu/qt6 ~/Qt/Qt6.7.0/6.7.0/gcc_64/include
 ```
-python3 pre_build.py --qt 5.15.3 --qt-system --build
+python3 pre_build.py --qt 6.7.0 --build
 
-Some additional Qt components may be required, so install those:
-
-```
-sudo apt-get install qtbase5-dev
-sudo apt-get install qtbase5-dev-tools
-sudo apt-get install libqt5svg5-dev
-sudo apt-get install libqt5x11extras5
-sudo apt-get install qtbase5-private-dev
-```
-
-[qt-online]: https://www.qt.io/blog/qt-5.15.2-released
-[qt-offline]: https://download.qt.io/archive/qt/5.12/5.12.6/
+[qt-online]: https://www.qt.io/blog/qt-6.7-released
+[qt-offline]: https://download.qt.io/archive/qt/6.7/6.7.0

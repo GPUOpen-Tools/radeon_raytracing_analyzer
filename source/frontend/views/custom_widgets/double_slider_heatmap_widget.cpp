@@ -15,7 +15,6 @@
 #include <QStylePainter>
 
 #include "qt_common/utils/common_definitions.h"
-#include "qt_common/utils/scaling_manager.h"
 
 /// Stylesheet for the double slider widget.
 static const QString kCustomSliderStylesheet(
@@ -76,7 +75,6 @@ void DoubleSliderHeatmapWidget::Init()
 
     connect(this, &DoubleSliderHeatmapWidget::rangeChanged, this, &DoubleSliderHeatmapWidget::UpdateRange);
     connect(this, &DoubleSliderHeatmapWidget::SliderReleased, this, &DoubleSliderHeatmapWidget::MovePressedHandle);
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QSlider::updateGeometry);
 
     setStyleSheet(kCustomSliderStylesheet);
 
@@ -88,12 +86,6 @@ DoubleSliderHeatmapWidget::~DoubleSliderHeatmapWidget()
 {
     disconnect(this, &DoubleSliderHeatmapWidget::rangeChanged, this, &DoubleSliderHeatmapWidget::UpdateRange);
     disconnect(this, &DoubleSliderHeatmapWidget::SliderReleased, this, &DoubleSliderHeatmapWidget::MovePressedHandle);
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QSlider::updateGeometry);
-}
-
-QSize DoubleSliderHeatmapWidget::sizeHint() const
-{
-    return ScalingManager::Get().Scaled(QSlider::sizeHint());
 }
 
 void DoubleSliderHeatmapWidget::InitStyleOption(QStyleOptionSlider* option, DoubleSliderHeatmapWidget::SpanHandle span_handle) const
@@ -723,7 +715,7 @@ void DoubleSliderHeatmapWidget::paintEvent(QPaintEvent* event)
     const QPoint center_point = QRect(lower_handle_rect.center(), upper_handle_rect.center()).center();
     QRect        span_rect;
 
-    auto scaled_factor = ScalingManager::Get().Scaled(1.0);
+    auto scaled_factor = 1.0;
     if (orientation() == Qt::Horizontal)
     {
         auto heatmap_half_height = static_cast<int>(height() / (4 * scaled_factor));

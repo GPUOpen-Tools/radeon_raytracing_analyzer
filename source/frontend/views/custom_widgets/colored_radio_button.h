@@ -76,10 +76,6 @@ protected:
     /// @param [in] event The mouse press event.
     virtual void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
 
-private slots:
-    /// @brief Update checkbox as needed due to DPI scale factor changes.
-    void OnScaleFactorChanged();
-
 private:
     /// @brief Get the switch height based on the font size.
     ///

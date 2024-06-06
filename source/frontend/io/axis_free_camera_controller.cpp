@@ -7,6 +7,7 @@
 
 #include "axis_free_camera_controller.h"
 #include "public/rra_macro.h"
+#include "constants.h"
 
 #include <QMouseEvent>
 #include <glm/glm/gtx/euler_angles.hpp>
@@ -228,6 +229,24 @@ namespace rra
     {
         // Undo the horizontal reflection if it's in the camera's rotation matrix.
         rotation_ = GetCamera()->GetRotationMatrix() * GetReflectionMatrix();
+    }
+
+    void AxisFreeController::UpdateFromReadableStringState(const ReadableStringState& state)
+    {
+        ViewerIO::UpdateFromReadableStringState(state);
+        rotation_ = state.axis_free_rotation;
+    }
+
+    std::string AxisFreeController::GetReadableString() const
+    {
+        std::string result{ViewerIO::GetReadableString()};
+        result += "Axis-free rotation" + text::kDelimiterBinary + text::kDelimiter;
+        result += std::to_string(rotation_[0][0]) + text::kDelimiter + std::to_string(rotation_[1][0]) + text::kDelimiter + std::to_string(rotation_[2][0]) +
+                  text::kDelimiter + std::to_string(rotation_[0][1]) + text::kDelimiter + std::to_string(rotation_[1][1]) + text::kDelimiter +
+                  std::to_string(rotation_[2][1]) + text::kDelimiter + std::to_string(rotation_[0][2]) + text::kDelimiter + std::to_string(rotation_[1][2]) +
+                  text::kDelimiter + std::to_string(rotation_[2][2]);
+
+        return result;
     }
 
     void AxisFreeController::ProcessUserInputs()

@@ -15,8 +15,6 @@
 #include "models/ray/ray_inspector_ray_tree_item.h"
 #include "models/ray/ray_inspector_ray_tree_model.h"
 
-#include <qt_common/utils/scaling_manager.h>
-
 RayInspectorPane::RayInspectorPane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::RayInspectorPane)
@@ -32,7 +30,7 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
 
     table_delegate_ = new RayInspectorRayTreeItemDelegate(this);
     ui_->ray_tree_->setItemDelegate(table_delegate_);
-    ui_->ray_tree_->setMinimumWidth(ScalingManager::Get().Scaled(390));
+    ui_->ray_tree_->setMinimumWidth(390);
     ui_->ray_tree_->setSortingEnabled(false);
     ui_->ray_tree_->SetFocusOnSelectedRayCallback([&]() { FocusOnSelectedRay(); });
     ui_->ray_tree_->SetResetSceneCallback([&]() {

@@ -9,8 +9,6 @@
 
 #include <QPainter>
 
-#include "qt_common/utils/scaling_manager.h"
-
 static const float kVerticalLabelPointFontSize = 9.0F;  ///< Font point size for vertical labels.
 
 VerticalButtonWidget::VerticalButtonWidget(QWidget* parent)
@@ -19,13 +17,10 @@ VerticalButtonWidget::VerticalButtonWidget(QWidget* parent)
     QFont tmp_font = font();
     tmp_font.setPointSizeF(kVerticalLabelPointFontSize);
     setFont(tmp_font);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &VerticalButtonWidget::updateGeometry);
 }
 
 VerticalButtonWidget::~VerticalButtonWidget()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &VerticalButtonWidget::updateGeometry);
 }
 
 void VerticalButtonWidget::paintEvent(QPaintEvent* event)
@@ -43,7 +38,7 @@ void VerticalButtonWidget::paintEvent(QPaintEvent* event)
 
 QSize VerticalButtonWidget::minimumSizeHint() const
 {
-    QSize minimum_size_hint = ScalingManager::Get().ScaledFontMetrics(font()).size(0, text());
+    QSize minimum_size_hint = QFontMetrics(font()).size(0, text());
 
     // Swap width and height.
     return QSize(minimum_size_hint.height(), minimum_size_hint.width());
@@ -51,7 +46,7 @@ QSize VerticalButtonWidget::minimumSizeHint() const
 
 QSize VerticalButtonWidget::sizeHint() const
 {
-    QSize size_hint = ScalingManager::Get().ScaledFontMetrics(font()).size(0, text());
+    QSize size_hint = QFontMetrics(font()).size(0, text());
 
     // Swap width and height.
     return QSize(size_hint.height(), size_hint.width());

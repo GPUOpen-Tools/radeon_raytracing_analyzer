@@ -15,7 +15,6 @@
 #include "managers/message_manager.h"
 #include "views/widget_util.h"
 
-#include "qt_common/utils/scaling_manager.h"
 #include "dispatch_pane.h"
 #include "ui_tlas_pane.h"
 #include "util/string_util.h"
@@ -80,7 +79,7 @@ void SummaryPane::AddTlasPanes()
     const auto& tlas_stats = model_->GetTlasStatistics();
     ui_->total_memory_content_->setText(rra::string_util::LocalizedValueMemory(model_->GetTotalTraceMemory(), false, true));
 
-    Ui_TlasOverviewPane tlas_overview_pane{};
+    Ui_tlas_pane_ tlas_overview_pane{};
     ui_->tlas_pane_list_->setSpacing(30);
     ui_->tlas_overview_scroll_area_->setWidgetResizable(true);
 

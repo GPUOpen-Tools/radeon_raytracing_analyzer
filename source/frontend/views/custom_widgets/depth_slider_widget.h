@@ -51,13 +51,6 @@ signals:
     void SpanChanged(int lower_value, int upper_value);
 
 protected:
-    /// The DepthSliderWidget can shrink / expand to fill whatever amount of space
-    /// is allocated by the layout, so simply return a default sizeHint that is
-    /// scaled according to the ScalingManager.
-    ///
-    /// @return A default size hint.
-    virtual QSize sizeHint() const Q_DECL_OVERRIDE;
-
     /// Override Qt's mouse press event for the depth slider.
     ///
     /// @param [in] event The mouse event of the depth slider.

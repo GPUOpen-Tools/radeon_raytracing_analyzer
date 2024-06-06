@@ -9,7 +9,6 @@
 
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 const float kLegendHeightRatio = 2.0f / 3.0f;
 
@@ -17,12 +16,10 @@ DispatchLegend::DispatchLegend(QWidget* parent)
     : QWidget(parent)
 {
     setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &DispatchLegend::OnScaleFactorChanged);
 }
 
 DispatchLegend::~DispatchLegend()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &DispatchLegend::OnScaleFactorChanged);
 }
 
 void DispatchLegend::SetColor(const QColor& color)
@@ -30,15 +27,10 @@ void DispatchLegend::SetColor(const QColor& color)
     color_ = color;
 }
 
-void DispatchLegend::OnScaleFactorChanged()
-{
-    updateGeometry();
-}
-
 QSize DispatchLegend::sizeHint() const
 {
     int w = (int)(height() * kLegendHeightRatio);
-    return ScalingManager::Get().Scaled(QSize(w, w));
+    return QSize(w, w);
 }
 
 void DispatchLegend::paintEvent(QPaintEvent* event)

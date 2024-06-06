@@ -13,7 +13,6 @@
 #include <QStylePainter>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 ColoredCheckbox::ColoredCheckbox(QWidget* parent)
     : QCheckBox(parent)
@@ -22,13 +21,10 @@ ColoredCheckbox::ColoredCheckbox(QWidget* parent)
     setMouseTracking(true);
     setChecked(false);
     setCursor(Qt::PointingHandCursor);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ColoredCheckbox::OnScaleFactorChanged);
 }
 
 ColoredCheckbox::~ColoredCheckbox()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ColoredCheckbox::OnScaleFactorChanged);
 }
 
 void ColoredCheckbox::Initialize(bool checked, const QColor& primary_color)
@@ -155,12 +151,6 @@ QSize ColoredCheckbox::sizeHint() const
     int   text_width     = font_metrics.horizontalAdvance(this->text());
 
     return QSize(switch_width + scaled_padding + text_width, height);
-}
-
-void ColoredCheckbox::OnScaleFactorChanged()
-{
-    QtCommon::QtUtils::InvalidateFontMetrics(this);
-    this->updateGeometry();
 }
 
 void ColoredCheckbox::UpdateText(const QString& text)

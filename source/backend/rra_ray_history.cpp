@@ -54,7 +54,6 @@ RraErrorCode RraRayGetRayCount(uint32_t dispatch_id, GlobalInvocationID invocati
     {
         return kRraErrorIndexOutOfRange;
     }
-    auto  rh            = data_set_.async_ray_histories[dispatch_id]->GetRayHistoryTrace();
     auto& dispatch_data = data_set_.async_ray_histories[dispatch_id]->GetDispatchData();
 
     if (!dispatch_data.CoordinateIsValid(invocation_id.x, invocation_id.y, invocation_id.z))
@@ -257,7 +256,6 @@ RraErrorCode RraRayGetAnyHitInvocationCount(uint32_t dispatch_id, GlobalInvocati
     {
         return kRraErrorIndexOutOfRange;
     }
-    auto  rh            = data_set_.async_ray_histories[dispatch_id]->GetRayHistoryTrace();
     auto& dispatch_data = data_set_.async_ray_histories[dispatch_id]->GetDispatchData();
 
     if (!dispatch_data.CoordinateIsValid(invocation_id.x, invocation_id.y, invocation_id.z))

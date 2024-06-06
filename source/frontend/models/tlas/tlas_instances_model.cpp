@@ -13,7 +13,6 @@
 #include <QSortFilterProxyModel>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "models/instances_item_model.h"
 

@@ -5,7 +5,6 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-
 # Attempt to automatically find Qt on the local machine
 if (UNIX AND NOT APPLE)
     find_package(Qt6 QUIET COMPONENTS Core Widgets Network Gui Svg Test GuiPrivate CorePrivate)
@@ -32,6 +31,16 @@ if (NOT Qt6_DIR)
     endif ()
 endif ()
 
+# linuxdeployqt
+if (UNIX AND NOT APPLE)
+
+    find_program(LINUXDEPLOYQT "linuxdeployqt" HINTS "${PROJECT_SOURCE_DIR}/external/linuxdeployqt")
+    if (LINUXDEPLOYQT)
+        message(STATUS "Found linuxdeployqt: ${LINUXDEPLOYQT}")
+    else ()
+        message(ERROR "linuxdeployqt not found but is required for build")
+    endif ()
+endif ()
 
 if (Qt5_DIR OR Qt6_DIR)
     #######################################################################################################################
@@ -57,7 +66,7 @@ if (Qt5_DIR OR Qt6_DIR)
             if (WIN32)
                 if (Qt6_DIR)
                     set(DEPLOYQT_POST_BUILD_COMMAND
-                            ${DEPLOYQT_EXECUTABLE} $<TARGET_FILE:${target}> -verbose 0 --no-compiler-runtime --no-translations
+                            ${DEPLOYQT_EXECUTABLE} $<TARGET_FILE:${target}> -verbose 0 --no-compiler-runtime --no-translations --no-system-d3d-compiler --no-system-dxc-compiler --no-opengl-sw --no-network
                             WORKING_DIRECTORY ${output_directory})
                 else ()
                     set(DEPLOYQT_POST_BUILD_COMMAND
@@ -67,7 +76,7 @@ if (Qt5_DIR OR Qt6_DIR)
             elseif (UNIX AND NOT APPLE)
                 set(DEPLOYQT_POST_BUILD_COMMAND
                         ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${EXTERNAL_DIR}/libtraceevent/lib:${EXTERNAL_DIR}/libtracefs/lib:${_qt_bin_dir}/../lib
-                        ${DEPLOYQT_EXECUTABLE} $<TARGET_FILE:${target}> -qmake=${QT_QMAKE_EXECUTABLE} -verbose=0 -unsupported-allow-new-glibc
+                        ${DEPLOYQT_EXECUTABLE} $<TARGET_FILE:${target}> -qmake=${QT_QMAKE_EXECUTABLE} -verbose=0 -unsupported-allow-new-glibc -no-translations
                         WORKING_DIRECTORY ${output_directory})
                 # If Qt5, install X11Extras
                 if (Qt5_DIR)

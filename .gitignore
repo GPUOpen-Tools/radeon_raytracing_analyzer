@@ -11,6 +11,6 @@ documentation/build
 documentation/source/_build
 source/frontend/version.h
 Buildinfo.properties
+external
 .vscode
 *.aps
-

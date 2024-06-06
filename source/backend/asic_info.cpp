@@ -9,7 +9,7 @@
 
 #include "rdf/rdf/inc/amdrdf.h"
 
-static_assert(sizeof(rra::AsicInfo::TraceChunkAsicInfo) == 576, "AsicInfo does not have the expected byte size.");
+static_assert(sizeof(rra::AsicInfo::TraceChunkAsicInfo) == 608, "AsicInfo does not have the expected byte size.");
 
 namespace rra
 {
@@ -58,6 +58,11 @@ namespace rra
                     // copy old data to new chunk data format.
                     chunk_file.ReadChunkDataToBuffer(identifier, chunk_index, &chunk_data_.shader_core_clock_frequency);
                     chunk_data_.pci_id = 0;
+                }
+                else if (chunk_version == 2)
+                {
+                    memset(&chunk_data_, 0, sizeof(TraceChunkAsicInfo));
+                    chunk_file.ReadChunkDataToBuffer(identifier, chunk_index, &chunk_data_);
                 }
                 else
                 {

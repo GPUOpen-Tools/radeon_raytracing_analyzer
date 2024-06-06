@@ -38,10 +38,6 @@ protected:
     /// @param [in] event The paint event.
     virtual void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE;
 
-private slots:
-    /// Callback for when the DPI scale factor changes
-    void OnScaleFactorChanged();
-
 private:
     QColor color_;   ///< The color of the legend.
 };

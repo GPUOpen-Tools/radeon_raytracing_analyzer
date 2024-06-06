@@ -12,8 +12,6 @@
 #include <QHeaderView>
 #include <QSortFilterProxyModel>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "models/tlas/blas_list_item_model.h"
 
 #include "public/rra_bvh.h"

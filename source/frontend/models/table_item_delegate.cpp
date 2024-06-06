@@ -13,8 +13,6 @@
 #include <QScreen>
 #include <QWindow>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "constants.h"
 #include "views/widget_util.h"
 #include "util/string_util.h"

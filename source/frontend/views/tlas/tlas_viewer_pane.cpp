@@ -7,8 +7,6 @@
 
 #include "views/tlas/tlas_viewer_pane.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
@@ -38,7 +36,7 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     ui_->expand_collapse_tree_->Init(QStringList({rra::text::kTextExpandTree, rra::text::kTextCollapseTree}));
     ui_->expand_collapse_tree_->setCursor(Qt::PointingHandCursor);
 
-    int        size           = ScalingManager::Get().Scaled(kSplitterWidth);
+    int        size           = kSplitterWidth;
     QList<int> splitter_sizes = {size, size};
     ui_->splitter_->setSizes(splitter_sizes);
 

@@ -9,18 +9,14 @@
 
 #include <QPainter>
 
-#include "qt_common/utils/scaling_manager.h"
-
 DispatchLoadingBar::DispatchLoadingBar(QWidget* parent)
     : QWidget(parent)
     , fill_percentage_(0)
 {
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QWidget::updateGeometry);
 }
 
 DispatchLoadingBar::~DispatchLoadingBar()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QWidget::updateGeometry);
 }
 
 void DispatchLoadingBar::SetFillPercentage(qreal percentage)
@@ -41,7 +37,7 @@ void DispatchLoadingBar::MarkError()
 
 QSize DispatchLoadingBar::sizeHint() const
 {
-    return ScalingManager::Get().Scaled(QSize(kDefaultWidth_, kDefaultHeight_));
+    return QSize(kDefaultWidth_, kDefaultHeight_);
 }
 
 void DispatchLoadingBar::paintEvent(QPaintEvent* paint_event)

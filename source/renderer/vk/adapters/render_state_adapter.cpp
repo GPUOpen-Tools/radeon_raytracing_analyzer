@@ -568,6 +568,7 @@ namespace rra
             {
                 if (vulkan_renderer_->GetSceneUbo().traversal_accept_first_hit)
                 {
+                    // TODO: This value may be kBoxSortHeuristicDisabled under some circumstances. Check GPURT.
                     vulkan_renderer_->GetSceneUbo().traversal_box_sort_heuristic = kBoxSortHeuristicClosest;
                 }
                 else

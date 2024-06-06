@@ -10,8 +10,6 @@
 #include <QPainter>
 #include <QMouseEvent>
 
-#include "qt_common/utils/scaling_manager.h"
-
 static const float kSegmentBorder = 2.0f;  ///< The border around each segment, in pixels.
 
 DepthSliderWidget::DepthSliderWidget(QWidget* parent)
@@ -25,11 +23,6 @@ DepthSliderWidget::DepthSliderWidget(QWidget* parent)
 
 DepthSliderWidget::~DepthSliderWidget()
 {
-}
-
-QSize DepthSliderWidget::sizeHint() const
-{
-    return ScalingManager::Get().Scaled(QWidget::sizeHint());
 }
 
 void DepthSliderWidget::SetLowerValue(int lower_value)

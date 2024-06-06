@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.11)
 
 set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
 
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 include(dev_tools)
 
@@ -16,7 +15,7 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 5)
+set(RRA_MINOR_VERSION 6)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()
@@ -59,7 +58,6 @@ ELSE(WIN32)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug)
 ENDIF(WIN32)
-
 
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
@@ -169,20 +167,6 @@ if(SPHINX_EXECUTABLE)
         COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
         COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rra/. -t ${SPHINX_OPTION}
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/help/rra/.doctrees
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/blas_instance_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/blas_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/blas_properties.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/blas_viewer.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/capture.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/geometries_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/overview.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/ray_dispatches.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/ray_inspector.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/settings.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/tlas_instance_list.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/tlas_properties.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/tlas_viewer.html
-        COMMAND ${CMAKE_COMMAND} -E remove ${DOCS_OUTPUT_DIR}/help/rra/triangle_list.html
     )
 else()
     message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
@@ -197,5 +181,3 @@ add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/landscape.rra  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rra
 )
-
-

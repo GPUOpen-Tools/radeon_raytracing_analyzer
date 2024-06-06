@@ -7,8 +7,6 @@
 
 #include "views/blas/blas_viewer_pane.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
@@ -35,7 +33,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     ui_->expand_collapse_tree_->Init(QStringList({rra::text::kTextExpandTree, rra::text::kTextCollapseTree}));
     ui_->expand_collapse_tree_->setCursor(Qt::PointingHandCursor);
 
-    int        size           = ScalingManager::Get().Scaled(kSplitterWidth);
+    int        size           = kSplitterWidth;
     QList<int> splitter_sizes = {size, size};
     ui_->splitter_->setSizes(splitter_sizes);
 
@@ -100,7 +98,6 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
         ui_->viewer_container_widget_->ShowColoringMode(geometry_mode);
     });
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TriangleTableSelected, this, &BlasViewerPane::SelectTriangle);
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &BlasViewerPane::OnScaleFactorChanged);
     connect(ui_->content_parent_blas_, &ScaledPushButton::clicked, this, &BlasViewerPane::SelectParentNode);
 
     // Reset the UI state. When the 'reset' button is clicked, it broadcasts a message from the message manager. Any objects interested in this
@@ -180,12 +177,6 @@ void BlasViewerPane::UpdateTreeDepths(int min_value, int max_value)
 
     ui_->tree_depth_start_value_->setText(QString::number(min_value));
     ui_->tree_depth_end_value_->setText(QString::number(max_value));
-}
-
-void BlasViewerPane::OnScaleFactorChanged()
-{
-    int height = ui_->geometry_flags_table_1_->verticalHeader()->minimumSectionSize();
-    ui_->geometry_flags_table_1_->setMaximumHeight(2 * height);
 }
 
 void BlasViewerPane::UpdateWidgets(const QModelIndex& index)

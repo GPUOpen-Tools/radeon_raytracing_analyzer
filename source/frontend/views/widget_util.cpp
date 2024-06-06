@@ -11,8 +11,6 @@
 #include <QHeaderView>
 #include <QStandardItemModel>
 
-#include "qt_common/utils/scaling_manager.h"
-
 #include "constants.h"
 #include "views/widget_util.h"
 #include "settings/settings.h"
@@ -79,8 +77,7 @@ namespace rra
         const static QColor kCheckBoxUncheckedColor(224, 224, 224);
         const static QColor kCheckBoxCheckColor(255, 255, 255);
 
-        ScalingManager& scaling_manager       = ScalingManager::Get();
-        const int       scaled_check_box_size = scaling_manager.Scaled(kCheckBoxBoxSize);
+        const int       scaled_check_box_size = kCheckBoxBoxSize;
         const int       half_size             = scaled_check_box_size / 2;
 
         // Center the checkbox by finding out the width of the column, then subtract half the checkbox width

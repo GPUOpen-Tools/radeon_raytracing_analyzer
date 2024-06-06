@@ -115,6 +115,9 @@ protected:
 #endif
 
 signals:
+    /// @brief Notify listeners on a queued connection that the renderer should be updated.
+    void RequestRenderFrame();
+
     /// @brief This signal is emitted when graphics device initialization is complete.
     ///
     /// @param [in] success True if the device was initialized successfully.
@@ -165,6 +168,9 @@ private slots:
     /// @brief Render a new frame of the scene.
     void RenderFrame();
 
+    /// @brief Respond to the timer timeout and request the renderer to update using a queued connection.
+    void HandleRenderFrameRequest();
+
 private:
     /// @brief Initialize the widget instance's underlying renderer.
     ///
@@ -192,7 +198,6 @@ private:
     /// @returns True if the given widget has application focus, false if not.
     bool IsFocused(QWidget* widget);
 
-    QTimer                            timer_;                          ///< A timer used to redraw the scene at a specific rate.
     bool                              device_initialized_;             ///< A flag indicating if the device has been initialized.
     bool                              render_active_;                  ///< True when rendering is currently active.
     bool                              started_;                        ///< True if rendering has started.

@@ -11,7 +11,6 @@
 #include <QScrollBar>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "managers/message_manager.h"
 #include "managers/trace_manager.h"
@@ -97,7 +96,7 @@ void RecentTracesPane::SetupFileList()
 
         // Set the fonts.
         QFont font;
-        font.setPixelSize(ScalingManager::Get().Scaled(kRecentTracesTextPixelFontSize));
+        font.setPixelSize(kRecentTracesTextPixelFontSize);
         font.setBold(true);
         font.setFamily(font.defaultFamily());
         no_traces_label_->setFont(font);

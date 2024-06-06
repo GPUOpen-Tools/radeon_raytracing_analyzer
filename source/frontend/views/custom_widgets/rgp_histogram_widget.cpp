@@ -7,8 +7,6 @@
 
 #include "views/custom_widgets/rgp_histogram_widget.h"
 
-#include "qt_common/utils/scaling_manager.h"
-
 static const float    kSelectionRangeAlpha     = 0.125f;
 static const QColor   kSelectionRangeColor     = QColor(128, 32, 32, 128);
 static const QColor   kSelectedBucketColor     = QColor(0, 118, 215);
@@ -61,14 +59,11 @@ RgpHistogramWidget::RgpHistogramWidget(QWidget* parent)
     selection_range_indicator_range_->setFlag(QGraphicsItem::ItemIsSelectable, false);
     graphics_scene->addItem(selection_range_indicator_range_);
 
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &RgpHistogramWidget::OnScaleFactorChanged);
-
-    setFixedSize(ScalingManager::Get().Scaled(kHistogramBaseSize));
+    setFixedSize(kHistogramBaseSize);
 }
 
 RgpHistogramWidget::~RgpHistogramWidget()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &RgpHistogramWidget::OnScaleFactorChanged);
 }
 
 void RgpHistogramWidget::Clear()
@@ -207,12 +202,6 @@ void RgpHistogramWidget::SetSelectionAttributes(int32_t min_value, int32_t max_v
     }
 
     scene()->update();
-}
-
-void RgpHistogramWidget::OnScaleFactorChanged()
-{
-    setFixedSize(ScalingManager::Get().Scaled(kHistogramBaseSize));
-    updateGeometry();
 }
 
 void RgpHistogramWidget::resizeEvent(QResizeEvent* event)

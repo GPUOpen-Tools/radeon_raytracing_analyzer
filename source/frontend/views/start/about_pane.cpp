@@ -13,7 +13,6 @@
 #include <QUrl>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 #include "constants.h"
 #include "version.h"
@@ -127,8 +126,8 @@ void AboutPane::CheckForUpdates()
             check_for_updates_pending_dialog_->setWindowTitle(PRODUCT_APP_NAME PRODUCT_BUILD_SUFFIX);
             check_for_updates_pending_dialog_->setWindowFlags((check_for_updates_pending_dialog_->windowFlags() & ~Qt::WindowContextHelpButtonHint) |
                                                               Qt::MSWindowsFixedSizeDialogHint);
-            check_for_updates_pending_dialog_->setFixedWidth(ScalingManager::Get().Scaled(rra::kUpdatesPendingDialogWidth));
-            check_for_updates_pending_dialog_->setFixedHeight(ScalingManager::Get().Scaled(rra::kUpdatesPendingDialogHeight));
+            check_for_updates_pending_dialog_->setFixedWidth(rra::kUpdatesPendingDialogWidth);
+            check_for_updates_pending_dialog_->setFixedHeight(rra::kUpdatesPendingDialogHeight);
 
             QVBoxLayout* pLayout = new QVBoxLayout();
             check_for_updates_pending_dialog_->setLayout(pLayout);
@@ -182,8 +181,8 @@ void AboutPane::CheckForUpdatesCompleted(UpdateCheck::ThreadController* thread, 
             results_dialog->setWindowFlags(results_dialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
             results_dialog->setModal(true);
-            results_dialog->setFixedWidth(ScalingManager::Get().Scaled(rra::kUpdatesResultsDialogWidth));
-            results_dialog->setFixedHeight(ScalingManager::Get().Scaled(rra::kUpdatesResultsDialogHeight));
+            results_dialog->setFixedWidth(rra::kUpdatesResultsDialogWidth);
+            results_dialog->setFixedHeight(rra::kUpdatesResultsDialogHeight);
             results_dialog->SetShowTags(false);
 
             QDialogButtonBox* button_box = results_dialog->findChild<QDialogButtonBox*>("button_box_");

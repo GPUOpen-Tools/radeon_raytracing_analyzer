@@ -6,9 +6,6 @@
 //=============================================================================
 
 #include "views/custom_widgets/color_picker_widget.h"
-
-#include "qt_common/utils/scaling_manager.h"
-
 #include "views/custom_widgets/color_picker_button.h"
 
 const static QString kDefaultPaletteString("#000,#111,#222,#333,#444,#555,#666,#777,#888,#999,#AAA,#BBB,#CCC,#DDD,#EEE,#FFF");
@@ -35,13 +32,10 @@ ColorPickerWidget::ColorPickerWidget(QWidget* parent)
 
     // Set up signals/slots.
     connect(&button_group_, &QButtonGroup::idClicked, this, &ColorPickerWidget::ButtonClicked);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QWidget::updateGeometry);
 }
 
 ColorPickerWidget::~ColorPickerWidget()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &QWidget::updateGeometry);
 }
 
 void ColorPickerWidget::SetRowAndColumnCount(unsigned int rows, unsigned int columns)

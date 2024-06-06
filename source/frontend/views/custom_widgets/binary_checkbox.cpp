@@ -13,7 +13,6 @@
 #include <QStylePainter>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 BinaryCheckbox::BinaryCheckbox(QWidget* parent)
     : QCheckBox(parent)
@@ -22,13 +21,10 @@ BinaryCheckbox::BinaryCheckbox(QWidget* parent)
     setMouseTracking(true);
     setChecked(false);
     setCursor(Qt::PointingHandCursor);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &BinaryCheckbox::OnScaleFactorChanged);
 }
 
 BinaryCheckbox::~BinaryCheckbox()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &BinaryCheckbox::OnScaleFactorChanged);
 }
 
 void BinaryCheckbox::Initialize(bool checked, const QColor& primary_color)
@@ -181,12 +177,6 @@ QSize BinaryCheckbox::sizeHint() const
     // Width is defined by switch width plus the spacing between a check box indicator and its label, plus the width of the text.
     int switch_width = base_height * (2.0 / 3.0);
     return QSize(switch_width, height);
-}
-
-void BinaryCheckbox::OnScaleFactorChanged()
-{
-    QtCommon::QtUtils::InvalidateFontMetrics(this);
-    this->updateGeometry();
 }
 
 void BinaryCheckbox::UpdateText(const QString& text)

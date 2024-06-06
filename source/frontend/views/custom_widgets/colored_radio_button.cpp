@@ -13,7 +13,6 @@
 #include <QStylePainter>
 
 #include "qt_common/utils/qt_util.h"
-#include "qt_common/utils/scaling_manager.h"
 
 ColoredRadioButton::ColoredRadioButton(QWidget* parent)
     : QRadioButton(parent)
@@ -22,13 +21,10 @@ ColoredRadioButton::ColoredRadioButton(QWidget* parent)
     setMouseTracking(true);
     setChecked(false);
     setCursor(Qt::PointingHandCursor);
-
-    connect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ColoredRadioButton::OnScaleFactorChanged);
 }
 
 ColoredRadioButton::~ColoredRadioButton()
 {
-    disconnect(&ScalingManager::Get(), &ScalingManager::ScaleFactorChanged, this, &ColoredRadioButton::OnScaleFactorChanged);
 }
 
 void ColoredRadioButton::Initialize(bool checked, const QColor& primary_color)
@@ -146,12 +142,6 @@ QSize ColoredRadioButton::sizeHint() const
     int   text_width     = font_metrics.horizontalAdvance(this->text());
 
     return QSize(switch_width + scaled_padding + text_width, height);
-}
-
-void ColoredRadioButton::OnScaleFactorChanged()
-{
-    QtCommon::QtUtils::InvalidateFontMetrics(this);
-    this->updateGeometry();
 }
 
 void ColoredRadioButton::UpdateText(const QString& text)

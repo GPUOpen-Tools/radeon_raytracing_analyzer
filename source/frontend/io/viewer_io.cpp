@@ -199,14 +199,14 @@ namespace rra
         auto      camera = GetCamera();
         glm::vec3 pos    = camera->GetArcCenterPosition();
 
-        std::string result = "Control style" + rra::text::kDelimiterBinary + rra::text::kDelimiter + GetName() + " control style\n";
-        result += "Euler angles" + rra::text::kDelimiterBinary + rra::text::kDelimiter;
-        result += std::to_string(euler_angles_.x) + rra::text::kDelimiter + std::to_string(euler_angles_.y) + rra::text::kDelimiter +
-                  std::to_string(euler_angles_.z) + '\n';
-        result += "Arc center position" + rra::text::kDelimiterBinary + rra::text::kDelimiter;
-        result += std::to_string(pos.x) + rra::text::kDelimiter + std::to_string(pos.y) + rra::text::kDelimiter + std::to_string(pos.z) + '\n';
-        result += "Arc radius" + rra::text::kDelimiterBinary + rra::text::kDelimiter + std::to_string(arc_radius_) + '\n';
-        result += "Up axis" + rra::text::kDelimiterBinary + rra::text::kDelimiter;
+        std::string result = "Control style" + text::kDelimiterBinary + text::kDelimiter + GetName() + " control style\n";
+        result += "Euler angles" + text::kDelimiterBinary + text::kDelimiter;
+        result +=
+            std::to_string(euler_angles_.x) + text::kDelimiter + std::to_string(euler_angles_.y) + text::kDelimiter + std::to_string(euler_angles_.z) + '\n';
+        result += "Arc center position" + text::kDelimiterBinary + text::kDelimiter;
+        result += std::to_string(pos.x) + text::kDelimiter + std::to_string(pos.y) + text::kDelimiter + std::to_string(pos.z) + '\n';
+        result += "Arc radius" + text::kDelimiterBinary + text::kDelimiter + std::to_string(arc_radius_) + '\n';
+        result += "Up axis" + text::kDelimiterBinary + text::kDelimiter;
 
         switch (camera_orientation_.up_axis)
         {
@@ -221,12 +221,12 @@ namespace rra
             break;
         }
 
-        result += "Horizontal invert" + rra::text::kDelimiterBinary + rra::text::kDelimiter;
+        result += "Horizontal invert" + text::kDelimiterBinary + text::kDelimiter;
         result += camera_orientation_.flip_horizontal ? "true\n" : "false\n";
-        result += "Vertical invert" + rra::text::kDelimiterBinary + rra::text::kDelimiter;
+        result += "Vertical invert" + text::kDelimiterBinary + text::kDelimiter;
         result += camera_orientation_.flip_vertical ? "true\n" : "false\n";
-        result += "Field of view" + rra::text::kDelimiterBinary + rra::text::kDelimiter + std::to_string(camera->GetFieldOfView()) + '\n';
-        result += "Orthographic" + rra::text::kDelimiterBinary + rra::text::kDelimiter;
+        result += "Field of view" + text::kDelimiterBinary + text::kDelimiter + std::to_string(camera->GetFieldOfView()) + '\n';
+        result += "Orthographic" + text::kDelimiterBinary + text::kDelimiter;
         result += GetCamera()->Orthographic() ? "true\n" : "false\n";
 
         return result;
@@ -234,19 +234,7 @@ namespace rra
 
     ViewerIOCameraPasteResult ViewerIO::SetStateFromReadableString(const std::string& readable_string)
     {
-        // Stores the internal state of ViewerIO objects that is needed to serialize/deserialize.
-        // We don't change the controller's state as we read the string since we may return an
-        // error code and don't want to leave the camera in a partially changed state.
-        // So temporarily store the values in this struct until we know there are no errors.
-        struct
-        {
-            glm::vec3           euler_angles{};
-            glm::vec3           arc_center_position{};
-            float               arc_radius{};
-            ViewerIOOrientation orientation{};
-            float               fov{};
-            bool                orthographic{};
-        } state;
+        ReadableStringState state{};
 
         std::istringstream        stream(readable_string);
         std::string               line;
@@ -254,7 +242,7 @@ namespace rra
 
         while (std::getline(stream, line))
         {
-            std::vector<std::string> split = string_util::Split(line, rra::text::kDelimiterBinary);
+            std::vector<std::string> split = string_util::Split(line, text::kDelimiterBinary);
             std::string&             name  = split[0];
             std::string              val   = string_util::Trim(split[1]);
 
@@ -267,6 +255,17 @@ namespace rra
                 std::istringstream ss(val);
 
                 if (!(ss >> state.euler_angles.x >> state.euler_angles.y >> state.euler_angles.z))
+                {
+                    return ViewerIOCameraPasteResult::kFailure;
+                }
+            }
+            else if (name == "Axis-free rotation")
+            {
+                std::istringstream ss(val);
+
+                if (!(ss >> state.axis_free_rotation[0][0] >> state.axis_free_rotation[1][0] >> state.axis_free_rotation[2][0] >>
+                      state.axis_free_rotation[0][1] >> state.axis_free_rotation[1][1] >> state.axis_free_rotation[2][1] >> state.axis_free_rotation[0][2] >>
+                      state.axis_free_rotation[1][2] >> state.axis_free_rotation[2][2]))
                 {
                     return ViewerIOCameraPasteResult::kFailure;
                 }
@@ -374,16 +373,8 @@ namespace rra
             }
         }
 
-        auto camera = GetCamera();
-
-        // Now actually change state
-        euler_angles_ = state.euler_angles;
-        camera->SetArcCenterPosition(state.arc_center_position);
-        arc_radius_ = state.arc_radius;
-        SetCameraOrientation(state.orientation);
-        view_model_->SetOrientation(state.orientation);
-        camera->SetFieldOfView(state.fov);
-        camera->SetOrthographic(state.orthographic);
+        // Now actually change state.
+        UpdateFromReadableStringState(state);
 
         updated_ = true;
         view_model_->Update();
@@ -556,6 +547,19 @@ namespace rra
     void ViewerIO::ControlStyleChanged()
     {
         // By default, do nothing.
+    }
+
+    void ViewerIO::UpdateFromReadableStringState(const ReadableStringState& state)
+    {
+        auto camera = GetCamera();
+
+        euler_angles_ = state.euler_angles;
+        camera->SetArcCenterPosition(state.arc_center_position);
+        arc_radius_ = state.arc_radius;
+        SetCameraOrientation(state.orientation);
+        view_model_->SetOrientation(state.orientation);
+        camera->SetFieldOfView(state.fov);
+        camera->SetOrthographic(state.orthographic);
     }
 
     bool ViewerIO::MouseMovedWithinDelta() const

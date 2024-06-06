@@ -29,8 +29,7 @@ public:
     /// Provide a sizeHint for this widget.
     /// This particular widget does not have any specific dimensions that it needs,
     /// so it is really up to the layout to determine the size of this widget.
-    /// Since this is the case, just return a simple default size here, and scale
-    /// it according to the ScalingManager.
+    /// Since this is the case, just return a simple default size here.
     /// @return The preferred size of the widget based on the current DPI scalefactor.
     virtual QSize sizeHint() const Q_DECL_OVERRIDE;
 

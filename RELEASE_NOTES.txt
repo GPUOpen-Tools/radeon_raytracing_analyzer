@@ -1,11 +1,10 @@
-Radeon Raytracing Analyzer V1.5 04/24/2024
+Radeon Raytracing Analyzer V1.6 07/01/2024
 ------------------------------------------
 
-V1.5 Changes
+V1.6 Changes
 ------------------------------------
-1) Ray inspector has been updated to display the ray hierarchy, recursive rays will now display under the parent rays that shot them.
-2) Improved Device configuration reporting with newer scene files, including CPU and driver information.
-3) Bug/stability fixes.
+1) Updated to use Qt 6.7.0.
+2) Stability/bug fixes.
 
 Known Issues
 ------------------------------------
@@ -20,9 +19,16 @@ Known Issues
 (9) Only the X dimension is captured for the applications that use indirect dispatches.
 (10) The fov and camera speed does not get properly transmitted when jumping from ray inspector to TLAS viewer via the links on the left panel.
 (11) The ray dispatches feature is currently experimental on Linux and requires at least 16GB of system memory to work reliably in most cases.
+(12) The Wayland display manager is currently unsupported on Linux. Please use X11 instead.
 
 Release Notes History
 ------------------------------------
+
+V1.5 Changes
+------------------------------------
+1) Ray inspector has been updated to display the ray hierarchy, recursive rays will now display under the parent rays that shot them.
+2) Improved Device configuration reporting with newer scene files, including CPU and driver information.
+3) Bug/stability fixes.
 
 V1.4 Changes
 ------------------------------------

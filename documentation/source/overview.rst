@@ -1,3 +1,6 @@
+The OVERVIEW windows
+====================
+
 These panes show the overview of the scene and the system.
 
 Summary

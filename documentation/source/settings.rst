@@ -1,3 +1,9 @@
+Settings
+========
+
+The settings tab is used to control global settings throughout the product.
+These settings are stored, and are persistent for all instances of RRA.
+
 General
 -------
 **Check for updates** If checked, the Radeon Raytracing Analyzer will alert you
@@ -144,4 +150,20 @@ the product.
 .. image:: media/settings/keyboard_shortcuts_1.png
 
 All users are encouraged to adopt these keystrokes while using RRA.
+
+UI Navigation
+-------------
+
+In an effort to improve workflow, RRA supports keyboard shortcuts and
+back and forward history to quickly navigate throughout the UI.
+
+Back and forward navigation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+RRA tracks navigation history, which allows users to navigate back and
+forward between all of RRA’s panes. This is achieved using global
+navigation **hotkeys** shown above, or the back and forward **buttons**
+on all panes in the top left below the file menu.
+
+Currently, back and forward navigation is restricted to pane switches.
 

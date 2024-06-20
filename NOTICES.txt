@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. 
 
 
-Qt v5.15.2 (LGPL v3)
+Qt v6.7.0 (LGPL v3)
 GNU LESSER GENERAL PUBLIC LICENSE
 Version 3, 29 June 2007
 
@@ -122,6 +122,10 @@ Vulkan Header files and API registry
 https://github.com/KhronosGroup/Vulkan-Headers
 Licensed under Apache 2.0
 
+Threading Building Blocks
+https://github.com/oneapi-src/oneTBB
+libtbb.so.12
+Licensed under Apache 2.0
 
 Apache License
 

@@ -9,6 +9,17 @@ strategy.
 
 This document describes how the Radeon Raytracing Analyzer can be used to examine a bounding volume hierarchy.
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   quickstart.rst
+   settings.rst
+   overview.rst
+   tlas_windows.rst
+   blas_windows.rst
+   ray_windows.rst
+
 Supported graphics APIs, RDNA hardware, and operating systems
 -------------------------------------------------------------
 
@@ -32,174 +43,8 @@ Supported graphics APIs, RDNA hardware, and operating systems
 
 -  Ubuntu® 22.04 LTS (Vulkan only)
 
-Radeon Raytracing Analyzer - Quick Start
-========================================
-
-.. include:: capture.rst
-
-Starting the Radeon Raytracing Analyzer
----------------------------------------
-
-Start **RadeonRaytracingAnalyzer.exe** (this is the tool used to view RRA scene data).
-
-How to load a scene
--------------------
-
-There are a few ways to load a scene into RRA.
-
-1) Use the "File/Open scene" pull down menu, or the "File/Recent
-   scene" pull down menu item.
-
-2) Go to the "Welcome" view and click on the "Open a Radeon Raytracing Analyzer file…"
-
-3) Go to the "Welcome" view and click on a scene that you have
-   previously loaded in the Recent list.
-
-.. image:: media/welcome_1.png
-
-4) Go to the Recent scenes view to see a full list of all your recent scenes.
-
-  Notice that there is additional information provided for each scene when
-  viewed in this pane, such as the date when the scene was last accessed. It is
-  also possible to remove recent scenes from the list using the "Remove from list"
-  link button. Note that they will only be removed from the list; they won't be
-  deleted from the file system. There is also a link button, "Open file location"
-  to open the folder where that scene file is on the disk.
-
-.. image:: media/recent_traces_1.png
-
-5) Drag and drop an RRA scene file onto the **Radeon Raytracing Analyzer**
-   executable, or onto an already open RRA instance.
-
-The Radeon Raytracing Analyzer user interface
----------------------------------------------
-
-There are four main menus in the Radeon Raytracing Analyzer and each may have a
-number of sub-windows..
-
-1. **START**
-
-   a. **Welcome** - Shows links to help documentation, and a list of
-      recently opened scenes.
-
-   b. **Recent scenes** - Displays a list of the recently opened
-      scenes.
-
-   c. **About** - Shows build information about RRA and useful links.
-
-2. **OVERVIEW**
-
-   a. **Summary** - Gives an overview of the scene, showing the number
-      of acceleration structures, the resources they use and their memory usage.
-
-   b. **Device configuration** - Provides details of the GPU used to
-      record the scene.
-
-3. **TLAS**
-
-   a. **Viewer** - The main viewer for a top-level acceleration structure.
-
-   b. **Instances** - Lists statistics for all instances referenced in the selected
-      top-level acceleration structure.
-
-   c. **BLAS List** - Lists statistics for all bottom-level acceleration
-      structures referenced in the selected TLAS.
-
-   d. **Properties** - Lists statistics and properties for the currently
-      selected top-level acceleration structure.
-
-4. **BLAS**
-
-   a. **Viewer** - The main viewer for a bottom-level acceleration structure.
-
-   b. **Instances** - Lists statistics for all instances of the selected
-      bottom-level acceleration structure.
-
-   c. **Triangles** - Lists statistics for all triangles of the selected
-      bottom-level acceleration structure.
-
-   d. **Geometries** - Lists statistics for all geometries of the selected
-      selected bottom-level acceleration structure.
-
-   e. **Properties** - Lists statistics and properties for the currently
-      selected bottom-level acceleration structure.
-
-5. **RAY**
-
-   a. **Dispatches** - The main viewer for visualizing various types of dispatches that shot rays.
-
-   b. **Inspector** - A viewer for inspecting rays and how they interact with
-      the scene.
-
-Settings
-========
-
-The settings tab is used to control global settings throughout the product.
-These settings are stored, and are persistent for all instances of RRA.
-
-.. include:: settings.rst
-
-UI Navigation
--------------
-
-In an effort to improve workflow, RRA supports keyboard shortcuts and
-back and forward history to quickly navigate throughout the UI.
-
-Back and forward navigation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-RRA tracks navigation history, which allows users to navigate back and
-forward between all of RRA’s panes. This is achieved using global
-navigation **hotkeys** shown above, or the back and forward **buttons**
-on all panes in the top left below the file menu.
-
-Currently, back and forward navigation is restricted to pane switches.
-
-The OVERVIEW windows
-====================
-
-.. include:: overview.rst
-
-The TLAS windows
-================
-
-These panes show information about a top-level acceleration structure
-and its associated bottom-level acceleration structures.
-
-.. include:: tlas_viewer.rst
-
-.. include:: tlas_instance_list.rst
-
-.. include:: blas_list.rst
-
-.. include:: tlas_properties.rst
-
-The BLAS windows
-================
-
-These panes show information about a bottom-level acceleration structure.
-
-.. include:: blas_viewer.rst
-
-.. include:: blas_instance_list.rst
-
-.. include:: triangle_list.rst
-
-.. include:: geometries_list.rst
-
-.. include:: blas_properties.rst
-
-The RAY windows
-===============
-
-These panes allow dispatches and rays to be visualized.
-
-.. include:: ray_dispatches.rst
-
-.. include:: ray_inspector.rst
-
 DISCLAIMER
-==========
+----------
 The information contained herein is for informational purposes only, and is subject to change without notice. While every
 precaution has been taken in the preparation of this document, it may contain technical inaccuracies, omissions and typographical
 errors, and AMD is under no obligation to update or otherwise correct this information. Advanced Micro Devices, Inc. makes no

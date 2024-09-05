@@ -8,7 +8,7 @@ The first thing you will need to do is generate a BVH scene. Currently,
 this is done via the Radeon Developer Panel. Please read the documentation
 provided with this distribution for information on how to create a BVH scene.
 This can be obtained from within the Radeon Developer Panel or from the link
-on the Radeon Raytracing Analyzer “Welcome” view. The documentation is also
+on the Radeon Raytracing Analyzer "Welcome" view. The documentation is also
 available online at:
 http://radeon-developer-panel.readthedocs.io/en/latest/
 
@@ -71,7 +71,7 @@ number of sub-windows..
    a. **Summary** - Gives an overview of the scene, showing the number
       of acceleration structures, the resources they use and their memory usage.
 
-   b. **Device configuration** - Provides details of the GPU used to
+   b. **System information** - Provides details of the GPU used to
       record the scene.
 
 3. **TLAS**
@@ -109,3 +109,26 @@ number of sub-windows..
 
    b. **Inspector** - A viewer for inspecting rays and how they interact with
       the scene.
+
+Driver experiments
+------------------
+   
+Driver experiments are configured when capturing a scene and allow the behavior
+of certain driver operations to be adjusted.  Please see the Radeon Developer
+Panel documentation for more details on configuring Driver experiments. Modified
+Driver experiments included in a scene file will be listed on the System information
+pane under the section labeled **Driver experiments**. 
+
+.. image:: media/overview/system_info_1.png
+
+When a scene file that includes Driver experiments is loaded, a notification
+banner is displayed below the main drop down menu. 
+
+.. image:: media/overview/driver_experiments_1.png
+
+The notification banner includes a "see details" shortcut link that navigates
+to the System information pane. The banner can be dismissed by clicking the "X"
+button. Clicking the "Do not show again" link prevents the banner from being
+shown for subsequently loaded scene files. The notification banner can be
+re-enabled from the Settings pane.
+

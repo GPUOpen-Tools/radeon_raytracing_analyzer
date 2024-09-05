@@ -50,7 +50,9 @@ If dispatches was enabled from the Radeon Developer Panel, the **Dispatch list**
 a list of all ray dispatches that were executed during the captured frame.
 
 Each dispatch is shown as a card. The title text shows the API function name that launched
-the dispatch and the dispatch dimensions.
+the dispatch and the dispatch dimensions. If the dispatch has been named (using
+vkCmdBeginDebugUtilsLabelEXT or equivalent in Vulkan, or agsDriverExtensionsDX12_PushMarker
+or equivalent in DirectX 12), the name will show below the API name.
 
 The **Traversal statistics** show information pertaining to how much computation
 was done by this dispatch, such as the number of rays that were cast, the traversal loop counts
@@ -60,13 +62,24 @@ dispatch may give the user an indication of the efficiency of a particular dispa
 The **Shader invocations** shows the number of shaders that were executed and their type. This
 is also represented as a donut, showing the relative counts of the shader types.
 
-Clicking on the Dispatch name (text in blue) will navigate to the RAY Dispatches pane.
+Clicking on the Dispatch API function name (text in blue) will navigate to the RAY Dispatches pane.
 
-Device configuration
---------------------
-This pane will show some of the parameters of the video hardware on which the
-scene was recorded, showing such things as the name of the video card and
-the memory bandwidth.
+Since RRA 1.7 it is possible to associate each dispatch with a user-defined string called a user marker.
+If a user marker has been associated with a dispatch, it will be shown below the dispatch API call as
+shown below:
 
-.. image:: media/overview/device_config_1.png
+.. image:: media/overview/user_markers.png
+
+The **Radeon GPU Profiler** documentation provides a comprehensive description of adding user markers
+to your application.
+
+System information
+------------------
+This pane will show some of the parameters of the video hardware on which the scene was
+recorded, showing such things as the name of the video card and the memory bandwidth.
+In addition, if any Driver experiments are included when the scene was captured, they will
+be displayed here under the section labeled **Driver experiments**. Hovering over a driver
+experiment name or value with the mouse pointer displays a tooltip describing that item.
+
+.. image:: media/overview/system_info_1.png
 

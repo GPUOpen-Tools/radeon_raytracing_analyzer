@@ -43,6 +43,8 @@ Supported graphics APIs, RDNA hardware, and operating systems
 
 -  Ubuntu® 22.04 LTS (Vulkan only)
 
+-  Ubuntu® 24.04 LTS (Vulkan only)
+
 DISCLAIMER
 ----------
 The information contained herein is for informational purposes only, and is subject to change without notice. While every

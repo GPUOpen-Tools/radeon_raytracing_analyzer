@@ -1,5 +1,7 @@
 ## Build instructions
 
+To build RRA from source, third party software will need to be installed on your system.  A script may be provided that, when executed by you, automatically fetches and installs software onto your system, where such software originates from (a) elsewhere on your system, if such software is already present on your system, or (b) the internet, if such software is not already present on your system. BY EXECUTING THE SCRIPT AND INSTALLING THE THIRD PARTY SOFTWARE, YOU AGREE TO BE BOUND BY THE LICENSE AGREEMENT(S) APPLICABLE TO SUCH SOFTWARE. You agree to carefully review and abide by the terms and conditions of all license(s) that govern such software.  You acknowledge and agree that AMD is not distributing to you any of such software and that you are solely responsible for the installation of such software on your system.
+
 ### Download Source code
 
 Clone the project radeon_raytracing_analyzer from github.com

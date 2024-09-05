@@ -28,7 +28,7 @@ have a smaller movement speed.
 
 An example TLAS viewer pane is shown below:
 
-.. image:: media/tlas/tlas_viewer_1.png
+.. image:: media/tlas/tlas_viewer_1.jpg
 
 The view is split into 3 sections:
 
@@ -289,7 +289,7 @@ signatures by editing BLASes and repositioning of instances in the TLAS.
 
 An example of a typical scene using the traversal counters is shown below.
 
-    .. image:: media/tlas/loop_count.png
+    .. image:: media/tlas/loop_count.jpg
 
 The visualization depends on a counter range provided by the user via the **Counter range** slider. 
 The range is determined by the scene layout and the counter type selected. Adjusting the slider will
@@ -663,3 +663,4 @@ The Properties tab displays a read-only table of properties and statistics for
 the selected TLAS.
 
 .. image:: media/tlas/tlas_properties_1.png
+

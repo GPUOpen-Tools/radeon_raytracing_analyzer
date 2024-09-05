@@ -87,6 +87,10 @@ and better performance.
 the app will be displayed at. Hovering the mouse over a floating point value will display
 its full precision through a tooltip.
 
+**Show Driver experiment notifications** If checked, the Radeon Raytracing Analyzer
+will display a notification banner under the main drop down menu of the user
+interface indicating when a scene contains modified Driver experiments.
+
 .. image:: media/settings/general_1.png
 
 Themes and colors
@@ -130,6 +134,25 @@ The **Ray coloring** determines the colors of the rays shown in the 3D view of t
 
 .. image:: media/settings/themes_and_colors_1.png
 
+**Color theme:** The color theme can be changed with the "Color Theme" drop down combo box. 
+This changes the application-wide background and text color. The "Light" option maintains 
+RRA's default look of white backgrounds with black text. The "Dark" option changes RRA to 
+have a dark background color with lighter color text. The "Detect OS" option uses the system's 
+color theme to determine whether the color theme should be light or dark. If the system's 
+color theme cannot be detected, RRA will default to light theme. If the system's color 
+theme is changed while RRA is open with the "Detect OS" option selected it will not apply
+until the application has been restarted. On Windows operating systems when changing the color 
+theme a pop-up prompt will recommend restarting the application. This is because not all parts 
+of RRA will update to a change in color theme until the application is restarted. Changing 
+the color theme will not change any other color customization options that have been selected.
+
+.. image:: media/settings/dark_theme_prompt.png
+
+This is an example of how RRA will look when the color theme is changed to dark: 
+
+.. image:: media/settings/dark_theme_1.png
+
+
 Keyboard shortcuts
 ------------------
 
@@ -166,4 +189,5 @@ navigation **hotkeys** shown above, or the back and forward **buttons**
 on all panes in the top left below the file menu.
 
 Currently, back and forward navigation is restricted to pane switches.
+
 

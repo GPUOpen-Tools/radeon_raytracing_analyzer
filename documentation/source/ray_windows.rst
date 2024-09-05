@@ -19,6 +19,11 @@ The Information section
 As well as selecting dispatches from the **Overview pane**, they can also be selected from a dropdown
 in the top-left. The UI will be updated according to the dispatch selected.
 
+If a user marker has been associated with a dispatch, it will show up under the dispatch dropdown as
+show here:
+
+.. image:: media/ray/ray_user_markers.png
+
 Below the dispatch selection dropdown is the **Dispatch counters** table which shows some high-level
 statistics for the selected regions in the heatmap (see below), such as the ray count and number of instance
 intersections per ray.
@@ -96,7 +101,7 @@ on an entry in the table or a pixel in the heatmap image will navigate to the **
 The Inspector Tab
 -----------------
 
-.. image:: media/ray/ray_inspector_1.png
+.. image:: media/ray/ray_inspector_1.jpg
 
 The screen layout is similar to the TLAS and BLAS viewer panes, and is split into 3 areas.
 
@@ -121,7 +126,7 @@ index of the hit triangle. These fields will be blank if the ray misses.
 The center section shows a rendering of the scene:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: media/ray/ray_inspector_3.png
+.. image:: media/ray/ray_inspector_3.jpg
 
 Super-imposed on the scene are the rays corresponding to the pixel selected from the Ray dispatches pane. The scene
 coloring defaults to a new grayscale heatmap coloring mode so that the rays stand out from the background.
@@ -146,3 +151,4 @@ These controls function almost identically to those in the TLAS and BLAS viewer 
 A notable difference is that this pane contains a lock button to the right of the Camera position label. When locked,
 the camera will preserve its position when changing the selected dispatch coordinate in the Dispatches tab instead of
 focusing on the first ray in that coordinate's ray list.
+

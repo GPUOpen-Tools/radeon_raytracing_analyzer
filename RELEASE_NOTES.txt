@@ -1,10 +1,14 @@
-Radeon Raytracing Analyzer V1.6 07/01/2024
+Radeon Raytracing Analyzer V1.7 10/01/2024
 ------------------------------------------
 
-V1.6 Changes
+V1.7 Changes
 ------------------------------------
-1) Updated to use Qt 6.7.0.
-2) Stability/bug fixes.
+1) Dark mode user interface support, allowing the user to choose between a light and dark theme (or have RRA follow the OS theme setting).
+2) UI support for driver experiments.
+3) Support for naming dispatches with user markers.
+4) The total number of procedural nodes has been added for each TLAS in the Overview|Summary pane.
+5) The "Device configuration" pane has been renamed to "System information."
+6) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -23,6 +27,11 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.6 Changes
+------------------------------------
+1) Updated to use Qt 6.7.0.
+2) Stability/bug fixes.
 
 V1.5 Changes
 ------------------------------------

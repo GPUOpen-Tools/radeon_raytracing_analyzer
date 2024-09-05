@@ -28,7 +28,7 @@ to reduce performance bottlenecks.
 
 ## Important notes
 1. In order to capture BVH data, please ensure that acceleration structures are rebuilt each frame.
-2. In order to capture ray history information, please ensure that all command buffer are rebuilt each frame.
+2. In order to capture ray history information, please ensure that all command buffers are rebuilt each frame.
 3. RayQuery is currently only supported from compute shaders. Calling RayQuery from the graphics pipeline is not supported.
 
 ## Supported APIs
@@ -43,6 +43,7 @@ to reduce performance bottlenecks.
 * Windows® 10
 * Windows® 11
 * Ubuntu 22.04 LTS (Vulkan only)
+* Ubuntu 24.04 LTS (Vulkan only)
 
 ## Build instructions
 See [BUILD.md](BUILD.md) for more details.
@@ -81,4 +82,4 @@ CMake is a registered trademark of Kitware, Inc.
 Qt and the Qt logo are registered trademarks of the Qt Company Ltd and/or its subsidiaries worldwide.
 
 
-© 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+© 2022-2024 Advanced Micro Devices, Inc. All rights reserved.

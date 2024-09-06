@@ -216,7 +216,8 @@ namespace rta
     {
         DXC_RayTracingCounterInfo    = 1,
         DispatchSize                 = 2,
-        DXC_RayHistoryTraversalFlags = 3
+        DXC_RayHistoryTraversalFlags = 3,
+        UserMarkerInfo               = 4
     };
 
     using RayHistoryTokenFilter = std::unordered_set<RayHistoryTokenType>;

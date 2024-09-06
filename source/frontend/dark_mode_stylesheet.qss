@@ -1,0 +1,130 @@
+/**
+* RRA stylesheet for dark mode
+*
+* Centralized location for styling of widgets in RRA for dark mode.
+*/
+
+/*************************************/
+/* QScrollBar
+/*************************************/
+
+QScrollBar:horizontal
+{
+    height: 13px;
+    background: rgb(30, 30, 30);
+    margin: 0px 13px 0px 13px;
+}
+
+QScrollBar::handle:horizontal
+{
+    background: rgb(60, 60, 60);
+    min-width: 13px;
+}
+
+QScrollBar::add-line:horizontal
+{
+    border: none;
+    background-color: rgb(30, 30, 30);
+    width: 13px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal
+{
+    border: none;
+    background-color: rgb(30, 30, 30);
+    width: 13px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar:left-arrow:horizontal
+{
+    image: url(:/Resources/assets/arrow_gray_left.svg);
+    width: 8px;
+    height: 8px;
+}
+
+QScrollBar::right-arrow:horizontal
+{
+    image: url(:/Resources/assets/arrow_gray_right.svg);
+    width: 8px;
+    height: 8px;
+}
+
+QScrollBar:vertical
+{
+    width: 13px;
+    background: rgb(30, 30, 30);
+    margin: 13px 0px 13px 0px;
+}
+
+QScrollBar::handle:vertical
+{
+    background: rgb(60, 60, 60);
+    min-height: 13px;
+}
+
+QScrollBar::add-line:vertical
+{
+    border: none;
+    background-color: rgb(30, 30, 30);
+    height: 13px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical
+{
+    border: none;
+    background-color: rgb(30, 30, 30);
+    height: 13px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar:up-arrow:vertical
+{
+    image: url(:/Resources/assets/PullDownOn_Gray.svg);
+    width: 8px;
+    height: 8px;
+}
+
+QScrollBar::down-arrow:vertical
+{
+    image: url(:/Resources/assets/PullDownOff_Gray.svg);
+    width: 8px;
+    height: 8px;
+}
+
+QScrollBar::add-line:hover, QScrollBar::sub-line:hover
+{
+    background-color: rgb(60, 60, 60);
+}
+
+QScrollBar::add-page, QScrollBar::sub-page
+{
+    background: none;
+}
+
+/*************************************/
+/* Summary Pane
+/*************************************/
+
+QLabel#acceleration_structure_diagram_
+{
+    image: url(:/Resources/assets/acceleration_structure_overview-dark-theme.svg);
+}
+
+ScaledLabel#user_marker_stack_
+{
+    font: 9.75pt;
+    color: rgb(160, 160, 160);
+}
+
+ScaledLabel#user_marker_
+{
+    font: 9.75pt;
+    color: rgb(160, 160, 160);
+}

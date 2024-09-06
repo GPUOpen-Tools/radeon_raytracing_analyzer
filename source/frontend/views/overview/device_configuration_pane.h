@@ -41,6 +41,9 @@ private:
     /// @brief Refresh the UI.
     void Refresh();
 
+    /// @brief Update the pane based on the color theme.
+    void OnColorThemeUpdated();
+
     Ui::DeviceConfigurationPane*   ui_;     ///< Pointer to the Qt UI design.
     rra::DeviceConfigurationModel* model_;  ///< The model for this pane.
 };

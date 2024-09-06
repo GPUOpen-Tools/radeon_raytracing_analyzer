@@ -32,17 +32,21 @@
 static const int kTraversalCounterDefaultMinValue = 0;
 static const int kTraversalCounterDefaultMaxValue = 100;
 
-const char* kLockOpenClickableIcon = ":/Resources/assets/third_party/ionicons/lock-open-outline-clickable.svg";
-const char* kLockOpenHoverIcon     = ":/Resources/assets/third_party/ionicons/lock-open-outline-hover.svg";
+const char* kLockOpenClickableIcon     = ":/Resources/assets/third_party/ionicons/lock-open-outline-clickable.svg";
+const char* kLockOpenClickableIconDark = ":/Resources/assets/third_party/ionicons/lock-open-outline-clickable-dark-theme.svg";
+const char* kLockOpenHoverIcon         = ":/Resources/assets/third_party/ionicons/lock-open-outline-hover.svg";
 
-const char* kLockClosedClickableIcon = ":/Resources/assets/third_party/ionicons/lock-closed-outline-clickable.svg";
-const char* kLockClosedHoverIcon     = ":/Resources/assets/third_party/ionicons/lock-closed-outline-hover.svg";
+const char* kLockClosedClickableIcon     = ":/Resources/assets/third_party/ionicons/lock-closed-outline-clickable.svg";
+const char* kLockClosedClickableIconDark = ":/Resources/assets/third_party/ionicons/lock-closed-outline-clickable-dark-theme.svg";
+const char* kLockClosedHoverIcon         = ":/Resources/assets/third_party/ionicons/lock-closed-outline-hover.svg";
 
-const char* kWandClickableIcon = ":/Resources/assets/third_party/ionicons/wand-clickable.svg";
-const char* kWandHoverIcon     = ":/Resources/assets/third_party/ionicons/wand-hover.svg";
+const char* kWandClickableIcon     = ":/Resources/assets/third_party/ionicons/wand-clickable.svg";
+const char* kWandClickableIconDark = ":/Resources/assets/third_party/ionicons/wand-clickable-dark-theme.svg";
+const char* kWandHoverIcon         = ":/Resources/assets/third_party/ionicons/wand-hover.svg";
 
-const char* kKBDMouseClickableIcon = ":/Resources/assets/kbd_mouse_clickable.svg";
-const char* kKBDMouseHoverIcon     = ":/Resources/assets/kbd_mouse_hover.svg";
+const char* kKBDMouseClickableIcon     = ":/Resources/assets/kbd_mouse_clickable.svg";
+const char* kKBDMouseClickableIconDark = ":/Resources/assets/kbd_mouse_clickable-dark-theme.svg";
+const char* kKBDMouseHoverIcon         = ":/Resources/assets/kbd_mouse_hover.svg";
 
 /// @brief The signal handler to broadcast camera changes to all instances of ViewPane objects.
 ViewPaneSignalHandler ViewPane::signal_handler;
@@ -133,7 +137,14 @@ ViewPane::ViewPane(QWidget* parent)
 
     ui_->histogram_content_->SetSelectionMode(RgpHistogramWidget::kHistogramSelectionModeRange);
 
-    ui_->lock_camera_button_->SetNormalIcon(QIcon(kLockOpenClickableIcon));
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->lock_camera_button_->SetNormalIcon(QIcon(kLockOpenClickableIconDark));
+    }
+    else
+    {
+        ui_->lock_camera_button_->SetNormalIcon(QIcon(kLockOpenClickableIcon));
+    }
     ui_->lock_camera_button_->SetHoverIcon(QIcon(kLockOpenHoverIcon));
 
     ui_->lock_camera_button_->setCursor(Qt::PointingHandCursor);
@@ -144,8 +155,17 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->camera_to_origin_button_->setCursor(Qt::PointingHandCursor);
 
     QIcon refresh_clickable_icon;
-    refresh_clickable_icon.addFile(
-        QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        refresh_clickable_icon.addFile(
+            QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable-dark-theme.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+    else
+    {
+        refresh_clickable_icon.addFile(
+            QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
 
     QIcon refresh_hover_icon;
     refresh_hover_icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-hover.svg"), QSize(), QIcon::Normal, QIcon::Off);
@@ -155,6 +175,7 @@ ViewPane::ViewPane(QWidget* parent)
 
     ui_->copy_camera_transform_button_->hide();
     ui_->paste_camera_transform_button_->hide();
+    ui_->restore_camera_transform_button_->hide();
 
     model_->InitializeModel(ui_->content_field_of_view_, rra::kSidePaneViewFieldOfViewSlider, "value");
     model_->InitializeModel(ui_->content_near_plane_, rra::kSidePaneViewNearPlaneSlider, "value");
@@ -201,8 +222,11 @@ ViewPane::ViewPane(QWidget* parent)
     connect(ui_->content_show_hide_control_style_hotkeys_, SIGNAL(clicked(bool)), this, SLOT(ToggleHotkeyLayout()));
 
     connect(ui_->content_field_of_view_, &QSlider::valueChanged, this, &ViewPane::SetFieldOfView);
+
+    // For now, near plane slider is always hidden.
     ui_->label_near_plane_->hide();
     ui_->content_near_plane_->hide();
+
     connect(ui_->content_movement_speed_, &QSlider::valueChanged, this, &ViewPane::SetMovementSpeed);
 
     connect(ui_->content_control_style_invert_vertical_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleVerticalAxisInverted);
@@ -229,6 +253,8 @@ ViewPane::ViewPane(QWidget* parent)
         ui_->traversal_counter_slider_->SetSpan(min, max);
     });
 
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &ViewPane::OnColorThemeUpdated);
+
     // Set the heatmap update callback.
     model_->SetHeatmapUpdateCallback([&](rra::renderer::HeatmapData heatmap_data) {
         auto heatmap_image = QImage(static_cast<int>(rra::kHeatmapResolution), 1, QImage::Format::Format_RGBA8888);
@@ -246,11 +272,26 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_field_of_view_->setStyle(new AbsoluteSliderPositionStyle(ui_->content_field_of_view_->style()));
     ui_->content_movement_speed_->setStyle(new AbsoluteSliderPositionStyle(ui_->content_movement_speed_->style()));
 
-    ui_->content_show_hide_control_style_hotkeys_->SetNormalIcon(QIcon(kKBDMouseClickableIcon));
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->content_show_hide_control_style_hotkeys_->SetNormalIcon(QIcon(kKBDMouseClickableIconDark));
+    }
+    else
+    {
+        ui_->content_show_hide_control_style_hotkeys_->SetNormalIcon(QIcon(kKBDMouseClickableIcon));
+    }
+
     ui_->content_show_hide_control_style_hotkeys_->SetHoverIcon(QIcon(kKBDMouseHoverIcon));
     ui_->content_show_hide_control_style_hotkeys_->setBaseSize(QSize(47, 17));
 
-    ui_->traversal_adapt_to_view_->SetNormalIcon(QIcon(kWandClickableIcon));
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->traversal_adapt_to_view_->SetNormalIcon(QIcon(kWandClickableIconDark));
+    }
+    else
+    {
+        ui_->traversal_adapt_to_view_->SetNormalIcon(QIcon(kWandClickableIcon));
+    }
     ui_->traversal_adapt_to_view_->SetHoverIcon(QIcon(kWandHoverIcon));
     ui_->traversal_adapt_to_view_->setBaseSize(QSize(23, 23));
 
@@ -579,7 +620,16 @@ void ViewPane::MoveCameraToOrigin()
 void ViewPane::ToggleCameraLock()
 {
     model_->SetCameraLock(!model_->GetCameraLock());
-    ui_->lock_camera_button_->SetNormalIcon(QIcon(model_->GetCameraLock() ? kLockClosedClickableIcon : kLockOpenClickableIcon));
+
+    const char* closed_icon = kLockClosedClickableIcon;
+    const char* open_icon   = kLockOpenClickableIcon;
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        closed_icon = kLockClosedClickableIconDark;
+        open_icon   = kLockOpenClickableIconDark;
+    }
+
+    ui_->lock_camera_button_->SetNormalIcon(QIcon(model_->GetCameraLock() ? closed_icon : open_icon));
     ui_->lock_camera_button_->SetHoverIcon(QIcon(model_->GetCameraLock() ? kLockClosedHoverIcon : kLockOpenHoverIcon));
     rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingLockCamera, model_->GetCameraLock());
 }
@@ -612,52 +662,6 @@ void ViewPane::CheckPasteResult(rra::ViewerIOCameraPasteResult result)
             Note that nothing will be rendered if arc radius is 0 while orthographic projection is enabled.";
         QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Information, "Paste Error", QString::fromStdString(error_string));
     }
-}
-
-void ViewPane::CopyCameraButtonClicked()
-{
-    auto        controller     = model_->GetCurrentController();
-    QClipboard* clipboard      = QGuiApplication::clipboard();
-    QString     readableString = QString::fromStdString(controller->GetReadableString());
-
-    clipboard->setText(readableString);
-}
-
-void ViewPane::PasteCameraButtonClicked()
-{
-    QClipboard* clipboard       = QGuiApplication::clipboard();
-    std::string readable_string = clipboard->text().toStdString();
-
-    std::istringstream stream(readable_string);
-    std::string        line;
-    std::getline(stream, line);
-
-    auto styles = model_->GetControlStyles();
-    auto split  = rra::string_util::Split(line, rra::text::kDelimiterBinary);
-
-    if (split.size() != 2)
-    {
-        CheckPasteResult(rra::ViewerIOCameraPasteResult::kFailure);
-        return;
-    }
-
-    auto controller_type = rra::string_util::Trim(split[1]);
-
-    // I think it would be better to have an enum defining the indices of control styles
-    // so we don't have to loop through them and string compare. Would be O(1) instead of O(n).
-    int style_count = static_cast<int>(styles.size());
-    for (int i = 0; i < style_count; ++i)
-    {
-        if (controller_type == styles[i])
-        {
-            ui_->content_control_style_->SetSelectedRow(i);
-            auto controller = model_->GetCurrentController();
-            CheckPasteResult(controller->SetStateFromReadableString(readable_string));
-            return;
-        }
-    }
-
-    CheckPasteResult(rra::ViewerIOCameraPasteResult::kFailure);
 }
 
 void ViewPane::CameraPositionChangedX(double x_new)
@@ -873,4 +877,38 @@ bool ViewPane::eventFilter(QObject* obj, QEvent* event)
         return true;
     }
     return false;
+}
+
+void ViewPane::OnColorThemeUpdated()
+{
+    const char* closed_icon = kLockClosedClickableIcon;
+    const char* open_icon   = kLockOpenClickableIcon;
+
+    QIcon refresh_clickable_icon;
+
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        closed_icon = kLockClosedClickableIconDark;
+        open_icon   = kLockOpenClickableIconDark;
+
+        ui_->traversal_adapt_to_view_->SetNormalIcon(QIcon(kWandClickableIconDark));
+
+        ui_->content_show_hide_control_style_hotkeys_->SetNormalIcon(QIcon(kKBDMouseClickableIconDark));
+
+        refresh_clickable_icon.addFile(
+            QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable-dark-theme.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+    else
+    {
+        ui_->traversal_adapt_to_view_->SetNormalIcon(QIcon(kWandClickableIcon));
+
+        ui_->content_show_hide_control_style_hotkeys_->SetNormalIcon(QIcon(kKBDMouseClickableIcon));
+
+        refresh_clickable_icon.addFile(
+            QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+
+    ui_->camera_to_origin_button_->SetNormalIcon(refresh_clickable_icon);
+
+    ui_->lock_camera_button_->SetNormalIcon(QIcon(model_->GetCameraLock() ? closed_icon : open_icon));
 }

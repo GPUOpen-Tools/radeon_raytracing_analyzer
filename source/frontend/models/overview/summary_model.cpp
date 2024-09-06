@@ -253,6 +253,11 @@ namespace rra
                 continue;
             }
 
+            if (RraTlasGetTotalProceduralNodeCount(tlas_index, &stats.procedural_node_count) != kRraOk)
+            {
+                continue;
+            }
+
             if (RraTlasGetInactiveInstancesCount(tlas_index, &stats.inactive_instance_count) != kRraOk)
             {
                 continue;

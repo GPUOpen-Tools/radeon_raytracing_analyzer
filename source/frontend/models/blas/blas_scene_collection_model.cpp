@@ -53,8 +53,12 @@ namespace rra
         // Create a scene.
         Scene* blas_scene = new Scene();
 
+        // Allocate buffers needed by BLAS nodes.
+        renderer::RraVertex* vertex_buffer{blas_scene->AllocateVertexBuffer(blas_index)};
+        std::byte* child_buffer{blas_scene->AllocateChildBuffer(blas_index)};
+
         // Construct a tree by using the blas_index.
-        auto blas_node = SceneNode::ConstructFromBlas(blas_index);
+        auto blas_node = SceneNode::ConstructFromBlas(blas_index, vertex_buffer, child_buffer);
 
         // Initialize the scene with the given node.
         blas_scene->Initialize(blas_node);

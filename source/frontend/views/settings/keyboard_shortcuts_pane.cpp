@@ -15,7 +15,7 @@ KeyboardShortcutsPane::KeyboardShortcutsPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 }
 
 KeyboardShortcutsPane::~KeyboardShortcutsPane()

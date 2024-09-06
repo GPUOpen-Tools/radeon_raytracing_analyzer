@@ -184,7 +184,7 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Device configuration pane</string>
+                   <string>System information</string>
                   </property>
                  </widget>
                 </item>

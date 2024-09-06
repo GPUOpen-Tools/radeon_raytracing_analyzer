@@ -7,6 +7,9 @@
 
 #include "models/acceleration_structure_viewer_model.h"
 
+#undef emit
+#include <execution>
+#define emit
 #include <QTreeView>
 
 #include "qt_common/custom_widgets/scaled_tree_view.h"
@@ -297,14 +300,42 @@ namespace rra
         auto info = std::make_shared<renderer::GraphicsContextSceneInfo>();
         info->acceleration_structures.resize(blas_count);
 
-        for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
+        // Allocate memory.
+        for (uint32_t blas_index{0}; blas_index < blas_count; ++blas_index)
         {
-            auto scene_root = SceneNode::ConstructFromBlas(static_cast<uint32_t>(blas_index));
+            renderer::TraversalTree& traversal_tree{info->acceleration_structures[blas_index]};
+
+            uint32_t total_tri_count{};
+            RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
+            traversal_tree.vertices.resize((size_t)total_tri_count * 3);
+
+            uint64_t total_node_count{};
+            RraBlasGetTotalNodeCount(blas_index, &total_node_count);
+            traversal_tree.child_nodes_buffer = new std::byte[(total_node_count + 1) * sizeof(SceneNode)];
+
+            uint64_t box_node_count{};
+            RraBlasGetTotalNodeCount(blas_index, &box_node_count);
+            traversal_tree.volumes.reserve(box_node_count);
+        }
+
+        std::vector<uint32_t> blas_indices(blas_count);
+        std::iota(blas_indices.begin(), blas_indices.end(), 0);
+
+        std::for_each(std::execution::par, blas_indices.begin(), blas_indices.end(), [&](uint32_t blas_index) {
+            renderer::TraversalTree& traversal_tree{info->acceleration_structures[blas_index]};
+
+            SceneNode* scene_root = SceneNode::ConstructFromBlas(static_cast<uint32_t>(blas_index), traversal_tree.vertices.data(), traversal_tree.child_nodes_buffer);
 
             // Add to the tree using the scene root.
-            scene_root->AddToTraversalTree(info->acceleration_structures[blas_index]);
+            scene_root->AddToTraversalTree(false, traversal_tree);
+        });
 
-            delete scene_root;
+        // Deallocate child nodes buffers.
+        for (uint32_t blas_index{0}; blas_index < blas_count; ++blas_index)
+        {
+            renderer::TraversalTree& traversal_tree{info->acceleration_structures[blas_index]};
+            delete[] traversal_tree.child_nodes_buffer;
+            traversal_tree.child_nodes_buffer = nullptr;
         }
 
         return info;

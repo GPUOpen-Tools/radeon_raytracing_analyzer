@@ -93,6 +93,19 @@ namespace rra
         /// @returns True if an up axis is supported, false otherwise.
         virtual bool SupportsUpAxis() const override;
 
+        /// @brief Fit to the given camera params.
+        ///
+        /// @param [in] position The absolute camera position.
+        /// @param [in] forward The camera forward direction.
+        /// @param [in] up The camera up direction.
+        /// @param [in] fov The field of view of the camera.
+        /// @param [in] speed The speed of the camera.
+        virtual void FitCameraParams(glm::vec3            position,
+                                     glm::vec3            forward,
+                                     glm::vec3            up,
+                                     std::optional<float> opt_fov   = std::nullopt,
+                                     std::optional<float> opt_speed = std::nullopt) override;
+
         /// @brief Pitch the camera by the given angle.
         ///
         /// @param [in] angle The angle to pitch by.

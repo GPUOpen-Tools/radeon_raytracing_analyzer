@@ -25,6 +25,7 @@ namespace rra
         kTlasPropertiesNumInstanceNodes,
         kTlasPropertiesNumBlases,
         kTlasPropertiesNumTriangles,
+        kTlasPropertiesNumProceduralNodes,
 
         kTlasPropertiesBuildFlagAllowUpdate,
         kTlasPropertiesBuildFlagAllowCompaction,

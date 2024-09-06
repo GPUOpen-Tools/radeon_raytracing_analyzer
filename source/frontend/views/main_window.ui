@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MainWindow</class>
- <widget class="QMainWindow" name="main_window_">
+ <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>894</width>
+    <width>1009</width>
     <height>639</height>
    </rect>
   </property>
@@ -14,7 +14,10 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="main_content_">
-   <layout class="QHBoxLayout" name="horizontal_layout_5_">
+   <layout class="QVBoxLayout" name="vertical_layout_1_">
+    <property name="spacing">
+     <number>0</number>
+    </property>
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -28,9 +31,12 @@
      <number>0</number>
     </property>
     <item>
+     <widget class="DriverOverridesNotificationBanner" name="driver_overrides_notification_banner_" native="true"/>
+    </item>
+    <item>
      <widget class="TabWidget" name="main_tab_widget_">
       <property name="currentIndex">
-       <number>1</number>
+       <number>7</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -125,7 +131,7 @@
           </item>
           <item>
            <property name="text">
-            <string>Device configuration</string>
+            <string>System information</string>
            </property>
           </item>
          </widget>
@@ -269,7 +275,7 @@
        <attribute name="title">
         <string>  RAY  </string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontal_layout_6_" stretch="1,5">
+       <layout class="QHBoxLayout" name="horizontal_layout_6_" stretch="1">
         <property name="spacing">
          <number>0</number>
         </property>
@@ -307,7 +313,7 @@
             <item>
              <spacer name="vertical_spacer_2_">
               <property name="orientation">
-               <enum>Qt::Vertical</enum>
+               <enum>Qt::Orientation::Vertical</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -329,10 +335,10 @@
                <string/>
               </property>
               <property name="pixmap">
-               <pixmap resource="resources.qrc">:/Resources/assets/stop_128x128.png</pixmap>
+               <pixmap>:/Resources/assets/stop_128x128.png</pixmap>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -353,7 +359,7 @@
                <string>The loaded trace does not contain ray history information.</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -374,14 +380,14 @@
                <string>If ray history information is required, please ensure ray history is enabled in the Radeon Developer Panel when capturing ray trace information.</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
             <item>
              <spacer name="vertical_spacer_3_">
               <property name="orientation">
-               <enum>Qt::Vertical</enum>
+               <enum>Qt::Orientation::Vertical</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -419,6 +425,12 @@
        </layout>
       </widget>
       <widget class="QWidget" name="spacer_tab_">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <attribute name="title">
         <string>SPACER</string>
        </attribute>
@@ -482,8 +494,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>894</width>
-     <height>26</height>
+     <width>1009</width>
+     <height>22</height>
     </rect>
    </property>
   </widget>
@@ -491,14 +503,14 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>NavigationListWidget</class>
-   <extends>QListWidget</extends>
-   <header>qt_common/custom_widgets/navigation_list_widget.h</header>
-  </customwidget>
-  <customwidget>
    <class>ScaledLabel</class>
    <extends>QLabel</extends>
    <header>qt_common/custom_widgets/scaled_label.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NavigationListWidget</class>
+   <extends>QListWidget</extends>
+   <header>qt_common/custom_widgets/navigation_list_widget.h</header>
   </customwidget>
   <customwidget>
    <class>ScaledMenuBar</class>
@@ -519,71 +531,79 @@
   </customwidget>
   <customwidget>
    <class>TlasViewerPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/tlas/tlas_viewer_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BlasViewerPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/blas/blas_viewer_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BlasListPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/tlas/blas_list_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>TlasInstancesPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/tlas/tlas_instances_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BlasInstancesPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/blas/blas_instances_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BlasTrianglesPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/blas/blas_triangles_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BlasGeometriesPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/blas/blas_geometries_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>TlasPropertiesPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/tlas/tlas_properties_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BlasPropertiesPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/blas/blas_properties_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>RayHistoryPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/ray/ray_history_pane.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>RayInspectorPane</class>
-   <extends>BasePane</extends>
+   <extends>QWidget</extends>
    <header>views/ray/ray_inspector_pane.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>DriverOverridesNotificationBanner</class>
+   <extends>QWidget</extends>
+   <header>qt_common/custom_widgets/driver_overrides_notification_banner.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

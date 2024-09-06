@@ -18,9 +18,6 @@ DeviceConfigurationPane::DeviceConfigurationPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    // Set white background for this pane.
-    rra::widget_util::SetWidgetBackgroundColor(this, Qt::white);
-
     model_ = new rra::DeviceConfigurationModel();
 
     model_->InitializeModel(ui_->content_processor_brand_, rra::kDeviceConfigurationCPUName, "text");
@@ -45,6 +42,13 @@ DeviceConfigurationPane::DeviceConfigurationPane(QWidget* parent)
 
     ui_->label_raytracing_version_->hide();
     ui_->content_raytracing_version_->hide();
+
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->label_amd_logo_->setStyleSheet("QLabel#label_amd_logo_ { image: url(:/Resources/assets/amd_logo_white.svg); }");
+    }
+
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &DeviceConfigurationPane::OnColorThemeUpdated);
 }
 
 DeviceConfigurationPane::~DeviceConfigurationPane()
@@ -83,6 +87,18 @@ void DeviceConfigurationPane::showEvent(QShowEvent* event)
     ui_->label_driver_software_version_->setVisible(false);
     ui_->content_driver_software_version_->setVisible(false);
 #endif
+}
+
+void DeviceConfigurationPane::OnColorThemeUpdated()
+{
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->label_amd_logo_->setStyleSheet("QLabel#label_amd_logo_ { image: url(:/Resources/assets/amd_logo_white.svg); }");
+    }
+    else
+    {
+        ui_->label_amd_logo_->setStyleSheet("QLabel#label_amd_logo_ { image: url(:/Resources/assets/amd_logo.svg); }");
+    }
 }
 
 void DeviceConfigurationPane::Refresh()

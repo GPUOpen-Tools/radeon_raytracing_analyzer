@@ -75,6 +75,18 @@ private slots:
     /// @param [in] button_id The id of the selected button.
     void ItemButtonClicked(int button_id);
 
+    /// @brief Handle Color theme changed in the settings.
+    ///
+    /// color_theme_option Color theme option that was selected.
+    void ColorThemeOptionSelected(QListWidgetItem* color_theme_option);
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    /// @brief Handle Color scheme changed in the OS.
+    ///
+    /// color_scheme The color scheme selected by the OS.
+    void OsColorSchemeChanged(Qt::ColorScheme color_scheme);
+#endif
+
     /// @brief Default settings button clicked slot.
     ///
     /// Called when the default settings button is clicked.

@@ -57,6 +57,14 @@ public:
     /// @return The derived dispatch size.
     rta::DispatchSize GetDerivedDispatchSize() const;
 
+    bool IsUserMarkerContextValid() const
+    {
+        return (user_marker_context_.cb_id != 0) && (user_marker_context_.user_marker_idx != 0);
+    }
+
+    uint32_t GetUserMarkerContextCbId() const { return user_marker_context_.cb_id; }
+    uint32_t GetUserMarkerContextIdx() const { return user_marker_context_.user_marker_idx; }
+
 private:
     /// @brief Get the percentage of the loader's progress.
     /// @return The loaded percentage.
@@ -109,6 +117,12 @@ private:
     uint32_t dim_x_ = 0;  ///< The dispatch dimension x.
     uint32_t dim_y_ = 0;  ///< The dispatch dimension y.
     uint32_t dim_z_ = 0;  ///< The dispatch dimension z.
+
+    struct
+    {
+        uint32_t user_marker_idx;   ///< Index into marker infos contained in user_marker_history_map_
+        uint32_t cb_id;             ///< key of UserMarkerHistory::user_marker_history_map_
+    } user_marker_context_ = {};
 };
 
 #endif

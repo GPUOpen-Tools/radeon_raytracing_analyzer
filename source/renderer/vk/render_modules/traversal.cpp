@@ -278,37 +278,7 @@ namespace rra
 
         void TraversalRenderModule::Draw(const RenderFrameContext* context)
         {
-            // Update the counter range if requested
-            if ((!traversal_counter_range_update_functions_.empty() || traversal_counter_range_continuous_update_function_) && counter_gpu_buffer_size_ > 0)
-            {
-                std::vector<TraversalResult> counters;
-                counters.resize(2);  // Resize to 2 for min/max at the beginning.
-
-                context->device->ReadFromBuffer(counter_cpu_buffers_[context->current_frame].allocation, counters.data(), counter_cpu_buffer_size_);
-
-                uint32_t min_counter = counters[kSubsampleMinIndex].counter;
-                uint32_t max_counter = counters[kSubsampleMaxIndex].counter;
-
-                for (auto callback : traversal_counter_range_update_functions_)
-                {
-                    callback(min_counter, max_counter);
-                }
-
-                traversal_counter_range_update_functions_.clear();
-
-                if (traversal_counter_range_continuous_update_function_)
-                {
-                    traversal_counter_range_continuous_update_function_(min_counter, max_counter);
-                }
-            }
-
-            if (histogram_update_function_ && histogram_gpu_buffer_size_ > 0)
-            {
-                std::vector<uint32_t> histogram_data(histogram_gpu_buffer_size_ / sizeof(uint32_t));
-                context->device->ReadFromBuffer(histogram_gpu_buffers_[context->current_frame].allocation, histogram_data.data(), histogram_gpu_buffer_size_);
-                histogram_update_function_(histogram_data, last_offscreen_image_width_, last_offscreen_image_height_);
-                context->device->ZeroOutBuffer(histogram_gpu_buffers_[context->current_frame].allocation, histogram_gpu_buffer_size_);
-            }
+            rendered_this_frame_ = true;
 
             // This function is safe to use repeatedly.
             // Creates the offscreen image when necessary.
@@ -388,8 +358,8 @@ namespace rra
                 buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
                 buffer_barrier.srcAccessMask       = VK_ACCESS_SHADER_WRITE_BIT;
                 buffer_barrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
-                buffer_barrier.srcQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
-                buffer_barrier.dstQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
+                buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
                 buffer_barrier.buffer              = counter_gpu_buffers_[context->current_frame].buffer;
                 buffer_barrier.offset              = 0;
                 buffer_barrier.size                = VK_WHOLE_SIZE;
@@ -428,8 +398,8 @@ namespace rra
                 buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
                 buffer_barrier.srcAccessMask       = VK_ACCESS_SHADER_WRITE_BIT;
                 buffer_barrier.dstAccessMask       = VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_SHADER_READ_BIT;
-                buffer_barrier.srcQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
-                buffer_barrier.dstQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
+                buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
                 buffer_barrier.buffer              = counter_gpu_buffers_[context->current_frame].buffer;
                 buffer_barrier.offset              = 0;
                 buffer_barrier.size                = VK_WHOLE_SIZE;
@@ -769,6 +739,45 @@ namespace rra
                 context_->device->GetDevice(), static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, nullptr);
         }
 
+        void TraversalRenderModule::EveryFrameUpdate(Device* device, uint32_t current_frame)
+        {
+            // Update the counter range if requested
+            if ((!traversal_counter_range_update_functions_.empty() || traversal_counter_range_continuous_update_function_) && counter_gpu_buffer_size_ > 0)
+            {
+                std::vector<TraversalResult> counters;
+                counters.resize(2);  // Resize to 2 for min/max at the beginning.
+
+                device->ReadFromBuffer(counter_cpu_buffers_[current_frame].allocation, counters.data(), counter_cpu_buffer_size_);
+
+                uint32_t min_counter = counters[kSubsampleMinIndex].counter;
+                uint32_t max_counter = counters[kSubsampleMaxIndex].counter;
+
+                for (auto callback : traversal_counter_range_update_functions_)
+                {
+                    callback(min_counter, max_counter);
+                }
+
+                traversal_counter_range_update_functions_.clear();
+
+                if (traversal_counter_range_continuous_update_function_)
+                {
+                    traversal_counter_range_continuous_update_function_(min_counter, max_counter);
+                }
+            }
+
+            if (histogram_update_function_ && histogram_gpu_buffer_size_ > 0)
+            {
+                std::vector<uint32_t> histogram_data(histogram_gpu_buffer_size_ / sizeof(uint32_t));
+                device->ReadFromBuffer(histogram_gpu_buffers_[current_frame].allocation, histogram_data.data(), histogram_gpu_buffer_size_);
+                histogram_update_function_(histogram_data, last_offscreen_image_width_, last_offscreen_image_height_);
+                if (rendered_this_frame_)
+                {
+                    device->ZeroOutBuffer(histogram_gpu_buffers_[current_frame].allocation, histogram_gpu_buffer_size_);
+                }
+            }
+            rendered_this_frame_ = false;
+        }
+
         void TraversalRenderModule::UploadTraversalData(const RenderFrameContext* context)
         {
             // Generate CPU side traversal information.
@@ -825,8 +834,8 @@ namespace rra
                 buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
                 buffer_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
                 buffer_barrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
-                buffer_barrier.srcQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
-                buffer_barrier.dstQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
+                buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
                 buffer_barrier.buffer              = volume_buffer;
                 buffer_barrier.offset              = 0;
                 buffer_barrier.size                = VK_WHOLE_SIZE;
@@ -881,8 +890,8 @@ namespace rra
                 buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
                 buffer_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
                 buffer_barrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
-                buffer_barrier.srcQueueFamilyIndex = context_->device->GetGraphicsQueueFamilyIndex();
-                buffer_barrier.dstQueueFamilyIndex = context_->device->GetGraphicsQueueFamilyIndex();
+                buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
                 buffer_barrier.buffer              = vertex_buffer;
                 buffer_barrier.offset              = 0;
                 buffer_barrier.size                = VK_WHOLE_SIZE;
@@ -942,8 +951,8 @@ namespace rra
                 buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
                 buffer_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
                 buffer_barrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
-                buffer_barrier.srcQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
-                buffer_barrier.dstQueueFamilyIndex = context_->device->GetComputeQueueFamilyIndex();
+                buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
                 buffer_barrier.buffer              = instance_buffer;
                 buffer_barrier.offset              = 0;
                 buffer_barrier.size                = VK_WHOLE_SIZE;

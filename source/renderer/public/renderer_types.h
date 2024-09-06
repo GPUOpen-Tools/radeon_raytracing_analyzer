@@ -22,7 +22,7 @@
 #include <windows.h>
 #elif defined(VK_USE_PLATFORM_XCB_KHR)
 #include <xcb/xcb.h>
-#include <qpa/qplatformnativeinterface.h>
+#include <QtGui/qpa/qplatformnativeinterface.h>
 #include <QGuiApplication>
 #endif
 
@@ -298,9 +298,10 @@ namespace rra
         /// @brief Structure to represent the traversal tree as a whole.
         struct TraversalTree
         {
-            std::vector<TraversalVolume>   volumes;    ///< The volumes of the structure.
-            std::vector<RraVertex>         vertices;   ///< The aligned vertices of the volumes.
-            std::vector<TraversalInstance> instances;  ///< The aligned instances under volumes.
+            std::vector<TraversalVolume>   volumes;            ///< The volumes of the structure.
+            std::vector<RraVertex>         vertices;           ///< The aligned vertices of the volumes.
+            std::vector<TraversalInstance> instances;          ///< The aligned instances under volumes.
+            std::byte* child_nodes_buffer;  ///< Buffer to be referenced by all the nodes in tree so they don't have to do individual small allocations.
         };
 
         /// @brief Structure to use as the result of ray traversal.

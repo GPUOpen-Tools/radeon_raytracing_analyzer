@@ -87,6 +87,12 @@ namespace rra
             /// @return True if a copy of the depth buffer should be saved.
             virtual bool ShouldCopyDepthBuffer() const;
 
+            /// @brief Render module functionality invoked every frame, even when there is no rendering update when the camera is not moved.
+            ///
+            /// @param [in] device        The graphics device.
+            /// @param [in] current_frame The current frame index.
+            virtual void EveryFrameUpdate(Device* device, uint32_t current_frame);
+
             /// @brief Enable module to draw.
             void Enable();
 

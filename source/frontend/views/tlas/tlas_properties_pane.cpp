@@ -16,7 +16,7 @@ TlasPropertiesPane::TlasPropertiesPane(QWidget* parent)
     , ui_(new Ui::TlasPropertiesPane)
 {
     ui_->setupUi(this);
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
     model_ = new rra::TlasPropertiesModel(rra::kTlasPropertiesNumWidgets);
 
     model_->InitializeModel(ui_->content_node_address_, rra::kTlasPropertiesBaseAddress, "text");
@@ -28,6 +28,7 @@ TlasPropertiesPane::TlasPropertiesPane(QWidget* parent)
     model_->InitializeModel(ui_->content_num_instances_, rra::kTlasPropertiesNumInstanceNodes, "text");
     model_->InitializeModel(ui_->content_num_blases_, rra::kTlasPropertiesNumBlases, "text");
     model_->InitializeModel(ui_->content_num_triangles_, rra::kTlasPropertiesNumTriangles, "text");
+    model_->InitializeModel(ui_->content_num_procedural_nodes_, rra::kTlasPropertiesNumProceduralNodes, "text");
 
     model_->InitializeModel(ui_->content_allow_update_, rra::kTlasPropertiesBuildFlagAllowUpdate, "checked");
     model_->InitializeModel(ui_->content_allow_compaction_, rra::kTlasPropertiesBuildFlagAllowCompaction, "checked");

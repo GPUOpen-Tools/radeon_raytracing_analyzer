@@ -201,7 +201,7 @@ namespace rra
 
             VkCommandBufferBeginInfo begin_info = {};
             begin_info.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            auto                     result     = vkBeginCommandBuffer(cmd, &begin_info);
+            auto result                         = vkBeginCommandBuffer(cmd, &begin_info);
             CheckResult(result, "Upload command buffer failed to begin during heatmap upload.");
 
             VkImageMemoryBarrier undefined_to_transfer_barrier        = {};
@@ -301,50 +301,54 @@ namespace rra
 
         bool VkGraphicsContext::CollectAndUploadTraversalTrees(std::shared_ptr<GraphicsContextSceneInfo> info)
         {
+            PRE_RENDER_CHECK_HEALTH();
+
+            // Command setup
+            VkResult result;
+
+            VkCommandPool   command_pool;
+            VkCommandBuffer command_buffer;
+            VkFence         fence;
+
+            VkCommandPoolCreateInfo pool_info = {};
+            pool_info.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            pool_info.queueFamilyIndex        = device_.GetGraphicsQueueFamilyIndex();
+
+            result = vkCreateCommandPool(device_.GetDevice(), &pool_info, nullptr, &command_pool);
+            PRE_RENDER_CHECK_RESULT(result, "Failed to create global upload command buffer pool.");
+
+            VkFenceCreateInfo fence_info{};
+            fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+            result           = vkCreateFence(device_.GetDevice(), &fence_info, nullptr, &fence);
+            PRE_RENDER_CHECK_RESULT(result, "Failed to create fence for buffer upload.");
+
+            VkCommandBufferAllocateInfo alloc_info = {};
+            alloc_info.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            alloc_info.commandPool                 = command_pool;
+            alloc_info.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            alloc_info.commandBufferCount          = 1;
+
+            result = vkAllocateCommandBuffers(device_.GetDevice(), &alloc_info, &command_buffer);
+            PRE_RENDER_CHECK_RESULT(result, "Failed to allocate global upload command buffer.");
+
+            VkCommandBufferBeginInfo begin_info = {};
+            begin_info.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            result                              = vkBeginCommandBuffer(command_buffer, &begin_info);
+            PRE_RENDER_CHECK_RESULT(result, "Failed to begin global upload command buffer recording.");
+            PRE_RENDER_CHECK_HEALTH();
+
+            std::vector<VkBuffer>      volume_staging_buffers(info->acceleration_structures.size());
+            std::vector<VmaAllocation> volume_staging_allocations(info->acceleration_structures.size());
+            std::vector<VkBuffer>      triangle_staging_buffers(info->acceleration_structures.size());
+            std::vector<VmaAllocation> triangle_staging_allocations(info->acceleration_structures.size());
+
+            geometry_instructions_.reserve(info->acceleration_structures.size());
+            blases_.reserve(info->acceleration_structures.size());
+
             for (size_t i = 0; i < info->acceleration_structures.size(); i++)
             {
-                PRE_RENDER_CHECK_HEALTH();
-
-                // Command setup
-                VkResult result;
-
-                VkCommandPool   command_pool;
-                VkCommandBuffer command_buffer;
-
-                VkCommandPoolCreateInfo pool_info = {};
-                pool_info.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-                pool_info.queueFamilyIndex        = device_.GetGraphicsQueueFamilyIndex();
-
-                result = vkCreateCommandPool(device_.GetDevice(), &pool_info, nullptr, &command_pool);
-                PRE_RENDER_CHECK_RESULT(result, "Failed to create global upload command buffer pool.");
-
-                VkCommandBufferAllocateInfo alloc_info = {};
-                alloc_info.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-                alloc_info.commandPool                 = command_pool;
-                alloc_info.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-                alloc_info.commandBufferCount          = 1;
-
-                result = vkAllocateCommandBuffers(device_.GetDevice(), &alloc_info, &command_buffer);
-                PRE_RENDER_CHECK_RESULT(result, "Failed to allocate global upload command buffer.");
-
-                VkCommandBufferBeginInfo begin_info = {};
-                begin_info.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                result                              = vkBeginCommandBuffer(command_buffer, &begin_info);
-                PRE_RENDER_CHECK_RESULT(result, "Failed to begin global upload command buffer recording.");
-
-                std::vector<VkBuffer>      staging_buffers;
-                std::vector<VmaAllocation> staging_allocations;
-
-                PRE_RENDER_CHECK_HEALTH();
-
                 VkTraversalTree vk_tree;
-                auto            cpu_side = info->acceleration_structures[i];
-
-                VkBuffer      volume_staging_buffer     = VK_NULL_HANDLE;
-                VmaAllocation volume_staging_allocation = VK_NULL_HANDLE;
-
-                VkBuffer      triangle_staging_buffer     = VK_NULL_HANDLE;
-                VmaAllocation triangle_staging_allocation = VK_NULL_HANDLE;
+                TraversalTree&  cpu_side = info->acceleration_structures[i];
 
                 // We create a blank triangle since Vulkan does not like the 0 sized buffers and
                 // we need valid buffers for a descriptor slot that holds multiple buffers.
@@ -360,8 +364,8 @@ namespace rra
                     PRE_RENDER_CHECK_HEALTH();
                     device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                                          VMA_MEMORY_USAGE_CPU_ONLY,
-                                         volume_staging_buffer,
-                                         volume_staging_allocation,
+                                         volume_staging_buffers[i],
+                                         volume_staging_allocations[i],
                                          cpu_side.volumes.data(),
                                          buffer_size);
 
@@ -375,7 +379,7 @@ namespace rra
 
                     VkBufferCopy copy_region = {};
                     copy_region.size         = buffer_size;
-                    vkCmdCopyBuffer(command_buffer, volume_staging_buffer, vk_tree.volume_buffer, 1, &copy_region);
+                    vkCmdCopyBuffer(command_buffer, volume_staging_buffers[i], vk_tree.volume_buffer, 1, &copy_region);
                 }
                 {
                     // Upload triangles.
@@ -384,8 +388,8 @@ namespace rra
                     PRE_RENDER_CHECK_HEALTH();
                     device_.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                                          VMA_MEMORY_USAGE_CPU_ONLY,
-                                         triangle_staging_buffer,
-                                         triangle_staging_allocation,
+                                         triangle_staging_buffers[i],
+                                         triangle_staging_allocations[i],
                                          cpu_side.vertices.data(),
                                          buffer_size);
 
@@ -399,7 +403,7 @@ namespace rra
 
                     VkBufferCopy copy_region = {};
                     copy_region.size         = buffer_size;
-                    vkCmdCopyBuffer(command_buffer, triangle_staging_buffer, vk_tree.vertex_buffer, 1, &copy_region);
+                    vkCmdCopyBuffer(command_buffer, triangle_staging_buffers[i], vk_tree.vertex_buffer, 1, &copy_region);
                 }
 
                 // Create draw instructions for rasterization pipelines.
@@ -411,34 +415,30 @@ namespace rra
 
                 // Add structures to internal list.
                 blases_.push_back(vk_tree);
+            }
 
-                // Add staging to list for deallocation.
-                staging_buffers.push_back(triangle_staging_buffer);
-                staging_buffers.push_back(volume_staging_buffer);
-                staging_allocations.push_back(triangle_staging_allocation);
-                staging_allocations.push_back(volume_staging_allocation);
+            result = vkEndCommandBuffer(command_buffer);
+            PRE_RENDER_CHECK_RESULT(result, "Failed to end global upload command buffer recording.");
 
-                result = vkEndCommandBuffer(command_buffer);
-                PRE_RENDER_CHECK_RESULT(result, "Failed to end global upload command buffer recording.");
+            VkSubmitInfo submit_info       = {};
+            submit_info.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit_info.commandBufferCount = 1;
+            submit_info.pCommandBuffers    = &command_buffer;
 
-                VkSubmitInfo submit_info       = {};
-                submit_info.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                submit_info.commandBufferCount = 1;
-                submit_info.pCommandBuffers    = &command_buffer;
+            result = vkQueueSubmit(device_.GetGraphicsQueue(), 1, &submit_info, fence);
+            PRE_RENDER_CHECK_RESULT(result, "Failed to submit global buffer uploads to the graphics queue.");
 
-                result = vkQueueSubmit(device_.GetGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
-                PRE_RENDER_CHECK_RESULT(result, "Failed to submit global buffer uploads to the graphics queue.");
+            PRE_RENDER_CHECK_HEALTH();
+            result = vkWaitForFences(device_.GetDevice(), 1, &fence, VK_TRUE, 1000000000);
+            PRE_RENDER_CHECK_RESULT(result, "Failed waiting for fence after buffer transfer.");
 
+            vkDestroyCommandPool(device_.GetDevice(), command_pool, nullptr);
+
+            for (uint32_t i = 0; i < (uint32_t)triangle_staging_buffers.size(); ++i)
+            {
                 PRE_RENDER_CHECK_HEALTH();
-                device_.GPUFlush();
-
-                vkDestroyCommandPool(device_.GetDevice(), command_pool, nullptr);
-
-                for (size_t k = 0; k < staging_buffers.size(); k++)
-                {
-                    PRE_RENDER_CHECK_HEALTH();
-                    device_.DestroyBuffer(staging_buffers[k], staging_allocations[k]);
-                }
+                device_.DestroyBuffer(triangle_staging_buffers[i], triangle_staging_allocations[i]);
+                device_.DestroyBuffer(volume_staging_buffers[i], volume_staging_allocations[i]);
             }
 
             return true;

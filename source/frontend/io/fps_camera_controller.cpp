@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 
 #include "models/side_panels/view_model.h"
+#include "settings/settings.h"
 
 namespace rra
 {
@@ -183,7 +184,7 @@ namespace rra
 
     uint32_t FPSController::GetComboBoxIndex() const
     {
-        return 1;
+        return kControlStyleTypeFPS;
     }
 
     void FPSController::ProcessUserInputs()
@@ -266,9 +267,6 @@ namespace rra
                 break;
             case Qt::Key_F:
                 should_focus_on_selection_ = true;
-                break;
-            case Qt::Key_U:
-                SetViewModelUpByCardinalMax(camera->GetUp());
                 break;
             default:
                 break;

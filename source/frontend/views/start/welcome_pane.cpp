@@ -33,9 +33,6 @@ WelcomePane::WelcomePane(QWidget* parent)
     constexpr int id = qRegisterMetaType<RraErrorCode>();
     Q_UNUSED(id);
 
-    // Set white background for this pane.
-    rra::widget_util::SetWidgetBackgroundColor(this, Qt::white);
-
     SetupFileList();
 
     // Set up the buttons.
@@ -176,7 +173,7 @@ void WelcomePane::InitButton(ScaledPushButton* button)
 {
     // Init the button.
     button->setCursor(Qt::PointingHandCursor);
-    button->setStyleSheet(kLinkButtonStylesheet);
+    button->SetLinkStyleSheet();
 }
 
 void WelcomePane::OpenHtmlFile(const QString& html_file)
@@ -260,8 +257,7 @@ void WelcomePane::NotifyOfNewVersion(UpdateCheck::ThreadController* thread, cons
         // This dialog will get deleted when the WelcomePane is deleted.
         UpdateCheckResultsDialog* results_dialog = new UpdateCheckResultsDialog(this);
         results_dialog->setWindowFlags((results_dialog->windowFlags() & ~Qt::WindowContextHelpButtonHint) | Qt::MSWindowsFixedSizeDialogHint);
-        results_dialog->setFixedSize(rra::kUpdatesResultsDialogWidth,
-                                     rra::kUpdatesResultsDialogHeight);
+        results_dialog->setFixedSize(rra::kUpdatesResultsDialogWidth, rra::kUpdatesResultsDialogHeight);
         results_dialog->SetShowTags(false);
         results_dialog->SetResults(update_check_results);
 

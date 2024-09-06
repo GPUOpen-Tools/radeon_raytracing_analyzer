@@ -44,3 +44,36 @@ time_t RraTraceLoaderGetCreateTime()
 {
     return data_set_.create_time;
 }
+
+RraErrorCode RraTraceLoaderCopyDriverOverridesString(const char* driver_overrides_string, size_t length)
+{
+    RRA_RETURN_ON_ERROR(driver_overrides_string, kRraErrorInvalidPointer);
+    RraErrorCode result = kRraOk;
+
+    delete data_set_.driver_overrides_json_text;
+
+    if ((driver_overrides_string == nullptr) || (length == 0))
+    {
+        data_set_.driver_overrides_json_text = nullptr;
+    }
+    else
+    {
+        data_set_.driver_overrides_json_text = new (std::nothrow) char[length + 1];
+        if (data_set_.driver_overrides_json_text != nullptr)
+        {
+            memcpy(data_set_.driver_overrides_json_text, driver_overrides_string, length);
+            data_set_.driver_overrides_json_text[length] = '\0';
+        }
+        else
+        {
+            result = kRraErrorOutOfMemory;
+        }
+    }
+
+    return result;
+}
+
+char* RraTraceLoaderGetDriverOverridesString()
+{
+    return data_set_.driver_overrides_json_text;
+}

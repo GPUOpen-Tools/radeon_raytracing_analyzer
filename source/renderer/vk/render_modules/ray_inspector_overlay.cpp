@@ -266,8 +266,8 @@ namespace rra::renderer
         buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
         buffer_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
         buffer_barrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
-        buffer_barrier.srcQueueFamilyIndex = module_context_->device->GetGraphicsQueueFamilyIndex();
-        buffer_barrier.dstQueueFamilyIndex = module_context_->device->GetGraphicsQueueFamilyIndex();
+        buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         buffer_barrier.buffer              = current_ray_memory_.buffer;
         buffer_barrier.offset              = 0;
         buffer_barrier.size                = VK_WHOLE_SIZE;
@@ -401,8 +401,8 @@ namespace rra::renderer
         buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
         buffer_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
         buffer_barrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
-        buffer_barrier.srcQueueFamilyIndex = module_context_->device->GetGraphicsQueueFamilyIndex();
-        buffer_barrier.dstQueueFamilyIndex = module_context_->device->GetGraphicsQueueFamilyIndex();
+        buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         buffer_barrier.buffer              = current_icon_memory_.buffer;
         buffer_barrier.offset              = 0;
         buffer_barrier.size                = VK_WHOLE_SIZE;

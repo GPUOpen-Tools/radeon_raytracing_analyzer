@@ -41,6 +41,12 @@ namespace rra
             /// @param [in] context The context to cleanup.
             virtual void Cleanup(const RenderModuleContext* context) override;
 
+            /// @brief Render module functionality invoked every frame, even when there is no rendering update when the camera is not moved.
+            ///
+            /// @param [in] device        The graphics device.
+            /// @param [in] current_frame The current frame index.
+            virtual void EveryFrameUpdate(Device* device, uint32_t current_frame) override;
+
             /// @brief Uploads the required storage buffers to the device.
             ///
             /// @param [in] context The draw context.
@@ -132,6 +138,8 @@ namespace rra
 
             uint32_t max_traversal_count_setting_{};  ///< Maximum traversal count value from the settings.
             bool     traversal_count_setting_changed_{};
+
+            bool rendered_this_frame_{}; ///< True when the traversal module draw function was called this frame.
 
             std::function<void(const std::vector<uint32_t>& data, uint32_t buffer_width, uint32_t buffer_height)> histogram_update_function_ =
                 nullptr;  ///< The update function to call for histogram data.

@@ -128,6 +128,7 @@ enum SettingID
     kSettingGeneralFrustumCullRatio,
     kSettingGeneralDecimalPrecision,
     kSettingGeneralPersistentUIState,
+    kSettingGeneralDriverOverridesAllowNotifications,
 
     kSettingThemesAndColorsPalette,
 
@@ -140,8 +141,11 @@ enum SettingID
     kSettingThemesAndColorsWireframeNormal,
     kSettingThemesAndColorsWireframeSelected,
     kSettingThemesAndColorsGeometrySelected,
-    kSettingThemesAndColorsBackground1,
-    kSettingThemesAndColorsBackground2,
+    kSettingThemesAndColorsBackgroundLight1,
+    kSettingThemesAndColorsBackgroundLight2,
+    kSettingThemesAndColorsBackgroundDark1,
+    kSettingThemesAndColorsBackgroundDark2,
+    kSettingThemesAndColorsColorThemeMode,
     kSettingThemesAndColorsNonOpaque,
     kSettingThemesAndColorsOpaque,
     kSettingThemesAndColorsPositive,
@@ -651,6 +655,26 @@ namespace rra
         ///
         /// Sets the UI state common between panes.
         void SetPersistentUIToDefault();
+
+        /// @brief Gets the current color theme mode.
+        ///
+        /// @return the value of the current color theme.
+        int GetColorTheme();
+
+        /// @brief Sets the color theme mode.
+        ///
+        /// @param [in] the value of the color theme.
+        void SetColorTheme(int value);
+
+        /// @brief Set the value of kSettingGeneralDriverOverridesAllowNotifications in the settings.
+        ///
+        /// @param [in] value The new value of kSettingGeneralDriverOverridesAllowNotifications.
+        void SetDriverOverridesAllowNotifications(const bool value);
+
+        /// @brief Get the value of kSettingGeneralDriverOverridesAllowNotifications in the settings.
+        ///
+        /// @return The value of kSettingGeneralDriverOverridesAllowNotifications.
+        bool GetDriverOverridesAllowNotifications() const;
 
     private:
         /// @brief Get the settingID from a lookup map based on the pane and an index.

@@ -33,6 +33,7 @@ namespace rra
         uint32_t                                tlas_index;               ///< TLAS index.
         uint64_t                                total_triangle_count;     ///< The sum of the triangles in each instance referenced by this TLAS.
         uint64_t                                unique_triangle_count;    ///< The sum of the triangles in each BLAS referenced by this TLAS.
+        uint64_t                                procedural_node_count;    ///< The total number of procedural nodes in BLASes referenced by this TLAS.
         uint64_t                                node_count;               ///< The number of nodes in this TLAS.
         uint64_t                                box_node_count;           ///< The number of box nodes in this TLAS.
         uint32_t                                box16_node_count;         ///< The number of box16 nodes in this TLAS.

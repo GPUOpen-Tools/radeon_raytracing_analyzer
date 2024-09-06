@@ -93,7 +93,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
     , ui_(new Ui::RayHistoryPane)
 {
     ui_->setupUi(this);
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     model_ = new rra::RayHistoryModel(rra::kRayListNumWidgets);
 
@@ -565,6 +565,19 @@ void RayHistoryPane::SetDispatchId(uint64_t dispatch_id)
     ui_->dispatch_valid_switch_->setCurrentIndex(0);
 
     ui_->ray_table_->setSortingEnabled(false);
+
+    char user_marker_string_buffer[512];
+    RraRayGetDispatchUserMarkerString(dispatch_id_, user_marker_string_buffer, 512);
+    if (strlen(user_marker_string_buffer) > 0)
+    {
+        ui_->user_marker_stack_->setText(user_marker_string_buffer);
+        ui_->user_marker_stack_->setToolTip(user_marker_string_buffer);
+        ui_->user_marker_stack_->show();
+    }
+    else
+    {
+        ui_->user_marker_stack_->hide();
+    }
 
     if (!show_event_occured_)
     {

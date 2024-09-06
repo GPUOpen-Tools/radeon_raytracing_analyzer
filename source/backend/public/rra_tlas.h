@@ -319,6 +319,14 @@ RraErrorCode RraTlasGetTotalTriangleCount(uint64_t tlas_index, uint64_t* triangl
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetUniqueTriangleCount(uint64_t tlas_index, uint64_t* out_count);
 
+/// @brief Get the total number of procedural nodes referenced by the instance nodes in this TLAS.
+///
+/// @param tlas_index The index of the TLAS.
+/// @param out_count  The total procedural node count.
+/// 
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetTotalProceduralNodeCount(uint64_t tlas_index, uint64_t* out_count);
+
 /// @brief Get the number of inactive instances referenced by this TLAS.
 ///
 /// @param [in] tlas_index      The index of the TLAS.

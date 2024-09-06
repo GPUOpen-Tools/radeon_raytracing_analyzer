@@ -293,7 +293,7 @@ namespace rta
     uint64_t EncodedRtIp11TopLevelBvh::GetInactiveInstanceCountImpl() const
     {
         uint64_t inactive_count{0};
-        size_t  byte_offset = 0;
+        size_t   byte_offset = 0;
         while (byte_offset < instance_node_data_.size())
         {
             const dxr::amd::InstanceNode* instance_node = reinterpret_cast<const dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
@@ -370,6 +370,22 @@ namespace rta
             }
         }
         return triangle_count;
+    }
+
+    uint64_t EncodedRtIp11TopLevelBvh::GetTotalProceduralNodeCount() const
+    {
+        uint64_t procedural_count = 0;
+        for (const auto& it : instance_list_)
+        {
+            uint32_t     procedural_nodes = 0;
+            RraErrorCode status           = RraBlasGetProceduralNodeCount(it.first, &procedural_nodes);
+            RRA_ASSERT(status == kRraOk);
+            if (status == kRraOk)
+            {
+                procedural_count += static_cast<uint64_t>(procedural_nodes);
+            }
+        }
+        return procedural_count;
     }
 
     uint64_t EncodedRtIp11TopLevelBvh::GetInstanceCount(uint64_t index) const

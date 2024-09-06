@@ -342,6 +342,20 @@ namespace rra
         /// @brief Get the node by the instance index.
         SceneNode* GetNodeByInstanceIndex(uint32_t instance_index);
 
+        /// @brief Allocate vertex buffer that all triangle SceneNodes will point into.
+        ///
+        /// @param blas_index The BLAS index to allocate space for.
+        ///
+        /// @return A pointer to the allocated buffer.
+        renderer::RraVertex* AllocateVertexBuffer(uint32_t blas_index);
+
+        /// @brief Allocate buffer that all SceneNodes will point into for their children.
+        ///
+        /// @param blas_index The BLAS index to allocate space for.
+        ///
+        /// @return A pointer to the allocated buffer.
+        std::byte* AllocateChildBuffer(uint32_t blas_index);
+
     private:
         /// @brief Populate the scene info values.
         void PopulateSceneInfo();
@@ -391,8 +405,10 @@ namespace rra
         renderer::InstanceMap                         cached_instance_map_{};  ///< Saved instance map of all instances, used when frustum culling is disabled.
         std::vector<std::vector<SceneNode*>> rebraid_siblings_{};  ///< The ith index contains all instances with index i, indicating they're rebraid siblings.
         std::unordered_map<uint64_t, std::vector<SceneNode*>>
-            split_triangle_siblings_{};           ///< The key is a combination of geometry index and triangle index, and the value is all the siblings.
-        std::vector<SceneNode*> instance_nodes_;  ///< The instances of the all the nodes in this scene by instance index.
+            split_triangle_siblings_{};  ///< The key is a combination of geometry index and triangle index, and the value is all the siblings.
+        std::vector<SceneNode*>          instance_nodes_;  ///< The instances of the all the nodes in this scene by instance index.
+        std::vector<renderer::RraVertex> vertices_{};
+        std::vector<std::byte> child_nodes_buffer_{};
 
         // Using a map instead of a vector since only the visible node IDs are included in the list.
         std::unordered_map<uint32_t, uint32_t> custom_triangle_map_{};  ///< Contains pairs (node_id, custom_triangles_ index) of all visible triangle nodes.

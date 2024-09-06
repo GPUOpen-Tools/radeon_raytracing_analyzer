@@ -123,6 +123,15 @@ private slots:
     /// Either show or hide the UI reset button depending which sub-pane is currently being displayed.
     void UpdateResetButtons();
 
+    /// @brief Update the icons when the color theme is updated.
+    void OnColorThemeUpdated();
+
+    /// @brief Open the System Configuration pane.
+    void OpenDriverOverridesDetailsLink();
+
+    /// @brief Save the setting to prevent Driver Override notifications.
+    void DontShowDriverOverridesNotification();
+
 #ifdef BETA_LICENSE
     /// @brief What happens when the user agrees to the license.
     void AgreedToLicense();
@@ -212,6 +221,10 @@ private:
     QMenu*                           recent_traces_menu_;        ///< Sub menu containing recently opened files.
     QVector<QAction*>                recent_trace_actions_;      ///< List of actions for recent traces.
     QVector<QMetaObject::Connection> recent_trace_connections_;  ///< List of previously connected signals/slots.
+
+    RraIconButton* reset_tlas_ui_state_;  ///< Save reset state icon button in tlas pane so it can be updated if color theme is changed.
+    RraIconButton* reset_blas_ui_state_;  ///< Save reset state icon button in blas pane so it can be updated if color theme is changed.
+    RraIconButton* reset_ray_ui_state_;   ///< Save reset state icon button in ray pane so it can be updated if color theme is changed.
 
     NavigationBar    navigation_bar_;  ///< The Back/Forward Navigation buttons added to the main tab bar.
     rra::PaneManager pane_manager_;    ///< The class responsible for managing the relationships between different panes.

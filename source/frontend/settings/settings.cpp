@@ -11,6 +11,8 @@
 #include <ctime>
 #include <QFile>
 
+#include "qt_common/utils/qt_util.h"
+
 #include "public/rra_assert.h"
 
 #include "constants.h"
@@ -270,8 +272,16 @@ namespace rra
         scene_palette.wireframe_normal_color                = QColorToGLM(GetColorValue(kSettingThemesAndColorsWireframeNormal));
         scene_palette.wireframe_selected_color              = QColorToGLM(GetColorValue(kSettingThemesAndColorsWireframeSelected));
         scene_palette.selected_geometry_color               = QColorToGLM(GetColorValue(kSettingThemesAndColorsGeometrySelected));
-        scene_palette.background1_color                     = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackground1));
-        scene_palette.background2_color                     = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackground2));
+        if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeLight)
+        {
+            scene_palette.background1_color = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackgroundLight1));
+            scene_palette.background2_color = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackgroundLight2));
+        }
+        else
+        {
+            scene_palette.background1_color = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackgroundDark1));
+            scene_palette.background2_color = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackgroundDark2));
+        }
         scene_palette.transparent_color                     = QColorToGLM(GetColorValue(kSettingThemesAndColorsNonOpaque));
         scene_palette.opaque_color                          = QColorToGLM(GetColorValue(kSettingThemesAndColorsOpaque));
         scene_palette.positive_color                        = QColorToGLM(GetColorValue(kSettingThemesAndColorsPositive));
@@ -303,21 +313,22 @@ namespace rra
 #ifdef BETA_LICENSE
         default_settings_[kSettingLicenseAgreementVersion] = {"LicenseAgreementVersion", "0.0.0.0"};
 #endif  // BETA_LICENSE
-        default_settings_[kSettingGeneralCheckForUpdatesOnStartup] = {"CheckForUpdatesOnStartup", "False"};
-        default_settings_[kSettingGeneralCameraResetOnStyleChange] = {"CameraResetOnStyleChange", "True"};
-        default_settings_[kSettingGeneralCameraControlSync]        = {"CameraControlSync", "False"};
-        default_settings_[kSettingGeneralPersistentUIState]        = {"PersistentUIState", "True"};
-        default_settings_[kSettingGeneralTreeviewNodeID]           = {"TreeviewNodeID", "0"};
-        default_settings_[kSettingGeneralTraversalCounterMaximum]  = {"TraversalCounterMaximum", "1000"};
-        default_settings_[kSettingGeneralMovementSpeedLimit]       = {"MovementSpeedLimit", "10000"};
-        default_settings_[kSettingGeneralFrustumCullRatio]         = {"FrustumCullRatio", "0.0005"};
-        default_settings_[kSettingGeneralDecimalPrecision]         = {"DecimalPrecision", "2"};
+        default_settings_[kSettingGeneralCheckForUpdatesOnStartup]          = {"CheckForUpdatesOnStartup", "False"};
+        default_settings_[kSettingGeneralCameraResetOnStyleChange]          = {"CameraResetOnStyleChange", "True"};
+        default_settings_[kSettingGeneralCameraControlSync]                 = {"CameraControlSync", "False"};
+        default_settings_[kSettingGeneralPersistentUIState]                 = {"PersistentUIState", "True"};
+        default_settings_[kSettingGeneralTreeviewNodeID]                    = {"TreeviewNodeID", "0"};
+        default_settings_[kSettingGeneralTraversalCounterMaximum]           = {"TraversalCounterMaximum", "1000"};
+        default_settings_[kSettingGeneralMovementSpeedLimit]                = {"MovementSpeedLimit", "10000"};
+        default_settings_[kSettingGeneralFrustumCullRatio]                  = {"FrustumCullRatio", "0.0005"};
+        default_settings_[kSettingGeneralDecimalPrecision]                  = {"DecimalPrecision", "2"};
+        default_settings_[kSettingGeneralDriverOverridesAllowNotifications] = {"DriverOverridesAllowNotifications", "True"};
 
         default_settings_[kSettingThemesAndColorsPalette] = {"ColorPalette",
                                                              "#FFFFBA02,#FFFF8B00,#FFF76210,#FFE17F35,#FFDA3B01,#FFEF6950,#FFD03438,#FFFF4343,"
                                                              "#FFFF6062,#FFE81123,#FFEA015D,#FFC40052,#FFFF0080,#FFFF97FF,#FFFF4CFF,#FFDC00DD,"
-                                                             "#FF0278D8,#FF0063B1,#FF8E8CD7,#FF6B69D6,#FF7F00FF,#FF00EAFF,#FFAF47C2,#FF871797,"
-                                                             "#FF000000,#FFC3C3C3,#FFFFFFFF,#FF00172E,#FFC0D1D5,#FFF0FFFF,#FF00CC69,#FF10883E"};
+                                                             "#FF0278D8,#FF0063B1,#FF8E8CD7,#FF6B69D6,#FF7F00FF,#FF212121,#FFAF47C2,#FF871797,"
+                                                             "#FF161616,#FFC3C3C3,#FFFFFFFF,#FF00172E,#FFC0D1D5,#FFF0FFFF,#FF00CC69,#FF10883E"};
 
         default_settings_[kSettingThemesAndColorsBoundingVolumeBox16]         = {"BoundingVolumeBox16Color", "23"};
         default_settings_[kSettingThemesAndColorsBoundingVolumeBox32]         = {"BoundingVolumeBox32Color", "15"};
@@ -328,8 +339,11 @@ namespace rra
         default_settings_[kSettingThemesAndColorsWireframeNormal]             = {"WireframeNormalColor", "27"};
         default_settings_[kSettingThemesAndColorsWireframeSelected]           = {"WireframeSelectedColor", "29"};
         default_settings_[kSettingThemesAndColorsGeometrySelected]            = {"GeometrySelectedColor", "28"};
-        default_settings_[kSettingThemesAndColorsBackground1]                 = {"Background1Color", "25"};
-        default_settings_[kSettingThemesAndColorsBackground2]                 = {"Background2Color", "26"};
+        default_settings_[kSettingThemesAndColorsBackgroundLight1]            = {"Background1ColorLight", "25"};
+        default_settings_[kSettingThemesAndColorsBackgroundLight2]            = {"Background2ColorLight", "26"};
+        default_settings_[kSettingThemesAndColorsBackgroundDark1]             = {"Background1ColorDark", "24"};
+        default_settings_[kSettingThemesAndColorsBackgroundDark2]             = {"Background2ColorDark", "21"};
+        default_settings_[kSettingThemesAndColorsColorThemeMode]              = {"ColorThemeMode", "2"};
         default_settings_[kSettingThemesAndColorsNonOpaque]                   = {"NonOpaqueColor", "29"};
         default_settings_[kSettingThemesAndColorsOpaque]                      = {"OpaqueColor", "30"};
         default_settings_[kSettingThemesAndColorsPositive]                    = {"PositiveColor", "30"};
@@ -731,8 +745,10 @@ namespace rra
         SetToDefaultValue(kSettingThemesAndColorsWireframeNormal);
         SetToDefaultValue(kSettingThemesAndColorsWireframeSelected);
         SetToDefaultValue(kSettingThemesAndColorsGeometrySelected);
-        SetToDefaultValue(kSettingThemesAndColorsBackground1);
-        SetToDefaultValue(kSettingThemesAndColorsBackground2);
+        SetToDefaultValue(kSettingThemesAndColorsBackgroundLight1);
+        SetToDefaultValue(kSettingThemesAndColorsBackgroundLight2);
+        SetToDefaultValue(kSettingThemesAndColorsBackgroundDark1);
+        SetToDefaultValue(kSettingThemesAndColorsBackgroundDark2);
         SetToDefaultValue(kSettingThemesAndColorsNonOpaque);
         SetToDefaultValue(kSettingThemesAndColorsOpaque);
         SetToDefaultValue(kSettingThemesAndColorsPositive);
@@ -1040,4 +1056,25 @@ namespace rra
         }
     }
 
+    int Settings::GetColorTheme()
+    {
+        return GetIntValue(kSettingThemesAndColorsColorThemeMode);
+    }
+
+    void Settings::SetColorTheme(int value)
+    {
+        SetIntValue(kSettingThemesAndColorsColorThemeMode, value);
+        SaveSettings();
+    }
+
+    void Settings::SetDriverOverridesAllowNotifications(const bool value)
+    {
+        SetBoolValue(kSettingGeneralDriverOverridesAllowNotifications, value);
+        SaveSettings();
+    }
+
+    bool Settings::GetDriverOverridesAllowNotifications() const
+    {
+        return GetBoolValue(kSettingGeneralDriverOverridesAllowNotifications);
+    }
 }  // namespace rra

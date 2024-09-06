@@ -111,7 +111,7 @@ void ColoredRadioButton::paintEvent(QPaintEvent* event)
     qreal text_height = font_metrics.capHeight();
     qreal text_base   = half_height + (text_height / 2.0);
 
-    painter.setPen(Qt::black);
+    painter.setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
     painter.drawText(radio_button_width + scaled_padding, text_base, this->text());
 }
 

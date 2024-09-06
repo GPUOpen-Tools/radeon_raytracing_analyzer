@@ -21,6 +21,8 @@
 #include "api_info.h"
 #include "asic_info.h"
 #include "system_info_utils/source/system_info_reader.h"
+#include "string_table.h"
+#include "user_marker_history.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,15 +31,19 @@ extern "C" {
 /// A structure encapsulating a single RRA dataset.
 typedef struct RraDataSet
 {
-    char                                                   file_path[RRA_MAXIMUM_FILE_PATH];  ///< The file path to the file being worked with.
-    bool                                                   file_loaded;                       ///< Has a file been successfully loaded.
-    size_t                                                 file_size_in_bytes;  ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
-    time_t                                                 create_time;         ///< The time the trace was created.
-    std::unique_ptr<rta::BvhBundle>                        bvh_bundle;  ///< The BVH bundle class encapsulating all the BLAS and TLAS for the loaded trace.
-    std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> async_ray_histories;    ///< The ray histories made available per asnyc work.
-    rra::ApiInfo                                           api_info    = {};       ///< The API info.
-    rra::AsicInfo                                          asic_info   = {};       ///< The ASIC info.
-    system_info_utils::SystemInfo*                         system_info = nullptr;  ///< The System Info.
+    char                            file_path[RRA_MAXIMUM_FILE_PATH];  ///< The file path to the file being worked with.
+    bool                            file_loaded;                       ///< Has a file been successfully loaded.
+    size_t                          file_size_in_bytes;                ///< The size of the file pointed to by <c><i>fileHandle</i></c> in bytes.
+    time_t                          create_time;                       ///< The time the trace was created.
+    std::unique_ptr<rta::BvhBundle> bvh_bundle;                        ///< The BVH bundle class encapsulating all the BLAS and TLAS for the loaded trace.
+
+    char*                                                  driver_overrides_json_text;           ///< The Driver Overrides JSON text.
+    std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> async_ray_histories;                  ///< The ray histories made available per asnyc work.
+    rra::ApiInfo                                           api_info                  = {};       ///< The API info.
+    rra::AsicInfo                                          asic_info                 = {};       ///< The ASIC info.
+    system_info_utils::SystemInfo*                         system_info               = nullptr;  ///< The System Info.
+    rra::StringTables*                                     user_marker_string_tables = nullptr;
+    rra::UserMarkerHistory*                                user_marker_histories     = nullptr;
 } RraDataSet;
 
 /// Initialize the RRA data set from a file path.

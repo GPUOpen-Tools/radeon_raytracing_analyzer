@@ -116,6 +116,7 @@ namespace rra
             device_properties->AddDeviceExtensionName(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
             device_properties->AddDeviceExtensionName(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
             device_properties->AddDeviceExtensionName(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME);
+            device_properties->AddDeviceExtensionName(VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME);
         }
 
         void Device::OnCreateEx(VkInstance instance, VkPhysicalDevice physical_device, DeviceProperties* device_properties, const WindowInfo* window_info)

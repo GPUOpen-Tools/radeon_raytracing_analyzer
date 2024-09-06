@@ -193,6 +193,22 @@ namespace rra
         return instance_nodes_[instance_index];
     }
 
+    renderer::RraVertex* Scene::AllocateVertexBuffer(uint32_t blas_index)
+    {
+        uint32_t total_tri_count{};
+        RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
+        vertices_.resize((size_t)total_tri_count * 3);
+        return vertices_.data();
+    }
+
+    std::byte* Scene::AllocateChildBuffer(uint32_t blas_index)
+    {
+        uint64_t total_node_count{};
+        RraBlasGetTotalNodeCount(blas_index, &total_node_count);
+        child_nodes_buffer_.resize(total_node_count * sizeof(SceneNode));
+        return child_nodes_buffer_.data();
+    }
+
     void Scene::PopulateSceneInfo()
     {
         scene_stats_.max_instance_count = ComputeMaxInstanceCount();
@@ -330,15 +346,16 @@ namespace rra
 
         for (uint32_t node_id : selected_node_ids_)
         {
-            for (auto& instance : GetNodeById(node_id)->GetInstances())
+            renderer::Instance* instance = GetNodeById(node_id)->GetInstance();
+            if (instance)
             {
                 renderer::SelectedVolumeInstance selected_volume = {};
-                RraBlasGetBoundingVolumeExtents(instance.blas_index, root_node, &selection_extents);
+                RraBlasGetBoundingVolumeExtents(instance->blas_index, root_node, &selection_extents);
 
                 selected_volume.min          = {selection_extents.min_x, selection_extents.min_y, selection_extents.min_z};
                 selected_volume.max          = {selection_extents.max_x, selection_extents.max_y, selection_extents.max_z};
                 selected_volume.is_transform = true;
-                selected_volume.transform    = instance.transform;
+                selected_volume.transform    = instance->transform;
 
                 substrate_instances.push_back(selected_volume);
             }
@@ -368,13 +385,13 @@ namespace rra
         rebraid_siblings_.resize((size_t)max_index + 1);
         for (auto& node : nodes_)
         {
-            const auto& instances = node.second->GetInstances();
-            if (instances.empty())
+            renderer::Instance* instance = node.second->GetInstance();
+            if (!instance)
             {
                 continue;
             }
 
-            rebraid_siblings_[instances[0].instance_index].push_back(node.second);
+            rebraid_siblings_[instance->instance_index].push_back(node.second);
         }
 
         // Sort.
@@ -836,11 +853,12 @@ namespace rra
 
         for (auto node : cast_results)
         {
-            for (auto& instance : node->GetInstances())
+            renderer::Instance* instance = node->GetInstance();
+            if (instance)
             {
-                glm::vec3 transformed_origin    = glm::transpose(glm::inverse(instance.transform)) * glm::vec4(ray_origin, 1.0f);
-                glm::vec3 transformed_direction = glm::mat3(glm::transpose(glm::inverse(instance.transform))) * ray_direction;
-                CastClosestHitRayOnBlas(instance.blas_index, node, transformed_origin, transformed_direction, scene_closest_hit);
+                glm::vec3 transformed_origin    = glm::transpose(glm::inverse(instance->transform)) * glm::vec4(ray_origin, 1.0f);
+                glm::vec3 transformed_direction = glm::mat3(glm::transpose(glm::inverse(instance->transform))) * ray_direction;
+                CastClosestHitRayOnBlas(instance->blas_index, node, transformed_origin, transformed_direction, scene_closest_hit);
             }
 
             for (auto& triangle : node->GetTriangles())
@@ -880,11 +898,12 @@ namespace rra
 
                 for (auto node : cast_results)
                 {
-                    for (auto& instance : node->GetInstances())
+                    renderer::Instance* instance = node->GetInstance();
+                    if (instance)
                     {
-                        glm::vec3 transformed_origin    = glm::transpose(glm::inverse(instance.transform)) * glm::vec4(request.origin, 1.0f);
-                        glm::vec3 transformed_direction = glm::mat3(glm::transpose(glm::inverse(instance.transform))) * request.direction;
-                        CastClosestHitRayOnBlas(instance.blas_index, node, transformed_origin, transformed_direction, scene_closest_hit);
+                        glm::vec3 transformed_origin    = glm::transpose(glm::inverse(instance->transform)) * glm::vec4(request.origin, 1.0f);
+                        glm::vec3 transformed_direction = glm::mat3(glm::transpose(glm::inverse(instance->transform))) * request.direction;
+                        CastClosestHitRayOnBlas(instance->blas_index, node, transformed_origin, transformed_direction, scene_closest_hit);
                     }
 
                     for (auto& triangle : node->GetTriangles())
@@ -1047,7 +1066,8 @@ namespace rra
 
         if (root_node_ && root_node_->IsVisible())
         {
-            root_node_->AddToTraversalTree(traversal_tree);
+            traversal_tree.volumes.reserve(nodes_.size());
+            root_node_->AddToTraversalTree(true, traversal_tree);
         }
 
         return traversal_tree;

@@ -17,7 +17,7 @@ BlasPropertiesPane::BlasPropertiesPane(QWidget* parent)
     , tlas_index_(0)
 {
     ui_->setupUi(this);
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
     model_ = new rra::BlasPropertiesModel(rra::kBlasPropertiesNumWidgets);
 
     model_->InitializeModel(ui_->content_node_address_, rra::kBlasPropertiesBaseAddress, "text");

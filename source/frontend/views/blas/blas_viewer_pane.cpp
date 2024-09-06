@@ -7,6 +7,8 @@
 
 #include "views/blas/blas_viewer_pane.h"
 
+#include "qt_common/utils/qt_util.h"
+
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
@@ -23,7 +25,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     ui_->side_panel_container_->GetViewPane()->SetParentPaneId(rra::kPaneIdBlasViewer);
     ui_->viewer_container_widget_->SetupUI(this, rra::kPaneIdBlasViewer);
 
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
     ui_->blas_tree_->setIndentation(rra::kTreeViewIndent);
     ui_->blas_tree_->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     ui_->blas_tree_->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -64,6 +66,8 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     model_->InitializeModel(ui_->content_primitive_index_2_, rra::kBlasStatsPrimitiveIndexTriangle2, "text");
     model_->InitializeModel(ui_->content_geometry_index_1_, rra::kBlasStatsGeometryIndex, "text");
     model_->InitializeModel(ui_->content_parent_blas_, rra::kBlasStatsParent, "text");
+
+    ui_->content_parent_blas_->SetLinkStyleSheet();
 
     ui_->triangle_split_info_->setCursor(Qt::PointingHandCursor);
     ui_->triangle_split_info_->hide();
@@ -114,8 +118,18 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
 
     flag_table_delegate_ = new FlagTableItemDelegate();
     ui_->geometry_flags_table_1_->setItemDelegate(flag_table_delegate_);
+    
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable-dark-theme.svg"));
+    }
+    else
+    {
+        ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
+    }
 
-    ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &BlasViewerPane::OnColorThemeUpdated);
+
     ui_->content_focus_selected_volume_->SetHoverIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-hover.svg"));
     ui_->content_focus_selected_volume_->setBaseSize(QSize(25, 25));
     connect(ui_->content_focus_selected_volume_, &ScaledPushButton::clicked, [&]() { model_->GetCameraController()->FocusOnSelection(); });
@@ -358,4 +372,16 @@ void BlasViewerPane::TreeNodeChanged(const QItemSelection& selected, const QItem
 
     AccelerationStructureViewerPane::SelectedTreeNodeChanged(selected, deselected);
     SelectLeafNode(false);
+}
+
+void BlasViewerPane::OnColorThemeUpdated()
+{
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable-dark-theme.svg"));
+    }
+    else
+    {
+        ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
+    }
 }

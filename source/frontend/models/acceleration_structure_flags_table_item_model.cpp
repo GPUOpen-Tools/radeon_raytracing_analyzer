@@ -86,7 +86,7 @@ namespace rra
             switch (index.column())
             {
             case kInstanceFlagsTableColumnFlag:
-                return QVariant(row_data_[row].checked ? QColor(Qt::black) : QColor(Qt::gray));
+                return QVariant(row_data_[row].checked ? QColor(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color) : QColor(Qt::gray));
             }
         }
         return QVariant();

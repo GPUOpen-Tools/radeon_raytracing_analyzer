@@ -37,8 +37,6 @@ LicenseDialog::LicenseDialog()
 
     ui_->agree_button_->setEnabled(!ui_->text_edit_->verticalScrollBar()->isVisible());
 
-    rra::widget_util::SetWidgetBackgroundColor(this, Qt::white);
-
     QFile license_file(QCoreApplication::applicationDirPath() + rra::text::kLicenseFile);
 
     if (license_file.open(QIODevice::ReadOnly) == true)

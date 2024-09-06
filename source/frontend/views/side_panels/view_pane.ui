@@ -731,7 +731,10 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Copy camera params</string>
+           <string>Copy</string>
+          </property>
+          <property name="toolTip">
+           <string>Copies the camera parameters to the clipboard and internally stores it.</string>
           </property>
          </widget>
         </item>
@@ -744,7 +747,26 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Paste camera params</string>
+           <string>Paste</string>
+          </property>
+          <property name="toolTip">
+           <string>Pastes the camera parameters from the clipboard.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ScaledPushButton" name="restore_camera_transform_button_">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Restore</string>
+          </property>
+          <property name="toolTip">
+           <string>Restores the camera parameters from the internally stored data.</string>
           </property>
          </widget>
         </item>

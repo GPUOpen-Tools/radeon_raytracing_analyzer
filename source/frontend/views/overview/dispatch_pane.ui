@@ -38,6 +38,20 @@
     </widget>
    </item>
    <item>
+    <widget class="ScaledLabel" name="user_marker_stack_">
+     <property name="text">
+      <string>user/marker/stack</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="ScaledLabel" name="user_marker_">
+     <property name="text">
+      <string>User marker</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="loading_bar_spacer_">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

@@ -104,9 +104,10 @@ namespace rra
             auto scene_nodes = scene->CastRayCollectNodes(origin, direction);
             for (auto node : scene_nodes)
             {
-                for (const auto& instance : node->GetInstances())
+                renderer::Instance* instance = node->GetInstance();
+                if (instance)
                 {
-                    hit_instances.push_back(instance.instance_node);
+                    hit_instances.push_back(instance->instance_node);
                 }
             }
         }

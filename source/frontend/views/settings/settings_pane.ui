@@ -31,7 +31,10 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <layout class="QVBoxLayout" name="vertical_layout_" stretch="0,0">
+      <layout class="QVBoxLayout" name="vertical_layout_">
+       <property name="spacing">
+        <number>6</number>
+       </property>
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -80,7 +83,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="ColoredCheckbox" name="check_for_updates_on_startup_checkbox_">
+           <widget class="CheckBoxWidget" name="check_for_updates_on_startup_checkbox_">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -160,7 +163,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="ColoredCheckbox" name="reset_camera_on_style_change_checkbox_">
+           <widget class="CheckBoxWidget" name="reset_camera_on_style_change_checkbox_">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -240,7 +243,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="ColoredCheckbox" name="viewer_state_checkbox_">
+           <widget class="CheckBoxWidget" name="viewer_state_checkbox_">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -640,6 +643,9 @@
           </size>
          </property>
          <layout class="QVBoxLayout" name="instance_group_layout_">
+          <property name="spacing">
+           <number>0</number>
+          </property>
           <property name="leftMargin">
            <number>0</number>
           </property>
@@ -652,9 +658,6 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <property name="spacing">
-           <number>0</number>
-          </property>
           <item>
            <widget class="QSlider" name="small_object_culling_content_">
             <property name="sizePolicy">
@@ -662,6 +665,9 @@
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="minimum">
              <number>0</number>
@@ -678,15 +684,12 @@
             <property name="invertedControls">
              <bool>false</bool>
             </property>
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
            </widget>
           </item>
           <item>
            <layout class="QHBoxLayout">
             <item>
-             <widget class="ScaledLabel">
+             <widget class="ScaledLabel" name="scaled_label_1_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -718,7 +721,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="ScaledLabel">
+             <widget class="ScaledLabel" name="scaled_label_2_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -750,7 +753,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="ScaledLabel">
+             <widget class="ScaledLabel" name="scaled_label_3_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -844,6 +847,38 @@
          </property>
         </widget>
        </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>30</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="DriverOverridesNotificationConfigWidget" name="driver_overrides_notification_config_widget_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>
@@ -857,11 +892,6 @@
    <header>qt_common/custom_widgets/scaled_spin_box.h</header>
   </customwidget>
   <customwidget>
-   <class>ScaledDoubleSpinBox</class>
-   <extends>QSpinBox</extends>
-   <header>qt_common/custom_widgets/scaled_double_spin_box.h</header>
-  </customwidget>
-  <customwidget>
    <class>ArrowIconComboBox</class>
    <extends>QWidget</extends>
    <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
@@ -873,9 +903,15 @@
    <header>qt_common/custom_widgets/scaled_label.h</header>
   </customwidget>
   <customwidget>
-   <class>ColoredCheckbox</class>
+   <class>CheckBoxWidget</class>
    <extends>QCheckBox</extends>
-   <header>views/custom_widgets/colored_checkbox.h</header>
+   <header>qt_common/custom_widgets/check_box_widget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DriverOverridesNotificationConfigWidget</class>
+   <extends>QWidget</extends>
+   <header>qt_common/custom_widgets/driver_overrides_notification_config_widget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

@@ -30,9 +30,6 @@ RecentTracesPane::RecentTracesPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    // Set white background for this pane.
-    rra::widget_util::SetWidgetBackgroundColor(this, Qt::white);
-
     // Set the background color.
     QPalette palette;
     palette.setColor(QPalette::Window, Qt::GlobalColor::transparent);

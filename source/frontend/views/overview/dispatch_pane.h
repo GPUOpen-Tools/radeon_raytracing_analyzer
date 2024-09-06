@@ -36,6 +36,11 @@ public:
     /// @param [in] event The show event object.
     virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
 
+    /// @brief Overridden paintEvent method.
+    ///
+    /// @param event The paint event object
+    void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE;
+
     /// @brief Set the dispatch Id in the UI.
     ///
     /// @param [in] dispatch_id  The dispatch id.

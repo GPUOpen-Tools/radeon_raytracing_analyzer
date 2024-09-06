@@ -28,7 +28,6 @@ void VerticalButtonWidget::paintEvent(QPaintEvent* event)
     Q_UNUSED(event);
 
     QPainter painter(this);
-    painter.setPen(Qt::black);
     QFont tmp_font = font();
     tmp_font.setPointSizeF(kVerticalLabelPointFontSize);
     painter.setFont(tmp_font);

@@ -8,6 +8,7 @@
 #ifndef RRA_BACKEND_RAY_HISTORY_COUNTER_H_
 #define RRA_BACKEND_RAY_HISTORY_COUNTER_H_
 
+#include <cstdint>
 #include <memory>
 #include <stdexcept>
 

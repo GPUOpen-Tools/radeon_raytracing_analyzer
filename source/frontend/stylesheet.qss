@@ -8,15 +8,9 @@
 /* Global
 /*************************************/
 
-QWidget#main_content_
-{
-    background-color: white;
-}
-
 QTableView::item:selected
 {
     border: none;
-    color: white;
     background-color: #0078d7;
 }
 
@@ -34,37 +28,35 @@ QSplitter::handle#ray_splitter_
 QSlider::groove:horizontal
 {
     height: 2px;
-    background-color : #AFAFAF;
+    background-color: #AFAFAF;
     margin: 2px 0;
 }
 
 QSlider::handle:horizontal
 {
-    background-color : #0074D6;
+    background-color: #0074D6;
     width: 6px;
-    height:15px;
+    height: 15px;
     margin: -15px 0;
 }
 
 QSlider::handle:horizontal:hover
 {
-    background-color : black;
     width: 6px;
-    height:15px;
+    height: 15px;
     margin: -15px 0
 }
 
 QSlider::handle:disabled
 {
-    background-color : grey;
+    background-color: grey;
     width: 6px;
-    height:15px;
+    height: 15px;
     margin: -15px 0
 }
 
 FileLoadingWidget
 {
-    background-color: rgb(255, 255, 255);
     color: gray;
 }
 
@@ -75,7 +67,6 @@ RecentTraceMiniWidget
 
 ScaledCycleButton
 {
-    background: white;
     border: none;
     font-size: 9.75pt;
     text-align: center;
@@ -93,7 +84,7 @@ ScaledHeaderView
 
 ScaledTabWidget
 {
-    font:  bold 8pt;
+    font: bold 8pt;
 }
 
 ScaledTabWidget > QTabBar::tab
@@ -108,21 +99,22 @@ ScaledTabWidget > QTabBar::tab:!first
 
 ScaledTabWidget > QTabBar::tab:selected
 {
-    background-color: white;
-    border: 1px solid #C4C4C3;
-    border-bottom: 1px solid white;
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: none;
 }
 
 ScaledTabWidget > QTabBar::tab:!selected
 {
-    background-color: rgb(236, 236, 236);
+    background-color: palette(alternate-base);
     border-right: 1px solid #C4C4C3;
     border-left: 1px solid #C4C4C3;
     border-bottom: 1px solid #C4C4C3;
 }
 
-ScaledTabWidget > QTabBar::tab:!selected:hover {
-    background-color: rgb(237, 246, 255)
+ScaledTabWidget > QTabBar::tab:!selected:hover
+{
+    background-color: palette(highlight);
 }
 
 ScaledLabel, ScaledPushButton, QLabel, QPushButton
@@ -137,10 +129,9 @@ ColoredLegendGraphicsView
 
 ArrowIconWidget, ArrowIconComboBox
 {
-    background: white;
     border: none;
     font-size: 9.75pt;
-    text-align:left;
+    text-align: left;
 }
 
 ListWidget
@@ -164,12 +155,12 @@ ListWidget QLabel
 
 ListWidget::item:hover
 {
-    background: rgb(214, 214, 214);
+    background-color: palette(alternate-base);
 }
 
 ListWidget::item:selected
 {
-    background: rgb(143, 193, 231);
+    background-color: palette(highlight);
 }
 
 ListWidget::item
@@ -177,11 +168,35 @@ ListWidget::item
     border-bottom: none;
 }
 
+CheckBoxWidget
+{
+    font-size: 9.75pt;
+}
+
+CheckBoxWidget::indicator::checked::disabled
+{
+    image: url(:/Resources/assets/checkbox_on_gray.svg);
+}
+
+CheckBoxWidget::indicator::unchecked::disabled
+{
+    image: url(:/Resources/assets/checkbox_off_gray.svg);
+}
+
+CheckBoxWidget::indicator:checked
+{
+    image: url(:/Resources/assets/checkbox_on.svg);
+}
+
+CheckBoxWidget::indicator:unchecked
+{
+    image: url(:/Resources/assets/checkbox_off.svg);
+}
+
 TextSearchWidget
 {
-   font-size: 9.75pt;
-   border: 1px solid gray;
-   background: white;
+    font-size: 9.75pt;
+    border: 1px solid gray;
 }
 
 QFrame#warning_widget_
@@ -210,15 +225,9 @@ ScaledLabel#label_instance_mask_filter_
 /* MainWindow
 /*************************************/
 
-MainWindow QWidget#bottom_spacer_label_
-{
-    background-color: rgb(240, 240, 240);
-}
-
 MainWindow QTabWidget::pane
 {
-    border : 0px  solid #444;
-    background: solid white;
+    border: 0px solid #444;
 }
 
 MainWindow #main_tab_widget_ > QTabWidget::pane
@@ -258,6 +267,7 @@ MainWindow #main_tab_widget_ > QTabBar::tab:top:hover
 
 MainWindow #main_tab_widget_ > QTabBar::tab:top:selected
 {
+    color: rgb(240, 240, 240);
     border-bottom: 4px solid rgb(224,30,55);
 }
 
@@ -268,7 +278,7 @@ MainWindow #main_tab_widget_ > QTabBar::tab:!selected:hover
 
 MainWindow QTabWidget#tlas_sub_tab_
 {
-    font:  bold 10pt;
+    font: bold 10pt;
 }
 
 MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab
@@ -279,28 +289,29 @@ MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab
 
 MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab:selected
 {
-    background-color: white;
-    border: 1px solid #C4C4C3;
-    border-bottom: 1px solid white;
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: none;
     margin-left: -1px;
 }
 
 MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab:!selected
 {
-    background-color: rgb(236, 236, 236);
+    background-color: palette(alternate-base);
     border-right: 1px solid #C4C4C3;
     border-left: 1px solid #C4C4C3;
     border-bottom: 1px solid #C4C4C3;
     margin-left: -1px;
 }
 
-MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab:!selected:hover {
-    background-color: rgb(237, 246, 255)
+MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab:!selected:hover
+{
+    background-color: palette(highlight);
 }
 
 MainWindow QTabWidget#blas_sub_tab_
 {
-    font:  bold 10pt;
+    font: bold 10pt;
 }
 
 MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab
@@ -311,28 +322,29 @@ MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab
 
 MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:selected
 {
-    background-color: white;
-    border: 1px solid #C4C4C3;
-    border-bottom: 1px solid white;
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: none;
     margin-left: -1px;
 }
 
 MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:!selected
 {
-    background-color: rgb(236, 236, 236);
+    background-color: palette(alternate-base);
     border-right: 1px solid #C4C4C3;
     border-left: 1px solid #C4C4C3;
     border-bottom: 1px solid #C4C4C3;
     margin-left: -1px;
 }
 
-MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:!selected:hover {
-    background-color: rgb(237, 246, 255)
+MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:!selected:hover
+{
+    background-color: palette(highlight);
 }
 
 MainWindow QTabWidget#ray_sub_tab_
 {
-    font:  bold 10pt;
+    font: bold 10pt;
 }
 
 MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab
@@ -343,23 +355,32 @@ MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab
 
 MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab:selected
 {
-    background-color: white;
-    border: 1px solid #C4C4C3;
-    border-bottom: 1px solid white;
+    border-right: 1px solid #C4C4C3;
+    border-left: 1px solid #C4C4C3;
+    border-bottom: none;
     margin-left: -1px;
 }
 
 MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab:!selected
 {
-    background-color: rgb(236, 236, 236);
+    background-color: palette(alternate-base);
     border-right: 1px solid #C4C4C3;
     border-left: 1px solid #C4C4C3;
     border-bottom: 1px solid #C4C4C3;
     margin-left: -1px;
 }
 
-MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab:!selected:hover {
-    background-color: rgb(237, 246, 255)
+MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab:!selected:hover
+{
+    background-color: palette(highlight);
+}
+
+DriverOverridesNotificationBanner
+{
+    color: black;
+    background-color: rgb(255, 245, 150);
+    qproperty-linkColor: blue;
+    qproperty-disabledLinkColor: grey;
 }
 
 /*************************************/
@@ -377,7 +398,6 @@ WelcomePane ScaledLabel
 
 AboutPane ScaledPushButton
 {
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -409,18 +429,11 @@ AboutPane ScaledLabel#label_related_actions_
 QScrollArea#tlas_overview_scroll_area_
 {
     border-style: none;
-    background-color: white;
 }
 
 QWidget#tlas_scroll_area_contents_
 {
     border-style: none;
-    background-color: white;
-}
-
-QLabel#acceleration_structure_diagram_
-{
-    image: url(:/Resources/assets/acceleration_structure_overview.svg);
 }
 
 ScaledLabel#tlas_summary_header_
@@ -441,11 +454,6 @@ ScaledLabel#total_memory_label_
 ScaledLabel#total_memory_content_
 {
     font: 12pt;
-}
-
-QWidget#tlas_pane_
-{
-    background-color: rgb(240, 240, 240);
 }
 
 ScaledLabel#tlas_memory_size_
@@ -496,7 +504,6 @@ ScaledLabel#total_memory_size_
 ScaledPushButton#tlas_title_
 {
     font: 20pt;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -514,13 +521,11 @@ ScaledLabel#dispatch_list_header_
 QScrollArea#dispatch_scroll_area_
 {
     border-style: none;
-    background-color: white;
 }
 
 QWidget#dispatch_scroll_area_contents_
 {
     border-style: none;
-    background-color: white;
 }
 
 /*************************************/
@@ -530,7 +535,6 @@ QWidget#dispatch_scroll_area_contents_
 ScaledLabel#content_node_address_
 {
     font: bold 12pt;
-    color: black;
     border: none;
     text-align: left;
 }
@@ -553,7 +557,6 @@ ScaledLabel#title_tlas_address_
 ScaledPushButton#content_blas_address_
 {
     font: bold;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -571,7 +574,6 @@ ScaledPushButton#content_blas_address_:disabled
 ScaledPushButton#content_parent_
 {
     font: bold;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -579,7 +581,6 @@ ScaledPushButton#content_parent_
 ScaledPushButton#content_parent_blas_
 {
     font: bold;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -598,7 +599,6 @@ ScaledPushButton#rebraid_button_
 {
     font: bold;
     font-size: 9pt;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -616,12 +616,6 @@ ScaledPushButton#rebraid_button_:disabled
 ExpandingScrollArea#side_panel_scroll_area_
 {
     border-style: none;
-    background-color: white;
-}
-
-QWidget#side_pane_content_
-{
-    background-color: white;
 }
 
 ScaledLabel#label_camera_header_
@@ -636,19 +630,16 @@ ScaledLabel#label_renderer_header_
 
 QPushButton#view_button_
 {
-    background-color: white;
     border: none;
 }
 
 QPushButton#renderer_button_
 {
-    background-color: white;
     border: none;
 }
 
 QPushButton#bvh_button_
 {
-    background-color: white;
     border: none;
 }
 
@@ -665,13 +656,11 @@ ColoredRadioButton
 QScrollArea#triangle_split_scroll_area_
 {
     border-style: none;
-    background-color: white;
 }
 
 QWidget#split_triangle_siblings
 {
     border-style: none;
-    background-color: white;
 }
 
 /*************************************/
@@ -706,7 +695,6 @@ ScaledLabel#selected_ray_result_label_
 ScaledPushButton#content_ray_acceleration_structure_address_
 {
     font: bold;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -724,7 +712,6 @@ ScaledPushButton#content_ray_acceleration_structure_address_:disabled
 ScaledPushButton#content_ray_result_hit_distance_
 {
     font: bold;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -742,7 +729,6 @@ ScaledPushButton#content_ray_result_hit_distance_:disabled
 ScaledPushButton#content_ray_result_instance_index_
 {
     font: bold;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }
@@ -759,15 +745,8 @@ ScaledPushButton#content_ray_result_instance_index_:disabled
 
 ScaledPushButton#content_ray_result_geometry_index_
 {
-    font: bold;
-    color: rgb(0, 0, 0);
     border: none;
     text-align: left;
-}
-
-ScaledPushButton#content_ray_result_geometry_index_:hover
-{
-    color: rgb(0, 0, 0);
 }
 
 ScaledPushButton#content_ray_result_geometry_index_:disabled
@@ -777,15 +756,8 @@ ScaledPushButton#content_ray_result_geometry_index_:disabled
 
 ScaledPushButton#content_ray_result_primitive_index_
 {
-    font: bold;
-    color: rgb(0, 0, 0);
     border: none;
     text-align: left;
-}
-
-ScaledPushButton#content_ray_result_primitive_index_:hover
-{
-    color: rgb(0, 0, 0);
 }
 
 ScaledPushButton#content_ray_result_primitive_index_:disabled
@@ -801,7 +773,6 @@ ScaledLabel#reshape_label_
 ScaledPushButton#content_origin_
 {
     font: bold;
-    color: rgb(0, 0, 255);
     border: none;
     text-align: left;
 }

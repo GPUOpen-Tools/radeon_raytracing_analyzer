@@ -7,6 +7,7 @@
 
 #include <deque>
 #include <algorithm>
+#include <array>
 
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
@@ -34,7 +35,7 @@ namespace rra
     {
         for (auto child_node : child_nodes_)
         {
-            delete child_node;
+            child_node->~SceneNode();
         }
     }
 
@@ -47,9 +48,9 @@ namespace rra
         {
             const SceneNode* node = traversal_stack.front();
             traversal_stack.pop_front();
-            for (const auto& instance : node->instances_)
+            if (node->instance_.has_value())
             {
-                instances_map[instance.blas_index].push_back(instance);
+                instances_map[node->instance_.value().blas_index].push_back(node->instance_.value());
             }
 
             for (const auto& child_node : node->child_nodes_)
@@ -182,20 +183,20 @@ namespace rra
         }
 
         // Check for instances.
-        for (auto& instance : instances_)
+        if (instance_.has_value())
         {
             // If we've added one of this instances rebraid siblings already, don't add this one.
             // Just checking if this SceneNode is equal to the first rebraid sibling is not enough, since then the BLAS will be culled
             // if only the first rebraid sibling is out of the frustum. So we must check if any rebraid siblings are in the frustum,
             // but use rebraid_duplicates to avoid rendering duplicates.
-            if (!rebraid_duplicates[instance.instance_index])
+            if (!rebraid_duplicates[instance_.value().instance_index])
             {
-                rebraid_duplicates[instance.instance_index] = true;
+                rebraid_duplicates[instance_.value().instance_index] = true;
 
                 if (!BoundingVolumeExtentFovCull(bounding_volume_, frustum_info.camera_position, frustum_info.camera_fov, frustum_info.fov_threshold_ratio) &&
                     BoundingVolumeExtentsInsidePlanes(bounding_volume_, culling_planes))
                 {
-                    AppendMergedInstanceToInstanceMap(instance, instance_map, scene);
+                    AppendMergedInstanceToInstanceMap(instance_.value(), instance_map, scene);
                 }
             }
         }
@@ -214,14 +215,14 @@ namespace rra
             child_node->AppendInstanceMap(instance_map, scene);
         }
 
-        for (auto& instance : instances_)
+        if (instance_.has_value())
         {
             // Since we don't have to worry about culling here, it is enough to just check that this SceneNode
             // is equal to the first rebraid sibling to avoid duplicates.
-            auto sibling_nodes = scene->GetRebraidedInstances(instance.instance_index);
+            auto sibling_nodes = scene->GetRebraidedInstances(instance_.value().instance_index);
             if (!sibling_nodes.empty() && sibling_nodes[0] == this)
             {
-                AppendMergedInstanceToInstanceMap(instance, instance_map, scene);
+                AppendMergedInstanceToInstanceMap(instance_.value(), instance_map, scene);
             }
         }
     }
@@ -234,7 +235,7 @@ namespace rra
             return;
         }
 
-        vertex_list.insert(vertex_list.end(), vertices_.begin(), vertices_.end());
+        vertex_list.insert(vertex_list.end(), vertices_, vertices_ + vertex_count_);
 
         for (auto child_node : child_nodes_)
         {
@@ -242,108 +243,135 @@ namespace rra
         }
     }
 
-    SceneNode* SceneNode::ConstructFromBlasNode(uint64_t blas_index, uint32_t node_id, uint32_t depth)
+    SceneNode* SceneNode::ConstructFromBlasNode(uint64_t blas_index, uint32_t root_id, renderer::RraVertex* vertex_buffer, std::byte* child_buffer)
     {
-        SceneNode* node = new SceneNode();
-        node->node_id_  = node_id;
-        node->depth_    = depth;
+        uint32_t current_child_buffer_offset{0};
 
-        RraBlasGetBoundingVolumeExtents(blas_index, node_id, &node->bounding_volume_);
+        SceneNode* root_node = new (child_buffer + current_child_buffer_offset) SceneNode();
+        current_child_buffer_offset += sizeof(SceneNode);
+        root_node->node_id_  = root_id;
+        root_node->depth_    = 0;
 
-        if (RraBvhIsTriangleNode(node_id))
+        std::vector<SceneNode*> traversal_stack;
+        traversal_stack.reserve(64);  // It is rare for the traversal stack to get deeper than ~28 so this should be sufficient memory to reserve.
+        traversal_stack.push_back(root_node);
+
+        uint32_t vertex_buffer_idx{0};
+
+        while (!traversal_stack.empty())
         {
-            // Get the triangle nodes. If this is not a triangle the triangle count is 0.
-            uint32_t triangle_count;
-            RraBlasGetNodeTriangleCount(blas_index, node_id, &triangle_count);
+            SceneNode* node{traversal_stack.back()};
+            traversal_stack.pop_back();
 
-            // Continue with processing the node if it's a triangle node with 1 or more triangles within.
-            if (triangle_count > 0)
+            RraBlasGetBoundingVolumeExtents(blas_index, node->node_id_, &node->bounding_volume_);
+
+            if (RraBvhIsTriangleNode(node->node_id_))
             {
-                // Populate a vector of triangle vertex data.
-                std::vector<TriangleVertices> triangles(triangle_count);
-                RraBlasGetNodeTriangles(blas_index, node_id, triangles.data());
+                // Get the triangle nodes. If this is not a triangle the triangle count is 0.
+                uint32_t triangle_count;
+                RraBlasGetNodeTriangleCount(blas_index, node->node_id_, &triangle_count);
 
-                // Retrieve the geometry index associated with the current triangle node.
-                RraBlasGetGeometryIndex(blas_index, node_id, &node->geometry_index_);
+                // Make vertices_ a subset of the BLAS's vertex buffer.
+                node->vertices_ = vertex_buffer + vertex_buffer_idx;
+                vertex_buffer_idx += triangle_count * 3;
 
-                uint32_t geometry_flags = 0;
-                RraBlasGetGeometryFlags(blas_index, node->geometry_index_, &geometry_flags);
-
-                // Extract the opacity flag.
-                bool is_opaque = (geometry_flags & GeometryFlags::kOpaque) == GeometryFlags::kOpaque;
-
-                RraBlasGetPrimitiveIndex(blas_index, node_id, 0, &node->primitive_index_);
-
-                // Step over each triangle and extract data used to populate the vertex buffer.
-                for (size_t triangle_index = 0; triangle_index < triangles.size(); triangle_index++)
+                // Continue with processing the node if it's a triangle node with 1 or more triangles within.
+                if (triangle_count > 0)
                 {
-                    const TriangleVertices& triangle = triangles[triangle_index];
+                    // Populate a vector of triangle vertex data.
+                    std::array<TriangleVertices, 8> triangles{};
+                    RraBlasGetNodeTriangles(blas_index, node->node_id_, triangles.data());
 
-                    // Extract the vertex positions.
-                    glm::vec3 p0 = glm::vec3(triangle.a.x, triangle.a.y, triangle.a.z);
-                    glm::vec3 p1 = glm::vec3(triangle.b.x, triangle.b.y, triangle.b.z);
-                    glm::vec3 p2 = glm::vec3(triangle.c.x, triangle.c.y, triangle.c.z);
+                    // Retrieve the geometry index associated with the current triangle node.
+                    RraBlasGetGeometryIndex(blas_index, node->node_id_, &node->geometry_index_);
 
-                    // Compute the triangle normal.
-                    glm::vec3 a      = p1 - p0;
-                    glm::vec3 b      = p2 - p0;
-                    glm::vec3 normal = glm::cross(a, b);
-                    normal           = glm::normalize(normal);
+                    uint32_t geometry_flags = 0;
+                    RraBlasGetGeometryFlags(blas_index, node->geometry_index_, &geometry_flags);
 
-                    // We can infer the z-component from x and y, but the sign is lost. So we encode the sign of z by adding
-                    // kNormalSignIndicatorOffset to x if z is negative. This is then decoded in the shader.
-                    glm::vec2 compact_normal = glm::vec2(normal.x, normal.y);
-                    compact_normal.x         = (normal.z < 0.0f) ? compact_normal.x : compact_normal.x + kNormalSignIndicatorOffset;
+                    // Extract the opacity flag.
+                    bool is_opaque = (geometry_flags & GeometryFlags::kOpaque) == GeometryFlags::kOpaque;
 
-                    float triangle_sah = 0.0f;
-                    RraBlasGetTriangleSurfaceAreaHeuristic(blas_index, node_id, &triangle_sah);
+                    RraBlasGetPrimitiveIndex(blas_index, node->node_id_, 0, &node->primitive_index_);
 
-                    float average_epo = 0.0f;
-                    float max_epo     = 0.0f;
-                    RRA_UNUSED(average_epo);
-                    RRA_UNUSED(max_epo);
+                    // Step over each triangle and extract data used to populate the vertex buffer.
+                    for (size_t triangle_index = 0; triangle_index < triangle_count; triangle_index++)
+                    {
+                        const TriangleVertices& triangle = triangles[triangle_index];
 
-                    // We pack geometry index, depth, split, and opaque into one uint32_t.
-                    uint32_t geometry_index_depth_split_opaque{};
-                    geometry_index_depth_split_opaque |= node->geometry_index_ << 16;  // Bits 31-16 are geometry index.
-                    geometry_index_depth_split_opaque |= depth << 2;                   // Bits 15-2 are depth.
-                    geometry_index_depth_split_opaque |= 0 << 1;                       // Bit 1 is split. We write to this in PopulateSplitVertexAttribute().
-                    geometry_index_depth_split_opaque |= (uint32_t)is_opaque;          // Bit 0 is opaque.
+                        // Extract the vertex positions.
+                        glm::vec3 p0 = glm::vec3(triangle.a.x, triangle.a.y, triangle.a.z);
+                        glm::vec3 p1 = glm::vec3(triangle.b.x, triangle.b.y, triangle.b.z);
+                        glm::vec3 p2 = glm::vec3(triangle.c.x, triangle.c.y, triangle.c.z);
 
-                    // Triangle SAH is negative initially to indicate deselected triangles.
-                    renderer::RraVertex v0 = {p0, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node_id};
-                    renderer::RraVertex v1 = {p1, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node_id};
-                    renderer::RraVertex v2 = {p2, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node_id};
+                        // Compute the triangle normal.
+                        glm::vec3 a      = p1 - p0;
+                        glm::vec3 b      = p2 - p0;
+                        glm::vec3 normal = glm::cross(a, b);
+                        normal           = glm::normalize(normal);
 
-                    // Add 3 new triangle vertices to the output vector.
-                    node->vertices_.push_back(v0);
-                    node->vertices_.push_back(v1);
-                    node->vertices_.push_back(v2);
+                        // We can infer the z-component from x and y, but the sign is lost. So we encode the sign of z by adding
+                        // kNormalSignIndicatorOffset to x if z is negative. This is then decoded in the shader.
+                        glm::vec2 compact_normal = glm::vec2(normal.x, normal.y);
+                        compact_normal.x         = (normal.z < 0.0f) ? compact_normal.x : compact_normal.x + kNormalSignIndicatorOffset;
+
+                        float triangle_sah = 0.0f;
+                        RraBlasGetTriangleSurfaceAreaHeuristic(blas_index, node->node_id_, &triangle_sah);
+
+                        float average_epo = 0.0f;
+                        float max_epo     = 0.0f;
+                        RRA_UNUSED(average_epo);
+                        RRA_UNUSED(max_epo);
+
+                        // We pack geometry index, depth, split, and opaque into one uint32_t.
+                        uint32_t geometry_index_depth_split_opaque{};
+                        geometry_index_depth_split_opaque |= node->geometry_index_ << 16;  // Bits 31-16 are geometry index.
+                        geometry_index_depth_split_opaque |= node->depth_ << 2;            // Bits 15-2 are depth.
+                        geometry_index_depth_split_opaque |= 0 << 1;               // Bit 1 is split. We write to this in PopulateSplitVertexAttribute().
+                        geometry_index_depth_split_opaque |= (uint32_t)is_opaque;  // Bit 0 is opaque.
+
+                        // Triangle SAH is negative initially to indicate deselected triangles.
+                        renderer::RraVertex v0 = {p0, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node->node_id_};
+                        renderer::RraVertex v1 = {p1, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node->node_id_};
+                        renderer::RraVertex v2 = {p2, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node->node_id_};
+
+                        // Add 3 new triangle vertices to the output array.
+                        node->vertices_[node->vertex_count_ + 0] = v0;
+                        node->vertices_[node->vertex_count_ + 1] = v1;
+                        node->vertices_[node->vertex_count_ + 2] = v2;
+
+                        node->vertex_count_ += 3;
+                    }
                 }
-            }
 
-            return node;
-        }
-
-        uint32_t child_node_count;
-        RraBlasGetChildNodeCount(blas_index, node_id, &child_node_count);
-
-        std::vector<uint32_t> child_nodes(child_node_count);
-        RraBlasGetChildNodes(blas_index, node_id, child_nodes.data());
-
-        for (auto child_node : child_nodes)
-        {
-            if (child_node == node_id)
-            {
-                // Self refencing node will cause a stack overflow. Skip to prevent a crash.
                 continue;
             }
-            auto child_node_ptr     = SceneNode::ConstructFromBlasNode(blas_index, child_node, depth + 1);
-            child_node_ptr->parent_ = node;
-            node->child_nodes_.push_back(child_node_ptr);
+
+            uint32_t child_node_count;
+            RraBlasGetChildNodeCount(blas_index, node->node_id_, &child_node_count);
+
+            std::array<uint32_t, 8> child_nodes{};
+            RraBlasGetChildNodes(blas_index, node->node_id_, child_nodes.data());
+
+            for (uint32_t i{0}; i < child_node_count; ++i)
+            {
+                if (child_nodes[i] == node->node_id_)
+                {
+                    // Self refencing node will cause a stack overflow. Skip to prevent a crash.
+                    continue;
+                }
+
+                // Use placement new operator to allocate child in child_nodes_buffer_.
+                SceneNode* new_node = new (child_buffer + current_child_buffer_offset) SceneNode();
+                current_child_buffer_offset += sizeof(SceneNode);
+                new_node->node_id_ = child_nodes[i];
+                new_node->depth_   = node->depth_ + 1;
+                new_node->parent_  = node;
+                node->child_nodes_.PushBack(new_node);
+                traversal_stack.push_back(new_node);
+            }
         }
 
-        return node;
+        return root_node;
     }
 
     void SceneNode::AppendMergedInstanceToInstanceMap(renderer::Instance instance, renderer::InstanceMap& instance_map, const Scene* scene) const
@@ -359,13 +387,27 @@ namespace rra
         instance_map[instance.blas_index].push_back(instance);
     }
 
-    SceneNode* SceneNode::ConstructFromBlas(uint32_t blas_index)
+    SceneNode* SceneNode::ConstructFromBlas(uint32_t blas_index, renderer::RraVertex* vertex_buffer, std::byte* child_buffer)
     {
         uint32_t root_node_index = UINT32_MAX;
         RraBvhGetRootNodePtr(&root_node_index);
+        auto node = ConstructFromBlasNode(blas_index, root_node_index, vertex_buffer, child_buffer);
 
-        auto node = ConstructFromBlasNode(blas_index, root_node_index, 0);
-        PopulateSplitVertexAttribute(node);
+        uint32_t geometry_count{};
+        RraBlasGetGeometryCount(blas_index, &geometry_count);
+        std::vector<uint32_t> geometry_offsets{};
+        geometry_offsets.resize(geometry_count);
+        uint32_t current_geo_offset{0};
+
+        for (uint32_t geo_idx{0}; geo_idx < geometry_count; ++geo_idx)
+        {
+            geometry_offsets[geo_idx] = current_geo_offset;
+
+            uint32_t primitive_count{};
+            RraBlasGetGeometryPrimitiveCount(blas_index, geo_idx, &primitive_count);
+            current_geo_offset += primitive_count;
+        }
+        PopulateSplitVertexAttribute(node, geometry_offsets, current_geo_offset);
 
         return node;
     }
@@ -420,7 +462,7 @@ namespace rra
 
             RraTlasGetInstanceFlags(tlas_index, node_id, &instance.flags);
 
-            node->instances_.push_back(instance);
+            node->instance_ = instance;
 
             return node;
         }
@@ -435,7 +477,7 @@ namespace rra
         {
             auto child_node_ptr     = SceneNode::ConstructFromTlasBoxNode(tlas_index, child_node, depth + 1);
             child_node_ptr->parent_ = node;
-            node->child_nodes_.push_back(child_node_ptr);
+            node->child_nodes_.PushBack(child_node_ptr);
         }
 
         return node;
@@ -458,15 +500,15 @@ namespace rra
             child_node->ResetSelection(selected_node_ids);
         }
 
-        for (auto& instance : instances_)
+        if (instance_.has_value())
         {
-            instance.selected = false;
+            instance_.value().selected = false;
         }
 
-        for (auto& vertex : vertices_)
+        for (uint32_t i{0}; i < vertex_count_; ++i)
         {
             // Unselect.
-            vertex.triangle_sah_and_selected = -std::abs(vertex.triangle_sah_and_selected);
+            vertices_[i].triangle_sah_and_selected = -std::abs(vertices_[i].triangle_sah_and_selected);
         }
     }
 
@@ -474,15 +516,15 @@ namespace rra
     {
         selected_ = false;
 
-        for (auto& instance : instances_)
+        if (instance_.has_value())
         {
-            instance.selected = false;
+            instance_.value().selected = false;
         }
 
-        for (auto& vertex : vertices_)
+        for (uint32_t i{0}; i < vertex_count_; ++i)
         {
             // Unselect.
-            vertex.triangle_sah_and_selected = -std::abs(vertex.triangle_sah_and_selected);
+            vertices_[i].triangle_sah_and_selected = -std::abs(vertices_[i].triangle_sah_and_selected);
         }
     }
 
@@ -501,15 +543,15 @@ namespace rra
             child_node->ApplyNodeSelection(selected_node_ids);
         }
 
-        for (auto& instance : instances_)
+        if (instance_.has_value())
         {
-            instance.selected = true;
+            instance_.value().selected = true;
         }
 
-        for (auto& vertex : vertices_)
+        for (uint32_t i{0}; i < vertex_count_; ++i)
         {
             // Select.
-            vertex.triangle_sah_and_selected = std::abs(vertex.triangle_sah_and_selected);
+            vertices_[i].triangle_sah_and_selected = std::abs(vertices_[i].triangle_sah_and_selected);
         }
     }
 
@@ -708,26 +750,21 @@ namespace rra
         }
     }
 
-    std::vector<renderer::Instance> SceneNode::GetInstances() const
-    {
-        return instances_;
-    }
-
     renderer::Instance* SceneNode::GetInstance()
     {
-        if (instances_.empty())
+        if (!instance_.has_value())
         {
             return nullptr;
         }
 
-        return &instances_[0];
+        return &instance_.value();
     }
 
     std::vector<SceneTriangle> SceneNode::GetTriangles() const
     {
-        RRA_ASSERT(vertices_.size() % 3 == 0);
+        RRA_ASSERT(vertex_count_ % 3 == 0);
         std::vector<SceneTriangle> triangles;
-        for (size_t i = 0; i < vertices_.size(); i += 3)
+        for (size_t i = 0; i < vertex_count_; i += 3)
         {
             SceneTriangle triangle;
             triangle.a = vertices_[i];
@@ -829,117 +866,125 @@ namespace rra
         return parent_;
     }
 
-    uint32_t SceneNode::AddToTraversalTree(renderer::TraversalTree& traversal_tree)
+    void SceneNode::AddToTraversalTree(bool populate_vertex_buffer, renderer::TraversalTree& traversal_tree)
     {
-        uint32_t current_index = static_cast<uint32_t>(traversal_tree.volumes.size());
+        std::vector<std::pair<SceneNode*, uint32_t> > traversal_stack{};  // Pairs of scene node and its index into traversal_tree.volumes.
+        traversal_stack.reserve(64);  // It is rare for the traversal stack to get deeper than ~28 so this should be sufficient memory to reserve.
+        traversal_stack.push_back({this, 0});
 
-        renderer::TraversalVolume traversal_volume;
-        traversal_volume.min = glm::vec4(bounding_volume_.min_x, bounding_volume_.min_y, bounding_volume_.min_z, 1.0f);
-        traversal_volume.max = glm::vec4(bounding_volume_.max_x, bounding_volume_.max_y, bounding_volume_.max_z, 1.0f);
-        traversal_tree.volumes.push_back(traversal_volume);
+        renderer::TraversalVolume root_volume{};
+        root_volume.parent          = 0;
+        root_volume.index_at_parent = -1;
+        traversal_tree.volumes.push_back(root_volume);
 
-        traversal_volume.parent          = 0;
-        traversal_volume.index_at_parent = -1;
+        uint32_t vertices_size{0};
 
-        if (RraBvhIsInstanceNode(node_id_))
+        while (!traversal_stack.empty())
         {
-            traversal_volume.volume_type = renderer::TraversalVolumeType::kInstance;
-            traversal_volume.leaf_start  = static_cast<uint32_t>(traversal_tree.instances.size());
+            auto pair = traversal_stack.back();
+            traversal_stack.pop_back();
+            SceneNode* node{pair.first};
+            uint32_t   current_index{pair.second};
 
-            for (const auto& instance : instances_)
+            renderer::TraversalVolume& traversal_volume = traversal_tree.volumes[current_index];
+            traversal_volume.min = glm::vec4(node->bounding_volume_.min_x, node->bounding_volume_.min_y, node->bounding_volume_.min_z, 1.0f);
+            traversal_volume.max = glm::vec4(node->bounding_volume_.max_x, node->bounding_volume_.max_y, node->bounding_volume_.max_z, 1.0f);
+
+            if (RraBvhIsInstanceNode(node->node_id_))
             {
-                renderer::TraversalInstance ci;
-                ci.transform         = instance.transform;
-                ci.inverse_transform = glm::inverse(instance.transform);
-                ci.selected          = IsSelected() ? 1 : 0;
-                ci.blas_index        = static_cast<uint32_t>(instance.blas_index);
-                ci.geometry_index    = 0;
-                ci.flags             = instance.flags;
+                traversal_volume.volume_type = renderer::TraversalVolumeType::kInstance;
+                traversal_volume.leaf_start  = static_cast<uint32_t>(traversal_tree.instances.size());
 
-                traversal_tree.instances.push_back(ci);
-            }
-
-            traversal_volume.leaf_end = static_cast<uint32_t>(traversal_tree.instances.size());
-        }
-        else if (RraBvhIsTriangleNode(node_id_))
-        {
-            traversal_volume.volume_type = renderer::TraversalVolumeType::kTriangle;
-            traversal_volume.leaf_start  = static_cast<uint32_t>(traversal_tree.vertices.size());
-            traversal_tree.vertices.insert(traversal_tree.vertices.end(), vertices_.begin(), vertices_.end());
-            traversal_volume.leaf_end = static_cast<uint32_t>(traversal_tree.vertices.size());
-        }
-        else if (RraBvhIsBoxNode(node_id_))
-        {
-            traversal_volume.volume_type = renderer::TraversalVolumeType::kBox;
-
-            // Separate for loops needed to preserve alignment.
-
-            RRA_ASSERT(child_nodes_.size() <= 4);
-
-            uint32_t child_index = 0;
-            for (auto child : child_nodes_)
-            {
-                uint32_t child_addr = child->AddToTraversalTree(traversal_tree);
-
-                if (child->IsEnabled() && child->IsVisible())
+                if (node->instance_.has_value())
                 {
-                    traversal_volume.child_mask = traversal_volume.child_mask | (0x1 << child_index);
+                    renderer::TraversalInstance ci;
+                    ci.transform         = node->instance_.value().transform;
+                    ci.inverse_transform = glm::inverse(node->instance_.value().transform);
+                    ci.selected          = IsSelected() ? 1 : 0;
+                    ci.blas_index        = static_cast<uint32_t>(node->instance_.value().blas_index);
+                    ci.geometry_index    = 0;
+                    ci.flags             = node->instance_.value().flags;
+
+                    traversal_tree.instances.push_back(ci);
                 }
 
-                auto child_bounds = child->GetBoundingVolume();
+                traversal_volume.leaf_end = static_cast<uint32_t>(traversal_tree.instances.size());
+            }
+            else if (RraBvhIsTriangleNode(node->node_id_))
+            {
+                traversal_volume.volume_type = renderer::TraversalVolumeType::kTriangle;
+                if (populate_vertex_buffer)
+                {
+                    traversal_volume.leaf_start = (uint32_t)traversal_tree.vertices.size();
+                    traversal_tree.vertices.insert(traversal_tree.vertices.end(), node->vertices_, node->vertices_ + node->vertex_count_);
+                    traversal_volume.leaf_end = (uint32_t)traversal_tree.vertices.size();
+                }
+                else
+                {
+                    traversal_volume.leaf_start = vertices_size;
+                    vertices_size += node->vertex_count_;
+                    traversal_volume.leaf_end = vertices_size;
+                }
+            }
+            else if (RraBvhIsBoxNode(node->node_id_))
+            {
+                traversal_volume.volume_type = renderer::TraversalVolumeType::kBox;
 
-                traversal_volume.child_nodes[child_index]          = child_addr;
-                traversal_volume.child_nodes_min[child_index]      = {child_bounds.min_x, child_bounds.min_y, child_bounds.min_z, 0.0f};
-                traversal_volume.child_nodes_max[child_index]      = {child_bounds.max_x, child_bounds.max_y, child_bounds.max_z, 0.0f};
-                traversal_tree.volumes[child_addr].parent          = current_index;
-                traversal_tree.volumes[child_addr].index_at_parent = child_index;
+                // Separate for loops needed to preserve alignment.
 
-                child_index++;
+                RRA_ASSERT(node->child_nodes_.Size() <= 4);
+
+                uint32_t child_index = 0;
+                for (auto child : node->child_nodes_)
+                {
+                    uint32_t child_addr = static_cast<uint32_t>(traversal_tree.volumes.size());
+                    traversal_stack.push_back({child, child_addr});
+                    traversal_tree.volumes.emplace_back();
+
+                    if (child->IsEnabled() && child->IsVisible())
+                    {
+                        traversal_volume.child_mask = traversal_volume.child_mask | (0x1 << child_index);
+                    }
+
+                    auto child_bounds = child->GetBoundingVolume();
+
+                    traversal_volume.child_nodes[child_index]          = child_addr;
+                    traversal_volume.child_nodes_min[child_index]      = {child_bounds.min_x, child_bounds.min_y, child_bounds.min_z, 0.0f};
+                    traversal_volume.child_nodes_max[child_index]      = {child_bounds.max_x, child_bounds.max_y, child_bounds.max_z, 0.0f};
+                    traversal_tree.volumes[child_addr].parent          = current_index;
+                    traversal_tree.volumes[child_addr].index_at_parent = child_index;
+
+                    child_index++;
+                }
             }
         }
-
-        traversal_tree.volumes[current_index] = traversal_volume;
-        return current_index;
     }
 
-    void SceneNode::PopulateSplitVertexAttribute(SceneNode* root)
+    void SceneNode::PopulateSplitVertexAttribute(SceneNode* root, const std::vector<uint32_t>& geometry_offsets, uint32_t primitive_count)
     {
-        std::unordered_map<uint64_t, uint32_t> primitive_index_counts;
-        root->GetPrimitiveIndexCounts(primitive_index_counts);
-        root->PopulateSplitVertexAttribute(primitive_index_counts);
+        std::vector<uint8_t> primitive_counts{};
+        primitive_counts.resize(primitive_count);
+
+        root->PopulateSplitVertexAttribute(geometry_offsets, primitive_counts);
     }
 
-    void SceneNode::GetPrimitiveIndexCounts(std::unordered_map<uint64_t, uint32_t>& tri_split_counts)
+    void SceneNode::PopulateSplitVertexAttribute(const std::vector<uint32_t>& geometry_offsets, std::vector<uint8_t>& primitive_counts)
     {
-        if (!vertices_.empty())
+        if (vertex_count_)
         {
-            auto& count = tri_split_counts[GetGeometryPrimitiveIndexKey(geometry_index_, primitive_index_)];
-            count++;
+            uint32_t geo_offset{geometry_offsets[geometry_index_]};
+            if (++primitive_counts[(size_t)geo_offset + primitive_index_] > 1)
+            {
+                for (size_t i = 0; i < vertex_count_; i += 3)
+                {
+                    vertices_[i].geometry_index_depth_split_opaque |= 1 << 1;
+                }
+            }
         }
 
         for (SceneNode* child : child_nodes_)
         {
-            child->GetPrimitiveIndexCounts(tri_split_counts);
-        }
-    }
-
-    void SceneNode::PopulateSplitVertexAttribute(const std::unordered_map<uint64_t, uint32_t>& tri_split_counts)
-    {
-        if (!vertices_.empty())
-        {
-            auto itr = tri_split_counts.find(GetGeometryPrimitiveIndexKey(geometry_index_, primitive_index_));
-            if (itr != tri_split_counts.end() && itr->second > 1)
-            {
-                for (auto& vertex : vertices_)
-                {
-                    vertex.geometry_index_depth_split_opaque |= 1 << 1;
-                }
-            }
-        }
-
-        for (SceneNode* child : child_nodes_)
-        {
-            child->PopulateSplitVertexAttribute(tri_split_counts);
+            child->PopulateSplitVertexAttribute(geometry_offsets, primitive_counts);
         }
     }
 

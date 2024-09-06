@@ -8,6 +8,7 @@
 #ifndef RRA_BACKEND_BVH_GPU_DEF_H_
 #define RRA_BACKEND_BVH_GPU_DEF_H_
 
+#include <cstdint>
 #include <string>
 
 // RawAccelStruct currently supported version numbers.

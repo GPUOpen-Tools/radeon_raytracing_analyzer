@@ -176,16 +176,6 @@ private slots:
     /// @param status Result code of pasting camera state.
     void CheckPasteResult(rra::ViewerIOCameraPasteResult result);
 
-    /// @brief Copy camera's transform to the clipboard.
-    ///
-    /// Intended to be pasted back into RRA.
-    void CopyCameraButtonClicked();
-
-    /// @brief Paste camera's transform to the clipboard.
-    ///
-    /// Intended to be pasted back into RRA.
-    void PasteCameraButtonClicked();
-
     /// @brief Slot to handle what happens when the camera's x position has changed from the side pane.
     ///
     /// Needs to adjust the camera's actual position to keep them in sync.
@@ -241,6 +231,7 @@ private slots:
     void SetMovementSpeed(int value);
 
 private:
+
     /// @brief An even filter to catch and discard some UI events.
     ///
     /// @param obj The object that the event came from.
@@ -251,6 +242,9 @@ private:
 
     /// @brief Updates the orientation widgets.
     void UpdateOrientationWidgets();
+
+    /// @brief Update the pane based on the color theme.
+    void OnColorThemeUpdated();
 
     Ui::ViewPane*   ui_             = nullptr;              ///< Pointer to the Qt UI design.
     rra::ViewModel* model_          = nullptr;              ///< The model for this pane.

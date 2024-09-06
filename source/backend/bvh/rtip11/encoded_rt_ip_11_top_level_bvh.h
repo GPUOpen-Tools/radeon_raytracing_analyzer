@@ -113,6 +113,11 @@ namespace rta
         /// @return The total number of triangles.
         uint64_t GetTotalTriangleCount() const;
 
+        /// @brief Get the total procedural node count.
+        /// 
+        /// @return The total procedural node count.
+        uint64_t GetTotalProceduralNodeCount() const;
+
         /// @brief Get the unique triangle count for this TLAS.
         ///
         /// This is the sum of triangles in each BLAS referenced by the TLAS.

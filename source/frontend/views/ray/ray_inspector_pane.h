@@ -158,6 +158,9 @@ private:
     /// @brief Halt rendering of new frames in the active renderer widget.
     void HaltRendererWidget();
 
+    /// @brief Update the pane based on the color theme.
+    void OnColorThemeUpdated();
+
     /// @brief Check for the rays on the event of a click
     /// @param camera The camera to use.
     /// @param hit_coords The 0 to 1 screen space coords.

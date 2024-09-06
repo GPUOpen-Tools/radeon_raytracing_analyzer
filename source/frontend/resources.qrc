@@ -1,14 +1,24 @@
 <RCC>
  <qresource prefix="/Resources">
   <file>../assets/amd_logo.svg</file>
+  <file>../assets/amd_logo_white.svg</file>
+  <file>../assets/arrow_gray_left.svg</file>
+  <file>../assets/arrow_gray_right.svg</file>
   <file>../assets/browse_back_normal.svg</file>
   <file>../assets/browse_back_pressed.svg</file>
   <file>../assets/browse_back_disabled.svg</file>
   <file>../assets/browse_fwd_normal.svg</file>
   <file>../assets/browse_fwd_pressed.svg</file>
   <file>../assets/browse_fwd_disabled.svg</file>
+  <file>../assets/checkbox_on_gray.svg</file>
+  <file>../assets/checkbox_off_gray.svg</file>
+  <file>../assets/checkbox_on.svg</file>
+  <file>../assets/checkbox_off.svg</file>
+  <file>../assets/PullDownOff_Gray.svg</file>
+  <file>../assets/PullDownOn_Gray.svg</file>
   <file>../assets/kbd_mouse.svg</file>
   <file>../assets/kbd_mouse_clickable.svg</file>
+  <file>../assets/kbd_mouse_clickable-dark-theme.svg</file>
   <file>../assets/kbd_mouse_hover.svg</file>
   <file>../assets/icon_32x32.png</file>
   <file>../assets/icon_48x48.png</file>
@@ -22,6 +32,7 @@
   <file>../assets/zoom_reset.svg</file>
   <file>../assets/zoom_reset_disabled.svg</file>
   <file>../assets/acceleration_structure_overview.svg</file>
+  <file>../assets/acceleration_structure_overview-dark-theme.svg</file>
   <file>../assets/third_party/ionicons/search_icon.png</file>
   <file>../assets/third_party/ionicons/wand.svg</file>
   <file>../assets/third_party/ionicons/scan-outline.svg</file>
@@ -30,17 +41,25 @@
   <file>../assets/third_party/ionicons/lock-closed-outline.svg</file>
   <file>../assets/third_party/ionicons/lock-open-outline.svg</file>
   <file>../assets/third_party/ionicons/wand-clickable.svg</file>
+  <file>../assets/third_party/ionicons/wand-clickable-dark-theme.svg</file>
   <file>../assets/third_party/ionicons/scan-outline-clickable.svg</file>
+  <file>../assets/third_party/ionicons/scan-outline-clickable-dark-theme.svg</file>
   <file>../assets/third_party/ionicons/information-circle-outline-clickable.svg</file>
+  <file>../assets/third_party/ionicons/information-circle-outline-clickable-dark-theme.svg</file>
   <file>../assets/third_party/ionicons/refresh-outline-clickable.svg</file>
+  <file>../assets/third_party/ionicons/refresh-outline-clickable-dark-theme.svg</file>
   <file>../assets/third_party/ionicons/lock-closed-outline-clickable.svg</file>
+  <file>../assets/third_party/ionicons/lock-closed-outline-clickable-dark-theme.svg</file>
   <file>../assets/third_party/ionicons/lock-open-outline-clickable.svg</file>
+  <file>../assets/third_party/ionicons/lock-open-outline-clickable-dark-theme.svg</file>
   <file>../assets/third_party/ionicons/wand-hover.svg</file>
   <file>../assets/third_party/ionicons/scan-outline-hover.svg</file>
   <file>../assets/third_party/ionicons/information-circle-outline-hover.svg</file>
   <file>../assets/third_party/ionicons/refresh-outline-hover.svg</file>
   <file>../assets/third_party/ionicons/lock-closed-outline-hover.svg</file>
   <file>../assets/third_party/ionicons/lock-open-outline-hover.svg</file>
+  <file>dark_mode_stylesheet.qss</file>
+  <file>light_mode_stylesheet.qss</file>
   <file>stylesheet.qss</file>
  </qresource>
 </RCC>

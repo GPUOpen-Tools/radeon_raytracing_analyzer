@@ -18,6 +18,7 @@
 #include "util/string_util.h"
 #include "constants.h"
 #include "qt_common/custom_widgets/scaled_label.h"
+#include "settings/settings.h"
 
 namespace rra
 {
@@ -226,6 +227,7 @@ namespace rra
         result += "Vertical invert" + text::kDelimiterBinary + text::kDelimiter;
         result += camera_orientation_.flip_vertical ? "true\n" : "false\n";
         result += "Field of view" + text::kDelimiterBinary + text::kDelimiter + std::to_string(camera->GetFieldOfView()) + '\n';
+        result += "Movement speed" + text::kDelimiterBinary + text::kDelimiter + std::to_string(camera->GetMovementSpeed()) + '\n';
         result += "Orthographic" + text::kDelimiterBinary + text::kDelimiter;
         result += GetCamera()->Orthographic() ? "true\n" : "false\n";
 
@@ -346,6 +348,15 @@ namespace rra
                     return ViewerIOCameraPasteResult::kFailure;
                 }
             }
+            else if (name == "Movement speed")
+            {
+                std::istringstream ss(val);
+
+                if (!(ss >> state.movement_speed))
+                {
+                    return ViewerIOCameraPasteResult::kFailure;
+                }
+            }
             else if (name == "Orthographic")
             {
                 if (val == "true")
@@ -418,6 +429,10 @@ namespace rra
             view_model_->SetOrientation(orientation);
             view_model_->SetCameraControllerParameters(false, view_model_->GetParentPaneId());
             UpdateViewModel();
+
+            rra::Settings::Get().SetUpAxis((UpAxisType)orientation.up_axis);
+            rra::Settings::Get().SetInvertVertical(orientation.flip_vertical);
+            rra::Settings::Get().SetInvertHorizontal(orientation.flip_horizontal);
         }
     }
 
@@ -559,6 +574,7 @@ namespace rra
         SetCameraOrientation(state.orientation);
         view_model_->SetOrientation(state.orientation);
         camera->SetFieldOfView(state.fov);
+        camera->SetMovementSpeed(state.movement_speed);
         camera->SetOrthographic(state.orthographic);
     }
 

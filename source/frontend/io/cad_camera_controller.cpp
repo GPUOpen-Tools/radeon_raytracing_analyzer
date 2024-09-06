@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 
 #include "models/side_panels/view_model.h"
+#include "settings/settings.h"
 
 namespace rra
 {
@@ -189,7 +190,7 @@ namespace rra
 
     uint32_t CADController::GetComboBoxIndex() const
     {
-        return 0;
+        return kControlStyleTypeCAD;
     }
 
     void CADController::ProcessUserInputs()

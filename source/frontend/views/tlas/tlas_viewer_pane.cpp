@@ -7,6 +7,8 @@
 
 #include "views/tlas/tlas_viewer_pane.h"
 
+#include "qt_common/utils/qt_util.h"
+
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
@@ -26,7 +28,7 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     ui_->side_panel_container_->GetViewPane()->SetParentPaneId(rra::kPaneIdTlasViewer);
     ui_->viewer_container_widget_->SetupUI(this, rra::kPaneIdTlasViewer);
 
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
     ui_->tlas_tree_->setIndentation(rra::kTreeViewIndent);
     ui_->tlas_tree_->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     ui_->tlas_tree_->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -87,6 +89,9 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasAssumeCamera, this, &TlasViewerPane::SetTlasCamera);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::InspectorInstanceSelected, this, &TlasViewerPane::SelectInstance);
 
+    ui_->content_blas_address_->SetLinkStyleSheet();
+    ui_->content_parent_->SetLinkStyleSheet();
+
     ui_->tree_depth_slider_->setCursor(Qt::PointingHandCursor);
     connect(ui_->tree_depth_slider_, &DepthSliderWidget::SpanChanged, this, &TlasViewerPane::UpdateTreeDepths);
 
@@ -122,7 +127,17 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     flag_table_delegate_ = new FlagTableItemDelegate();
     ui_->flags_table_->setItemDelegate(flag_table_delegate_);
 
-    ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable-dark-theme.svg"));
+    }
+    else
+    {
+        ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
+    }
+
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &TlasViewerPane::OnColorThemeUpdated);
+
     ui_->content_focus_selected_volume_->SetHoverIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-hover.svg"));
     ui_->content_focus_selected_volume_->setBaseSize(QSize(25, 25));
     connect(ui_->content_focus_selected_volume_, &ScaledPushButton::clicked, [&]() { model_->GetCameraController()->FocusOnSelection(); });
@@ -488,5 +503,17 @@ void TlasViewerPane::SetTlasIndex(uint64_t tlas_index)
     if (tlas_index != last_selected_as_id_)
     {
         last_selected_as_id_ = tlas_index;
+    }
+}
+
+void TlasViewerPane::OnColorThemeUpdated()
+{
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable-dark-theme.svg"));
+    }
+    else
+    {
+        ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }

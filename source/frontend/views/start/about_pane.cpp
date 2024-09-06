@@ -36,9 +36,6 @@ AboutPane::AboutPane(QWidget* parent)
     copyright.replace("(C)", u8"\u00A9");
     ui_->label_copyright_->setText(copyright);
 
-    // Set white background for this pane.
-    rra::widget_util::SetWidgetBackgroundColor(this, Qt::white);
-
     InitButton(ui_->open_getting_started_button_);
     InitButton(ui_->open_help_button_);
     InitButton(ui_->read_license_button_);
@@ -76,6 +73,7 @@ void AboutPane::showEvent(QShowEvent* event)
 void AboutPane::InitButton(ScaledPushButton* button)
 {
     button->setCursor(Qt::PointingHandCursor);
+    button->SetLinkStyleSheet();
 }
 
 void AboutPane::OpenHtmlFile(const QString& html_file)

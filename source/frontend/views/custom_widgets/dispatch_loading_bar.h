@@ -11,6 +11,8 @@
 #include <QColor>
 #include <QWidget>
 
+#include "qt_common/utils/common_definitions.h"
+
 /// @brief Support for the dispatch loading bar.
 class DispatchLoadingBar : public QWidget
 {
@@ -65,7 +67,8 @@ protected:
 private:
     qreal fill_percentage_;  ///< Percentage of the bar that was filled in
 
-    const QColor kEmptyColor_ = QColor(204, 204, 204);  ///< The default color for the empty portion of the widget.
+    const QColor kEmptyColor_[ColorThemeType::kColorThemeTypeCount] = {QColor(204, 204, 204),
+                                                                       QColor(50, 50, 50)};  ///< The default color for the empty portion of the widget for each color theme.
     const QColor kFillColor_  = QColor(0, 118, 215);    ///< The default color for the filled portion of the widget.
     const QColor kErrorColor_ = QColor(255, 0, 0);      ///< The default color for error.
 

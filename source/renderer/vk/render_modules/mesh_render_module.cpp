@@ -175,8 +175,8 @@ namespace rra
                 buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
                 buffer_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
                 buffer_barrier.dstAccessMask       = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
-                buffer_barrier.srcQueueFamilyIndex = context_->device->GetGraphicsQueueFamilyIndex();
-                buffer_barrier.dstQueueFamilyIndex = context_->device->GetGraphicsQueueFamilyIndex();
+                buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
                 buffer_barrier.buffer              = per_blas_instance_buffer_.buffer;
                 buffer_barrier.offset              = 0;
                 buffer_barrier.size                = VK_WHOLE_SIZE;
@@ -905,8 +905,8 @@ namespace rra
                     buffer_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
                     buffer_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
                     buffer_barrier.dstAccessMask       = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
-                    buffer_barrier.srcQueueFamilyIndex = context_->device->GetGraphicsQueueFamilyIndex();
-                    buffer_barrier.dstQueueFamilyIndex = context_->device->GetGraphicsQueueFamilyIndex();
+                    buffer_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                    buffer_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
                     buffer_barrier.buffer              = custom_triangle_buffer.buffer;
                     buffer_barrier.offset              = 0;
                     buffer_barrier.size                = VK_WHOLE_SIZE;

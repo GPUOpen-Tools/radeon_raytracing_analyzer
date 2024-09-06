@@ -102,6 +102,9 @@ private:
     /// @param [in] node_id The ID of the selected node.
     void UpdateTriangleSplitUI(rra::Scene* scene, uint32_t blas_index, uint32_t geometry_index, uint32_t primitive_index, uint32_t node_id);
 
+    /// @brief Update the pane based on the color theme.
+    void OnColorThemeUpdated();
+
     Ui::BlasViewerPane*            ui_;                       ///< Pointer to the Qt UI design.
     rra::BlasViewerModel*          derived_model_ = nullptr;  ///< Pointer to the model. This is a copy of the model in the base class and is deleted there.
     FlagTableItemDelegate*         flag_table_delegate_ = nullptr;   ///< Delegate for drawing the geometry flags table.

@@ -17,6 +17,7 @@
 #include "views/widget_util.h"
 #include "util/string_util.h"
 #include "qt_common/custom_widgets/scaled_table_view.h"
+#include "qt_common/utils/qt_util.h"
 #include "settings/settings.h"
 
 TableItemDelegate::TableItemDelegate(QObject* parent)
@@ -60,22 +61,10 @@ QSize TableItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QMod
 
 void TableItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
-    painter->setPen(QColor(Qt::black));
-
-    QColor background_color = index.data(Qt::BackgroundRole).value<QColor>();
-
-    // Draw cell background color.
-    if (background_color.isValid())
-    {
-        // Draw background if valid.
-        painter->fillRect(option.rect, QBrush(background_color));
-
-        painter->setPen(QColor(Qt::white));
-    }
-    else if ((option.state & QStyle::State_Selected) != 0)
+    if ((option.state & QStyle::State_Selected) != 0)
     {
         // Draw selection highlight (and set text color to white).
-        painter->fillRect(option.rect, QBrush(rra::kTableRowSelectedColor));
+        painter->fillRect(option.rect, QBrush(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().row_selected_color));
     }
 
     if (CheckboxAt(index.row(), index.column()))

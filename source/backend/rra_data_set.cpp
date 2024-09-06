@@ -16,6 +16,12 @@
 #include "public/rra_assert.h"
 #include "public/rra_print.h"
 #include "public/rra_ray_history.h"
+#include "public/rra_trace_loader.h"
+
+#include "string_table.h"
+#include "user_marker_history.h"
+
+#include "system_info_utils/source/driver_overrides_reader.h"
 
 #include "rdf/rdf/inc/amdrdf.h"
 
@@ -76,6 +82,22 @@ RraErrorCode CheckMajorVersions(int as_major, int dispatch_major)
     return kRraOk;
 }
 
+// Load the Driver Overrides chunk.
+static RraErrorCode LoadDriverOverridesChunk(rdfChunkFile* chunk_file)
+{
+    RRA_RETURN_ON_ERROR(chunk_file != nullptr, kRraErrorInvalidPointer);
+    RraErrorCode result = kRraErrorMalformedData;
+
+    // Attempt to load Driver Overrides chunk.
+    std::string json_text;
+    if (driver_overrides_utils::DriverOverridesReader::Parse(chunk_file, json_text))
+    {
+        result = RraTraceLoaderCopyDriverOverridesString(json_text.c_str(), json_text.size());
+    }
+
+    return result;
+}
+
 static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
 {
     auto         file       = rdf::Stream::OpenFile(path);
@@ -99,6 +121,21 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
         {
             return error_code;
         }
+    }
+
+    error_code = LoadDriverOverridesChunk(chunk_file.operator rdfChunkFile*());
+    if (error_code != kRraOk)
+    {
+        return error_code;
+    }
+
+    if (ContainsChunk("StringTable", chunk_file))
+    {
+        data_set->user_marker_string_tables->LoadChunk(chunk_file);
+    }
+    if (ContainsChunk("UserMarkerHist", chunk_file))
+    {
+        data_set->user_marker_histories->LoadChunk(chunk_file);
     }
 
     int max_as_major_version       = 0;
@@ -141,8 +178,11 @@ RraErrorCode RraDataSetInitialize(const char* path, RraDataSet* data_set)
     const size_t path_length = strlen(path);
     memcpy(data_set->file_path, path, RRA_MINIMUM(RRA_MAXIMUM_FILE_PATH, path_length));
 
-    data_set->file_loaded = false;
-    data_set->system_info = new system_info_utils::SystemInfo();
+    data_set->driver_overrides_json_text = nullptr;
+    data_set->file_loaded                = false;
+    data_set->system_info                = new system_info_utils::SystemInfo();
+    data_set->user_marker_string_tables  = new rra::StringTables();
+    data_set->user_marker_histories      = new rra::UserMarkerHistory();
 
     // Error-checking to make sure the chunk file is valid.
     rdfChunkFile* chunk_file = nullptr;
@@ -172,6 +212,15 @@ RraErrorCode RraDataSetDestroy(RraDataSet* data_set)
     data_set->bvh_bundle.reset();
     delete data_set->system_info;
     data_set->system_info = nullptr;
+
+    delete data_set->driver_overrides_json_text;
+    data_set->driver_overrides_json_text = nullptr;
+
+    delete data_set->user_marker_string_tables;
+    data_set->user_marker_string_tables = nullptr;
+
+    delete data_set->user_marker_histories;
+    data_set->user_marker_histories = nullptr;
 
     return kRraOk;
 }

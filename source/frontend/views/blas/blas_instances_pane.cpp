@@ -21,7 +21,7 @@ BlasInstancesPane::BlasInstancesPane(QWidget* parent)
     , data_valid_(false)
 {
     ui_->setupUi(this);
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
     model_ = new rra::BlasInstancesModel(rra::kBlasInstancesNumWidgets);
 
     model_->InitializeModel(ui_->title_tlas_address_, rra::kTlasInstancesBaseAddress, "text");

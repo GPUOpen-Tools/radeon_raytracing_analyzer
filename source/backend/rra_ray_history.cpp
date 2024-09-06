@@ -112,7 +112,6 @@ RraErrorCode RraRayGetRays(uint32_t dispatch_id, GlobalInvocationID invocation_i
             out_rays[i].id                = rta_ray.GetRayId();
             out_rays[i].dynamic_id        = begin_data->dynamicId;
             out_rays[i].parent_id         = begin_data->parentId;
-
         }
         else
         {
@@ -288,3 +287,58 @@ RraErrorCode RraRayGetDispatchStatus(uint32_t dispatch_id, RraDispatchLoadStatus
     return kRraOk;
 }
 
+
+RraErrorCode RraRayGetDispatchUserMarkerString(uint32_t dispatch_id, char* buffer, uint32_t buffer_size)
+{
+    const auto& loader = data_set_.async_ray_histories[dispatch_id];
+
+    if (loader->IsUserMarkerContextValid() == false) 
+    {
+        // There's no user marker data.
+        if (buffer_size == 0 || buffer == nullptr)
+        {
+            return kRraErrorOutOfMemory;
+        }
+
+        buffer[0] = '\0';
+        return kRraOk;
+    }
+
+    uint32_t cbId      = loader->GetUserMarkerContextCbId();
+    uint32_t markerIdx = loader->GetUserMarkerContextIdx();
+    uint32_t tableId   = data_set_.user_marker_histories->GetStringTableId(cbId);
+
+    if (tableId == 0)
+    {
+        // No marker string for this loader
+        buffer[0] = '\0';
+        return kRraOk;
+    }
+
+    auto idxStack      = data_set_.user_marker_histories->GetUserMarkerStringIndices(cbId, markerIdx);
+
+    const auto& stringTable = data_set_.user_marker_string_tables->GetStringTable(tableId);
+
+    std::string result;
+    while (!idxStack.empty())
+    {
+        auto idx = idxStack.top();
+        idxStack.pop();
+        const char* separator = result.empty() ? "" : "/";
+        result                = stringTable.at(idx) + separator + result;
+    }
+
+    if (result.size() >= buffer_size)
+    {
+        return kRraErrorOutOfMemory;
+    }
+
+    strcpy(buffer, result.c_str());
+    return kRraOk;
+}
+
+RayDispatchBeginIdentifier::RayDispatchBeginIdentifier(uint32_t coord_index, uint32_t begin_index)
+    : dispatch_coord_index{coord_index}
+    , begin_token_index{begin_index}
+{
+}

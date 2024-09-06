@@ -75,6 +75,12 @@ private slots:
     /// @param new_precision The new decimal precision.
     void DecimalPrecisionChanged(int new_precision);
 
+    /// @brief Slot to handle what happens when the driver experiment notifications checkbox changes.
+    ///
+    /// @param checked The new state of the checkbox.
+    /// Update and save the settings.
+    void DriverOverridesAllowNotificationsChanged(const bool checked);
+
 private:
     /// @brief Update the Treeview node ID combo box.
     ///

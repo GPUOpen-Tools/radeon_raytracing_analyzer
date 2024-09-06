@@ -106,18 +106,22 @@ struct RraRayHistoryStats
 
 struct RraDispatchLoadStatus
 {
-    bool  raw_data_parsed  = false;
-    bool  data_indexed     = false;
-    bool  loading_complete = false;
-    bool  has_errors       = false;
-    bool  incomplete_data  = false;
-    float load_percentage  = 0.0f;
+    bool  data_decompressed = false;
+    bool  raw_data_parsed   = false;
+    bool  data_indexed      = false;
+    bool  loading_complete  = false;
+    bool  has_errors        = false;
+    bool  incomplete_data   = false;
+    float load_percentage   = 0.0f;
 };
 
 struct RayDispatchBeginIdentifier
 {
     uint32_t dispatch_coord_index;
     uint32_t begin_token_index;
+
+    // Constructor needed to construct in place using std::vector::emplace_back().
+    RayDispatchBeginIdentifier(uint32_t coord_index, uint32_t begin_index);
 };
 
 struct DispatchCoordinateStats
@@ -262,6 +266,15 @@ RraErrorCode RraRayGetDispatchType(uint32_t dispatch_id, DispatchType* type);
 ///
 /// @returnkRraOk if successful.
 RraErrorCode RraRayGetDispatchStatus(uint32_t dispatch_id, RraDispatchLoadStatus* status);
+
+/// @brief Get the dispatch name (user marker) if available.
+///
+/// @param dispatch_id Dispatch ID to get status for.
+/// @param buffer      Pointer to a buffer to receive the user marker string.
+/// @param buffer_size The size of the buffer, in bytes.
+///
+/// @returnkRraOk if successful.
+RraErrorCode RraRayGetDispatchUserMarkerString(uint32_t dispatch_id, char* buffer, uint32_t buffer_size);
 
 #ifdef __cplusplus
 }

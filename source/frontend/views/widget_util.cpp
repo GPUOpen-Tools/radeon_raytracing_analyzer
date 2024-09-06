@@ -11,29 +11,17 @@
 #include <QHeaderView>
 #include <QStandardItemModel>
 
+#include "qt_common/utils/qt_util.h"
+
 #include "constants.h"
 #include "views/widget_util.h"
 #include "settings/settings.h"
 
 namespace rra
 {
-    void widget_util::SetWidgetBackgroundColor(QWidget* widget, const QColor& color)
+    void widget_util::ApplyStandardPaneStyle(QScrollArea* scroll_area)
     {
-        if (widget != nullptr)
-        {
-            QPalette palette(widget->palette());
-            palette.setColor(QPalette::Window, color);
-            widget->setPalette(palette);
-            widget->setAutoFillBackground(true);
-        }
-    }
-
-    void widget_util::ApplyStandardPaneStyle(QWidget* root, QWidget* main_content, QScrollArea* scroll_area)
-    {
-        SetWidgetBackgroundColor(root, Qt::white);
-        SetWidgetBackgroundColor(main_content, Qt::white);
         scroll_area->setFrameStyle(QFrame::NoFrame);
-        SetWidgetBackgroundColor(scroll_area, Qt::white);
     }
 
     void widget_util::InitSingleSelectComboBox(QWidget*           parent,
@@ -77,8 +65,8 @@ namespace rra
         const static QColor kCheckBoxUncheckedColor(224, 224, 224);
         const static QColor kCheckBoxCheckColor(255, 255, 255);
 
-        const int       scaled_check_box_size = kCheckBoxBoxSize;
-        const int       half_size             = scaled_check_box_size / 2;
+        const int scaled_check_box_size = kCheckBoxBoxSize;
+        const int half_size             = scaled_check_box_size / 2;
 
         // Center the checkbox by finding out the width of the column, then subtract half the checkbox width
         // from the center of the column to allow for the checkbox width.

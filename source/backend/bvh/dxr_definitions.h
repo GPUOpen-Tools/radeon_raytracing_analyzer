@@ -176,7 +176,7 @@ namespace dxr
         constexpr std::uint32_t kFp16BoxNodeSize                 = 64;
         constexpr std::uint32_t kLeafNodeSize                    = 64;
         constexpr std::uint32_t kInstanceExtraDataSize           = 64;
-        constexpr std::uint32_t kMetaDataV1Size                  = 36;
+        constexpr std::uint32_t kMetaDataV1Size                  = 108;
         constexpr std::uint32_t kAccelerationStructureHeaderSize = 128;
         constexpr std::uint32_t kParentChunkSize                 = 64;
         constexpr std::uint32_t kGeometryInfoSize                = 12;

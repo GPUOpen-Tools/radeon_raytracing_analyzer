@@ -36,6 +36,24 @@ bool RraTraceLoaderValid();
 /// @return A time_t structure containing the time the trace was created.
 time_t RraTraceLoaderGetCreateTime();
 
+/// @brief Allocate memory and copy the Driver Overrides JSON string to the data set.
+///
+/// @param [in]  driver_overrides_string                    The JSON text to copy.
+/// @param [in]  length                                     The length of the JSON text to copy.
+///
+/// @returns
+/// kRmtOk                                      The operation completed successfully.
+/// @retval
+/// kRmtErrorInvalidPointer                     The operation failed due to <c><i>driver_overrides_string</i></c> being <c><i>NULL</i></c>.
+/// @retval
+/// kRmtErrorOutOfMemory                        The operation failed due to lack of free memory.
+RraErrorCode RraTraceLoaderCopyDriverOverridesString(const char* driver_overrides_string, size_t length);
+
+/// @brief  Get the Driver Overrides JSON string from the data set.
+///
+/// @returns                                    The Driver Overrides JSON text.
+char* RraTraceLoaderGetDriverOverridesString();
+
 #ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus

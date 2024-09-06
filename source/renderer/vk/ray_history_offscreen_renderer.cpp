@@ -142,7 +142,6 @@ namespace rra
                             out_max_count->any_hit_invocation_count = total_any_hit_count;
                         }
 
-
                         RraRayGetRays(dispatch_id, {x, y, z}, rays.data());
 
                         for (uint32_t ray_idx{0}; ray_idx < ray_count; ++ray_idx)

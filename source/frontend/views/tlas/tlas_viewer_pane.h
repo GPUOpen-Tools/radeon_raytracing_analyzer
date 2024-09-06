@@ -128,6 +128,9 @@ private:
     /// @brief Handle the selection changed signal.
     void HandleSceneSelectionChanged();
 
+    /// @brief Update the pane based on the color theme.
+    void OnColorThemeUpdated();
+
     Ui::TlasViewerPane*            ui_;                       ///< Pointer to the Qt UI design.
     rra::TlasViewerModel*          derived_model_;            ///< Pointer to the model. This is a copy of the model in the base class and is deleted there.
     FlagTableItemDelegate*         flag_table_delegate_;      ///< Delegate for drawing the instance flags table.

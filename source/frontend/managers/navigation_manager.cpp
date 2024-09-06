@@ -13,6 +13,8 @@
 
 #include "managers/message_manager.h"
 
+#include "qt_common/custom_widgets/driver_overrides_model.h"
+
 namespace rra
 {
     NavigationManager::NavigationManager()
@@ -35,6 +37,11 @@ namespace rra
     void NavigationManager::RecordNavigationEventPaneSwitch(RRAPaneId pane)
     {
         const NavEvent& curr_event = navigation_history_[navigation_history_location_];
+
+        // Enable the  Driver Overrides "See details" link when navigating to a pane other than the System information pane.
+        const bool enable_driver_overrides_details_link = (pane != kPaneIdOverviewDeviceConfig);
+        driver_overrides::DriverOverridesModel::GetInstance()->SetModelAttributeValue(driver_overrides::kModelAttributeEnableSeeDetailsLink,
+                                                                                      enable_driver_overrides_details_link);
 
         if (curr_event.type == kNavigationTypePaneSwitch)
         {

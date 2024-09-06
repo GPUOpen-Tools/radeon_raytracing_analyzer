@@ -11,6 +11,7 @@
 #include <QStyleFactory>
 #include <stdarg.h>
 
+#include "qt_common/custom_widgets/driver_overrides_model.h"
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
@@ -64,19 +65,6 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     a.setStyle(QStyleFactory::create("fusion"));
 
-    // Load application stylesheet.
-    QFile style_sheet(rra::resource::kStylesheet);
-    if (style_sheet.open(QFile::ReadOnly))
-    {
-        a.setStyleSheet(style_sheet.readAll());
-    }
-
-    // Force a light theme for now. When we remove all the places that manually set the
-    // background color to white and the text to black, and create a custom dark stylesheet
-    // for widgets that have been customized in the stylesheet for light theme, we can set
-    // the palette to the OS theme.
-    a.setPalette(QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette());
-
     MainWindow* window = new (std::nothrow) MainWindow();
     int         result = -1;
     if (window != nullptr)
@@ -112,6 +100,7 @@ int main(int argc, char* argv[])
 
         result = a.exec();
 
+        driver_overrides::DriverOverridesModel::DestroyInstance();
         delete window;
     }
 

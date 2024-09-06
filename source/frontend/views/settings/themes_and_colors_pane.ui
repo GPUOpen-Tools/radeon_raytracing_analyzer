@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ThemesAndColorsPane</class>
- <widget class="QWidget" name="themes_and_colors_pane_">
+ <widget class="QWidget" name="ThemesAndColorsPane">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -60,7 +60,7 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <layout class="QGridLayout" name="grid_layout_" columnstretch="0,0,0,0,0,0,0">
+           <layout class="QGridLayout" name="grid_layout_" columnstretch="0,0,0,0,0,0,0,0">
             <property name="leftMargin">
              <number>0</number>
             </property>
@@ -76,48 +76,8 @@
             <property name="spacing">
              <number>1</number>
             </property>
-            <item row="0" column="0">
-             <widget class="ScaledLabel" name="label_bounding_volume_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-                <underline>false</underline>
-                <stylestrategy>PreferAntialias</stylestrategy>
-               </font>
-              </property>
-              <property name="text">
-               <string>Bounding volume</string>
-              </property>
-              <property name="toolTip">
-               <string>Select the color of the wireframe bounding volume</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <spacer name="horizontal_spacer_3_">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="0" column="2">
-             <widget class="ThemesAndColorsItemButton" name="button_node_box16_">
+            <item row="2" column="2">
+             <widget class="ThemesAndColorsItemButton" name="button_geometry_selected_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -127,145 +87,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Box16</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="3">
-             <widget class="ThemesAndColorsItemButton" name="button_node_box32_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Box32</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="4">
-             <widget class="ThemesAndColorsItemButton" name="button_node_instance_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Instance</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="5">
-             <widget class="ThemesAndColorsItemButton" name="button_node_triangle_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Triangle</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="6">
-             <widget class="ThemesAndColorsItemButton" name="button_node_procedural_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Procedural</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="7">
-             <widget class="ThemesAndColorsItemButton" name="button_node_selected_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -279,10 +100,13 @@
               <property name="checkable">
                <bool>true</bool>
               </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="ScaledLabel" name="label_wireframe_">
+            <item row="5" column="3">
+             <widget class="ThemesAndColorsItemButton" name="button_non_opaque_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -291,27 +115,134 @@
               </property>
               <property name="font">
                <font>
-                <weight>75</weight>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Non-opaque</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="4">
+             <widget class="ThemesAndColorsItemButton" name="button_shadow_ray_color_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Accept first hit ray</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="ScaledLabel" name="label_opacity_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
                 <bold>true</bold>
                 <underline>false</underline>
                 <stylestrategy>PreferAntialias</stylestrategy>
                </font>
               </property>
-              <property name="text">
-               <string>Wireframe coloring</string>
-              </property>
               <property name="toolTip">
-               <string>Select the color of the geometry wireframe</string>
+               <string>Select the colors for the opacity geometry coloring mode</string>
+              </property>
+              <property name="text">
+               <string>Opacity coloring</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
-             <spacer name="horizontal_spacer_4_">
+            <item row="7" column="0">
+             <widget class="ScaledLabel" name="label_build_algorithm_flags_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <bold>true</bold>
+                <underline>false</underline>
+                <stylestrategy>PreferAntialias</stylestrategy>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the colors for the fast build/trace flag geometry coloring modes</string>
+              </property>
+              <property name="text">
+               <string>Build type coloring</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="ThemesAndColorsItemButton" name="button_background_dark_1_">
+              <property name="minimumSize">
+               <size>
+                <width>104</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Color1</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <spacer name="horizontal_spacer_5_">
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
               <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
+               <enum>QSizePolicy::Policy::Fixed</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -332,7 +263,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -351,105 +281,8 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="3">
-             <widget class="ThemesAndColorsItemButton" name="button_wireframe_selected_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Selected</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="ScaledLabel" name="label_geometry_coloring_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-                <underline>false</underline>
-                <stylestrategy>PreferAntialias</stylestrategy>
-               </font>
-              </property>
-              <property name="text">
-               <string>Selected triangles</string>
-              </property>
-              <property name="toolTip">
-               <string>Select the color of the geometry triangles</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <spacer name="horizontal_spacer_5_">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="2" column="2">
-             <widget class="ThemesAndColorsItemButton" name="button_geometry_selected_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Selected</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
             <item row="3" column="0">
-             <widget class="ScaledLabel" name="label_background_">
+             <widget class="ScaledLabel" name="label_background_light_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -458,38 +291,21 @@
               </property>
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                 <underline>false</underline>
                 <stylestrategy>PreferAntialias</stylestrategy>
                </font>
               </property>
-              <property name="text">
-               <string>Background coloring</string>
-              </property>
               <property name="toolTip">
-               <string>Select the colors of the checkered background</string>
+               <string>Select the colors of the checkered background for the light color theme.</string>
+              </property>
+              <property name="text">
+               <string>Background coloring (light)</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
-             <spacer name="horizontal_spacer_6_">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="3" column="2">
-             <widget class="ThemesAndColorsItemButton" name="button_background_1_">
+            <item row="7" column="4">
+             <widget class="ThemesAndColorsItemButton" name="button_build_algorithm_fast_trace_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -499,7 +315,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -508,7 +323,56 @@
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
               <property name="text">
-               <string>Color1</string>
+               <string>Fast trace</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="0">
+             <widget class="ScaledLabel" name="label_shader_invocation_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <bold>true</bold>
+                <underline>false</underline>
+                <stylestrategy>PreferAntialias</stylestrategy>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the colors used for the shader invocation types</string>
+              </property>
+              <property name="text">
+               <string>Shader invocation coloring</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="ThemesAndColorsItemButton" name="button_node_box16_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Box16</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -518,171 +382,7 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="3">
-             <widget class="ThemesAndColorsItemButton" name="button_background_2_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Color2</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="ScaledLabel" name="label_opacity_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-                <underline>false</underline>
-                <stylestrategy>PreferAntialias</stylestrategy>
-               </font>
-              </property>
-              <property name="text">
-               <string>Opacity coloring</string>
-              </property>
-              <property name="toolTip">
-               <string>Select the colors for the opacity geometry coloring mode</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <spacer name="horizontal_spacer_7_">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="4" column="2">
-             <widget class="ThemesAndColorsItemButton" name="button_opaque_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Opaque</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="3">
-             <widget class="ThemesAndColorsItemButton" name="button_non_opaque_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Non-opaque</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="0">
-             <widget class="ScaledLabel" name="label_build_flags_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-                <underline>false</underline>
-                <stylestrategy>PreferAntialias</stylestrategy>
-               </font>
-              </property>
-              <property name="text">
-               <string>Flag indication colors</string>
-              </property>
-              <property name="toolTip">
-               <string>Select the colors for flag-specific geometry coloring modes</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <spacer name="horizontal_spacer_8_">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="5" column="2">
+            <item row="6" column="2">
              <widget class="ThemesAndColorsItemButton" name="button_positive_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -693,7 +393,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -712,7 +411,495 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="3">
+            <item row="10" column="0">
+             <widget class="ScaledLabel" name="label_ray_coloring_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <bold>true</bold>
+                <underline>false</underline>
+                <stylestrategy>PreferAntialias</stylestrategy>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the colors used for the ray types</string>
+              </property>
+              <property name="text">
+               <string>Ray coloring</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="3">
+             <widget class="ThemesAndColorsItemButton" name="button_instance_opaque_force_opaque_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Force opaque</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <spacer name="horizontal_spacer_6_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="5" column="1">
+             <spacer name="horizontal_spacer_7_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="6" column="0">
+             <widget class="ScaledLabel" name="label_build_flags_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <bold>true</bold>
+                <underline>false</underline>
+                <stylestrategy>PreferAntialias</stylestrategy>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the colors for flag-specific geometry coloring modes</string>
+              </property>
+              <property name="text">
+               <string>Flag indication colors</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <spacer name="horizontal_spacer_3_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="6" column="1">
+             <spacer name="horizontal_spacer_8_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="9" column="6">
+             <widget class="ThemesAndColorsItemButton" name="button_invocation_miss_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Miss</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="ScaledLabel" name="label_bounding_volume_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <bold>true</bold>
+                <underline>false</underline>
+                <stylestrategy>PreferAntialias</stylestrategy>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the color of the wireframe bounding volume</string>
+              </property>
+              <property name="text">
+               <string>Bounding volume</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="6">
+             <widget class="ThemesAndColorsItemButton" name="button_node_procedural_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Procedural</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="ScaledLabel" name="label_background_dark_">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the colors of the checkered background for the dark color theme.</string>
+              </property>
+              <property name="text">
+               <string>Background coloring (dark)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="5">
+             <widget class="ThemesAndColorsItemButton" name="button_invocation_intersection_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Intersection</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="2">
+             <widget class="ThemesAndColorsItemButton" name="button_invocation_raygen_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Raygen</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <spacer name="horizontal_spacer_13_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="3">
+             <widget class="ThemesAndColorsItemButton" name="button_node_box32_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Box32</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="0">
+             <widget class="ScaledLabel" name="label_instance_opaque_flags_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <bold>true</bold>
+                <underline>false</underline>
+                <stylestrategy>PreferAntialias</stylestrategy>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the colors for the fast build/trace flag geometry coloring modes</string>
+              </property>
+              <property name="text">
+               <string>Instance force opaque/no-opaque</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="ThemesAndColorsItemButton" name="button_wireframe_selected_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Selected</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="5">
+             <widget class="ThemesAndColorsItemButton" name="button_instance_opaque_both_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Both</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="5">
+             <widget class="ThemesAndColorsItemButton" name="button_zero_mask_ray_color_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Zero mask ray</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="1">
+             <spacer name="horizontal_spacer_10_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="2" column="0">
+             <widget class="ScaledLabel" name="label_geometry_coloring_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <bold>true</bold>
+                <underline>false</underline>
+                <stylestrategy>PreferAntialias</stylestrategy>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the color of the geometry triangles</string>
+              </property>
+              <property name="text">
+               <string>Selected triangles</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1">
+             <spacer name="horizontal_spacer_11_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="6" column="3">
              <widget class="ThemesAndColorsItemButton" name="button_negative_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -723,7 +910,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -739,48 +925,8 @@
               </property>
              </widget>
             </item>
-            <item row="6" column="0">
-             <widget class="ScaledLabel" name="label_build_algorithm_flags_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-                <underline>false</underline>
-                <stylestrategy>PreferAntialias</stylestrategy>
-               </font>
-              </property>
-              <property name="text">
-               <string>Build type coloring</string>
-              </property>
-              <property name="toolTip">
-               <string>Select the colors for the fast build/trace flag geometry coloring modes</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <spacer name="horizontal_spacer_9_">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="6" column="2">
-             <widget class="ThemesAndColorsItemButton" name="button_build_algorithm_none_">
+            <item row="8" column="2">
+             <widget class="ThemesAndColorsItemButton" name="button_instance_opaque_none_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -790,7 +936,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -809,129 +954,8 @@
               </property>
              </widget>
             </item>
-            <item row="6" column="3">
-             <widget class="ThemesAndColorsItemButton" name="button_build_algorithm_fast_build_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Fast build</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="4">
-             <widget class="ThemesAndColorsItemButton" name="button_build_algorithm_fast_trace_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Fast trace</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="5">
-             <widget class="ThemesAndColorsItemButton" name="button_build_algorithm_both_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Both</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="0">
-             <widget class="ScaledLabel" name="label_instance_opaque_flags_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-                <underline>false</underline>
-                <stylestrategy>PreferAntialias</stylestrategy>
-               </font>
-              </property>
-              <property name="text">
-               <string>Instance force opaque/no-opaque</string>
-              </property>
-              <property name="toolTip">
-               <string>Select the colors for the fast build/trace flag geometry coloring modes</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="1">
-             <spacer name="horizontal_spacer_10_">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
             <item row="7" column="2">
-             <widget class="ThemesAndColorsItemButton" name="button_instance_opaque_none_">
+             <widget class="ThemesAndColorsItemButton" name="button_build_algorithm_none_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -941,7 +965,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -961,7 +984,7 @@
              </widget>
             </item>
             <item row="7" column="3">
-             <widget class="ThemesAndColorsItemButton" name="button_instance_opaque_force_opaque_">
+             <widget class="ThemesAndColorsItemButton" name="button_build_algorithm_fast_build_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -971,7 +994,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -980,14 +1002,14 @@
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
               <property name="text">
-               <string>Force opaque</string>
+               <string>Fast build</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
               </property>
              </widget>
             </item>
-            <item row="7" column="4">
+            <item row="8" column="4">
              <widget class="ThemesAndColorsItemButton" name="button_instance_opaque_force_no_opaque_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -998,7 +1020,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -1014,8 +1035,32 @@
               </property>
              </widget>
             </item>
+            <item row="4" column="3">
+             <widget class="ThemesAndColorsItemButton" name="button_background_dark_2_">
+              <property name="minimumSize">
+               <size>
+                <width>104</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Color2</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
             <item row="7" column="5">
-             <widget class="ThemesAndColorsItemButton" name="button_instance_opaque_both_">
+             <widget class="ThemesAndColorsItemButton" name="button_build_algorithm_both_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1025,7 +1070,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -1041,107 +1085,7 @@
               </property>
              </widget>
             </item>
-            <item row="8" column="0">
-             <widget class="ScaledLabel" name="label_shader_invocation_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-                <underline>false</underline>
-                <stylestrategy>PreferAntialias</stylestrategy>
-               </font>
-              </property>
-              <property name="text">
-               <string>Shader invocation coloring</string>
-              </property>
-              <property name="toolTip">
-               <string>Select the colors used for the shader invocation types</string>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="1">
-             <spacer name="horizontal_spacer_11_">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="8" column="2">
-             <widget class="ThemesAndColorsItemButton" name="button_invocation_raygen_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Raygen</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="3">
-             <widget class="ThemesAndColorsItemButton" name="button_invocation_closest_hit_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Closest hit</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="4">
+            <item row="9" column="4">
              <widget class="ThemesAndColorsItemButton" name="button_invocation_any_hit_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -1152,7 +1096,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -1171,8 +1114,8 @@
               </property>
              </widget>
             </item>
-            <item row="8" column="5">
-             <widget class="ThemesAndColorsItemButton" name="button_invocation_intersection_">
+            <item row="5" column="2">
+             <widget class="ThemesAndColorsItemButton" name="button_opaque_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1182,7 +1125,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -1191,77 +1133,20 @@
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
               <property name="text">
-               <string>Intersection</string>
+               <string>Opaque</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
               </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
              </widget>
             </item>
-            <item row="8" column="6">
-             <widget class="ThemesAndColorsItemButton" name="button_invocation_miss_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <bold>false</bold>
-                <kerning>true</kerning>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="text">
-               <string>Miss</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="9" column="0">
-             <widget class="ScaledLabel" name="label_ray_coloring_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-                <underline>false</underline>
-                <stylestrategy>PreferAntialias</stylestrategy>
-               </font>
-              </property>
-              <property name="text">
-               <string>Ray coloring</string>
-              </property>
-              <property name="toolTip">
-               <string>Select the colors used for the ray types</string>
-              </property>
-             </widget>
-            </item>
-            <item row="9" column="1">
+            <item row="10" column="1">
              <spacer name="horizontal_spacer_12_">
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
               <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
+               <enum>QSizePolicy::Policy::Fixed</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -1271,7 +1156,94 @@
               </property>
              </spacer>
             </item>
-            <item row="9" column="2">
+            <item row="3" column="2">
+             <widget class="ThemesAndColorsItemButton" name="button_background_light_1_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Color1</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <spacer name="horizontal_spacer_4_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="7" column="1">
+             <spacer name="horizontal_spacer_9_">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="4">
+             <widget class="ThemesAndColorsItemButton" name="button_node_instance_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Instance</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="2">
              <widget class="ThemesAndColorsItemButton" name="button_selected_ray_color_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -1282,7 +1254,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -1301,7 +1272,33 @@
               </property>
              </widget>
             </item>
-            <item row="9" column="3">
+            <item row="0" column="5">
+             <widget class="ThemesAndColorsItemButton" name="button_node_triangle_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Triangle</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="3">
              <widget class="ThemesAndColorsItemButton" name="button_ray_color_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -1312,7 +1309,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -1331,8 +1327,31 @@
               </property>
              </widget>
             </item>
-            <item row="9" column="4">
-             <widget class="ThemesAndColorsItemButton" name="button_shadow_ray_color_">
+            <item row="1" column="0">
+             <widget class="ScaledLabel" name="label_wireframe_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <bold>true</bold>
+                <underline>false</underline>
+                <stylestrategy>PreferAntialias</stylestrategy>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select the color of the geometry wireframe</string>
+              </property>
+              <property name="text">
+               <string>Wireframe coloring</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="3">
+             <widget class="ThemesAndColorsItemButton" name="button_invocation_closest_hit_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1342,7 +1361,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -1351,7 +1369,7 @@
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
               <property name="text">
-               <string>Accept first hit ray</string>
+               <string>Closest hit</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -1361,8 +1379,40 @@
               </property>
              </widget>
             </item>
-            <item row="9" column="5">
-             <widget class="ThemesAndColorsItemButton" name="button_zero_mask_ray_color_">
+            <item row="3" column="3">
+             <widget class="ThemesAndColorsItemButton" name="button_background_light_2_">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+                <kerning>true</kerning>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Color2</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="7">
+             <widget class="ThemesAndColorsItemButton" name="button_node_selected_">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1372,7 +1422,6 @@
               <property name="font">
                <font>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <bold>false</bold>
                 <kerning>true</kerning>
                </font>
@@ -1381,13 +1430,20 @@
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
               <property name="text">
-               <string>Zero mask ray</string>
+               <string>Selected</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
               </property>
-              <property name="checked">
-               <bool>true</bool>
+             </widget>
+            </item>
+            <item row="11" column="0">
+             <widget class="ArrowIconComboBox" name="color_theme_combo_box_">
+              <property name="text">
+               <string>Color Theme: Light</string>
+              </property>
+              <property name="default">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -1415,7 +1471,7 @@
            <item>
             <spacer name="horizontal_spacer_bottom_">
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -1430,7 +1486,7 @@
          <item>
           <spacer name="vertical_spacer_">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -1485,7 +1541,7 @@
                 <number>255</number>
                </property>
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="invertedAppearance">
                 <bool>false</bool>
@@ -1505,7 +1561,6 @@
                </property>
                <property name="font">
                 <font>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -1524,7 +1579,6 @@
                </property>
                <property name="font">
                 <font>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -1543,7 +1597,6 @@
                </property>
                <property name="font">
                 <font>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -1564,7 +1617,7 @@
                 <number>255</number>
                </property>
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="invertedAppearance">
                 <bool>false</bool>
@@ -1584,7 +1637,6 @@
                </property>
                <property name="font">
                 <font>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -1603,7 +1655,6 @@
                </property>
                <property name="font">
                 <font>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -1622,7 +1673,6 @@
                </property>
                <property name="font">
                 <font>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -1643,7 +1693,7 @@
                 <number>255</number>
                </property>
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="invertedAppearance">
                 <bool>false</bool>
@@ -1668,7 +1718,6 @@
                <property name="font">
                 <font>
                  <pointsize>16</pointsize>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -1676,7 +1725,7 @@
                 <string>#DUMMY</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -1694,7 +1743,7 @@
          <item>
           <spacer name="vertical_spacer_2_">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -1709,7 +1758,7 @@
        <item>
         <spacer name="horizontal_spacer_end_">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -1746,6 +1795,11 @@
    <class>ThemesAndColorsItemButton</class>
    <extends>QPushButton</extends>
    <header>views/custom_widgets/themes_and_colors_item_button.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ArrowIconComboBox</class>
+   <extends>QPushButton</extends>
+   <header>qt_common/custom_widgets/arrow_icon_combo_box.h</header>
   </customwidget>
  </customwidgets>
  <resources>

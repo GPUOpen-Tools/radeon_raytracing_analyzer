@@ -9,6 +9,8 @@
 
 #include <float.h>
 #include <math.h>
+#include <numeric>
+#include <execution>
 
 #include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 #include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
@@ -321,38 +323,37 @@ namespace rra
         uint32_t root_node = UINT32_MAX;
         RRA_BUBBLE_ON_ERROR(RraBvhGetRootNodePtr(&root_node));
 
-        uint32_t              child_node_count;
-        uint32_t              triangle_count;
-        std::vector<uint32_t> traverse_nodes = {root_node};
-        std::vector<uint32_t> swap_nodes;
+        uint32_t child_node_count;
+        uint32_t triangle_count;
+
+        uint32_t triangle_node_count{};
+        RraBlasGetTriangleNodeCount(blas_index, &triangle_node_count);
+        triangle_nodes.reserve(triangle_node_count);
+
+        std::vector<uint32_t> traversal_stack{};
+        traversal_stack.reserve(64);  // It is rare for the traversal stack to get deeper than ~28 so this should be sufficient memory to reserve.
+        traversal_stack.push_back(root_node);
 
         // Memoized traversal of the tree.
-        while (!traverse_nodes.empty())
+        while (!traversal_stack.empty())
         {
-            swap_nodes.clear();
+            uint32_t current_node{traversal_stack.back()};
+            traversal_stack.pop_back();
 
-            for (size_t i = 0; i < traverse_nodes.size(); i++)
+            // Add the triangles to the list.
+            RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(blas_index, current_node, &child_node_count));
+            std::array<uint32_t, 8> child_nodes{};
+            RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(blas_index, current_node, child_nodes.data()));
+            traversal_stack.insert(traversal_stack.end(), child_nodes.data(), child_nodes.data() + child_node_count);
+
+            // Get the triangle nodes. If this is not a triangle the triangle count is 0.
+            RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangleCount(blas_index, current_node, &triangle_count));
+
+            // Continue with processing the node if it's a triangle node with 1 or more triangles within.
+            if (triangle_count > 0)
             {
-                uint32_t current_node = traverse_nodes[i];
-
-                // Add the triangles to the list.
-                RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(blas_index, current_node, &child_node_count));
-                std::vector<uint32_t> child_nodes(child_node_count);
-                RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(blas_index, current_node, child_nodes.data()));
-                swap_nodes.insert(swap_nodes.end(), child_nodes.begin(), child_nodes.end());
-
-                // Get the triangle nodes. If this is not a triangle the triangle count is 0.
-                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangleCount(blas_index, current_node, &triangle_count));
-
-                // Continue with processing the node if it's a triangle node with 1 or more triangles within.
-                if (triangle_count > 0)
-                {
-                    triangle_nodes.push_back(dxr::amd::NodePointer(current_node));
-                }
+                triangle_nodes.push_back(dxr::amd::NodePointer(current_node));
             }
-
-            // Swap the old list with the new.
-            traverse_nodes = swap_nodes;
         }
         return kRraOk;
     }
@@ -546,32 +547,36 @@ namespace rra
 
     RraErrorCode CalculateSurfaceAreaHeuristics(RraDataSet& data_set)
     {
-        // Calculate the SAH for each BLAS.
-        // The CalcBlasSAH can be done as a worker thread if needed.
+        // Calculate BLAS SAH.
         const auto& bottom_level_bvhs = data_set.bvh_bundle->GetBottomLevelBvhs();
-        for (size_t blas_index = 0; blas_index < bottom_level_bvhs.size(); blas_index++)
-        {
+        std::vector<uint32_t> blas_indices(bottom_level_bvhs.size());
+        std::iota(blas_indices.begin(), blas_indices.end(), 0);
+
+        std::for_each(std::execution::par, blas_indices.begin(), blas_indices.end(), [&](uint32_t blas_index) {
             rta::EncodedRtIp11BottomLevelBvh* blas = dynamic_cast<rta::EncodedRtIp11BottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
             if (blas == nullptr)
             {
-                return kRraErrorInvalidPointer;
+                return;
             }
 
             CalcBlasSAH(blas);
-        }
+        });
+
 
         // Calculate the SAH for each TLAS.
         // The leaf nodes here will be an instance node/BLAS.
         const auto& top_level_bvhs = data_set.bvh_bundle->GetTopLevelBvhs();
-        for (size_t tlas_index = 0; tlas_index < top_level_bvhs.size(); tlas_index++)
-        {
+        std::vector<uint32_t> tlas_indices(top_level_bvhs.size());
+        std::iota(blas_indices.begin(), blas_indices.end(), 0);
+
+        std::for_each(std::execution::par, tlas_indices.begin(), tlas_indices.end(), [&](uint32_t tlas_index) {
             rta::EncodedRtIp11TopLevelBvh* tlas = dynamic_cast<rta::EncodedRtIp11TopLevelBvh*>(&(*top_level_bvhs[tlas_index]));
             if (tlas == nullptr)
             {
-                return kRraErrorInvalidPointer;
+                return;
             }
             CalcTlasSAH(tlas);
-        }
+        });
 
         return kRraOk;
     }

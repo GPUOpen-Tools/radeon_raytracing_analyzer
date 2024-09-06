@@ -55,6 +55,8 @@ set( SOURCES
     "surface_area_heuristic.cpp"
     "surface_area_heuristic.h"
     "rra_async_ray_history_loader.cpp"
+    "string_table.cpp"
+    "user_marker_history.cpp"
 
     # other dependencies
     "bvh/bvh_bundle.cpp"
@@ -118,7 +120,6 @@ set( LINUX_SOURCES
     "linux/safe_crt.cpp"
 )
 
-
 # specify output library name
 IF(WIN32)
     add_library(${PROJECT_NAME} ${SOURCES})
@@ -131,6 +132,7 @@ devtools_target_options(${PROJECT_NAME})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_CXX_BINDINGS)
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DSYSTEM_INFO_ENABLE_RDF)
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DDRIVER_OVERRIDES_ENABLE_RDF)
 
 IF (WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_PLATFORM_WINDOWS -D_CRT_SECURE_NO_WARNINGS)

@@ -293,6 +293,7 @@ namespace rra
             float               arc_radius;
             ViewerIOOrientation orientation;
             float               fov;
+            float               movement_speed;
             bool                orthographic;
         };
 

@@ -21,6 +21,13 @@ namespace rra
             return false;
         }
 
+        void RenderModule::EveryFrameUpdate(Device* device, uint32_t current_frame)
+        {
+            // No-op by default.
+            RRA_UNUSED(device);
+            RRA_UNUSED(current_frame);
+        }
+
         void RenderModule::Enable()
         {
             enabled_ = true;

@@ -110,7 +110,7 @@ void BinaryCheckbox::paintEvent(QPaintEvent* event)
         painter.drawRoundedRect(inner_rect, space_radius, space_radius);
 
         // Draw binary bit.
-        painter.setPen(Qt::black);
+        painter.setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
         int   text_width           = font_metrics.horizontalAdvance(QString("0"));
         qreal text_horizontal_base = (switch_width - text_width) * 0.5;
         painter.drawText(text_horizontal_base, text_base, QString("0"));
@@ -149,7 +149,7 @@ void BinaryCheckbox::paintEvent(QPaintEvent* event)
         painter.drawText(text_horizontal_base, text_base, QString("1"));
     }
 
-    painter.setPen(Qt::black);
+    painter.setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
     painter.drawText(switch_width + scaled_padding, text_base, this->text());
 }
 

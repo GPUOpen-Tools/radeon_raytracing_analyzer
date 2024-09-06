@@ -69,7 +69,7 @@ namespace rra
         int id = qRegisterMetaType<TraceLoadReturnCode>();
         Q_UNUSED(id);
 
-        ClearTrace();
+        // No ClearTrace call here. Clears a global object before it is even constructed is a bug.
     }
 
     TraceManager::~TraceManager()

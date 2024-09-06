@@ -44,6 +44,7 @@ public:
     /// @brief Reset UI state.
     virtual void Reset() Q_DECL_OVERRIDE;
 
+public slots:
     /// @brief Select a TLAS.
     ///
     /// @param tlas_index The index of the selected TLAS.

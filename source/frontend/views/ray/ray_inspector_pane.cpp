@@ -7,6 +7,8 @@
 
 #include "views/ray/ray_inspector_pane.h"
 
+#include "qt_common/utils/qt_util.h"
+
 #include "views/widget_util.h"
 #include <settings/settings.h>
 #include "util/string_util.h"
@@ -23,7 +25,7 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
     ui_->side_panel_container_->GetViewPane()->SetParentPaneId(rra::kPaneIdRayInspector);
     ui_->viewer_container_widget_->SetupUI(this, rra::kPaneIdRayInspector);
 
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
     model_ = new rra::RayInspectorModel(rra::kRayInspectorRayListNumWidgets);
     model_->InitializeTreeModel(ui_->ray_tree_);
@@ -80,6 +82,11 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
     connect(ui_->selected_ray_focus_, &ScaledPushButton::clicked, this, &RayInspectorPane::FocusOnSelectedRay);
     ui_->selected_ray_focus_->setCursor(QCursor(Qt::PointingHandCursor));
 
+    ui_->content_ray_acceleration_structure_address_->SetLinkStyleSheet();
+    ui_->content_origin_->SetLinkStyleSheet();
+    ui_->content_ray_result_hit_distance_->SetLinkStyleSheet();
+    ui_->content_ray_result_instance_index_->SetLinkStyleSheet();
+
     // Save selected control style to settings.
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ControlStyleChanged, this, [&]() {
         if (renderer_interface_ == nullptr)
@@ -110,13 +117,24 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
     ui_->content_token_dump_->hide();
 
     QIcon clickable_icon;
-    clickable_icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        clickable_icon.addFile(
+            QString::fromUtf8(":/Resources/assets/third_party/ionicons/scan-outline-clickable-dark-theme.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+    else
+    {
+        clickable_icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
 
     QIcon hover_icon;
     hover_icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/scan-outline-hover.svg"), QSize(), QIcon::Normal, QIcon::Off);
 
     ui_->selected_ray_focus_->SetNormalIcon(clickable_icon);
     ui_->selected_ray_focus_->SetHoverIcon(hover_icon);
+
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &RayInspectorPane::OnColorThemeUpdated);
 
     ui_->selected_ray_focus_->setBaseSize(QSize(25, 25));
 }
@@ -1146,5 +1164,17 @@ bool RayInspectorPane::event(QEvent* event)
     }
 
     return QWidget::event(event);
+}
+
+void RayInspectorPane::OnColorThemeUpdated()
+{
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        ui_->selected_ray_focus_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable-dark-theme.svg"));
+    }
+    else
+    {
+        ui_->selected_ray_focus_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
+    }
 }
 

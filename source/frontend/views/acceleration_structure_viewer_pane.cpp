@@ -213,7 +213,6 @@ void AccelerationStructureViewerPane::OnTraceClose()
 
         renderer_widget_->SetRendererInterface(renderer_interface_);
     }
-    ResetUI(true);
 }
 
 void AccelerationStructureViewerPane::Reset()

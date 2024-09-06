@@ -718,6 +718,19 @@ RraErrorCode RraTlasGetUniqueTriangleCount(uint64_t tlas_index, uint64_t* triang
     return kRraOk;
 }
 
+RraErrorCode RraTlasGetTotalProceduralNodeCount(uint64_t tlas_index, uint64_t* out_count)
+{
+    const rta::EncodedRtIp11TopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    *out_count = tlas->GetTotalProceduralNodeCount();
+
+    return kRraOk;
+}
+
 RraErrorCode RraTlasGetInactiveInstancesCount(uint64_t tlas_index, uint64_t* inactive_count)
 {
     const rta::EncodedRtIp11TopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);

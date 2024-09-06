@@ -424,6 +424,19 @@ RraErrorCode RraBlasGetUniqueTriangleCount(uint64_t blas_index, uint32_t* out_tr
     return kRraOk;
 }
 
+RraErrorCode RraBlasGetActivePrimitiveCount(uint64_t blas_index, uint32_t* out_triangle_count)
+{
+    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    *out_triangle_count = blas->GetHeader().GetActivePrimitiveCount();
+    return kRraOk;
+}
+
 RraErrorCode RraBlasGetTriangleNodeCount(uint64_t blas_index, uint32_t* out_triangle_count)
 {
     const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);

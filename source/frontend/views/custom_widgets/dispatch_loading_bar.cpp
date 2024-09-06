@@ -9,6 +9,8 @@
 
 #include <QPainter>
 
+#include "qt_common/utils/qt_util.h"
+
 DispatchLoadingBar::DispatchLoadingBar(QWidget* parent)
     : QWidget(parent)
     , fill_percentage_(0)
@@ -48,7 +50,7 @@ void DispatchLoadingBar::paintEvent(QPaintEvent* paint_event)
 
     QRect rect = this->rect();
 
-    QBrush brush(kEmptyColor_);
+    QBrush brush(kEmptyColor_[QtCommon::QtUtils::ColorTheme::Get().GetColorTheme()]);
 
     QPen pen(Qt::NoPen);
     painter.setPen(pen);

@@ -13,6 +13,10 @@
 #include "views/widget_util.h"
 #include "views/custom_widgets/slider_style.h"
 
+#include "qt_common/custom_widgets/driver_overrides_model.h"
+
+using namespace driver_overrides;
+
 constexpr float kMaxCullRatio{0.01f};  ///< The maximum cull ratio able to be set by the settings slider.
 
 float SliderToFrustumCullRatio(int slider_value)
@@ -31,13 +35,23 @@ SettingsPane::SettingsPane(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    rra::widget_util::ApplyStandardPaneStyle(this, ui_->main_content_, ui_->main_scroll_area_);
+    rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
-    ui_->check_for_updates_on_startup_checkbox_->Initialize(rra::Settings::Get().GetCheckForUpdatesOnStartup(), rra::kCheckboxEnableColor);
-    connect(ui_->check_for_updates_on_startup_checkbox_, &ColoredCheckbox::Clicked, this, &SettingsPane::CheckForUpdatesOnStartupStateChanged);
+    // Set up checkboxes.
+    ui_->check_for_updates_on_startup_checkbox_->SetOnText(rra::text::kCheckForUpdates);
+    ui_->check_for_updates_on_startup_checkbox_->SetOffText(rra::text::kCheckForUpdates);
+    ui_->check_for_updates_on_startup_checkbox_->setChecked(rra::Settings::Get().GetCheckForUpdatesOnStartup());
+    connect(ui_->check_for_updates_on_startup_checkbox_, &CheckBoxWidget::stateChanged, this, &SettingsPane::CheckForUpdatesOnStartupStateChanged);
 
-    ui_->reset_camera_on_style_change_checkbox_->Initialize(rra::Settings::Get().GetCameraResetOnStyleChange(), rra::kCheckboxEnableColor);
-    connect(ui_->reset_camera_on_style_change_checkbox_, &ColoredCheckbox::Clicked, this, &SettingsPane::CameraResetOnStyleChangeStateChanged);
+    ui_->reset_camera_on_style_change_checkbox_->SetOnText(rra::text::kResetCamera);
+    ui_->reset_camera_on_style_change_checkbox_->SetOffText(rra::text::kResetCamera);
+    ui_->reset_camera_on_style_change_checkbox_->setChecked(rra::Settings::Get().GetCameraResetOnStyleChange());
+    connect(ui_->reset_camera_on_style_change_checkbox_, &CheckBoxWidget::stateChanged, this, &SettingsPane::CameraResetOnStyleChangeStateChanged);
+
+    ui_->viewer_state_checkbox_->SetOnText(rra::text::kSaveViewerState);
+    ui_->viewer_state_checkbox_->SetOffText(rra::text::kSaveViewerState);
+    ui_->viewer_state_checkbox_->setChecked(rra::Settings::Get().GetPersistentUIState());
+    connect(ui_->viewer_state_checkbox_, &CheckBoxWidget::stateChanged, this, &SettingsPane::PersistentUIStateChanged);
 
     // Populate the treeview combo box.
     rra::widget_util::InitSingleSelectComboBox(parent, ui_->treeview_combo_push_button_, rra::text::kSettingsTreeviewOffset, false);
@@ -67,8 +81,12 @@ SettingsPane::SettingsPane(QWidget* parent)
 
     ui_->small_object_culling_content_->setStyle(new AbsoluteSliderPositionStyle(ui_->small_object_culling_content_->style()));
 
-    ui_->viewer_state_checkbox_->Initialize(rra::Settings::Get().GetPersistentUIState(), rra::kCheckboxEnableColor);
-    connect(ui_->viewer_state_checkbox_, &ColoredCheckbox::Clicked, this, &SettingsPane::PersistentUIStateChanged);
+    // Set up the Driver Overrides notification configuration widget.
+    ui_->driver_overrides_notification_config_widget_->Init(rra::Settings::Get().GetDriverOverridesAllowNotifications(), false);
+    connect(ui_->driver_overrides_notification_config_widget_,
+            &DriverOverridesNotificationConfigWidget::StateChanged,
+            this,
+            &SettingsPane::DriverOverridesAllowNotificationsChanged);
 }
 
 SettingsPane::~SettingsPane()
@@ -142,4 +160,10 @@ void SettingsPane::SwitchTreeviewNodeId()
 {
     int node_id_type = rra::Settings::Get().GetTreeviewNodeIdType();
     UpdateTreeviewComboBox(node_id_type);
+}
+
+void SettingsPane::DriverOverridesAllowNotificationsChanged(const bool checked)
+{
+    rra::Settings::Get().SetDriverOverridesAllowNotifications(checked);
+    rra::Settings::Get().SaveSettings();
 }

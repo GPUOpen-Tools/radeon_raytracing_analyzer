@@ -44,9 +44,6 @@ namespace rra
 
     // @brief App colors.
     static const QColor kCheckboxEnableColor   = QColor(0, 122, 217);
-    static const QColor kTableRowSelectedColor = QColor(204, 232, 255);
-    static const QColor kBackgroundColor       = QColor(255, 255, 255);
-    static const QColor kBackgroundListColor   = QColor(240, 240, 240);
 
     /// @brief Control print formatting.
     static const int  kQtTooltipFloatPrecision = 7;    ///< Decimal place precision for tooltip of printed floating point values.
@@ -87,6 +84,8 @@ namespace rra
         // @brief The file extension for RRA trace files, and generic RDF files.
         static const QString kRRATraceFileExtension = ".rra";
 
+        static const QString kRraApplicationFileTypeString = "scene";
+
         // @brief Help file locations.
         static const QString kTraceHelpFile       = "/help/rdp/index.html";
         static const QString kHelpFile            = "/help/rra/index.html";
@@ -118,12 +117,18 @@ namespace rra
         /// @brief Delimiter for strings that are split into two tokens.
         static const std::string kDelimiterBinary = ":";
 
+        static const QString kCheckForUpdates = "Check for updates on startup.";
+        static const QString kResetCamera     = "Reset camera on control style change.";
+        static const QString kSaveViewerState = "Save the state of the TLAS Viewer, BLAS viewer and the RAY Inspector panes between RRA sessions.";
+
     }  // namespace text
 
     namespace resource
     {
         // @brief Stylesheet resource.
-        static const QString kStylesheet = ":/Resources/stylesheet.qss";
+        static const QString kDarkStylesheet  = ":/Resources/dark_mode_stylesheet.qss";
+        static const QString kLightStylesheet = ":/Resources/light_mode_stylesheet.qss";
+        static const QString kStylesheet      = ":/Resources/stylesheet.qss";
 
         // Zoom in/out svg resources.
         static const QString kZoomInEnabled   = ":/Resources/assets/zoom_in.svg";

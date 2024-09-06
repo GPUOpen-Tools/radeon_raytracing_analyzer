@@ -112,7 +112,8 @@ namespace rta
 
         if (!skip_meta_data)
         {
-            memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, sizeof(dxr::amd::MetaDataV1));
+            meta_data_ = {};
+            memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, chunk_header.meta_header_size);
         }
 
         if (buffer.size() < ((size_t)dxr::amd::kAccelerationStructureHeaderSize + chunk_header.header_offset))

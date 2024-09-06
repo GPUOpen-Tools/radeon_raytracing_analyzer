@@ -13,6 +13,7 @@
 #include <QScreen>
 #include <QtCore>
 
+#include "qt_common/custom_widgets/driver_overrides_model.h"
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
 
@@ -40,6 +41,8 @@
 #include "constants.h"
 #include "version.h"
 
+using namespace driver_overrides;
+
 // The maximum number of traces to list in the recent traces list.
 static const int kMaxSubmenuTraces = 10;
 
@@ -63,14 +66,60 @@ MainWindow::MainWindow(QWidget* parent)
     license_dialog_ = new LicenseDialog();
 #endif  // BETA_LICENSE
 
+    ColorThemeType color_mode = static_cast<ColorThemeType>(rra::Settings::Get().GetColorTheme());
+
+    if (color_mode == kColorThemeTypeCount)
+    {
+        color_mode = QtCommon::QtUtils::DetectOsSetting();
+    }
+
+    QtCommon::QtUtils::ColorTheme::Get().SetColorTheme(static_cast<ColorThemeType>(color_mode));
+
+    qApp->setPalette(QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette());
+
+    // Load application stylesheet.
+    QFile style_sheet(rra::resource::kStylesheet);
+
+    if (style_sheet.open(QFile::ReadOnly))
+    {
+        QString app_stylesheet = style_sheet.readAll();
+
+        if (color_mode == kColorThemeTypeDark)
+        {
+            QFile dark_style_sheet(rra::resource::kDarkStylesheet);
+            if (dark_style_sheet.open(QFile::ReadOnly))
+            {
+                app_stylesheet.append(dark_style_sheet.readAll());
+            }
+        }
+        else
+        {
+            QFile light_style_sheet(rra::resource::kLightStylesheet);
+            if (light_style_sheet.open(QFile::ReadOnly))
+            {
+                app_stylesheet.append(light_style_sheet.readAll());
+            }
+        }
+
+        qApp->setStyleSheet(app_stylesheet);
+    }
+
     ui_->setupUi(this);
 
     setWindowTitle(GetTitleBarString());
     setWindowIcon(QIcon(":/Resources/assets/icon_32x32.png"));
     setAcceptDrops(true);
 
-    // Set white background for this pane.
-    rra::widget_util::SetWidgetBackgroundColor(this, Qt::white);
+    DriverOverridesModel::GetInstance()->SetApplicationDetails(rra::text::kRraApplicationFileTypeString);
+
+    // Set up the links for the Driver Overrides notification banner.
+    connect(
+        ui_->driver_overrides_notification_banner_, &DriverOverridesNotificationBanner::ShowDetailsClicked, this, &MainWindow::OpenDriverOverridesDetailsLink);
+
+    connect(ui_->driver_overrides_notification_banner_,
+            &DriverOverridesNotificationBanner::DontShowAgainRequested,
+            this,
+            &MainWindow::DontShowDriverOverridesNotification);
 
     // Setup window sizes and settings.
     SetupWindowRects(loaded_settings);
@@ -150,12 +199,14 @@ MainWindow::MainWindow(QWidget* parent)
     connect(&rra::MessageManager::Get(), &rra::MessageManager::GraphicsContextFailedToInitialize, this, &MainWindow::OnGraphicsContextFailedToInitialize);
 
     // Add a reset UI button to the right side of the TLAS, BLAS and RAY tab bar
-    auto* reset_tlas_ui_state = CreateUIResetButton();
-    ui_->tlas_sub_tab_->setCornerWidget(reset_tlas_ui_state);
-    auto* reset_blas_ui_state = CreateUIResetButton();
-    ui_->blas_sub_tab_->setCornerWidget(reset_blas_ui_state);
-    auto* reset_ray_ui_state = CreateUIResetButton();
-    ui_->ray_sub_tab_->setCornerWidget(reset_ray_ui_state);
+    reset_tlas_ui_state_ = CreateUIResetButton();
+    ui_->tlas_sub_tab_->setCornerWidget(reset_tlas_ui_state_);
+    reset_blas_ui_state_ = CreateUIResetButton();
+    ui_->blas_sub_tab_->setCornerWidget(reset_blas_ui_state_);
+    reset_ray_ui_state_ = CreateUIResetButton();
+    ui_->ray_sub_tab_->setCornerWidget(reset_ray_ui_state_);
+
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &MainWindow::OnColorThemeUpdated);
 
 #ifdef BETA_LICENSE
     // Setup license dialog signal/slots.
@@ -180,7 +231,14 @@ RraIconButton* MainWindow::CreateUIResetButton()
     RraIconButton* reset_ui_state = new RraIconButton(this);
 
     QIcon icon;
-    icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable-dark-theme.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+    else
+    {
+        icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
     reset_ui_state->SetNormalIcon(icon);
 
     QIcon hover_icon;
@@ -223,6 +281,23 @@ void MainWindow::UpdateResetButtons()
     }
 }
 
+void MainWindow::OnColorThemeUpdated()
+{
+    QIcon icon;
+    if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
+    {
+        icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable-dark-theme.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+    else
+    {
+        icon.addFile(QString::fromUtf8(":/Resources/assets/third_party/ionicons/refresh-outline-clickable.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+
+    reset_tlas_ui_state_->SetNormalIcon(icon);
+    reset_blas_ui_state_->SetNormalIcon(icon);
+    reset_ray_ui_state_->SetNormalIcon(icon);
+}
+
 void MainWindow::OnGraphicsContextFailedToInitialize(const QString& failure_message)
 {
     // Close the trace, which will trigger the UI to reset back to the welcome pane.
@@ -249,9 +324,6 @@ void MainWindow::ResizeNavigationLists()
 
 void MainWindow::SetupTabBar()
 {
-    // Set grey background for main tab bar background.
-    rra::widget_util::SetWidgetBackgroundColor(ui_->main_tab_widget_, QColor(51, 51, 51));
-
     // Set the mouse cursor to pointing hand cursor for all of the tabs.
     QList<QTabBar*> tab_bar = ui_->main_tab_widget_->findChildren<QTabBar*>();
     for (QTabBar* item : tab_bar)
@@ -477,14 +549,28 @@ void MainWindow::OpenTrace()
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneRay, true);
 
     // Determine if ray history is present.
-    uint32_t     dispatch_count = 0;
-    RraErrorCode status         = RraRayGetDispatchCount(&dispatch_count);
+    uint32_t              dispatch_count         = 0;
+    RraErrorCode          status                 = RraRayGetDispatchCount(&dispatch_count);
+    DriverOverridesModel* driver_overrides_model = DriverOverridesModel::GetInstance();
     if (status == kRraOk && dispatch_count > 0)
     {
         ui_->ray_history_valid_switch_->setCurrentIndex(1);
+
+        if (RraTraceLoaderValid())
+        {
+            driver_overrides_model->ImportFromJsonText(RraTraceLoaderGetDriverOverridesString());
+        }
+        else
+        {
+            // Remove any old settings from the Driver Overrides model.
+            driver_overrides_model->Reset();
+        }
     }
     else
     {
+        // Remove any old settings from the Driver Overrides model.
+        driver_overrides_model->Reset();
+
         ui_->ray_history_valid_switch_->setCurrentIndex(0);
     }
 
@@ -528,7 +614,6 @@ void MainWindow::CloseTrace()
 {
     pane_manager_.OnTraceClose();
 
-    ResetUI();
     rra::TraceManager::Get().ClearTrace();
 
     rra::NavigationManager::Get().Reset();
@@ -547,6 +632,9 @@ void MainWindow::ResetUI()
 {
     // Default to first tab.
     const rra::NavLocation& nav_location = pane_manager_.ResetNavigation();
+
+    // Remove any old settings from the Driver Overrides model.
+    DriverOverridesModel::GetInstance()->Reset();
 
     ui_->main_tab_widget_->setCurrentIndex(nav_location.main_tab_index);
     ui_->start_list_->setCurrentRow(nav_location.start_list_row);
@@ -735,4 +823,15 @@ void MainWindow::UpdateTitlebar()
     title.append(GetTitleBarString());
 
     setWindowTitle(title);
+}
+
+void MainWindow::OpenDriverOverridesDetailsLink()
+{
+    // Open the System configurations pane.
+    ViewPane(rra::kPaneIdOverviewDeviceConfig);
+}
+
+void MainWindow::DontShowDriverOverridesNotification()
+{
+    rra::Settings::Get().SetDriverOverridesAllowNotifications(false);
 }

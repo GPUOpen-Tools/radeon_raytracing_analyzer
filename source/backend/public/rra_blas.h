@@ -196,6 +196,16 @@ RraErrorCode RraBlasGetBoundingVolumeExtents(uint64_t blas_index, uint32_t node_
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetUniqueTriangleCount(uint64_t blas_index, uint32_t* out_triangle_count);
 
+/// @brief Get the number of primitives that are marked active.
+///
+/// Invalid primitives may have zero or invalid transforms / references, or degenerated primitives (NaNs).
+///
+/// @param [in] blas_index           The index of the BLAS to use.
+/// @param [out] out_triangle_count  The number of active primitives in the BLAS.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetActivePrimitiveCount(uint64_t blas_index, uint32_t* out_triangle_count);
+
 /// @brief Retrieve the number of triangle nodes in a BLAS mesh.
 ///
 /// @param [in] blas_index           The index of the BLAS to use.

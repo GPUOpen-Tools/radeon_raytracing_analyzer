@@ -7,8 +7,13 @@
 
 #include "public/rra_async_ray_history_loader.h"
 #include <rdf/rdf/inc/amdrdf.h>
+#include <algorithm>
+#include <execution>
 #include <future>
-#include <map>
+
+// How frequently (every n loops) to update the loading progress bar.
+// Higher values reduce amount of locking, and increase performance.
+constexpr uint32_t kLoadUpdateFrequency{200};
 
 struct AsyncLoaderRayHistoryData
 {
@@ -88,9 +93,11 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
                 {
                     std::memcpy(&counter_info_, metadata_buffer.data() + offset, sizeof(GpuRt::CounterInfo));
                 }
-
-                // For now we can break when we have lodaded the counter info as we do not use any other information from the metadata chunk.
-                // In the future, once all the alignment issues have been fixed we can remove the break from here.
+            }
+            else if (current_info.kind == rta::RayHistoryMetadataKind::UserMarkerInfo)
+            {
+                // Copy user marker context.
+                std::memcpy(&user_marker_context_, metadata_buffer.data() + offset, sizeof(uint64_t));  
                 break;
             }
 
@@ -125,6 +132,11 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
 
         chunk_file.ReadChunkDataToBuffer(RRA_RAY_HISTORY_RAW_TOKENS_IDENTIFIER, (int)dispatch_index, byte_buffer);
         file.Close();
+        {
+            std::scoped_lock<std::mutex> plock(process_mutex_);
+            load_status_.data_decompressed = true;
+            load_status_.has_errors        = error_state_;
+        }
 
         ReadRayHistoryTraceFromRawBuffer(buffer_size, byte_buffer, dim_x_, dim_y_, dim_z_);
         free(byte_buffer);
@@ -199,7 +211,7 @@ void RraAsyncRayHistoryLoader::WaitProcess()
     bool get_the_future = false;
     {
         std::scoped_lock<std::mutex> plock(process_mutex_);
-        get_the_future = !process_complete_;
+        get_the_future          = !process_complete_;
         process_complete_local_ = process_complete_;
     }
 
@@ -306,19 +318,16 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
 
     struct RayStateAsyncLoader
     {
-        std::vector<std::byte> tokenData;
-        // Offsets of token starts
-        std::vector<RayHistoryTrace::TokenIndex> index;
+        size_t   token_byte_start;
+        size_t   token_byte_current_idx;
+        uint32_t current_index;
 
         bool beginToken = false;
         bool endToken   = false;
     };
 
-    // Using a map here improves compression ratio on Windows by 2x, as
-    // consecutive indices compress _much_ better. On Linux the effect is
-    // minimal as the unordered_map implementation there is well sorted
-    std::map<uint32_t, RayStateAsyncLoader> rayData;
-    int                                     totalTokenCount = 0;
+    std::vector<RayStateAsyncLoader> rayData(dx * dy * dz);
+    int                              totalTokenCount = 0;
 
     const auto bufferStart          = buffer_data;
     const auto bufferEnd            = buffer_data + buffer_size;
@@ -326,11 +335,15 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
         return p >= bufferStart && (static_cast<const std::byte*>(p) + size) <= bufferEnd;
     };
 
-    for (size_t offset = 0, end = buffer_size; offset < end;)
+    // First pass over buffer_size counts token size and index count.
+    size_t   offset   = 0;
+    uint32_t loop_idx = 0;
+    while (offset < buffer_size)
     {
+        if (loop_idx++ % kLoadUpdateFrequency == 0)
         {
             std::scoped_lock<std::mutex> plock(process_mutex_);
-            bytes_processed_ = offset;
+            bytes_processed_ = offset / 2;
         }
 
         const void* readPointer = buffer_data + offset;
@@ -381,13 +394,6 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
                 break;
             }
 
-            const auto tokenStart = rayState.tokenData.size();
-
-            //assert(tokenStart <= std::numeric_limits<std::uint32_t>::max());
-
-            const RayHistoryTrace::TokenIndex tokenIndex = {static_cast<uint32_t>(tokenStart), 1};
-            rayState.index.push_back(tokenIndex);
-
             switch (control->type)
             {
             case RayHistoryTokenType::Begin:
@@ -419,21 +425,17 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
                 break;
             }
 
-            rayState.tokenData.insert(
-                rayState.tokenData.end(),
-                buffer_data + offset,
-                buffer_data + offset + sizeof(RayHistoryTokenControl) + static_cast<std::size_t>(control->tokenLength) * 4 /* size in DWORDS */);
+            ++rayState.current_index;
+            size_t token_data_size{sizeof(RayHistoryTokenControl) + static_cast<std::size_t>(control->tokenLength) * 4};  // Size in DWORDS.
+            rayState.token_byte_start += token_data_size;
 
-            offset += sizeof(RayHistoryTokenControl);
-            offset += static_cast<std::size_t>(control->tokenLength) * 4 /* size in DWORDS */;
+            offset += token_data_size;
         }
         else
         {
             // No need to check anything here because the control token is
             // fully available
             offset += sizeof(RayHistoryTokenId);
-
-            const auto tokenStart = rayState.tokenData.size();
 
             // Check if TokenId and TokenControl are invalid, i.e. all zero
             if (std::all_of(buffer_data + offset - sizeof(RayHistoryTokenId), buffer_data + offset + sizeof(RayHistoryTokenControl), [](const std::byte b) {
@@ -446,46 +448,118 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
                 continue;
             }
 
-            const RayHistoryTrace::TokenIndex tokenIndex = {static_cast<uint32_t>(tokenStart), 0};
-
-            rayState.index.push_back(tokenIndex);
-
-            rayState.tokenData.insert(rayState.tokenData.end(), buffer_data + offset, buffer_data + offset + sizeof(RayHistoryTokenControl));
+            ++rayState.current_index;
+            rayState.token_byte_start += sizeof(RayHistoryTokenControl);
 
             offset += sizeof(RayHistoryTokenControl);
         }
     }
 
-    // At this point, we have the data in rayData. We now compact it such
-    // that all tokenData entries get pasted together, and adjust the
-    // indices accordingly.
-    std::size_t totalCombinedTokenSize = 0;
-
-    for (const auto& kv : rayData)
+    // Compute partial sums which will act as begin indices into combined vectors. And make combined ray ranges.
+    std::vector<RayHistoryTrace::RayRange> combinedRayRanges;
+    combinedRayRanges.reserve(rayData.size());
+    size_t   token_partial_sum = 0;
+    uint32_t index_partial_sum = 0;
+    uint32_t rs_id{0};
+    for (RayStateAsyncLoader& rs : rayData)
     {
-        totalCombinedTokenSize += kv.second.tokenData.size();
-        RRA_ASSERT(kv.second.beginToken);
+        const RayHistoryTrace::RayRange range = {rs_id++, static_cast<std::uint32_t>(index_partial_sum), rs.current_index, token_partial_sum};
+        combinedRayRanges.push_back(range);
+
+        size_t token_start_offset{token_partial_sum};
+        token_partial_sum += rs.token_byte_start;
+        rs.token_byte_start       = token_start_offset;
+        rs.token_byte_current_idx = token_start_offset;
+
+        uint32_t index_start_offset{index_partial_sum};
+        index_partial_sum += rs.current_index;
+        rs.current_index = index_start_offset;
     }
 
     std::vector<std::byte> combinedTokenData;
-    combinedTokenData.reserve(totalCombinedTokenSize);
+    combinedTokenData.resize(token_partial_sum);
 
     std::vector<RayHistoryTrace::TokenIndex> combinedTokenIndices;
-    combinedTokenIndices.reserve(totalTokenCount);
+    combinedTokenIndices.resize(totalTokenCount);
 
-    std::vector<RayHistoryTrace::RayRange> combinedRayRanges;
-    combinedRayRanges.reserve(rayData.size());
-
-    for (const auto& kv : rayData)
+    // Second pass over buffer_data populating all the combined vectors.
+    offset = 0;
+    while (offset < buffer_size)
     {
-        const RayHistoryTrace::RayRange range = {
-            kv.first, static_cast<std::uint32_t>(combinedTokenIndices.size()), static_cast<std::uint32_t>(kv.second.index.size()), combinedTokenData.size()};
+        if (loop_idx++ % kLoadUpdateFrequency == 0)
+        {
+            std::scoped_lock<std::mutex> plock(process_mutex_);
+            bytes_processed_ = (buffer_size + offset) / 2;
+        }
 
-        combinedRayRanges.push_back(range);
+        const void* readPointer = buffer_data + offset;
+        // We've reached the end of the stream, can't read anything here
+        if (!CheckOffsetIsInRange(readPointer, sizeof(RayHistoryTokenId)))
+        {
+            break;
+        }
+        // Tokens
+        const auto id = static_cast<const RayHistoryTokenId*>(readPointer);
 
-        combinedTokenData.insert(combinedTokenData.end(), kv.second.tokenData.begin(), kv.second.tokenData.end());
+        auto& rayState = rayData[id->id];
 
-        combinedTokenIndices.insert(combinedTokenIndices.end(), kv.second.index.begin(), kv.second.index.end());
+        readPointer = buffer_data + offset + sizeof(RayHistoryTokenId);
+
+        if (id->control)
+        {
+            // If it's a control word, then the payload comes right after
+            // this one
+            const auto control = static_cast<const RayHistoryTokenControl*>(readPointer);
+            offset += sizeof(RayHistoryTokenId);
+
+            // Check that we can actually read the whole token payload. Note
+            // that the read pointer didn't move yet so we need to check for
+            // both the token and the payload. At this point we know
+            // that we can dereference control, because that's checked before
+            // this loop
+            if (!CheckOffsetIsInRange(readPointer, sizeof(RayHistoryTokenControl) + control->tokenLength))
+            {
+                {
+                    std::scoped_lock<std::mutex> plock(process_mutex_);
+                    error_state_ = true;
+                }
+                break;
+            }
+
+            const auto                        tokenStart   = rayState.token_byte_current_idx - rayState.token_byte_start;
+            const RayHistoryTrace::TokenIndex tokenIndex   = {static_cast<uint32_t>(tokenStart), 1};
+            combinedTokenIndices[rayState.current_index++] = tokenIndex;
+
+            size_t token_data_size{sizeof(RayHistoryTokenControl) + static_cast<std::size_t>(control->tokenLength) * 4};  // Size in DWORDS.
+            std::memcpy(&combinedTokenData[rayState.token_byte_current_idx], buffer_data + offset, token_data_size);
+            rayState.token_byte_current_idx += token_data_size;
+
+            offset += token_data_size;
+        }
+        else
+        {
+            // No need to check anything here because the control token is
+            // fully available
+            offset += sizeof(RayHistoryTokenId);
+
+            // Check if TokenId and TokenControl are invalid, i.e. all zero
+            if (std::all_of(buffer_data + offset - sizeof(RayHistoryTokenId), buffer_data + offset + sizeof(RayHistoryTokenControl), [](const std::byte b) {
+                    return b == std::byte();
+                }))
+            {
+                offset += sizeof(RayHistoryTokenControl);
+                continue;
+            }
+
+            const auto                        tokenStart   = rayState.token_byte_current_idx - rayState.token_byte_start;
+            const RayHistoryTrace::TokenIndex tokenIndex   = {static_cast<uint32_t>(tokenStart), 0};
+            combinedTokenIndices[rayState.current_index++] = tokenIndex;
+
+            std::memcpy(&combinedTokenData[rayState.token_byte_current_idx], buffer_data + offset, sizeof(RayHistoryTokenControl));
+            rayState.token_byte_current_idx += sizeof(RayHistoryTokenControl);
+
+            offset += sizeof(RayHistoryTokenControl);
+        }
     }
 
     auto result =
@@ -533,28 +607,32 @@ void RraAsyncRayHistoryLoader::PreProcessDispatchData()
     dispatch_data.dispatch_ray_indices.resize(dispatch_size.width * dispatch_size.height * dispatch_size.depth);
 
     // Gather indices
-    for (int dispatch_coord_index{0}; dispatch_coord_index < dispatch_coord_count; ++dispatch_coord_index)
-    {
-        processed_dispatch_indices_++;
+    std::vector<uint32_t> dispatch_coord_indices(dispatch_coord_count);
+    std::iota(dispatch_coord_indices.begin(), dispatch_coord_indices.end(), 0);
+    std::for_each(std::execution::par, dispatch_coord_indices.begin(), dispatch_coord_indices.end(), [&](int dispatch_coord_index) {
+        // Count number of processed dispatch indices per thread and only periodically update that value to main thread to avoid unnecessary locking.
+        thread_local uint32_t local_processed_dispatch_indices{};
 
-        rta::RayHistory ray{rh->GetRayByIndex(dispatch_coord_index)};
+        if (local_processed_dispatch_indices++ == kLoadUpdateFrequency)
+        {
+            {
+                std::scoped_lock<std::mutex> plock(process_mutex_);
+                processed_dispatch_indices_ += local_processed_dispatch_indices;
+            }
+            local_processed_dispatch_indices = 0;
+        }
 
-        uint32_t x = 0;
-        uint32_t y = 0;
-        uint32_t z = 0;
-
-        uint32_t begin_token_index = 0;
-
+        // First pass. Just count rays for next pass.
+        rta::RayHistory          ray{rh->GetRayByIndex(dispatch_coord_index)};
+        DispatchCoordinateStats* coordinate_stats{nullptr};
         for (rta::RayHistoryToken token : ray)
         {
             if (token.IsBegin())
             {
-                auto begin_data = reinterpret_cast<const rta::RayHistoryTokenBeginDataV2*>(token.GetPayload());
-                x               = begin_data->dispatchRaysIndex[0];
-                y               = begin_data->dispatchRaysIndex[1];
-                z               = begin_data->dispatchRaysIndex[2];
-
-                RayDispatchBeginIdentifier begin_identifier = {(uint32_t)dispatch_coord_index, begin_token_index};
+                auto     begin_data = reinterpret_cast<const rta::RayHistoryTokenBeginDataV2*>(token.GetPayload());
+                uint32_t x          = begin_data->dispatchRaysIndex[0];
+                uint32_t y          = begin_data->dispatchRaysIndex[1];
+                uint32_t z          = begin_data->dispatchRaysIndex[2];
 
                 if (!dispatch_data.CoordinateIsValid(x, y, z))
                 {
@@ -563,31 +641,57 @@ void RraAsyncRayHistoryLoader::PreProcessDispatchData()
                     return;
                 }
 
-                dispatch_data.GetCoordinate(x, y, z).begin_identifiers.push_back(begin_identifier);
-                dispatch_data.GetCoordinate(x, y, z).stats.ray_count++;
+                coordinate_stats = &dispatch_data.GetCoordinate(x, y, z).stats;
 
-                std::scoped_lock<std::mutex> plock(process_mutex_);
-                total_ray_count_++;
+                // Initially just count rays to use in next pass to record data about them.
+                ++coordinate_stats->ray_count;
             }
 
-            if (token.GetType() == rta::RayHistoryTokenType::AnyHitStatus)
+            if (coordinate_stats)
             {
-                dispatch_data.GetCoordinate(x, y, z).stats.any_hit_count++;
-            }
+                if (token.GetType() == rta::RayHistoryTokenType::AnyHitStatus)
+                {
+                    ++coordinate_stats->any_hit_count;
+                }
 
-            if (token.GetType() == rta::RayHistoryTokenType::EndV2)
-            {
-                auto end_token = reinterpret_cast<const rta::RayHistoryTokenEndDataV2*>(token.GetPayload());
-                dispatch_data.GetCoordinate(x, y, z).stats.loop_iteration_count += end_token->numIterations;
-                dispatch_data.GetCoordinate(x, y, z).stats.intersection_count += end_token->numInstanceIntersections;
+                if (token.GetType() == rta::RayHistoryTokenType::EndV2)
+                {
+                    auto end_token = reinterpret_cast<const rta::RayHistoryTokenEndDataV2*>(token.GetPayload());
+                    coordinate_stats->loop_iteration_count += end_token->numIterations;
+                    coordinate_stats->intersection_count += end_token->numInstanceIntersections;
+                }
             }
-
-            begin_token_index++;
         }
-    }
+
+        // Second pass after we've counted number of rays in dispatch to pre-allocate begin identifiers.
+        uint32_t begin_token_index = 0;
+        for (rta::RayHistoryToken token : ray)
+        {
+            if (token.IsBegin())
+            {
+                auto                    begin_data      = reinterpret_cast<const rta::RayHistoryTokenBeginDataV2*>(token.GetPayload());
+                uint32_t                x               = begin_data->dispatchRaysIndex[0];
+                uint32_t                y               = begin_data->dispatchRaysIndex[1];
+                uint32_t                z               = begin_data->dispatchRaysIndex[2];
+                DispatchCoordinateData& coordinate_data = dispatch_data.GetCoordinate(x, y, z);
+
+                // For the first ray we encounter of a dispatch coordinate, we do one allocation for all the rays in this coordinate.
+                if (coordinate_data.begin_identifiers.empty())
+                {
+                    coordinate_data.begin_identifiers.reserve(coordinate_data.stats.ray_count);
+                    std::scoped_lock<std::mutex> plock(process_mutex_);
+                    total_ray_count_ += coordinate_data.stats.ray_count;
+                }
+
+                coordinate_data.begin_identifiers.emplace_back((uint32_t)dispatch_coord_index, begin_token_index);
+            }
+
+            ++begin_token_index;
+        }
+    });
 
     // Add data to the dispatch list.
-    dispatch_data_ = dispatch_data;
+    dispatch_data_ = std::move(dispatch_data);
 }
 
 void RraAsyncRayHistoryLoader::ProcessInvocationCounts()
@@ -597,31 +701,34 @@ void RraAsyncRayHistoryLoader::ProcessInvocationCounts()
         return;
     }
 
-    invocation_counts_.raygen_count = dim_x_ * dim_y_ * dim_z_;
+    {
+        std::scoped_lock<std::mutex> plock(process_mutex_);
+        invocation_counts_.raygen_count = dim_x_ * dim_y_ * dim_z_;
 
-    // This may change some day.
-    invocation_counts_.pixel_count = invocation_counts_.raygen_count;
+        // This may change some day.
+        invocation_counts_.pixel_count = invocation_counts_.raygen_count;
 
-    invocation_counts_.ray_count = total_ray_count_;
+        invocation_counts_.ray_count = total_ray_count_;
+    }
 
-    auto& rh = ray_history_trace_;
+    auto&              rh = ray_history_trace_;
+    RraRayHistoryStats local_stats{};  // Stats local to this thread, to be periodically synched with main thread.
 
     const int dispatch_coord_count{rh->GetRayCount(rta::RayHistoryTrace::ExcludeEmptyRays)};
+    uint32_t  loop_idx{0};
     for (int dispatch_coord_index{0}; dispatch_coord_index < dispatch_coord_count; ++dispatch_coord_index)
     {
         const rta::RayHistory& rta_ray{rh->GetRayByIndex(dispatch_coord_index)};
 
         for (const rta::RayHistoryToken& token : rta_ray)
         {
-            std::scoped_lock<std::mutex> plock(process_mutex_);
-
             if (token.GetType() == rta::RayHistoryTokenType::ProceduralIntersectionStatus)
             {
-                invocation_counts_.intersection_count++;
+                local_stats.intersection_count++;
             }
             else if (token.GetType() == rta::RayHistoryTokenType::AnyHitStatus)
             {
-                invocation_counts_.any_hit_count++;
+                local_stats.any_hit_count++;
             }
             else if (token.GetType() == rta::RayHistoryTokenType::EndV2)
             {
@@ -629,15 +736,27 @@ void RraAsyncRayHistoryLoader::ProcessInvocationCounts()
 
                 if (token.IsMiss())
                 {
-                    invocation_counts_.miss_count++;
+                    local_stats.miss_count++;
                 }
                 else
                 {
-                    invocation_counts_.closest_hit_count++;
+                    local_stats.closest_hit_count++;
                 }
 
-                invocation_counts_.loop_iteration_count += end_token->numIterations;
-                invocation_counts_.instance_intersection_count += end_token->numInstanceIntersections;
+                local_stats.loop_iteration_count += end_token->numIterations;
+                local_stats.instance_intersection_count += end_token->numInstanceIntersections;
+            }
+
+            // Periodically synch values with the main thread.
+            if (loop_idx++ % kLoadUpdateFrequency == 0)
+            {
+                std::scoped_lock<std::mutex> plock(process_mutex_);
+                invocation_counts_.intersection_count          = local_stats.intersection_count;
+                invocation_counts_.any_hit_count               = local_stats.any_hit_count;
+                invocation_counts_.miss_count                  = local_stats.miss_count;
+                invocation_counts_.closest_hit_count           = local_stats.closest_hit_count;
+                invocation_counts_.loop_iteration_count        = local_stats.loop_iteration_count;
+                invocation_counts_.instance_intersection_count = local_stats.instance_intersection_count;
             }
         }
     }

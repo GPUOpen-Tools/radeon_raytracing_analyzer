@@ -9,7 +9,9 @@
 #define RRA_RENDERER_SCENE_NODE_H_
 
 #include <unordered_set>
+#include <optional>
 #include "public/renderer_types.h"
+#include "util/stack_vector.h"
 
 namespace rra
 {
@@ -77,9 +79,11 @@ namespace rra
         /// @brief Construct the tree structure from BLAS.
         ///
         /// @param [in] blas_index The blas index.
+        /// @param [out] vertex_buffer The vertex buffer that triangles nodes will sub-allocate from.
+        /// @param [out] child_buffer The buffer to sub-allocate node children from.
         ///
         /// @returns A scene node.
-        static SceneNode* ConstructFromBlas(uint32_t blas_index);
+        static SceneNode* ConstructFromBlas(uint32_t blas_index, renderer::RraVertex* vertex_buffer, std::byte* child_buffer);
 
         /// @brief Construct the tree structure from TLAS.
         ///
@@ -162,11 +166,6 @@ namespace rra
         /// @param [out] intersected_nodes The list to add onto in case of intersection.
         void CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction, std::vector<SceneNode*>& intersected_nodes);
 
-        /// @brief Get instances of this node.
-        ///
-        /// @returns A list of instances.
-        std::vector<renderer::Instance> GetInstances() const;
-
         /// @brief Get the instance if there is one.
         ///
         /// The returned pointer should be used then immediately discarded. It's a pointer to an element
@@ -217,31 +216,29 @@ namespace rra
         /// @returns The parent of the node.
         SceneNode* GetParent() const;
 
-        /// @brief Adds nodes recursively to the traversal tree.
+        /// @brief Adds nodes and all children to traversal tree.
         ///
-        /// @param [out] node_to_address_map The mapping from node_id to the address that will end up in the tree.
+        /// Caller must reserve a sufficient capacity in TraversalTree::volumes before calling this function.
+        ///
+        /// @param [in] populate_vertex_buffer Whether or not TraversalTree::vertices should be written to.
         /// @param [out] traversal_tree The traversal tree to add onto.
-        ///
-        /// @returns The index address registered at the address buffer.
-        uint32_t AddToTraversalTree(renderer::TraversalTree& traversal_tree);
+        void AddToTraversalTree(bool populate_vertex_buffer, renderer::TraversalTree& traversal_tree);
 
         /// @brief For each triangle vertex, write to a bit specifying if it's split or not.
         ///
         /// @param [out] root The root node of the BLAS.
-        static void PopulateSplitVertexAttribute(SceneNode* root);
-
-        /// @brief Get the count of each primitive index in a node subtree.
-        ///
-        /// @param [out] tri_split_counts The primitive index counts unique by geometry.
-        void GetPrimitiveIndexCounts(std::unordered_map<uint64_t, uint32_t>& tri_split_counts);
+        /// @param [in]  geometry_offsets Geometry of each offset into primitive_counts.
+        /// @param [in]  primitive_count The number of primitives in the BLAS.
+        static void PopulateSplitVertexAttribute(SceneNode* root, const std::vector<uint32_t>& geometry_offsets, uint32_t primitive_count);
 
         /// @brief For each triangle vertex, write to a bit specifying if it's split or not.
         ///
-        /// @param [in] tri_split_counts The primitive index counts unique by geometry.
-        void PopulateSplitVertexAttribute(const std::unordered_map<uint64_t, uint32_t>& tri_split_counts);
+        /// @param [in]     geometry_offsets Geometry of each offset into primitive_counts.
+        /// @param [in/out] primitive_counts The number of duplicates of each primitive id / geometry id pair.
+        void PopulateSplitVertexAttribute(const std::vector<uint32_t>& geometry_offsets, std::vector<uint8_t>& primitive_counts);
 
         /// @brief Set whether or not this node is culled by the instance mask filter.
-        /// 
+        ///
         /// @param filtered Culled if true.
         void SetFiltered(bool filtered);
 
@@ -258,11 +255,12 @@ namespace rra
         /// @brief Construct the tree structure from BLAS.
         ///
         /// @param [in] blas_index The blas index.
-        /// @param [in] node_id The box index under this blas.
-        /// @param [in] depth The current depth for this node.
+        /// @param [in] root_id The id of the root BLAS node.
+        /// @param [out] vertex_buffer The buffer to sub-allocate triangle node vertices from.
+        /// @param [out] child_buffer The buffer to sub-allocate node children from.
         ///
         /// @returns A scene node.
-        static SceneNode* ConstructFromBlasNode(uint64_t blas_index, uint32_t node_id, uint32_t depth);
+        static SceneNode* ConstructFromBlasNode(uint64_t blas_index, uint32_t root_id, renderer::RraVertex* vertex_buffer, std::byte* child_buffer);
 
         /// @brief Appends the merged instance to the instance map.
         ///
@@ -273,19 +271,20 @@ namespace rra
         /// @param [in] scene The scene to collect rebraid siblings from.
         void AppendMergedInstanceToInstanceMap(renderer::Instance instance, renderer::InstanceMap& instance_map, const Scene* scene) const;
 
-        SceneNode*                       parent_ = nullptr;         ///< The parent node.
-        uint32_t                         node_id_;                  ///< The node id for this node.
-        uint32_t                         depth_           = 0;      ///< The depth of this node.
-        bool                             enabled_         = true;   ///< A flag to represent enablement of this node.
-        bool                             filtered_        = false;  ///< A flag to represent whether this node is disabled by being filtered.
-        bool                             visible_         = true;   ///< A flag to represent the visibility of this node.
-        bool                             selected_        = false;  ///< A flag to represent if this node is selected.
-        BoundingVolumeExtents            bounding_volume_ = {};     ///< The bounding volume of this node.
-        std::vector<SceneNode*>          child_nodes_;              ///< The child nodes of this node.
-        std::vector<renderer::Instance>  instances_;                ///< The instances that this node contains.
-        std::vector<renderer::RraVertex> vertices_;                 ///< The vertices that this node contains. Aligned by 3.
-        uint32_t                         primitive_index_ = 0;      ///< The primitive index of this node.
-        uint32_t                         geometry_index_  = 0;      ///< The geometry index of this node.
+        SceneNode*                        parent_ = nullptr;              ///< The parent node.
+        uint32_t                          node_id_;                       ///< The node id for this node.
+        uint32_t                          depth_              = 0;        ///< The depth of this node.
+        bool                              enabled_            = true;     ///< A flag to represent enablement of this node.
+        bool                              filtered_           = false;    ///< A flag to represent whether this node is disabled by being filtered.
+        bool                              visible_            = true;     ///< A flag to represent the visibility of this node.
+        bool                              selected_           = false;    ///< A flag to represent if this node is selected.
+        BoundingVolumeExtents             bounding_volume_    = {};       ///< The bounding volume of this node.
+        StackVector<SceneNode*, 8>        child_nodes_        = {};       ///< The child nodes of this node.
+        std::optional<renderer::Instance> instance_;                      ///< The optional instance that this node contains.
+        uint32_t                          vertex_count_    = 0;           ///< The number of vertices.
+        renderer::RraVertex*              vertices_        = nullptr;     ///< The vertices that this node contains. Aligned by 3.
+        uint32_t                          primitive_index_ = 0;           ///< The primitive index of this node.
+        uint32_t                          geometry_index_  = 0;           ///< The geometry index of this node.
     };
 
 }  // namespace rra

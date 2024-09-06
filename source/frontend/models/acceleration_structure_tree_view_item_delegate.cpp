@@ -8,6 +8,8 @@
 #include "models/acceleration_structure_tree_view_item_delegate.h"
 #include "models/acceleration_structure_tree_view_item.h"
 
+#include "qt_common/utils/qt_util.h"
+
 #include <QPainter>
 #include <QMouseEvent>
 #include <QApplication>
@@ -65,13 +67,14 @@ namespace rra
         auto text = item_data.display_name;
 
         // Make instance nodes with empty BLASes empty.
-        if (node && !node->GetInstances().empty() && RraBlasIsEmpty(node->GetInstances()[0].blas_index))
+        renderer::Instance* instance = node->GetInstance();
+        if (node && instance && RraBlasIsEmpty(instance->blas_index))
         {
             painter->setPen(Qt::red);
         }
         else
         {
-            painter->setPen(Qt::black);
+            painter->setPen(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color);
         }
 
         if (node && (!node->IsVisible() || !node->IsEnabled()))

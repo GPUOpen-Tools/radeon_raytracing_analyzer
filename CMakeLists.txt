@@ -15,7 +15,7 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 6)
+set(RRA_MINOR_VERSION 7)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()

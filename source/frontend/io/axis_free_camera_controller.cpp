@@ -13,6 +13,7 @@
 #include <glm/glm/gtx/euler_angles.hpp>
 
 #include "models/side_panels/view_model.h"
+#include "settings/settings.h"
 
 namespace rra
 {
@@ -191,6 +192,38 @@ namespace rra
         return false;
     }
 
+    void AxisFreeController::FitCameraParams(glm::vec3 position, glm::vec3 forward, glm::vec3 up, std::optional<float> opt_fov, std::optional<float> opt_speed)
+    {
+        RRA_UNUSED(up);
+        auto orientation = GetCameraOrientation();
+        auto camera      = GetCamera();
+        if (camera)
+        {
+            if (opt_fov)
+            {
+                camera->SetFieldOfView(opt_fov.value());
+            }
+            if (opt_speed)
+            {
+                camera->SetMovementSpeed(opt_speed.value());
+            }
+            glm::vec3 euler_angles{orientation.GetEulerByForward(forward)};
+            euler_angles = glm::radians(euler_angles);
+            rotation_    = glm::eulerAngleZYX(euler_angles.z, euler_angles.y, euler_angles.x);
+
+            camera->SetArcRadius(arc_radius_);
+            camera->SetArcCenterPosition(position + forward * camera->GetArcRadius());
+        }
+
+        updated_ = true;
+
+        if (view_model_)
+        {
+            view_model_->Update();
+        }
+
+    }
+
     void AxisFreeController::Pitch(float angle)
     {
         angle     = glm::radians(angle);
@@ -222,7 +255,7 @@ namespace rra
 
     uint32_t AxisFreeController::GetComboBoxIndex() const
     {
-        return 2;
+        return kControlStyleTypeAxisFree;
     }
 
     void AxisFreeController::ControlStyleChanged()

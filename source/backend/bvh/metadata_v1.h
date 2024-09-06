@@ -46,12 +46,10 @@ namespace dxr
             std::uint32_t id_low_    = 0;
             std::uint32_t id_high_   = 0;
             std::uint32_t byte_size_ = 0;  // == Size of meta data header == offset to real as header
-            std::uint32_t padding1   = 0;
-            std::uint32_t padding2   = 0;
-            std::uint32_t padding3   = 0;
-            std::uint32_t padding4   = 0;
-            std::uint32_t padding5   = 0;
-            std::uint32_t padding6   = 0;
+
+            std::uint32_t reserved0[18];  // Reserved
+            std::uint32_t reserved1[3];   // Reserved
+            std::uint32_t reserved2[3];   // Reserved
         };
 
     }  // namespace amd

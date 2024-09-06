@@ -27,18 +27,10 @@ namespace rra
 {
     namespace widget_util
     {
-        /// @brief Set a widget's background color.
+        /// @brief Apply standard styling for a given top level pane's scroll area.
         ///
-        /// @param [in] widget The widget to change background color.
-        /// @param [in] color  The new color.
-        void SetWidgetBackgroundColor(QWidget* widget, const QColor& color);
-
-        /// @brief Apply standard styling for a given top level pane.
-        ///
-        /// @param [in] root         The root widget.
-        /// @param [in] main_content The widget containing all content.
         /// @param [in] scroll_area  The scroll area.
-        void ApplyStandardPaneStyle(QWidget* root, QWidget* main_content, QScrollArea* scroll_area);
+        void ApplyStandardPaneStyle(QScrollArea* scroll_area);
 
         /// @brief Initialize an ArrowIconComboBox for single selection.
         ///

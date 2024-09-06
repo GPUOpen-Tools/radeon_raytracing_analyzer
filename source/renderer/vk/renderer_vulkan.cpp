@@ -13,6 +13,8 @@
 
 #include <cstring>
 
+#include "qt_common/utils/qt_util.h"
+
 #define FRUSTUM_CULLING_ENABLE 1  ///< A flag to determine if frustum culling is used or not.
 #define PROFILE_READY 0           ///< A flag to force the flags below to the optimal settings for profiling.
 
@@ -225,6 +227,15 @@ namespace rra
                 states_[current_frame_index] = current_state;
             }
 
+            // Update every frame even if force updates is false.
+            for (auto render_module : render_modules_)
+            {
+                if (render_module->IsEnabled())
+                {
+                    render_module->EveryFrameUpdate(&device_, current_frame_index);
+                }
+            };
+
             BeginRenderPass(cmd, RenderPassHint::kRenderPassHintResolve);
             EndRenderPass(cmd);
 
@@ -388,6 +399,9 @@ namespace rra
             scene_uniform_buffer_.screen_height = height_;
 
             scene_uniform_buffer_.count_as_fused_instances = scene_info_.fused_instances_enabled ? 1 : 0;
+
+            // Used by traversal shader for heatmap color brightness.
+            scene_uniform_buffer_.color_theme = QtCommon::QtUtils::ColorTheme::Get().GetColorTheme();
 
             device_.WriteToBuffer(scene_ubos_[frame_to_update].allocation, &scene_uniform_buffer_, sizeof(scene_uniform_buffer_));
         }

@@ -35,6 +35,7 @@ namespace rra
         SetModelData(kTlasPropertiesNumInstanceNodes, "-");
         SetModelData(kTlasPropertiesNumBlases, "-");
         SetModelData(kTlasPropertiesNumTriangles, "-");
+        SetModelData(kTlasPropertiesNumProceduralNodes, "-");
 
         SetModelData(kTlasPropertiesBuildFlagAllowUpdate, false);
         SetModelData(kTlasPropertiesBuildFlagAllowCompaction, false);
@@ -96,6 +97,12 @@ namespace rra
             SetModelData(kTlasPropertiesNumTriangles, rra::string_util::LocalizedValue(triangle_count));
         }
 
+         uint64_t procedural_node_count = 0;
+        if (RraTlasGetTotalProceduralNodeCount(tlas_index, &procedural_node_count) == kRraOk)
+        {
+            SetModelData(kTlasPropertiesNumProceduralNodes, rra::string_util::LocalizedValue(procedural_node_count));
+        }
+
         VkBuildAccelerationStructureFlagBitsKHR build_flags;
         if (RraTlasGetBuildFlags(tlas_index, &build_flags) == kRraOk)
         {
@@ -108,7 +115,7 @@ namespace rra
         uint32_t tlas_memory = 0;
         if (RraTlasGetSizeInBytes(tlas_index, &tlas_memory) == kRraOk)
         {
-            SetModelData(kTlasPropertiesMemoryTlas, rra::string_util::LocalizedValueMemory(static_cast<double>(tlas_memory), false, true ));
+            SetModelData(kTlasPropertiesMemoryTlas, rra::string_util::LocalizedValueMemory(static_cast<double>(tlas_memory), false, true));
         }
 
         uint64_t total_memory = 0;

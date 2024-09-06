@@ -10,6 +10,8 @@
 
 #if !defined(_WIN32)
 
+#include <stdio.h>
+
 /// errno_t defined so that the function prototypes match the Windows function prototypes.
 typedef int errno_t;
 

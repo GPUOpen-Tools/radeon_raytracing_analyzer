@@ -1,11 +1,13 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Triangles pane on the BLAS tab.
 //=============================================================================
 
 #include "views/blas/blas_triangles_pane.h"
+
+#include "public/rra_rtip_info.h"
 
 #include "managers/message_manager.h"
 #include "models/blas/blas_triangles_model.h"
@@ -115,6 +117,22 @@ void BlasTrianglesPane::showEvent(QShowEvent* event)
     }
 
     BasePane::showEvent(event);
+}
+
+void BlasTrianglesPane::OnTraceOpen()
+{
+    bool                   hide_triangle_verts = true;
+    rta::RayTracingIpLevel rtip_level{(rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel()};
+    if (rtip_level <= rta::RayTracingIpLevel::RtIp2_0)
+    {
+        hide_triangle_verts = false;
+    }
+
+    ui_->triangles_table_->setColumnHidden(rra::kBlasTrianglesColumnVertex0, hide_triangle_verts);
+    ui_->triangles_table_->setColumnHidden(rra::kBlasTrianglesColumnVertex1, hide_triangle_verts);
+    ui_->triangles_table_->setColumnHidden(rra::kBlasTrianglesColumnVertex2, hide_triangle_verts);
+
+    ui_->triangles_table_->setColumnHidden(rra::kBlasTrianglesColumnTriangleCount, !hide_triangle_verts);
 }
 
 void BlasTrianglesPane::OnTraceClose()

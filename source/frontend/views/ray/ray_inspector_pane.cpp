@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Ray inspector pane.
@@ -111,6 +111,13 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
     ui_->flags_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui_->flags_table_->setFocusPolicy(Qt::NoFocus);
     ui_->flags_table_->setSelectionMode(QAbstractItemView::NoSelection);
+
+    // Set the size of the legends.
+    const QSize legend_size = {20, 20};
+    ui_->ray_color_legend_->setFixedSize(legend_size);
+    ui_->selected_ray_color_legend_->setFixedSize(legend_size);
+    ui_->accept_first_hit_ray_legend_->setFixedSize(legend_size);
+    ui_->zero_mask_ray_legend_->setFixedSize(legend_size);
 
     UpdateColoringLegend();
 
@@ -567,13 +574,6 @@ void RayInspectorPane::UpdateColoringLegend()
     ui_->selected_ray_color_legend_->SetColor(InspectorGetQColorFromGLM(node_colors.selected_ray_color));
     ui_->accept_first_hit_ray_legend_->SetColor(InspectorGetQColorFromGLM(node_colors.shadow_ray_color));
     ui_->zero_mask_ray_legend_->SetColor(InspectorGetQColorFromGLM(node_colors.zero_mask_ray_color));
-
-    const QSize legend_size = {40, 40};
-
-    ui_->ray_color_legend_->setFixedSize(legend_size);
-    ui_->selected_ray_color_legend_->setFixedSize(legend_size);
-    ui_->accept_first_hit_ray_legend_->setFixedSize(legend_size);
-    ui_->zero_mask_ray_legend_->setFixedSize(legend_size);
 }
 
 void RayInspectorPane::MousePressed(QMouseEvent* mouse_event)

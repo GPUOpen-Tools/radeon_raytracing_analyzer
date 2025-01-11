@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a widget that implements a custom radio button.
@@ -53,7 +53,7 @@ void ColoredRadioButton::paintEvent(QPaintEvent* event)
 
     const qreal radio_button_height = GetSwitchHeight(font_metrics);
     const qreal radio_button_width  = radio_button_height;
-    const qreal half_height   = radio_button_height / 2;
+    const qreal half_height         = radio_button_height / 2;
     const qreal radio_button_radius = half_height;
 
     const qreal inner_circle_diameter          = radio_button_height * 0.8;

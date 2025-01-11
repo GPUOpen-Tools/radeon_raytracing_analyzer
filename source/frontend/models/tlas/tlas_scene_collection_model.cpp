@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS scene model.
@@ -78,7 +78,7 @@ namespace rra
         auto tlas_root_node = SceneNode::ConstructFromTlas(tlas_index);
 
         // Initialize the scene with the given node.
-        tlas_scene->Initialize(tlas_root_node);
+        tlas_scene->Initialize(tlas_root_node, tlas_index, true);
 
         return tlas_scene;
     }

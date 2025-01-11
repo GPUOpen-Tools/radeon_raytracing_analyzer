@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public API info interface.
@@ -20,7 +20,7 @@ extern "C" {
 const char* RraApiInfoGetApiName();
 
 /// @brief Get whether or not the captured application uses Vulkan.
-/// 
+///
 /// @return True if the captured application uses Vulkan, false otherwise.
 bool RraApiInfoIsVulkan();
 

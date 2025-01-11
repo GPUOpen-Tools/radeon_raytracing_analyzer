@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -188,7 +188,12 @@ endmacro()
 COMPILE_DXC_HLSL_SHADER(TraversalShader.hlsl VSMain vs_6_4 TraversalShader.vs.spv)
 COMPILE_DXC_HLSL_SHADER(TraversalShader.hlsl PSMain ps_6_4 TraversalShader.ps.spv)
 COMPILE_DXC_HLSL_SHADER(TraversalShader.hlsl CSMain cs_6_4 TraversalShader.cs.spv)
-COMPILE_DXC_HLSL_SHADER(TraversalShader.hlsl CSSubsample cs_6_4 TraversalShaderSubsample.cs.spv)
+COMPILE_DXC_HLSL_SHADER(rtip31/TraversalShaderOBB.hlsl VSMain vs_6_4 TraversalShaderOBB.vs.spv)
+COMPILE_DXC_HLSL_SHADER(rtip31/TraversalShaderOBB.hlsl PSMain ps_6_4 TraversalShaderOBB.ps.spv)
+COMPILE_DXC_HLSL_SHADER(rtip31/TraversalShaderOBB.hlsl CSMain cs_6_4 TraversalShaderOBB.cs.spv)
+COMPILE_DXC_HLSL_SHADER(rtip31/TraversalShaderOBB.hlsl CSSubsample cs_6_4 TraversalShaderSubsample.cs.spv)
+COMPILE_DXC_HLSL_SHADER(rtip31/GeometryColorPrimitiveStructure.hlsl VSMain vs_6_4 GeometryColorPrimitiveStructure.vs.spv)
+COMPILE_DXC_HLSL_SHADER(rtip31/GeometryColorPrimitiveStructure.hlsl PSMain ps_6_4 GeometryColorPrimitiveStructure.ps.spv)
 COMPILE_DXC_HLSL_SHADER(Clear.hlsl VSMain vs_6_4 Clear.vs.spv)
 COMPILE_DXC_HLSL_SHADER(Clear.hlsl PSMain ps_6_4 Clear.ps.spv)
 COMPILE_DXC_HLSL_SHADER(BoundingVolumeHierarchyWire.hlsl VSMain vs_6_4 BoundingVolumeHierarchyWire.vs.spv)
@@ -274,6 +279,12 @@ add_custom_target(
 
 # Add Shaders as a dependency to the project
 add_dependencies(${PROJECT_NAME} Shaders)
+
+if (WIN32)
+    install(DIRECTORY ${RRA_BINARY_DIR}/shaders DESTINATION . COMPONENT apps)
+elseif(LINUX)
+    install(DIRECTORY ${RRA_BINARY_DIR}/../shaders DESTINATION . COMPONENT apps)
+endif()
 
 # Copy the compiled shader binaries into the target output directories.
 IF (WIN32)

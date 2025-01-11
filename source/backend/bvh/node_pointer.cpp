@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a node pointer class.
@@ -8,6 +8,10 @@
 #include "node_pointer.h"
 
 #include "flags_util.h"
+#include "public/rra_rtip_info.h"
+#include "bvh/gpu_def.h"
+#include "public/rra_assert.h"
+#include "bvh/rtip31/ray_tracing_defs.h"
 
 namespace dxr
 {
@@ -25,9 +29,17 @@ namespace dxr
         }
 
         NodePointer::NodePointer(const NodeType type, const std::uint32_t address)
-            : type_(static_cast<std::uint32_t>(type))
-            , address_(address >> 6)
         {
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                rtip31_type_    = static_cast<std::uint32_t>(type);
+                rtip31_address_ = address >> 7;
+            }
+            else
+            {
+                type_    = static_cast<std::uint32_t>(type);
+                address_ = address >> 6;
+            }
         }
 
         NodePointer::NodePointer(const std::uint32_t pointer)
@@ -37,10 +49,17 @@ namespace dxr
 
         uint32_t NodePointer::GetByteOffset() const
         {
-            // The first 3-bits ([0-2]) of this address are zero as they are reserved for
-            // the node type. The shift is because we assume at least 64-byte (1 << 6)
-            // alignment of the address. Hence, the bits [3-5] can also be neglected here.
-            return address_ << 6;
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                return ExtractNodePointerOffset3_1(ptr_);
+            }
+            else
+            {
+                // The first 3-bits ([0-2]) of this address are zero as they are reserved for
+                // the node type. The shift is because we assume at least 64-byte (1 << 6)
+                // alignment of the address. Hence, the bits [3-5] can also be neglected here.
+                return GetShiftedAddress();
+            }
         }
 
         std::uint32_t NodePointer::CalculateParentLinkIndex(const std::uint32_t parent_data_size, const TriangleCompressionMode compression_mode) const
@@ -53,12 +72,19 @@ namespace dxr
             // The same with byte offset. To get the Gpu virtual address, we restore
             // the original address by shifting the value by 6 bits to the left. With this, we can
             // restore the 64-byte aligned virtual memory address.
-            return address_ << 6;
+            return GetShiftedAddress();
         }
 
         NodeType NodePointer::GetType() const
         {
-            return static_cast<NodeType>(type_);
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                return static_cast<NodeType>(rtip31_type_);
+            }
+            else
+            {
+                return static_cast<NodeType>(type_);
+            }
         }
 
         std::uint32_t NodePointer::GetID(const std::uint32_t offset) const
@@ -75,13 +101,17 @@ namespace dxr
             {
                 if (GetType() == NodeType::kAmdNodeBoxFp32)
                 {
-                    // return ptr_ >> 4 - 1;
-                    return byte_offset / kFp32BoxNodeSize;
+                    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() != rta::RayTracingIpLevel::RtIp3_1)
+                    {
+                        return byte_offset / kBvh8BoxNodeSize;
+                    }
+                    else
+                    {
+                        return byte_offset / kFp32BoxNodeSize;
+                    }
                 }
                 else
                 {
-                    // - 2 because of the AS header offset.
-                    //return ptr_ >> 3 - 2;
                     return byte_offset / kFp16BoxNodeSize;
                 }
             }
@@ -99,7 +129,7 @@ namespace dxr
         std::uint32_t NodePointer::GetParentByteOffset(const TriangleCompressionMode compression_mode) const
         {
             const auto          link_align_offset = (compression_mode == TriangleCompressionMode::kAmdTwoTriangleCompression) ? 1 : 0;
-            const std::uint32_t link_index_offset   = address_ << link_align_offset;
+            const std::uint32_t link_index_offset = GetAddress() << link_align_offset;
 
             auto compressed_prim_offset = 0;
             if (IsTriangleNode() && compression_mode == TriangleCompressionMode::kAmdTwoTriangleCompression)
@@ -115,7 +145,38 @@ namespace dxr
 
         bool NodePointer::IsTriangleNode() const
         {
-            return GetType() <= NodeType::kAmdNodeTriangle3;
+            bool is_triangle_node = GetType() <= NodeType::kAmdNodeTriangle3;
+
+            is_triangle_node = is_triangle_node || ((int)GetType() >= NODE_TYPE_TRIANGLE_4 && (int)GetType() <= NODE_TYPE_TRIANGLE_7);
+            return is_triangle_node;
+        }
+
+        uint32_t NodePointer::GetTrianglePairIndex() const
+        {
+            assert(IsTriangleNode());
+
+            switch ((uint32_t)GetType())
+            {
+            case (uint32_t)NodeType::kAmdNodeTriangle0:
+                return 0;
+            case (uint32_t)NodeType::kAmdNodeTriangle1:
+                return 1;
+            case (uint32_t)NodeType::kAmdNodeTriangle2:
+                return 2;
+            case (uint32_t)NodeType::kAmdNodeTriangle3:
+                return 3;
+            case NODE_TYPE_TRIANGLE_4:
+                return 4;
+            case NODE_TYPE_TRIANGLE_5:
+                return 5;
+            case NODE_TYPE_TRIANGLE_6:
+                return 6;
+            case NODE_TYPE_TRIANGLE_7:
+                return 7;
+            }
+
+            // Not a triangle node.
+            return 0xFFFF;
         }
 
         bool NodePointer::IsBoxNode() const
@@ -125,7 +186,13 @@ namespace dxr
 
         bool NodePointer::IsLeafNode() const
         {
-            return IsInstanceNode() || IsTriangleNode() || IsProceduralNode();
+            bool is_procedural_node = false;
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() != rta::RayTracingIpLevel::RtIp3_1)
+            {
+                is_procedural_node = GetType() == NodeType::kAmdNodeProcedural;
+            }
+
+            return IsInstanceNode() || IsTriangleNode() || is_procedural_node;
         }
 
         bool NodePointer::IsFp32BoxNode() const
@@ -143,11 +210,6 @@ namespace dxr
             return GetByteOffset() == dxr::amd::kAccelerationStructureHeaderSize;
         }
 
-        bool NodePointer::IsProceduralNode() const
-        {
-            return GetType() == NodeType::kAmdNodeProcedural;
-        }
-
         bool NodePointer::IsInstanceNode() const
         {
             return GetType() == NodeType::kAmdNodeInstance;
@@ -161,6 +223,30 @@ namespace dxr
         std::uint32_t NodePointer::GetRawPointer() const
         {
             return ptr_;
+        }
+
+        uint32_t NodePointer::GetAddress() const
+        {
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                return rtip31_address_ << 1;
+            }
+            else
+            {
+                return address_;
+            }
+        }
+
+        uint32_t NodePointer::GetShiftedAddress() const
+        {
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                return rtip31_address_ << 7;
+            }
+            else
+            {
+                return address_ << 6;
+            }
         }
 
     }  // namespace amd

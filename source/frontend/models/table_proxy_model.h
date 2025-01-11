@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a proxy filter that processes multiple columns.
@@ -60,14 +60,14 @@ namespace rra
         QModelIndex FindModelIndex(qulonglong lookup, int column) const;
 
         /// @brief Find a model index corresponding to the three passed in data items.
-        /// 
+        ///
         /// @param lookup0 The first value that must match.
         /// @param lookup1 The second value that must match.
         /// @param lookup2 The third value that must match.
         /// @param column0 The column to search for the first value in.
         /// @param column1 The column to search for the second value in.
         /// @param column2 The column to search for the third value in.
-        /// 
+        ///
         /// @return The model index containing the data.
         QModelIndex FindModelIndex(uint32_t lookup0, uint32_t lookup1, uint32_t lookup2, int column0, int column1, int column2) const;
 

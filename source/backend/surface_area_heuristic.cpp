@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Surface area heuristic calculations.
@@ -11,17 +11,22 @@
 #include <math.h>
 #include <numeric>
 #include <execution>
+#include <algorithm>
 
-#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 #include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
 #include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
 #include "bvh/dxr_definitions.h"
 #include "public/rra_assert.h"
 #include "public/rra_error.h"
+#include "public/rra_rtip_info.h"
 #include "rra_bvh_impl.h"
 #include "rra_blas_impl.h"
 #include "rra_data_set.h"
 #include "rra_tlas_impl.h"
+#include "bvh/rtip31/internal_node.h"
+#include "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
+#include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
+#include "bvh/rtip31/primitive_node.h"
 
 // External reference to the global dataset.
 extern RraDataSet data_set_;
@@ -132,20 +137,38 @@ namespace rra
     /// @param [in] node_offset    The offset into the interior nodes array.
     ///
     /// @return A reference to the array of child nodes.
-    static const std::array<dxr::amd::NodePointer, 4>& GetChildNodeArray(const dxr::amd::NodePointer root_node,
-                                                                         const std::vector<uint8_t>& interior_nodes,
-                                                                         uint32_t                    node_offset)
+    static std::array<dxr::amd::NodePointer, 8> GetChildNodeArray(const dxr::amd::NodePointer root_node,
+                                                                  const std::vector<uint8_t>& interior_nodes,
+                                                                  uint32_t                    node_offset)
     {
         RRA_ASSERT(root_node.IsBoxNode());
         if (root_node.IsFp32BoxNode())
         {
-            const dxr::amd::Float16BoxNode* box_node = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[node_offset]);
-            return box_node->GetChildren();
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                const auto                           node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[node_offset]);
+                std::array<dxr::amd::NodePointer, 8> children{};
+                node->DecodeChildrenOffsets(reinterpret_cast<uint32_t*>(children.data()));
+                return children;
+            }
+            else
+            {
+                const dxr::amd::Float32BoxNode*      box_node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[node_offset]);
+                std::array<dxr::amd::NodePointer, 8> children_padded{};
+                const auto&                          children = box_node->GetChildren();
+                std::copy(children.begin(), children.end(), children_padded.begin());
+
+                return children_padded;
+            }
         }
         else
         {
-            const dxr::amd::Float32BoxNode* box_node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[node_offset]);
-            return box_node->GetChildren();
+            const dxr::amd::Float16BoxNode*      box_node = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[node_offset]);
+            std::array<dxr::amd::NodePointer, 8> children_padded{};
+            const auto&                          children = box_node->GetChildren();
+            std::copy(children.begin(), children.end(), children_padded.begin());
+
+            return children_padded;
         }
     }
 
@@ -158,7 +181,7 @@ namespace rra
     /// @param [in] root_node The root node of the BLAS to start from.
     ///
     /// @return The surface area heuristic for the node passed in.
-    static float CalculateSAHForBlasNode(rta::EncodedRtIp11BottomLevelBvh* blas, const dxr::amd::NodePointer root_node)
+    static float CalculateSAHForBlasNode(rta::EncodedBottomLevelBvh* blas, const dxr::amd::NodePointer root_node)
     {
         float sah          = 0.0f;
         float sub_tree_sah = 0.0f;
@@ -176,14 +199,13 @@ namespace rra
             }
             const auto& child_array      = GetChildNodeArray(root_node, interior_nodes, node_offset);
             float       out_surface_area = 0.0f;
-            for (auto child_index = 0; child_index < 4; child_index++)
+            for (const auto& child_node : child_array)
             {
                 // find SAH for child nodes.
-                const auto child_node = child_array[child_index];
                 sub_tree_sah += CalculateSAHForBlasNode(blas, child_node);
                 if (RraBlasGetSurfaceAreaImpl(blas, &child_node, &out_surface_area) == kRraOk)
                 {
-                    total_child_area += static_cast<float>(out_surface_area);
+                    total_child_area += out_surface_area;
                 }
             }
 
@@ -191,7 +213,7 @@ namespace rra
             out_surface_area = 0.0;
             if (RraBlasGetSurfaceAreaImpl(blas, &root_node, &out_surface_area) == kRraOk)
             {
-                sah = total_child_area / (static_cast<float>(out_surface_area)) / 4.0f;
+                sah = 0.25f * (total_child_area / out_surface_area);
             }
 
             if (out_surface_area == 0.0)
@@ -238,10 +260,9 @@ namespace rra
 
             const auto& child_array      = GetChildNodeArray(root_node, interior_nodes, node_offset);
             float       out_surface_area = 0.0f;
-            for (auto child_index = 0; child_index < 4; child_index++)
+            for (const auto& child_node : child_array)
             {
                 // Find SAH for child nodes.
-                const auto child_node = child_array[child_index];
                 sub_tree_sah += CalculateSAHForTlasNode(tlas, child_node);
                 if (RraTlasGetSurfaceAreaImpl(tlas, &child_node, &out_surface_area) == kRraOk)
                 {
@@ -358,7 +379,7 @@ namespace rra
         return kRraOk;
     }
 
-    /// @brief Calculate the surface area heuristic for a given BLAS.
+    /// @brief Calculate the surface area heuristic for a given RtIp1.1 BLAS.
     ///
     /// @param [in] blas The bottom level acceleration structure index.
     ///
@@ -439,7 +460,7 @@ namespace rra
             }
 
             // Store the SAH back to the BLAS.
-            blas->SetLeafNodeSurfaceAreaHeuristic(node_index, sah);
+            blas->SetLeafNodeSurfaceAreaHeuristic(node_ptr.GetRawPointer(), sah);
         }
 
         // Iterate over the box nodes and calculate their SAH values.
@@ -452,16 +473,34 @@ namespace rra
         return kRraOk;
     }
 
+    /// @brief Calculate the surface area heuristic for a given RtIp3.1 BLAS.
+    ///
+    /// @param [in] blas The bottom level acceleration structure index.
+    ///
+    /// @returns Error code.
+    static RraErrorCode CalcBlasSAH(rta::EncodedRtIp31BottomLevelBvh* blas)
+    {
+        blas->ComputeSurfaceAreaHeuristic();
+        return kRraOk;
+    }
+
     /// @brief Calculate the surface area heuristic for a given TLAS.
     ///
     /// @param [in] tlas The top level acceleration structure.
-    static void CalcTlasSAH(rta::EncodedRtIp11TopLevelBvh* tlas)
+    static void CalcTlasSAH(rta::EncodedTopLevelBvh* tlas)
     {
         // Iterate over the box nodes and calculate their SAH values.
         // Top level node doesn't exist in the data so needs to be created. Assumed to be a Box32.
         dxr::amd::NodePointer root_node = dxr::amd::NodePointer(dxr::amd::NodeType::kAmdNodeBoxFp32, dxr::amd::kAccelerationStructureHeaderSize);
-        float                 sah       = CalculateSAHForTlasNode(tlas, root_node);
-        RRA_UNUSED(sah);
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+        {
+            // TODO: Implement this.
+        }
+        else
+        {
+            float sah = CalculateSAHForTlasNode((rta::EncodedRtIp11TopLevelBvh*)tlas, root_node);
+            RRA_UNUSED(sah);
+        }
     }
 
     /// @brief Recursive function to calculate the maximum surface area heuristic value for a given acceleration structure.
@@ -473,7 +512,7 @@ namespace rra
     /// @param [in]      root_node The root node of the acceleration to start from.
     /// @param [in]      tri_only  All non-triangle nodes will be ignored if this is true.
     /// @param [in, out] min_sah   The minimum surface area heuristic found.
-    static void GetMinimumSurfaceAreaHeuristicImpl(const rta::IEncodedRtIp11Bvh* bvh, const dxr::amd::NodePointer root_node, bool tri_only, float* min_sah)
+    static void GetMinimumSurfaceAreaHeuristicImpl(const rta::IBvh* bvh, const dxr::amd::NodePointer root_node, bool tri_only, float* min_sah)
     {
         if (root_node.IsTriangleNode() || !tri_only)
         {
@@ -490,9 +529,20 @@ namespace rra
         {
             const auto  node_offset    = root_node.GetByteOffset() - bvh->GetHeader().GetBufferOffsets().interior_nodes;
             const auto& interior_nodes = bvh->GetInteriorNodesData();
+            uint32_t    child_count{};
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                const auto node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[node_offset]);
+                child_count     = node->ValidChildCount();
+            }
+            else
+            {
+                const dxr::amd::Float32BoxNode* box_node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[node_offset]);
+                child_count                              = box_node->GetValidChildCount();
+            }
 
             const auto& child_array = GetChildNodeArray(root_node, interior_nodes, node_offset);
-            for (auto child_index = 0; child_index < 4; child_index++)
+            for (uint32_t child_index = 0; child_index < child_count; child_index++)
             {
                 // Find SAH for child nodes.
                 const auto& child_node = child_array[child_index];
@@ -511,11 +561,11 @@ namespace rra
     /// @param [in]      tri_only   All non-triangle nodes will be ignored if this is true.
     /// @param [in, out] total_sah  The total (summed) surface area heuristic value.
     /// @param [in, out] node_count The number of nodes processed.
-    static void GetTotalSurfaceAreaHeuristicImpl(const rta::IEncodedRtIp11Bvh* bvh,
-                                                 const dxr::amd::NodePointer   root_node,
-                                                 bool                          tri_only,
-                                                 float*                        total_sah,
-                                                 int32_t*                      node_count)
+    static void GetTotalSurfaceAreaHeuristicImpl(const rta::IBvh*            bvh,
+                                                 const dxr::amd::NodePointer root_node,
+                                                 bool                        tri_only,
+                                                 float*                      total_sah,
+                                                 int32_t*                    node_count)
     {
         if (root_node.IsTriangleNode() || !tri_only)
         {
@@ -535,11 +585,23 @@ namespace rra
             const auto& interior_nodes = bvh->GetInteriorNodesData();
             assert(node_offset < interior_nodes.size());
 
+            uint32_t child_count{};
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                const auto node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[node_offset]);
+                child_count     = node->ValidChildCount();
+            }
+            else
+            {
+                const dxr::amd::Float32BoxNode* box_node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[node_offset]);
+                child_count                              = box_node->GetValidChildCount();
+            }
+
             const auto& child_array = GetChildNodeArray(root_node, interior_nodes, node_offset);
-            for (auto child_index = 0; child_index < 4; child_index++)
+            for (uint32_t child_index = 0; child_index < child_count; child_index++)
             {
                 // Find SAH for child nodes.
-                const auto child_node = child_array[child_index];
+                const auto& child_node = child_array[child_index];
                 GetTotalSurfaceAreaHeuristicImpl(bvh, child_node, tri_only, total_sah, node_count);
             }
         }
@@ -548,40 +610,62 @@ namespace rra
     RraErrorCode CalculateSurfaceAreaHeuristics(RraDataSet& data_set)
     {
         // Calculate BLAS SAH.
-        const auto& bottom_level_bvhs = data_set.bvh_bundle->GetBottomLevelBvhs();
+        const auto&           bottom_level_bvhs = data_set.bvh_bundle->GetBottomLevelBvhs();
         std::vector<uint32_t> blas_indices(bottom_level_bvhs.size());
         std::iota(blas_indices.begin(), blas_indices.end(), 0);
 
         std::for_each(std::execution::par, blas_indices.begin(), blas_indices.end(), [&](uint32_t blas_index) {
-            rta::EncodedRtIp11BottomLevelBvh* blas = dynamic_cast<rta::EncodedRtIp11BottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
-            if (blas == nullptr)
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
             {
-                return;
+                rta::EncodedRtIp31BottomLevelBvh* blas = (rta::EncodedRtIp31BottomLevelBvh*)bottom_level_bvhs[blas_index].get();
+                if (blas == nullptr)
+                {
+                    return;
+                }
+                CalcBlasSAH(blas);
             }
-
-            CalcBlasSAH(blas);
+            else
+            {
+                rta::EncodedRtIp11BottomLevelBvh* blas = (rta::EncodedRtIp11BottomLevelBvh*)bottom_level_bvhs[blas_index].get();
+                if (blas == nullptr)
+                {
+                    return;
+                }
+                CalcBlasSAH(blas);
+            }
         });
-
 
         // Calculate the SAH for each TLAS.
         // The leaf nodes here will be an instance node/BLAS.
-        const auto& top_level_bvhs = data_set.bvh_bundle->GetTopLevelBvhs();
+        const auto&           top_level_bvhs = data_set.bvh_bundle->GetTopLevelBvhs();
         std::vector<uint32_t> tlas_indices(top_level_bvhs.size());
         std::iota(blas_indices.begin(), blas_indices.end(), 0);
 
         std::for_each(std::execution::par, tlas_indices.begin(), tlas_indices.end(), [&](uint32_t tlas_index) {
-            rta::EncodedRtIp11TopLevelBvh* tlas = dynamic_cast<rta::EncodedRtIp11TopLevelBvh*>(&(*top_level_bvhs[tlas_index]));
-            if (tlas == nullptr)
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
             {
-                return;
+                rta::EncodedRtIp31TopLevelBvh* tlas = (rta::EncodedRtIp31TopLevelBvh*)top_level_bvhs[tlas_index].get();
+                if (tlas == nullptr)
+                {
+                    return;
+                }
+                CalcTlasSAH(tlas);
             }
-            CalcTlasSAH(tlas);
+            else
+            {
+                rta::EncodedRtIp11TopLevelBvh* tlas = (rta::EncodedRtIp11TopLevelBvh*)top_level_bvhs[tlas_index].get();
+                if (tlas == nullptr)
+                {
+                    return;
+                }
+                CalcTlasSAH(tlas);
+            }
         });
 
         return kRraOk;
     }
 
-    float GetMinimumSurfaceAreaHeuristic(const rta::IEncodedRtIp11Bvh* bvh, const dxr::amd::NodePointer node_ptr, bool tri_only)
+    float GetMinimumSurfaceAreaHeuristic(const rta::IBvh* bvh, const dxr::amd::NodePointer node_ptr, bool tri_only)
     {
         float min_sah = 1.0f;
         GetMinimumSurfaceAreaHeuristicImpl(bvh, node_ptr, tri_only, &min_sah);
@@ -589,7 +673,7 @@ namespace rra
         return min_sah;
     }
 
-    float GetAverageSurfaceAreaHeuristic(const rta::IEncodedRtIp11Bvh* bvh, const dxr::amd::NodePointer node_ptr, bool tri_only)
+    float GetAverageSurfaceAreaHeuristic(const rta::IBvh* bvh, const dxr::amd::NodePointer node_ptr, bool tri_only)
     {
         float   total      = 0.0f;
         int32_t node_count = 0;

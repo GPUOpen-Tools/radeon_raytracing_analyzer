@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the selection rendering module.
@@ -318,8 +318,7 @@ namespace rra::renderer
             direction.type                    = 1;
             glm::vec4 screen_mapped_direction = view_projection * glm::vec4(ray.origin + ray.direction, 1.0f);
             screen_mapped_direction /= screen_mapped_direction.w;
-            glm::vec4 screen_mapped_direction_extension =
-                view_projection * glm::vec4(ray.origin + ray.direction - (ray.direction * 0.01f), 1.0f);
+            glm::vec4 screen_mapped_direction_extension = view_projection * glm::vec4(ray.origin + ray.direction - (ray.direction * 0.01f), 1.0f);
             screen_mapped_direction_extension /= screen_mapped_direction_extension.w;
             direction.position     = {screen_mapped_direction.x, screen_mapped_direction.y};
             direction.aspect_ratio = screen_size.x / screen_size.y;
@@ -589,7 +588,7 @@ namespace rra::renderer
         // Draw deselected rays.
         uint32_t first_ray_outline{frame_context_->scene_info->first_ray_outline};
         uint32_t first_ray_outline_adjusted =
-            first_ray_outline - rays_in_other_tlas_;  // Ray buffer has removed rays from other TLASes, so subtract that from first index.
+            first_ray_outline - rays_in_other_tlas_;                 // Ray buffer has removed rays from other TLASes, so subtract that from first index.
         uint32_t deselected_ray_count = first_ray_outline_adjusted;  // The deselected rays are grouped contiguously before the ray outlines.
         vkCmdSetLineWidth(frame_context_->command_buffer, 5.0f);
         vkCmdDraw(frame_context_->command_buffer, 2, deselected_ray_count, 0, 0);

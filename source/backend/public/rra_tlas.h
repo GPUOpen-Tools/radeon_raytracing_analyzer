@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public TLAS interface.
@@ -84,6 +84,26 @@ RraErrorCode RraTlasGetChildNodes(uint64_t tlas_index, uint32_t parent_node, uin
 ///         kRraErrorInvalidChildNode if the child node is invalid. (Meaning there may be more child nodes)
 ///         kRraErrorIndexOutOfRange if the child node index is out of range.
 RraErrorCode RraTlasGetChildNodePtr(uint64_t tlas_index, uint32_t parent_node, uint32_t child_index, uint32_t* out_node_ptr);
+
+/// @brief Get name of the node provided.
+///
+/// This is encoded in the node data passed in.
+///
+/// @param [in]  node_ptr    The encoded node pointer.
+/// @param [in]  out_name    The text string of the node name.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetNodeName(uint32_t node_ptr, const char** out_name);
+
+/// @brief Get tooltip of the node provided.
+///
+/// This is encoded in the node data passed in.
+///
+/// @param [in]  node_ptr    The encoded node pointer.
+/// @param [in]  out_tooltip The tooltip text string of the node name. Can be empty string if no tooltip required.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetNodeNameToolTip(uint32_t node_ptr, const char** out_tooltip);
 
 /// @brief Get the base address for a given node.
 ///
@@ -323,7 +343,7 @@ RraErrorCode RraTlasGetUniqueTriangleCount(uint64_t tlas_index, uint64_t* out_co
 ///
 /// @param tlas_index The index of the TLAS.
 /// @param out_count  The total procedural node count.
-/// 
+///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetTotalProceduralNodeCount(uint64_t tlas_index, uint64_t* out_count);
 
@@ -367,6 +387,24 @@ RraErrorCode RraTlasGetInstanceFlags(uint64_t tlas_index, uint32_t node_ptr, uin
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetFusedInstancesEnabled(uint64_t tlas_index, bool* out_enabled);
+
+/// @brief Get the index of the node's OBB.
+///
+/// @param [in]  tlas_index   The index of the TLAS to use.
+/// @param [in]  node_ptr     The node of interest.
+/// @param [out] out_rotation A pointer to 9 floats to have the column-major matrix written to.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetNodeObbIndex(uint64_t tlas_index, uint32_t node_ptr, uint32_t* obb_index);
+
+/// @brief Get the orientation of the node's OBB.
+///
+/// @param [in]  tlas_index   The index of the TLAS to use.
+/// @param [in]  node_ptr     The node of interest.
+/// @param [out] out_rotation A pointer to 9 floats to have the column-major matrix written to.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32_t node_ptr, float* out_rotation);
 
 #ifdef __cplusplus
 }

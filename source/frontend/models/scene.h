@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Scene class.
@@ -108,7 +108,9 @@ namespace rra
         /// @brief Initialize the Scene with the input mesh and instance info.
         ///
         /// @param [in] root_node The root node for this scene.
-        void Initialize(SceneNode* root_node);
+        /// @param [in] bvh_index The index of the BVH for this scene.
+        /// @param [in] root_node Whether this scene is a TLAS or BLAS.
+        void Initialize(SceneNode* root_node, uint64_t bvh_index, bool is_tlas);
 
         /// @brief Get the mesh instances map.
         ///
@@ -231,7 +233,7 @@ namespace rra
         /// @param [in] ray_direction The direction of the ray.
         ///
         /// @returns The nodes that has their bounding volumes intersected by this ray.
-        std::vector<SceneNode*> CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction);
+        std::vector<SceneNode*> CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction) const;
 
         /// @brief Cast a ray and report closest distance.
         ///
@@ -239,7 +241,7 @@ namespace rra
         /// @param [in] ray_direction The direction of the ray.
         ///
         /// @returns The closest distance to the origin.
-        SceneClosestHit CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction);
+        SceneClosestHit CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction) const;
 
         /// @brief Get node by id.
         ///
@@ -402,13 +404,12 @@ namespace rra
         VertexList                                    custom_triangles_;                  ///< A list of custom triangles in the scene.
         uint32_t                                      most_recent_selected_node_id_ = 0;  ///< The most recent selected node id.
         static bool                                   multi_select_;                      ///< Allows multiple nodes to be selected if true.
-        renderer::InstanceMap                         cached_instance_map_{};  ///< Saved instance map of all instances, used when frustum culling is disabled.
         std::vector<std::vector<SceneNode*>> rebraid_siblings_{};  ///< The ith index contains all instances with index i, indicating they're rebraid siblings.
         std::unordered_map<uint64_t, std::vector<SceneNode*>>
             split_triangle_siblings_{};  ///< The key is a combination of geometry index and triangle index, and the value is all the siblings.
         std::vector<SceneNode*>          instance_nodes_;  ///< The instances of the all the nodes in this scene by instance index.
         std::vector<renderer::RraVertex> vertices_{};
-        std::vector<std::byte> child_nodes_buffer_{};
+        std::vector<std::byte>           child_nodes_buffer_{};
 
         // Using a map instead of a vector since only the visible node IDs are included in the list.
         std::unordered_map<uint32_t, uint32_t> custom_triangle_map_{};  ///< Contains pairs (node_id, custom_triangles_ index) of all visible triangle nodes.
@@ -416,6 +417,9 @@ namespace rra
 
         uint32_t depth_range_lower_bound_ = 0;  ///< The lower bound for the depth range.
         uint32_t depth_range_upper_bound_ = 0;  ///< The upper bound for the depth range.
+
+        uint64_t bvh_index_ = {};  ///< The BVH index of this scene.
+        bool     is_tlas_   = {};  ///< True if this is a TLAS scene, false if it's a BLAS scene.
 
         // Static so that it monotonically increases across all scenes.
         // This prevents problems when storing last scene iteration and switching scenes.

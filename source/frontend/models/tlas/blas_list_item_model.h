@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the BLAS list item model.
@@ -24,22 +24,22 @@ namespace rra
     /// @brief Structure describing the statistics needed for the BLAS list pane.
     struct BlasListStatistics
     {
-        uint64_t                                address;                ///< The base address.
-        VkBuildAccelerationStructureFlagBitsKHR build_flags;            ///< The build flags used to build the BVH.
-        uint64_t                                instance_count;         ///< The instance count.
-        uint64_t                                node_count;             ///< The total number of nodes.
-        uint64_t                                box_count;              ///< The number of box (internal) nodes.
-        uint32_t                                box32_count;            ///< The number of box-32 nodes.
-        uint32_t                                box16_count;            ///< The number of box-16 nodes.
-        uint32_t                                triangle_node_count;    ///< The number of triangle nodes.
-        uint32_t                                procedural_node_count;  ///< The number of procedural nodes.
-        uint32_t                                memory_usage;           ///< The amount of memory this BLAS uses.
-        float                                   root_sah;               ///< The root node surface area heuristic value.
-        float                                   max_sah;                ///< The maximum surface area heuristic value in the BVH.
-        float                                   mean_sah;               ///< The average surface area heuristic value in the BVH.
-        uint32_t                                max_depth;              ///< The maximum tree depth.
-        uint32_t                                avg_depth;              ///< The average tree depth.
-        uint64_t                                blas_index;             ///< The BLAS index.
+        uint64_t                                address;      ///< The base address.
+        VkBuildAccelerationStructureFlagBitsKHR build_flags;  ///< The build flags used to build the BVH.
+        uint64_t instance_count;         ///< The instance count.
+        uint64_t node_count;             ///< The total number of nodes.
+        uint64_t box_count;              ///< The number of box (internal) nodes.
+        uint32_t box32_count;            ///< The number of box-32 nodes.
+        uint32_t box16_count;            ///< The number of box-16 nodes.
+        uint32_t triangle_node_count;    ///< The number of triangle nodes.
+        uint32_t procedural_node_count;  ///< The number of procedural nodes.
+        uint32_t memory_usage;           ///< The amount of memory this BLAS uses.
+        float    root_sah;               ///< The root node surface area heuristic value.
+        float    max_sah;                ///< The maximum surface area heuristic value in the BVH.
+        float    mean_sah;               ///< The average surface area heuristic value in the BVH.
+        uint32_t max_depth;              ///< The maximum tree depth.
+        uint32_t avg_depth;              ///< The average tree depth.
+        uint64_t blas_index;             ///< The BLAS index.
     };
 
     /// @brief Column Id's for the fields in the acceleration structure list.

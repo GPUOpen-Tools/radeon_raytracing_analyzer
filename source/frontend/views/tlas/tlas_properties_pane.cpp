@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS properties pane.
@@ -10,6 +10,7 @@
 #include "managers/message_manager.h"
 #include "models/tlas/tlas_properties_model.h"
 #include "views/widget_util.h"
+#include "public/rra_rtip_info.h"
 
 TlasPropertiesPane::TlasPropertiesPane(QWidget* parent)
     : BasePane(parent)
@@ -48,5 +49,9 @@ TlasPropertiesPane::~TlasPropertiesPane()
 
 void TlasPropertiesPane::SetTlasIndex(uint64_t tlas_index)
 {
+    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+    {
+        ui_->label_num_box32_nodes_->setText("Number of Bvh8 nodes:");
+    }
     model_->Update(tlas_index);
 }

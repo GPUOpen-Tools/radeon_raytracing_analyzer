@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for an instance node class.
@@ -111,7 +111,7 @@ namespace dxr
 
     void InstanceDesc::SetInstancePtr(const std::uint64_t instance_base_pointer)
     {
-        bottom_level_bvh_address_low_           = static_cast<std::uint32_t>(instance_base_pointer);
+        bottom_level_bvh_address_low_            = static_cast<std::uint32_t>(instance_base_pointer);
         bottom_level_bvh_address_and_flags_high_ = instance_base_pointer >> 32;
     }
 
@@ -203,7 +203,8 @@ namespace dxr
 
         bool InstanceNode::IsInactive() const
         {
-            return desc_.GetBottomLevelBvhGpuVa(dxr::InstanceDescType::kDecoded) == 0 || extra_data_.GetBottomLevelBvhMetaDataSize() == 0 || desc_.GetMask() == 0;
+            return desc_.GetBottomLevelBvhGpuVa(dxr::InstanceDescType::kDecoded) == 0 || extra_data_.GetBottomLevelBvhMetaDataSize() == 0 ||
+                   desc_.GetMask() == 0;
         }
 
     }  // namespace amd

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ASIC info interface.
@@ -102,14 +102,14 @@ RraErrorCode RraAsicInfoGetVideoMemoryBusWidth(int32_t* out_bus_width)
 
 RraErrorCode RraAsicInfoGetRaytracingVersion(uint16_t* out_version_major, uint16_t* out_version_minor)
 {
-    const rta::IEncodedRtIp11Bvh* tlas = RraTlasGetTlasFromTlasIndex(0);
+    const rta::IBvh* tlas = RraTlasGetTlasFromTlasIndex(0);
     if (tlas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
 
-    const rta::IRtIp11AccelerationStructureHeader& header  = tlas->GetHeader();
-    rta::RayTracingBinaryVersion                   version = header.GetGpuRtDriverInterfaceVersion();
+    const rta::IRtIpCommonAccelerationStructureHeader& header  = tlas->GetHeader();
+    rta::RayTracingBinaryVersion                       version = header.GetGpuRtDriverInterfaceVersion();
 
     *out_version_major = version.GetMajor();
     *out_version_minor = version.GetMinor();

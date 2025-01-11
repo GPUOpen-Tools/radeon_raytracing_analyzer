@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific top level acceleration structure
@@ -11,19 +11,19 @@
 
 #include <unordered_map>
 
-#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
+#include "bvh/rtip_common/encoded_top_level_bvh.h"
 #include "bvh/node_types/instance_node.h"
 
 namespace rta
 {
-    class EncodedRtIp11TopLevelBvh final : public IEncodedRtIp11Bvh
+    class EncodedRtIp11TopLevelBvh final : public EncodedTopLevelBvh
     {
     public:
         // Global identifier of tlas dump in chunk files.
         static constexpr const char* kChunkIdentifier = "GpuEncTlasDump";
 
         /// @brief Default constructor.
-        EncodedRtIp11TopLevelBvh() = default;
+        EncodedRtIp11TopLevelBvh();
 
         /// @brief Destructor.
         virtual ~EncodedRtIp11TopLevelBvh();
@@ -66,17 +66,6 @@ namespace rta
                                        const char* const                   chunk_identifier,
                                        const BvhBundleReadOption           import_option) override;
 
-        /// @brief Replace all absolute references with relative references.
-        ///
-        /// This includes replacing absolute VA's with index values for quick lookup.
-        ///
-        /// @param [in] reference_map A map of virtual addresses to the acceleration structure index.
-        /// @param [in] map_self If true, the map is the same type as the acceleration structure ie a BLAS using the BLAS mapping.
-        /// Setting to false can be used when a TLAS needs to use a BLAS mapping to fix up the instance nodes.
-        void SetRelativeReferences(const std::unordered_map<GpuVirtualAddress, std::uint64_t>& reference_map,
-                                   bool                                                        map_self,
-                                   std::unordered_set<GpuVirtualAddress>&                      missing_set) override;
-
         /// @brief Do the post-load step.
         ///
         /// This will be called once all the acceleration structures are loaded and fixed up. Tasks here include
@@ -100,7 +89,7 @@ namespace rta
         /// @brief Get the memory size for all the BLASes referenced by this TLAS.
         ///
         /// @return The total memory for all referenced BLASes, in bytes.
-        uint64_t GetReferencedBlasMemorySize() const;
+        virtual uint64_t GetReferencedBlasMemorySize() const override;
 
         /// @brief Get the total triangle count for this TLAS.
         ///
@@ -111,19 +100,14 @@ namespace rta
         /// the instance node references.
         ///
         /// @return The total number of triangles.
-        uint64_t GetTotalTriangleCount() const;
-
-        /// @brief Get the total procedural node count.
-        /// 
-        /// @return The total procedural node count.
-        uint64_t GetTotalProceduralNodeCount() const;
+        virtual uint64_t GetTotalTriangleCount() const override;
 
         /// @brief Get the unique triangle count for this TLAS.
         ///
         /// This is the sum of triangles in each BLAS referenced by the TLAS.
         ///
         /// @return The number unique of triangles.
-        uint64_t GetUniqueTriangleCount() const;
+        virtual uint64_t GetUniqueTriangleCount() const override;
 
         /// @brief Get the instance node for a given blas index and instance index.
         ///
@@ -146,6 +130,32 @@ namespace rta
         /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
         void SetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic);
 
+        /// @brief Build the list for the number of instances of each BLAS.
+        ///
+        /// @return true if the build succeeded, false if error.
+        virtual bool BuildInstanceList() override;
+
+        /// @brief Replace all absolute references with relative references.
+        ///
+        /// This includes replacing absolute VA's with index values for quick lookup.
+        ///
+        /// @param [in] reference_map A map of virtual addresses to the acceleration structure index.
+        /// @param [in] map_self If true, the map is the same type as the acceleration structure ie a BLAS using the BLAS mapping.
+        /// Setting to false can be used when a TLAS needs to use a BLAS mapping to fix up the instance nodes.
+        virtual void SetRelativeReferences(const std::unordered_map<GpuVirtualAddress, std::uint64_t>& reference_map,
+                                           bool                                                        map_self,
+                                           std::unordered_set<GpuVirtualAddress>&                      missing_set) override;
+
+        /// @brief Get the parent node of the node passed in.
+        ///
+        /// @param [in] node_ptr The node whose parent is to be found.
+        ///
+        /// @return The parent node. If the node passed in is the root node, the
+        /// parent node will be an invalid node.
+        virtual dxr::amd::NodePointer GetParentNode(const dxr::amd::NodePointer* node_ptr) const;
+
+        std::vector<std::uint8_t> instance_node_data_ = {};  ///< The list of instance nodes.
+
     private:
         /// @brief Get the size of an instance node.
         ///
@@ -161,19 +171,10 @@ namespace rta
         /// @return The buffer size.
         std::uint64_t GetBufferByteSizeImpl(const ExportOption export_option) const override;
 
-        /// @brief Build the list for the number of instances of each BLAS.
-        ///
-        /// @return true if the build succeeded, false if error.
-        bool BuildInstanceList();
-
         /// @brief Derived class implementation of GetInactiveInstanceCount().
         ///
         /// @return The number of inactive instances.
         virtual uint64_t GetInactiveInstanceCountImpl() const override;
-
-        std::vector<std::uint8_t>                                        instance_node_data_  = {};  ///< The list of instance nodes.
-        std::unordered_map<uint64_t, std::vector<dxr::amd::NodePointer>> instance_list_       = {};  ///< A map of BLAS index to list of instances of that BLAS.
-        std::vector<float> instance_surface_area_heuristic_                                   = {};  ///< Surface area heuristic values for the instances.
     };
 }  // namespace rta
 

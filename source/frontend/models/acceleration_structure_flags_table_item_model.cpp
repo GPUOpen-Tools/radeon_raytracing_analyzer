@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS list item model.
@@ -86,7 +86,8 @@ namespace rra
             switch (index.column())
             {
             case kInstanceFlagsTableColumnFlag:
-                return QVariant(row_data_[row].checked ? QColor(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color) : QColor(Qt::gray));
+                return QVariant(row_data_[row].checked ? QColor(QtCommon::QtUtils::ColorTheme::Get().GetCurrentThemeColors().graphics_scene_text_color)
+                                                       : QColor(Qt::gray));
             }
         }
         return QVariant();

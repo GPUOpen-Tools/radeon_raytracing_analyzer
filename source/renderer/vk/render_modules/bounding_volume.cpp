@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BBox module.
@@ -146,6 +146,25 @@ namespace rra
             };
 
             attribute_descriptions = {vertex_position_attrib, instance_min_attrib, instance_max_attrib, instance_metadata_attrib};
+
+            VkVertexInputAttributeDescription instance_rotation_0_attrib = {
+                4, kInstanceBufferBindId, VK_FORMAT_R32G32B32_SFLOAT, offsetof(BoundingVolumeInstance, rotation)  // Location 4: Rotation column 0
+            };
+            VkVertexInputAttributeDescription instance_rotation_1_attrib = {
+                5,
+                kInstanceBufferBindId,
+                VK_FORMAT_R32G32B32_SFLOAT,
+                offsetof(BoundingVolumeInstance, rotation) + sizeof(glm::vec3)  // Location 5: Rotation column 1
+            };
+            VkVertexInputAttributeDescription instance_rotation_2_attrib = {
+                6,
+                kInstanceBufferBindId,
+                VK_FORMAT_R32G32B32_SFLOAT,
+                offsetof(BoundingVolumeInstance, rotation) + 2 * sizeof(glm::vec3)  // Location 6: Rotation column 2
+            };
+            attribute_descriptions.push_back(instance_rotation_0_attrib);
+            attribute_descriptions.push_back(instance_rotation_1_attrib);
+            attribute_descriptions.push_back(instance_rotation_2_attrib);
 
             VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
             vertex_input_state_info.sType                                = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

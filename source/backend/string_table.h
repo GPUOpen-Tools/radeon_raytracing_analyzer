@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for StringTables (a RDF chunk type).
@@ -62,6 +62,18 @@ namespace rra
             return string_tables_.at(table_id);
         }
 
+        const std::string GetAccelStructLabel(uint64_t accel_struct_id) const
+        {
+            auto it = accel_struct_labels_.find(accel_struct_id);
+
+            if (it == accel_struct_labels_.end())
+            {
+                return "";
+            }
+
+            return it->second;
+        }
+
     private:
         /// @brief The API Info chunk data format.
         struct TraceChunkStringTableHeader
@@ -73,6 +85,7 @@ namespace rra
         std::string                                  chunk_identifier_ = "StringTable";  ///< The chunk identifier.
         bool                                         chunk_data_valid_ = false;          ///< Is the API info data valid.
         std::map<uint32_t, std::vector<std::string>> string_tables_;                     ///< The string tables.
+        std::map<uint64_t, std::string>              accel_struct_labels_;               ///< The labels for the acceleration structures.
     };
 
 }  // namespace rra

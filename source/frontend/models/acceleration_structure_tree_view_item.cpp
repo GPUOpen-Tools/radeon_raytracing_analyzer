@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure (AS) tree-view item.
@@ -12,6 +12,7 @@
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
+#include "bvh/node_pointer.h"
 
 #include "settings/settings.h"
 
@@ -110,13 +111,50 @@ namespace rra
                 {
                     QVariant variant;
 
-                    item_data.display_name = RraBvhGetNodeName(node_data_) + QString(" - 0x") + QString("%1").arg(node_address, 0, 16);
+                    const char* node_name{};
+
+                    if (is_tlas)
+                    {
+                        RraTlasGetNodeName(node_data_, &node_name);
+                    }
+                    else
+                    {
+                        RraBlasGetNodeName(as_index, node_data_, &node_name);
+                    }
+
+                    item_data.display_name = node_name + QString(" - 0x") + QString("%1").arg(node_address, 0, 16);
                     item_data.node_id      = node_data_;
+
+                    const dxr::amd::NodePointer* node = reinterpret_cast<const dxr::amd::NodePointer*>(&node_data_);
+                    if (node->IsInstanceNode())
+                    {
+                        uint64_t blas_index{};
+                        RraTlasGetBlasIndexFromInstanceNode(as_index, node_data_, &blas_index);
+                        if (RraBlasIsEmpty(blas_index))
+                        {
+                            item_data.display_name += " (missing BLAS)";
+                        }
+                    }
 
                     variant.setValue(item_data);
                     return variant;
                 }
                 break;
+            }
+
+            case Qt::ToolTipRole:
+            {
+                static const char* node_tooltip{};
+
+                if (is_tlas)
+                {
+                    RraTlasGetNodeNameToolTip(node_data_, &node_tooltip);
+                }
+                else
+                {
+                    RraBlasGetNodeNameToolTip(as_index, node_data_, &node_tooltip);
+                }
+                return node_tooltip;
             }
 
             case Qt::UserRole:

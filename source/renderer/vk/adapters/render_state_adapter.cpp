@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Render State Adapter type.
@@ -268,7 +268,7 @@ namespace rra
             SceneUniformBuffer& scene_ubo                          = vulkan_renderer_->GetSceneUbo();
             scene_ubo.wireframe_enabled                            = render_wireframe ? 1 : 0;
 
-            auto renderer_interface                                = mesh_render_module_->GetRendererInterface();
+            auto renderer_interface = mesh_render_module_->GetRendererInterface();
             // If setting UI on trace load, mesh_render_module_ will be null, so no need to mark as dirty.
             if (renderer_interface)
             {

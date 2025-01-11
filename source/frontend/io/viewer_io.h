@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration to qt based user input controller interface.
@@ -298,7 +298,7 @@ namespace rra
         };
 
         /// @brief After parsing the readable string, this function will update the state of the ViewerIO.
-        /// 
+        ///
         /// @param state The parsed readable string.
         virtual void UpdateFromReadableStringState(const ReadableStringState& state);
 

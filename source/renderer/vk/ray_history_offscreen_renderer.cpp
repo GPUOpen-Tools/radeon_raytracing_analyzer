@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for ray history offscreen renderer type.
@@ -118,7 +118,7 @@ namespace rra
 
                         for (uint32_t i{0}; i < ray_count; ++i)
                         {
-                            IntersectionResult intersection_result{};
+                            RraIntersectionResult intersection_result{};
                             RraRayGetIntersectionResult(dispatch_id, {x, y, z}, i, &intersection_result);
                             traversal_count += intersection_result.num_iterations;
                             instance_intersection_count += intersection_result.num_instance_intersections;

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public BVH interface.
@@ -69,15 +69,6 @@ RraErrorCode RraBvhGetRootNodePtr(uint32_t* out_node_ptr);
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const struct BoundingVolumeExtents* extents, float* out_surface_area);
 
-/// @brief Get name of the node provided.
-///
-/// This is encoded in the node data passed in.
-///
-/// @param [in]  node_ptr            The encoded node pointer.
-///
-/// @return The text string of the node name.
-const char* RraBvhGetNodeName(uint32_t node_ptr);
-
 /// @brief Get the offset of the node provided.
 ///
 /// This is encoded in the node data passed in.
@@ -87,13 +78,6 @@ const char* RraBvhGetNodeName(uint32_t node_ptr);
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBvhGetNodeOffset(uint32_t node_ptr, uint64_t* out_offset);
-
-/// @brief Check if the given node is a triangle node.
-///
-/// @param [in] node_ptr The encoded node pointer.
-///
-/// @return True if the given node is a triangle node, and false if it's not.
-bool RraBvhIsTriangleNode(uint32_t node_ptr);
 
 /// @brief Check if the given node is a box node.
 ///
@@ -166,7 +150,7 @@ RraErrorCode RraBvhGetMissingBlasCount(uint64_t* out_count);
 /// @brief Get the number of inactive instances in the loaded trace.
 ///
 /// @param [out] out_count A pointer to receive the number of inactive instances.
-/// 
+///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBvhGetInactiveInstancesCount(uint64_t* out_count);
 

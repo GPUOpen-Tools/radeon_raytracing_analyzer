@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for StringTables class (a RDF Chunk type)
@@ -14,7 +14,9 @@ namespace rra
     /// @return kRraOk if loaded correctly, error code if not.
     RraErrorCode StringTables::LoadChunk(rdf::ChunkFile& chunk_file)
     {
-        const char* identifier = chunk_identifier_.c_str();
+        const char*              identifier                    = chunk_identifier_.c_str();
+        static const std::string kAccelStructLabelPrefix       = "RRA_AS:";
+        static const size_t      kAccelStructLabelPrefixLength = kAccelStructLabelPrefix.size();
 
         chunk_data_valid_ = false;
         if (!chunk_file.ContainsChunk(identifier))
@@ -35,8 +37,8 @@ namespace rra
 
             RRA_ASSERT(header_size == sizeof(TraceChunkStringTableHeader));
 
-            TraceChunkStringTableHeader header = {};       ///< The chunk data.
-            std::vector<char> data(payload_size);
+            TraceChunkStringTableHeader header = {};  ///< The chunk data.
+            std::vector<char>           data(payload_size);
 
             if (header_size > 0)
             {
@@ -48,13 +50,42 @@ namespace rra
             }
 
             std::vector<std::string> stringTbl;
-            auto pData    = data.data();
-            auto pOffsets = reinterpret_cast<const uint32_t*>(pData);
+            auto                     data_begin = data.data();
+            auto                     offsets    = reinterpret_cast<const uint32_t*>(data_begin);
 
             for (uint32_t n = 0; n < header.numStrings; n++)
             {
-               const char* str = pData + pOffsets[n];
-               stringTbl.push_back(str);
+                const char* raw_str = data_begin + offsets[n];
+
+                std::string std_str(raw_str);
+
+                if (std_str.substr(0, kAccelStructLabelPrefixLength) == kAccelStructLabelPrefix)
+                {
+                    std_str = std_str.substr(kAccelStructLabelPrefixLength);
+
+                    size_t colon_pos = std_str.find(':');
+                    if (colon_pos != std::string::npos)
+                    {
+                        // Extract number and label
+                        std::string address_str = std_str.substr(0, colon_pos);
+                        std::string label_str   = std_str.substr(colon_pos + 1);
+
+                        // Parse the address as decimal or hexadecimal
+                        bool     is_hex  = (address_str.substr(0, 2) == "0x");
+                        char*    end_ptr = nullptr;
+                        uint64_t address = std::strtoull(address_str.c_str(), &end_ptr, is_hex ? 16 : 10);
+
+                        bool is_valid_address = (end_ptr != address_str.c_str() && *end_ptr == '\0');
+                        bool is_valid_label   = !label_str.empty();
+
+                        if (is_valid_address && is_valid_label)
+                        {
+                            accel_struct_labels_[address] = label_str;
+                        }
+                    }
+                }
+
+                stringTbl.push_back(raw_str);
             }
 
             string_tables_[header.tableId] = std::move(stringTbl);
@@ -66,4 +97,3 @@ namespace rra
     }
 
 }  // namespace rra
-

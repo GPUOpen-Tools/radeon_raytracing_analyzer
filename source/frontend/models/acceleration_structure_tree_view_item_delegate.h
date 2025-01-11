@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure (AS) tree-view item delegate.
@@ -33,11 +33,11 @@ namespace rra
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
         /// @brief Determines the size of the tree view item.
-        /// 
+        ///
         /// @param [in] option Additional parameters affecting the size.
         /// @param [in] index Index of the item.
-        /// 
-        /// @return 
+        ///
+        /// @return
         QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
         /// @brief Handle event on the delegate.

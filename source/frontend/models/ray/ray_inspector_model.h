@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the ray inspector model.
@@ -26,6 +26,14 @@
 
 namespace rra
 {
+    /// @brief Calculate the near plane by casting rays to detect closest triangle.
+    ///
+    /// @param scene  The BVH scene.
+    /// @param camera The renderer camera.
+    ///
+    /// @return The optimal near plane distance.
+    float GetNearPlane(Scene* scene, rra::renderer::Camera* camera);
+
     /// @brief The unique dispatch index to identify a "thread" that launches rays consecutively.
     struct RayInspectorKey
     {
@@ -121,7 +129,7 @@ namespace rra
         /// @param index The index into this dispatch index's rays.
         ///
         /// @return The ray result if valid.
-        std::optional<IntersectionResult> GetRayResult(uint32_t index) const;
+        std::optional<RraIntersectionResult> GetRayResult(uint32_t index) const;
 
         /// @brief Get current ray count.
         uint32_t GetRayCount() const;
@@ -181,7 +189,7 @@ namespace rra
         RayInspectorSceneCollectionModel*      scene_collection_model_;             ///< The scene collection model.
         QStandardItemModel*                    stats_table_model_ = nullptr;        ///< Model associated with the stats table.
         std::vector<Ray>                       rays_{};                             ///< The rays currently being shown in inspector.
-        std::vector<IntersectionResult>        results_{};                          ///< The result of each ray in the inspector.
+        std::vector<RraIntersectionResult>     results_{};                          ///< The result of each ray in the inspector.
         uint32_t                               ray_index_ = 0;                      ///< The ray index to render.
         std::unordered_map<uint64_t, uint64_t> tlas_address_to_index_;              ///< A map to keep track of tlas addresses to index.
         rra::FlagsTableItemModel*              flags_table_model_       = nullptr;  ///< Model associated with the flags table.

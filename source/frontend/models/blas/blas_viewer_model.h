@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the BLAS viewer model.
@@ -27,6 +27,12 @@ namespace rra
         kBlasStatsSAHSubTreeMean,
         kBlasStatsPrimitiveIndexTriangle1,
         kBlasStatsPrimitiveIndexTriangle2,
+        kBlasStatsPrimitiveIndexTriangle3,
+        kBlasStatsPrimitiveIndexTriangle4,
+        kBlasStatsPrimitiveIndexTriangle5,
+        kBlasStatsPrimitiveIndexTriangle6,
+        kBlasStatsPrimitiveIndexTriangle7,
+        kBlasStatsPrimitiveIndexTriangle8,
         kBlasStatsGeometryIndex,
         kBlasStatsParent,
         kBlasStatsFocus,
@@ -47,9 +53,9 @@ namespace rra
 
         /// @brief Initialize the vertex tables model, used by the vertex tables in the BLAS viewer left-side pane.
         ///
-        /// @param [in] table_view_triangle_1  The table view widget.
-        /// @param [in] table_view_triangle_2  The table view widget.
-        void InitializeVertexTableModels(ScaledTableView* table_view_triangle_1, ScaledTableView* table_view_triangle_2);
+        /// @param [in] table_view_triangle_  The table view widget.
+        /// @param [in] tri_index  The index of the triangle which will have data displayed in this table.
+        void InitializeVertexTableModels(ScaledTableView* table_view_triangle_);
 
         /// @brief Initialize the geometry flags table model.
         ///
@@ -142,23 +148,29 @@ namespace rra
         /// @returns The number of procedural nodes in the BLAS.
         uint32_t GetProceduralNodeCount(uint64_t blas_index) const;
 
-        /// @brief Check if the current node has a second triangle.
+        /// @brief Get the number of triangles in the selected node.
         ///
-        /// @returns True if the current node has a second triangle.
-        bool SelectedNodeHasSecondTriangle() const;
+        /// @return The triangle count.
+        uint32_t SelectedNodeTriangleCount() const;
 
     private:
+        /// @brief Get the parent node ID of the currently selected node.
+        ///
+        /// @param blas_index The BLAS we are interested in.
+        ///
+        /// @return The parent node id.
+        uint32_t GetParentNodeOfSelected(uint32_t blas_index);
+
         /// @brief Update the statistics for the selected BLAS node.
         ///
         /// @param [in] blas_index      The index of the BLAS to use.
         /// @param [in] node_id         The selected node in the BLAS.
         void UpdateStatistics(uint64_t blas_index, uint32_t node_id);
 
-        bool                 last_selected_node_is_tri_         = false;    ///< True if last selected node is triangle node.
-        bool                 last_selected_node_has_second_tri_ = false;    ///< True if last selected node has second triangle.
-        QStandardItemModel*  vertex_table_model_triangle_1_     = nullptr;  ///< Model associated with the vertex table for triangle 1.
-        QStandardItemModel*  vertex_table_model_triangle_2_     = nullptr;  ///< Model associated with the vertex table for triangle 2.
-        FlagsTableItemModel* geometry_flags_table_model_        = nullptr;  ///< Model associated with the geometry flags table.
+        bool                             last_selected_node_is_tri_    = false;    ///< True if last selected node is triangle node.
+        uint32_t                         last_selected_node_tri_count_ = 0;        ///< The triangle count of the last selected node.
+        std::vector<QStandardItemModel*> vertex_table_models_triangle_ = {};       ///< Model associated with the vertex table for triangle 1.
+        FlagsTableItemModel*             geometry_flags_table_model_   = nullptr;  ///< Model associated with the geometry flags table.
     };
 }  // namespace rra
 

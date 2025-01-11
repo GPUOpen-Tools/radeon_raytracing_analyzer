@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan renderer.
@@ -15,7 +15,7 @@
 
 #include "qt_common/utils/qt_util.h"
 
-#define FRUSTUM_CULLING_ENABLE 1  ///< A flag to determine if frustum culling is used or not.
+#define FRUSTUM_CULLING_ENABLE 0  ///< A flag to determine if frustum culling is used or not.
 #define PROFILE_READY 0           ///< A flag to force the flags below to the optimal settings for profiling.
 
 #define FORCE_UPDATES 0                  ///< A flag to force renderer updates for profiling or other tests.

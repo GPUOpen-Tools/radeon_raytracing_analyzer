@@ -2,7 +2,7 @@
 // Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief
+/// @brief  Shader for the ray history off-screen renderer.
 //=============================================================================
 
 #define KERNEL_SIZE 8

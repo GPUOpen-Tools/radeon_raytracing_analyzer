@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ray inspector model.
@@ -12,6 +12,12 @@
 #include <QHeaderView>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
+
+#undef emit
+#include <execution>
+#include <algorithm>
+#define emit
+#include <mutex>
 
 #include "models/ray/ray_list_item_model.h"
 #include "util/string_util.h"
@@ -78,7 +84,7 @@ namespace rra
 
         for (uint32_t i = 0; i < ray_count; ++i)
         {
-            IntersectionResult intersection_result{};
+            RraIntersectionResult intersection_result{};
             RraRayGetIntersectionResult(key.dispatch_id, key.invocation_id, i, &intersection_result);
 
             uint32_t        any_hit_count{};
@@ -176,23 +182,7 @@ namespace rra
 
         const auto& ray = opt_ray.value();
 
-        uint64_t difference = 0xFFFFFFFF;
-        for (auto& [address, index] : tlas_address_to_index_)
-        {
-            if (address > ray.tlas_address)
-            {
-                continue;
-            }
-
-            uint64_t local_difference = ray.tlas_address - address;
-            if (local_difference < difference)
-            {
-                difference = local_difference;
-                tlas_index = index;
-            }
-        }
-
-        return tlas_index;
+        return tlas_address_to_index_[ray.tlas_address];
     }
 
     RayInspectorRayTreeProxyModel* RayInspectorModel::GetProxyModel() const
@@ -519,8 +509,8 @@ namespace rra
         // Reverse order that i is iterated so rays shot first appear in front.
         for (int32_t i = (int32_t)rays_.size() - 1; i >= 0; i--)
         {
-            const auto&        ray                 = rays_[i];
-            IntersectionResult intersection_result = {};
+            const auto&           ray                 = rays_[i];
+            RraIntersectionResult intersection_result = {};
             RraRayGetIntersectionResult(key_.dispatch_id, key_.invocation_id, static_cast<uint32_t>(i), &intersection_result);
 
             renderer::RayInspectorRay iray = {};
@@ -562,7 +552,7 @@ namespace rra
         return renderable_rays;
     }
 
-    std::optional<IntersectionResult> RayInspectorModel::GetRayResult(uint32_t index) const
+    std::optional<RraIntersectionResult> RayInspectorModel::GetRayResult(uint32_t index) const
     {
         if (index >= results_.size())
         {
@@ -584,30 +574,37 @@ namespace rra
         scene->GetSceneBoundingVolume(volume);
         float diagonal = glm::length(glm::vec3{volume.max_x - volume.min_x, volume.max_y - volume.min_y, volume.max_z - volume.min_z});
 
-        float near_value = diagonal * kNearMultiplier;
+        float      near_value = diagonal * kNearMultiplier;
+        std::mutex near_value_mutex;
 
         size_t width  = 16;
         size_t height = 16;
+        size_t size   = width * height;
 
-        for (size_t i = 0; i < width; i++)
-        {
-            for (size_t k = 0; k < height; k++)
+        std::vector<size_t> indices(size);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::for_each(std::execution::par, indices.begin(), indices.end(), [&](size_t idx) {
+            size_t i = idx % width;
+            size_t k = idx / width;
+
+            float x = i / float(width - 1);
+            float y = k / float(height - 1);
+
+            x = (x - 0.5f) * 2.0f;
+            y = (y - 0.5f) * 2.0f;
+
+            auto ray = camera->CastRay({x, y});
+
+            auto closest_hit = scene->CastRayGetClosestHit(ray.origin, ray.direction);
+
             {
-                float x = i / float(width - 1);
-                float y = k / float(height - 1);
-
-                x = (x - 0.5f) * 2.0f;
-                y = (y - 0.5f) * 2.0f;
-
-                auto ray = camera->CastRay({x, y});
-
-                auto closest_hit = scene->CastRayGetClosestHit(ray.origin, ray.direction);
+                const std::lock_guard<std::mutex> lock{near_value_mutex};
                 if (closest_hit.distance > 0.0 && closest_hit.distance < near_value)
                 {
                     near_value = closest_hit.distance;
                 }
             }
-        }
+        });
 
         return glm::max(near_value * kNearMultiplier, 0.05f);
     }
@@ -638,17 +635,21 @@ namespace rra
 
         scene_collection_model_->PopulateScene(renderer, tlas_index);
         Scene* bvh_scene = scene_collection_model_->GetSceneByIndex(tlas_index);
+        if (!bvh_scene)
+        {
+            return;
+        }
         bvh_scene->ShowAllNodes();
         bvh_scene->FilterNodesByInstanceMask(ray.cull_mask);
 
         // Set the scene info callback in the renderer so the renderer can acces up-to-date info about the scene.
-        auto&    node_colors             = GetSceneNodeColors();
         bool     fused_instances_enabled = scene_collection_model_->GetFusedInstancesEnabled(tlas_index);
         uint32_t first_ray_outline{};
         uint32_t ray_outline_count{};
         auto     rendering_rays = GetRenderableRays(&first_ray_outline, &ray_outline_count);
 
         renderer->SetSceneInfoCallback([=](renderer::RendererSceneInfo& info, renderer::Camera* camera, bool frustum_culling, bool force_camera_update) {
+            auto& node_colors                          = GetSceneNodeColors();
             info.scene_iteration                       = bvh_scene->GetSceneIteration();
             info.depth_range_lower_bound               = bvh_scene->GetDepthRangeLowerBound();
             info.depth_range_upper_bound               = bvh_scene->GetDepthRangeUpperBound();

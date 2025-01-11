@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a widget that implements a custom graphics view.
@@ -271,8 +271,8 @@ void RayHistoryGraphicsView::mouseMoveEvent(QMouseEvent* event)
         int x_pos = event->x();
         int y_pos = event->y();
 #else
-        int x_pos    = event->position().toPoint().x();
-        int y_pos    = event->position().toPoint().y();
+        int x_pos = event->position().toPoint().x();
+        int y_pos = event->position().toPoint().y();
 #endif
         horizontalScrollBar()->setValue(horizontalScrollBar()->value() - (x_pos - pan_start_x_));
         verticalScrollBar()->setValue(verticalScrollBar()->value() - (y_pos - pan_start_y_));

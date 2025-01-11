@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for a node pointer class.
@@ -82,6 +82,12 @@ namespace dxr
             /// @return true if it's a triangle node, false if not.
             bool IsTriangleNode() const;
 
+            /// @brief Get the start of the triangle pair range.
+            /// The end of the range is determined by the stop bit in the triangle pair descriptor.
+            ///
+            /// @return Triangle pair index.
+            uint32_t GetTrianglePairIndex() const;
+
             /// @brief Is this node a box node.
             ///
             /// @return true if it's a box node, false if not.
@@ -107,11 +113,6 @@ namespace dxr
             /// @return true if it's a root node, false if not.
             bool IsRoot() const;
 
-            /// @brief Is this node a procedural node.
-            ///
-            /// @return true if it's a procedural node, false if not.
-            bool IsProceduralNode() const;
-
             /// @brief Is this node an instance node.
             ///
             /// @return true if it's an instance node, false if not.
@@ -128,6 +129,10 @@ namespace dxr
             std::uint32_t GetRawPointer() const;
 
         private:
+            uint32_t GetAddress() const;
+
+            uint32_t GetShiftedAddress() const;
+
             union
             {
                 // This union makes it easier to quickly retrieve the node type
@@ -136,6 +141,11 @@ namespace dxr
                 {
                     std::uint32_t type_ : 3;      ///< Type of node (internal, leaf).
                     std::uint32_t address_ : 29;  ///< Byte offset (uses 29 bits).
+                };
+                struct
+                {
+                    std::uint32_t rtip31_type_ : 4;
+                    std::uint32_t rtip31_address_ : 28;
                 };
                 std::uint32_t ptr_;  ///< The node pointer.
             };

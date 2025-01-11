@@ -1,6 +1,6 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief Script to perform all necessary pre build steps. This includes:
@@ -51,6 +51,8 @@ else:
 
 # parse the command line arguments
 parser = argparse.ArgumentParser(description="A script that generates all the necessary build dependencies for a project")
+parser.add_argument("--ninja", action="store_true", help="Use ninja build system")
+parser.add_argument("--package", action="store_true", help="Package using CPack")
 if sys.platform == "win32":
     parser.add_argument("--vs", default="2022", choices=["2017", "2019", "2022"], help="specify the version of Visual Studio to be used with this script (default: 2022)")
     parser.add_argument("--toolchain", default="2022", choices=["2017", "2019", "2022"], help="specify the compiler toolchain to be used with this script (default: 2022)")
@@ -70,7 +72,7 @@ parser.add_argument("--build-number", default="0", help="specify the build numbe
 parser.add_argument("--update", action="store_true", help="Force fetch_dependencies script to update all dependencies")
 parser.add_argument("--output", default=output_root, help="specify the output location for generated cmake and build output files (default = OS specific subdirectory of location of pre_build.py script)")
 parser.add_argument("--build", action="store_true", help="build all supported configurations on completion of prebuild step")
-parser.add_argument("--build-jobs", default="4", help="number of simultaneous jobs to run during a build (default = 4)")
+parser.add_argument("--build-jobs", default="16", help="number of simultaneous jobs to run during a build (default = 16)")
 parser.add_argument("--analyze", action="store_true", help="perform static analysis of code on build (currently VS2017 only)")
 parser.add_argument("--vscode", action="store_true", help="generate CMake options into VsCode settings file for this project")
 if support_32_bit_build:
@@ -154,13 +156,20 @@ def check_qt_path(qt_root, qt_root_arg, qt_arg):
 if args.analyze and not args.build:
     log_error_and_exit("--analyze option requires the --build option to also be specified")
 
+    
+if (args.package):
+    if(args.ninja == False):
+        log_error_and_exit("Packaging requires the use of ninja build system")
+
 # check that the default output directory exists
 mkdir_print(args.output)
 
 # Define the output directory for CMake generated files
 cmake_output_dir = None
 
-if sys.platform == "win32":
+if args.ninja:
+    cmake_output_dir = os.path.join(args.output, "ninja")
+elif sys.platform == "win32":
     cmake_output_dir = os.path.join(args.output, "vs" + args.toolchain)
 else:
     cmake_output_dir = os.path.join(args.output, "make")
@@ -213,7 +222,9 @@ if not args.no_qt:
 
 # Specify the type of Build files to generate
 cmake_generator = None
-if sys.platform == "win32":
+if args.ninja:
+    cmake_generator="Ninja"
+elif sys.platform == "win32":
     if args.vs == "2022":
         cmake_generator="Visual Studio 17 2022"
     elif args.vs == "2019":
@@ -235,6 +246,7 @@ else:
 def generate_config(config):
     if (config != ""):
         cmake_dir = os.path.join(cmake_output_dir, config + config_suffix)
+        print(cmake_dir)
         mkdir_print(cmake_dir)
     else:
         cmake_dir = cmake_output_dir
@@ -245,19 +257,20 @@ def generate_config(config):
     debug_output_dir = os.path.join(args.output, "debug" + config_suffix)
 
     if args.no_qt:
-        cmake_args = ["cmake", cmakelist_path, "-DHEADLESS=TRUE"]
+        cmake_args = ["cmake", cmakelist_path, "-DHEADLESS=TRUE", "-G", cmake_generator]
     else:
         cmake_args = ["cmake", cmakelist_path, "-DCMAKE_PREFIX_PATH=" + qt_path, "-G", cmake_generator]
 
-    if sys.platform == "win32":
-        if args.vs != "2017":
-            if not support_32_bit_build or args.platform != "x86":
-                cmake_args.extend(["-A" + "x64"])
+    if args.ninja==False:
+        if sys.platform == "win32":
+            if args.vs != "2017":
+                if not support_32_bit_build or args.platform != "x86":
+                    cmake_args.extend(["-A" + "x64"])
 
-            if args.toolchain == "2019":
-                cmake_args.extend(["-Tv142"])
-            elif args.toolchain == "2017":
-                cmake_args.extend(["-Tv141"])
+                if args.toolchain == "2019":
+                    cmake_args.extend(["-Tv142"])
+                elif args.toolchain == "2017":
+                    cmake_args.extend(["-Tv141"])
 
     if sys.platform.startswith('linux'):
         if args.qt_system:
@@ -269,14 +282,13 @@ def generate_config(config):
             os.chmod(dxc_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
 
     cmake_args.extend(["-DRRA_BUILD_NUMBER=" + str(args.build_number)])
-    cmake_args.extend(["-DQT_VERSION=" + str(args.qt)])
 
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=" + release_output_dir])
     cmake_args.extend(["-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=" + debug_output_dir])
     cmake_args.extend(["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG=" + debug_output_dir])
 
-    if sys.platform != "win32":
+    if args.ninja or sys.platform != "win32":
         if "RELEASE" in config.upper():
             cmake_args.extend(["-DCMAKE_BUILD_TYPE=Release"])
         elif "DEBUG" in config.upper():
@@ -343,13 +355,13 @@ def generate_config(config):
         log_error_and_exit("cmake failed with %d" % p.returncode)
 
 log_print("Generating build files ...")
-if sys.platform == "win32":
-    # On Windows always generates both Debug and Release configurations in a single solution file
-    generate_config("")
-else:
+if args.ninja or sys.platform != "win32":
     # For Linux & Mac - generate both Release and Debug configurations
     for config in configs:
         generate_config(config)
+else:
+    # On Windows always generates both Debug and Release configurations in a single solution file
+    generate_config("")
 
 # Optionally, the user can choose to build all configurations on conclusion of the prebuild job
 if (args.build):
@@ -358,7 +370,13 @@ if (args.build):
         build_dir = ""
 
         cmake_args_docs = ""
-        if sys.platform == "win32":
+        if args.ninja or sys.platform != "win32":
+            build_dir = os.path.join(cmake_output_dir, config + config_suffix)
+
+            cmake_args = ["cmake", "--build", build_dir, "--parallel", args.build_jobs]
+
+            cmake_args_docs = ["cmake", "--build", build_dir, "--target", "Documentation", "--parallel", args.build_jobs]
+        elif sys.platform == "win32":
             build_dir = cmake_output_dir
 
             # For Visual Studio, specify the config to build
@@ -368,14 +386,6 @@ if (args.build):
                 cmake_args.append("/p:RunCodeAnalysis=true")
 
             cmake_args_docs = ["cmake", "--build", build_dir, "--config", config, "--target", "Documentation", "--", "/m:" + args.build_jobs]
-        else:
-            # linux & mac use the same commands
-            # generate the path to the config specific makefile
-            build_dir = os.path.join(cmake_output_dir, config + config_suffix)
-
-            cmake_args = ["cmake", "--build", build_dir, "--parallel", args.build_jobs]
-
-            cmake_args_docs = ["cmake", "--build", build_dir, "--config", config, "--target", "Documentation", "--parallel", args.build_jobs]
 
         p = subprocess.Popen(cmake_args, cwd=cmake_output_dir, stderr=subprocess.STDOUT)
         p.wait()
@@ -389,6 +399,17 @@ if (args.build):
         p = subprocess.Popen(cmake_args_docs, cwd=cmake_output_dir, stderr=subprocess.STDOUT)
         p.wait()
         sys.stdout.flush()
+
+
+        if (args.package):
+            if sys.platform == "win32":
+                cmake_args = ["cpack", "-G", "ZIP"]
+            else:
+                cmake_args = ["cpack", "-G", "TGZ"]
+
+            p = subprocess.Popen(cmake_args, cwd=build_dir, stderr=subprocess.STDOUT)
+            p.wait()
+            sys.stdout.flush()
 
 minutes, seconds = divmod(time.time() - start_time, 60)
 log_print("Successfully completed in {0:.0f} minutes, {1:.1f} seconds".format(minutes,seconds))

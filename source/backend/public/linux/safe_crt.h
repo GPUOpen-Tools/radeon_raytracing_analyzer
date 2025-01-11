@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2016-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2016-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Linux definition of Windows safe CRT functions.

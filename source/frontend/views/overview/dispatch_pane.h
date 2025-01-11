@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the dispatch pane.
@@ -10,12 +10,15 @@
 
 #include "ui_dispatch_pane.h"
 
+#include <unordered_map>
 #include <QWidget>
 #include <QTimer>
 
 #include "qt_common/custom_widgets/colored_legend_scene.h"
 #include "qt_common/custom_widgets/colored_legend_graphics_view.h"
 #include <public/rra_ray_history.h>
+
+class SummaryPane;
 
 /// @brief Class declaration.
 class DispatchPane : public QWidget
@@ -77,6 +80,19 @@ public:
                                  uint64_t     intersection_count,
                                  uint64_t     miss_count);
 
+    // Set the TLAS address to index map.
+    void SetTlasMap(std::unordered_map<uint64_t, uint32_t>* tlas_address_to_index);
+
+    /// @brief Set the summary pane.
+    ///
+    /// @param summary_pane The summary pane.
+    void SetSummaryPane(SummaryPane* summary_pane);
+
+    /// @brief Set the TLASes that were traversed in the UI.
+    ///
+    /// @param tlases_traversed List of the TLASes traversed by this dispatch.
+    void SetTlasesParameters(const std::vector<uint64_t>& tlases_traversed);
+
 private slots:
     /// @brief Switch to the ray history pane.
     ///
@@ -106,9 +122,12 @@ private:
         kNumInvocations
     };
 
-    Ui_DispatchPane* ui_;               ///< The Qt Instance of this object.
-    uint32_t         dispatch_id_ = 0;  ///< The dispatch ID associated with this pane.
-    QTimer           timer_;            ///< A timer used to redraw the widget at a specific rate.
+    Ui_DispatchPane*                        ui_;                     ///< The Qt Instance of this object.
+    uint32_t                                dispatch_id_ = 0;        ///< The dispatch ID associated with this pane.
+    QTimer                                  timer_;                  ///< A timer used to redraw the widget at a specific rate.
+    std::vector<QWidget*>                   tlases_traversed_;       ///< The widgets to navigate to the traversed TLASes (if valid).
+    SummaryPane*                            summary_pane_;           ///< The summary pane.
+    std::unordered_map<uint64_t, uint32_t>* tlas_address_to_index_;  ///< Maps the TLAS addresses to their indices.
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_DISPATCH_PANE_H_

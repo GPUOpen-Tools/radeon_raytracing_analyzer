@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the checker styled clear module.
@@ -17,8 +17,8 @@ namespace rra
         /// @brief Push constant containing colors of checker pattern.
         struct ClearColorPushConstants
         {
-            glm::vec4 checker_color_1; ///< Color of half the checker tiles.
-            glm::vec4 checker_color_2; ///< Color of half the checker tiles.
+            glm::vec4 checker_color_1;  ///< Color of half the checker tiles.
+            glm::vec4 checker_color_2;  ///< Color of half the checker tiles.
         };
 
         /// @brief Render module to render the checkerboard background

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the TLAS properties model.
@@ -97,7 +97,7 @@ namespace rra
             SetModelData(kTlasPropertiesNumTriangles, rra::string_util::LocalizedValue(triangle_count));
         }
 
-         uint64_t procedural_node_count = 0;
+        uint64_t procedural_node_count = 0;
         if (RraTlasGetTotalProceduralNodeCount(tlas_index, &procedural_node_count) == kRraOk)
         {
             SetModelData(kTlasPropertiesNumProceduralNodes, rra::string_util::LocalizedValue(procedural_node_count));

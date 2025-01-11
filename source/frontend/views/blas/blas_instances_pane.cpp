@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Instances pane on the BLAS tab.
@@ -165,7 +165,7 @@ void BlasInstancesPane::GotoBlasInstanceFromTableSelect(const QModelIndex& index
 
             // Get the instance index from the table corresponding to the row.
             uint32_t instance_index = model_->GetProxyModel()->GetData(index.row(), rra::kInstancesColumnUniqueInstanceIndex);
-            emit rra::MessageManager::Get().InstanceSelected(instance_index);
+            emit     rra::MessageManager::Get().InstanceSelected(instance_index);
         }
     }
 }

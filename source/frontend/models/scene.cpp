@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Scene class.
@@ -8,6 +8,7 @@
 #include "scene.h"
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
+#include "util/stack_vector.h"
 
 // We can't use std::max or glm::max since the windows macro ends up overriding the max keyword.
 // So we underfine max for this file only.
@@ -40,10 +41,12 @@ namespace rra
         delete root_node_;
     }
 
-    void Scene::Initialize(SceneNode* root_node)
+    void Scene::Initialize(SceneNode* root_node, uint64_t bvh_index, bool is_tlas)
     {
         delete root_node_;
         root_node_ = root_node;
+        bvh_index_ = bvh_index;
+        is_tlas_   = is_tlas;
 
         nodes_.clear();
         root_node->CollectNodes(nodes_);
@@ -111,14 +114,8 @@ namespace rra
             return instance_map;
         }
 
-        if (!cached_instance_map_.empty())
-        {
-            return cached_instance_map_;
-        }
-
         root_node_->AppendInstanceMap(instance_map, this);
 
-        cached_instance_map_ = instance_map;
         return instance_map;
     }
 
@@ -259,7 +256,7 @@ namespace rra
         {
             auto node = id_node.second;
             // The last condition prevents overdrawing for split triangles.
-            if (node && !node->GetTriangles().empty() && node->IsVisible() && node->IsEnabled() &&
+            if (node && !node->GetTriangles().Empty() && node->IsVisible() && node->IsEnabled() &&
                 GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0] == node)
             {
                 custom_triangle_map_[node->GetId()] = (uint32_t)custom_triangles_.size();
@@ -408,7 +405,7 @@ namespace rra
     {
         for (auto& node : nodes_)
         {
-            if (node.second->GetTriangles().empty())
+            if (node.second->GetTriangles().Empty())
             {
                 continue;
             }
@@ -445,48 +442,6 @@ namespace rra
         }
     }
 
-    bool TraverseAddBoundingVolumesForBlas(uint64_t                      blas_index,
-                                           renderer::BoundingVolumeList& bounding_volumes,
-                                           uint32_t                      current_node,
-                                           uint32_t                      target_node,
-                                           uint32_t                      tree_level)
-    {
-        if (current_node == target_node)
-        {
-            return true;
-        }
-
-        uint32_t child_node_count;
-        RRA_ASSERT(RraBlasGetChildNodeCount(blas_index, current_node, &child_node_count) == kRraOk);
-        std::vector<uint32_t> child_nodes(child_node_count);
-        RRA_ASSERT(RraBlasGetChildNodes(blas_index, current_node, child_nodes.data()) == kRraOk);
-
-        for (size_t i = 0; i < child_nodes.size(); i++)
-        {
-            if (TraverseAddBoundingVolumesForBlas(blas_index, bounding_volumes, child_nodes[i], target_node, tree_level + 1))
-            {
-                BoundingVolumeExtents extents = {};
-                if (RraBlasGetBoundingVolumeExtents(blas_index, current_node, &extents) == kRraOk)
-                {
-                    // The 'Min' field holds metadata in the W component. In this case, it's packed with tree depth.
-                    glm::vec4 min = {extents.min_x, extents.min_y, extents.min_z, static_cast<float>(tree_level)};
-                    glm::vec3 max = {extents.max_x, extents.max_y, extents.max_z};
-
-                    // Each BoundingVolumeInstance includes a packed metadata field that can be read from the vertex shader.
-                    float     sah      = 0.0f;
-                    glm::vec4 metadata = {sah, 0.0f, 0.0f, 1.0f};
-
-                    // Add the node bounding box to the RenderMesh's list of bounding boxes.
-                    renderer::BoundingVolumeInstance bounding_volume = {min, max, metadata};
-                    bounding_volumes.push_back(bounding_volume);
-                }
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     void Scene::SetMultiSelect(bool multi_select)
     {
         multi_select_ = multi_select;
@@ -509,14 +464,14 @@ namespace rra
             auto node = GetNodeById(node_id);
 
             // We only draw the first of the split triangles, so deselect that one.
-            node = node->GetTriangles().size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
+            node = node->GetTriangles().Size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
 
             if (!node->IsEnabled())
             {
                 continue;
             }
 
-            uint32_t num_triangles{(uint32_t)node->GetTriangles().size()};
+            uint32_t num_triangles{(uint32_t)node->GetTriangles().Size()};
             uint32_t custom_tri_idx = custom_triangle_map_[node->GetId()];
 
             for (uint32_t i = 0; i < num_triangles; ++i)
@@ -536,14 +491,14 @@ namespace rra
             auto node = GetNodeById(node_id);
 
             // We only draw the first of the split triangles, so select that one.
-            node = node->GetTriangles().size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
+            node = node->GetTriangles().Size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
 
             if (!node->IsEnabled())
             {
                 continue;
             }
 
-            uint32_t num_triangles{(uint32_t)node->GetTriangles().size()};
+            uint32_t num_triangles{(uint32_t)node->GetTriangles().Size()};
 
             if (!num_triangles)
             {
@@ -744,7 +699,7 @@ namespace rra
         return depth_range_upper_bound_;
     }
 
-    std::vector<SceneNode*> Scene::CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction)
+    std::vector<SceneNode*> Scene::CastRayCollectNodes(glm::vec3 ray_origin, glm::vec3 ray_direction) const
     {
         std::vector<SceneNode*> intersected_nodes;
 
@@ -765,22 +720,29 @@ namespace rra
         uint32_t root_node = UINT32_MAX;
         RRA_BUBBLE_ON_ERROR(RraBvhGetRootNodePtr(&root_node));
 
-        uint32_t              triangle_count;
-        std::vector<uint32_t> traverse_nodes = {root_node};
-        std::vector<uint32_t> swap_nodes;
+        uint32_t triangle_count;
+
+        // Two stack allocated buffers (since heap allocation was a bottleneck in this function).
+        StackVector<uint32_t, 1024> buffer0{};
+        StackVector<uint32_t, 1024> buffer1{};
+
+        // We use the buffers indirectly through a pointer so we can swap them without having to copy.
+        StackVector<uint32_t, 1024>* traverse_nodes_ptr = &buffer0;
+        StackVector<uint32_t, 1024>* swap_nodes_ptr     = &buffer1;
+        traverse_nodes_ptr->PushBack(root_node);
 
         // Memoized traversal of the tree.
-        while (!traverse_nodes.empty())
+        while (!traverse_nodes_ptr->Empty())
         {
-            swap_nodes.clear();
+            swap_nodes_ptr->Clear();
 
-            for (size_t i = 0; i < traverse_nodes.size(); i++)
+            for (size_t i = 0; i < traverse_nodes_ptr->Size(); i++)
             {
                 BoundingVolumeExtents extent = {};
 
                 float closest = std::numeric_limits<float>::infinity();
 
-                RRA_BUBBLE_ON_ERROR(RraBlasGetBoundingVolumeExtents(bvh_index, traverse_nodes[i], &extent));
+                RRA_BUBBLE_ON_ERROR(RraBlasGetBoundingVolumeExtents(bvh_index, (*traverse_nodes_ptr)[i], &extent));
                 if (renderer::IntersectAABB(
                         origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z), closest))
                 {
@@ -788,20 +750,26 @@ namespace rra
                     {
                         // Get the child nodes. If this is not a box node, the child count is 0.
                         uint32_t child_node_count;
-                        RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(bvh_index, traverse_nodes[i], &child_node_count));
-                        std::vector<uint32_t> child_nodes(child_node_count);
-                        RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(bvh_index, traverse_nodes[i], child_nodes.data()));
-                        swap_nodes.insert(swap_nodes.end(), child_nodes.begin(), child_nodes.end());
+                        RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(bvh_index, (*traverse_nodes_ptr)[i], &child_node_count));
+                        StackVector<uint32_t, 8> child_nodes{};
+                        child_nodes.Resize(child_node_count);
+                        RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(bvh_index, (*traverse_nodes_ptr)[i], child_nodes.Data()));
+
+                        for (uint32_t child : child_nodes)
+                        {
+                            swap_nodes_ptr->PushBack(child);
+                        }
                     }
                 }
 
                 // Get the triangle nodes. If this is not a triangle the triangle count is 0.
-                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangleCount(bvh_index, traverse_nodes[i], &triangle_count));
-                std::vector<TriangleVertices> triangles(triangle_count);
-                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangles(bvh_index, traverse_nodes[i], triangles.data()));
+                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangleCount(bvh_index, (*traverse_nodes_ptr)[i], &triangle_count));
+                StackVector<TriangleVertices, 8> triangles{};
+                triangles.Resize(triangle_count);
+                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangles(bvh_index, (*traverse_nodes_ptr)[i], triangles.Data()));
 
                 // Go over each triangle and test for intersection.
-                for (size_t k = 0; k < triangles.size(); k++)
+                for (size_t k = 0; k < triangles.Size(); k++)
                 {
                     TriangleVertices triangle_vertices = triangles[k];
                     float            hit_distance;
@@ -822,7 +790,7 @@ namespace rra
             }
 
             // Swap the old list with the new.
-            traverse_nodes = swap_nodes;
+            std::swap(traverse_nodes_ptr, swap_nodes_ptr);
         }
         return kRraOk;
     }
@@ -846,7 +814,7 @@ namespace rra
         }
     }
 
-    SceneClosestHit Scene::CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction)
+    SceneClosestHit Scene::CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction) const
     {
         auto            cast_results      = CastRayCollectNodes(ray_origin, ray_direction);
         SceneClosestHit scene_closest_hit = {};
@@ -914,7 +882,15 @@ namespace rra
 
                 if (scene_closest_hit.node)
                 {
-                    auto        node_name         = RraBvhGetNodeName(scene_closest_hit.node->GetId());
+                    const char* node_name{};
+                    if (is_tlas_)
+                    {
+                        RraTlasGetNodeName(scene_closest_hit.node->GetId(), &node_name);
+                    }
+                    else
+                    {
+                        RraBlasGetNodeName(bvh_index_, scene_closest_hit.node->GetId(), &node_name);
+                    }
                     std::string node_display_name = std::to_string(scene_closest_hit.node->GetId());
 
                     uint64_t node_address;
@@ -997,7 +973,7 @@ namespace rra
                     }
                 }
                 // If triangle node is split, hide all split sibling nodes.
-                else if (!node->GetTriangles().empty())
+                else if (!node->GetTriangles().Empty())
                 {
                     for (auto sibling : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex()))
                     {
@@ -1045,7 +1021,7 @@ namespace rra
                 }
             }
             // Show all split triangle siblings if we're showing at least one.
-            else if (!node->GetTriangles().empty())
+            else if (!node->GetTriangles().Empty())
             {
                 for (auto sibling : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex()))
                 {

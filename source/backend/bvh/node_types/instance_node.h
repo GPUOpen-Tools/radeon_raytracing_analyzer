@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an instance node class.
@@ -234,8 +234,8 @@ namespace dxr
         /// @brief General structure of a fused instance node for Tlas.
         struct FusedInstanceNode
         {
-            InstanceNode   instance_node          = {};     ///< The instance node data.
-            Float32BoxNode bottom_level_root_node = {};     ///< The bottom level root node data.
+            InstanceNode   instance_node          = {};  ///< The instance node data.
+            Float32BoxNode bottom_level_root_node = {};  ///< The bottom level root node data.
         };
 
     }  // namespace amd

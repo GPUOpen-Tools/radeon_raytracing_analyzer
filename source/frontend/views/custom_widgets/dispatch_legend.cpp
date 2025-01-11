@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief Widget for a colored legend.
@@ -27,12 +27,6 @@ void DispatchLegend::SetColor(const QColor& color)
     color_ = color;
 }
 
-QSize DispatchLegend::sizeHint() const
-{
-    int w = (int)(height() * kLegendHeightRatio);
-    return QSize(w, w);
-}
-
 void DispatchLegend::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
@@ -44,7 +38,7 @@ void DispatchLegend::paintEvent(QPaintEvent* event)
 
     int w = height() * kLegendHeightRatio;
     int x = w / 2;
-    int y = (height() - w + 1) / 2; // Add 1 to round up instead of down.
+    int y = (height() - w + 1) / 2;  // Add 1 to round up instead of down.
 
     painter.fillRect(x, y, w, w, color_);
     painter.end();

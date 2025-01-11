@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan swapchain object.
@@ -476,7 +476,7 @@ namespace rra
             if (geometry_depth_copy_.image != VK_NULL_HANDLE)
             {
                 vmaDestroyImage(device_->GetAllocator(), geometry_depth_copy_.image, geometry_depth_copy_.allocation);
-                geometry_depth_copy_.image = VK_NULL_HANDLE;
+                geometry_depth_copy_.image      = VK_NULL_HANDLE;
                 geometry_depth_copy_.allocation = VK_NULL_HANDLE;
             }
         }

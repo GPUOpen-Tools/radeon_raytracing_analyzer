@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Renderer Interface. This component is
@@ -173,7 +173,7 @@ namespace rra
             int               width_;                  ///< The viewport width.
             int               height_;                 ///< The viewport height.
             const WindowInfo* window_info_ = nullptr;  ///< The window info.
-            RendererSceneInfo scene_info_  = {};       ///< The scene being rendered.
+            RendererSceneInfo scene_info_  = {};       ///< The scene being rendered. Updated in AccelerationStructureViewerModel::PopulateScene().
 
             bool     should_update_heatmap_ = false;    ///< The flag to track of heatmap updates.
             Heatmap* heatmap_               = nullptr;  ///< The current heatmap.

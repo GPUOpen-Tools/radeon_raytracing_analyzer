@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the axis-free style camera controller.
@@ -195,8 +195,7 @@ namespace rra
     void AxisFreeController::FitCameraParams(glm::vec3 position, glm::vec3 forward, glm::vec3 up, std::optional<float> opt_fov, std::optional<float> opt_speed)
     {
         RRA_UNUSED(up);
-        auto orientation = GetCameraOrientation();
-        auto camera      = GetCamera();
+        auto camera = GetCamera();
         if (camera)
         {
             if (opt_fov)
@@ -207,9 +206,6 @@ namespace rra
             {
                 camera->SetMovementSpeed(opt_speed.value());
             }
-            glm::vec3 euler_angles{orientation.GetEulerByForward(forward)};
-            euler_angles = glm::radians(euler_angles);
-            rotation_    = glm::eulerAngleZYX(euler_angles.z, euler_angles.y, euler_angles.x);
 
             camera->SetArcRadius(arc_radius_);
             camera->SetArcCenterPosition(position + forward * camera->GetArcRadius());
@@ -221,7 +217,6 @@ namespace rra
         {
             view_model_->Update();
         }
-
     }
 
     void AxisFreeController::Pitch(float angle)

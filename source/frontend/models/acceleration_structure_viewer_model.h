@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure viewer model base class.
@@ -58,6 +58,16 @@ namespace rra
         ///
         /// @param [in] table_view  The table view widget.
         void InitializeExtentsTableModel(ScaledTableView* table_view);
+
+        /// @brief Initialize the rotation table model, used by the rotation table in the viewer left-side pane.
+        ///
+        /// @param [in] table_view  The table view widget.
+        void InitializeRotationTableModel(ScaledTableView* table_view);
+
+        /// @brief Populate the rotation table.
+        ///
+        /// @param [in] rotation The node rotation.
+        void PopulateRotationTable(const glm::mat3& rotation);
 
         /// @brief Connect the incoming map of RendererAdapter instances with the model.
         ///
@@ -330,14 +340,15 @@ namespace rra
         SceneCollectionModel*                  scene_collection_model_  = nullptr;  ///< The scene model.
         rra::renderer::RenderStateAdapter*     render_state_adapter_    = nullptr;  ///< The adapter used to toggle mesh render states.
         Scene*                                 last_clicked_node_scene_ = nullptr;  ///< The last scene in which a node was clicked.
+        ScaledTreeView*                        tree_view_               = nullptr;  ///< The scaled tree view.
 
     private:
         AccelerationStructureTreeViewModel* tree_view_model_       = nullptr;  ///< The model for the acceleration structure tree view.
         rra::ViewerIO*                      camera_controller_     = nullptr;  ///< The active camera controller.
         TreeViewProxyModel*                 tree_view_proxy_model_ = nullptr;  ///< The treeview proxy model, used for text search filtering.
         QStandardItemModel*                 extents_table_model_   = nullptr;  ///< Model associated with the extents table.
-        QModelIndex     selected_node_index_;  ///< The model index for the selected node in the treeview (can be invalid - nothing selected).
-        ScaledTreeView* tree_view_ = nullptr;  ///< The scaled tree view.
+        QStandardItemModel*                 bottom_table_model_    = nullptr;  ///< Model associated with the rotation table.
+        QModelIndex selected_node_index_;  ///< The model index for the selected node in the treeview (can be invalid - nothing selected).
         std::map<uint64_t, AccelerationStructureTreeViewItemDelegate*> item_delegate_map_;  ///< The item delegates for the tree view.
         TreeViewExpandMode treeview_expand_state_ = kCollapsed;                             ///< The state of the treeview (expanded/collapsed).
         bool               is_tlas_;                                                        ///< Is this a TLAS BVH.

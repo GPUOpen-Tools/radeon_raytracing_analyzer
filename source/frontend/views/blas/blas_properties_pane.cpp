@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS properties pane.
@@ -10,6 +10,7 @@
 #include "managers/message_manager.h"
 #include "models/blas/blas_properties_model.h"
 #include "views/widget_util.h"
+#include "public/rra_rtip_info.h"
 
 BlasPropertiesPane::BlasPropertiesPane(QWidget* parent)
     : BasePane(parent)
@@ -55,6 +56,11 @@ BlasPropertiesPane::~BlasPropertiesPane()
 
 void BlasPropertiesPane::SetBlasIndex(uint64_t blas_index)
 {
+    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+    {
+        ui_->label_num_box32_nodes_->setText("Number of Bvh8 nodes:");
+    }
+
     model_->Update(tlas_index_, blas_index);
 }
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the main window.
@@ -110,6 +110,7 @@ MainWindow::MainWindow(QWidget* parent)
     setWindowIcon(QIcon(":/Resources/assets/icon_32x32.png"));
     setAcceptDrops(true);
 
+    // Initialize the Driver Overrides model.
     DriverOverridesModel::GetInstance()->SetApplicationDetails(rra::text::kRraApplicationFileTypeString);
 
     // Set up the links for the Driver Overrides notification banner.
@@ -503,13 +504,21 @@ void MainWindow::SetupRecentTracesMenu()
 
     const int num_items = (files.size() > kMaxSubmenuTraces) ? kMaxSubmenuTraces : files.size();
 
-    for (int i = 0; i < num_items; i++)
+    if (num_items == 0)
     {
-        recent_trace_actions_[i]->setText(files[i].path);
+        recent_traces_menu_->setEnabled(false);
+    }
+    else
+    {
+        recent_traces_menu_->setEnabled(true);
+        for (int i = 0; i < num_items; i++)
+        {
+            recent_trace_actions_[i]->setText(files[i].path);
 
-        recent_traces_menu_->addAction(recent_trace_actions_[i]);
+            recent_traces_menu_->addAction(recent_trace_actions_[i]);
 
-        recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=]() { LoadTrace(files[i].path); });
+            recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=]() { LoadTrace(files[i].path); });
+        }
     }
 
     emit rra::MessageManager::Get().RecentFileListChanged();

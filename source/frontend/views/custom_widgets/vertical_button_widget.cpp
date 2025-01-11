@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Implementation of a vertical QPushButton.
@@ -28,7 +28,7 @@ void VerticalButtonWidget::paintEvent(QPaintEvent* event)
     Q_UNUSED(event);
 
     QPainter painter(this);
-    QFont tmp_font = font();
+    QFont    tmp_font = font();
     tmp_font.setPointSizeF(kVerticalLabelPointFontSize);
     painter.setFont(tmp_font);
     painter.rotate(90);

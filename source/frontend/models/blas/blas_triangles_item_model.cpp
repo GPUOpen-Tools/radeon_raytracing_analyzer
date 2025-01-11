@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS triangles item model.
@@ -52,12 +52,14 @@ namespace rra
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnPrimitiveIndex, 13);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnNodeAddress, 18);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnNodeOffset, 15);
+        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnTriangleCount, 15);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnActive, 10);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnTriangleSurfaceArea, 15);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnSAH, 10);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex0, 20);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex1, 20);
         acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex2, 20);
+        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnPadding, 5);
 
         // Allow users to resize columns if desired.
         acceleration_structure_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
@@ -92,6 +94,8 @@ namespace rra
                 return QString("0x") + QString("%1").arg(cache.triangle_address, 0, 16);
             case kBlasTrianglesColumnNodeOffset:
                 return QString("0x") + QString("%1").arg(cache.triangle_offset, 0, 16);
+            case kBlasTrianglesColumnTriangleCount:
+                return QString("%1").arg(cache.triangle_count);
             case kBlasTrianglesColumnTriangleSurfaceArea:
                 return QString::number(cache.triangle_surface_area, kQtFloatFormat, decimal_precision);
             case kBlasTrianglesColumnSAH:
@@ -164,19 +168,21 @@ namespace rra
                 return QVariant::fromValue<qulonglong>(cache.triangle_address);
             case kBlasTrianglesColumnNodeOffset:
                 return QVariant::fromValue<qulonglong>(cache.triangle_offset);
+            case kBlasTrianglesColumnTriangleCount:
+                return QVariant::fromValue<qulonglong>(cache.triangle_count);
             case kBlasTrianglesColumnActive:
                 return QVariant::fromValue<bool>(cache.is_inactive);
             case kBlasTrianglesColumnTriangleSurfaceArea:
                 return QVariant::fromValue<float>(cache.triangle_surface_area);
             case kBlasTrianglesColumnSAH:
                 return QVariant::fromValue<float>(cache.sah);
-            // Userdata in the vertex columns isn't going to be used so use them to return the node id.
             case kBlasTrianglesColumnVertex0:
             case kBlasTrianglesColumnVertex1:
             case kBlasTrianglesColumnVertex2:
                 return QVariant::fromValue<uint32_t>(cache.node_id);
+            // Userdata in the padding column isn't going to be used so use it to return the node id.
             case kBlasTrianglesColumnPadding:
-                return QVariant();
+                return QVariant::fromValue<uint32_t>(cache.node_id);
 
             default:
                 break;
@@ -208,6 +214,8 @@ namespace rra
                     return "Primitive index";
                 case kBlasTrianglesColumnNodeAddress:
                     return "Node address";
+                case kBlasTrianglesColumnTriangleCount:
+                    return "Triangle count";
                 case kBlasTrianglesColumnNodeOffset:
                     return "Node offset";
                 case kBlasTrianglesColumnActive:

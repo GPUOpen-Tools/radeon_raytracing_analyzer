@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Device configuration pane.
@@ -79,14 +79,19 @@ void DeviceConfigurationPane::showEvent(QShowEvent* event)
     ui_->label_driver_information_->setVisible(visible);
     ui_->label_driver_packaging_version_->setVisible(visible);
     ui_->content_driver_packaging_version_->setVisible(visible);
-#ifdef WIN32
-    // Driver software version is Windows only.
-    ui_->label_driver_software_version_->setVisible(visible);
-    ui_->content_driver_software_version_->setVisible(visible);
-#else
-    ui_->label_driver_software_version_->setVisible(false);
-    ui_->content_driver_software_version_->setVisible(false);
-#endif
+
+    // Detect if the loaded scene was taken on Windows
+    if (model_->IsDriverSoftwareVersionNeeded())
+    {
+        // Driver software version is Windows only.
+        ui_->label_driver_software_version_->setVisible(visible);
+        ui_->content_driver_software_version_->setVisible(visible);
+    }
+    else
+    {
+        ui_->label_driver_software_version_->setVisible(false);
+        ui_->content_driver_software_version_->setVisible(false);
+    }
 }
 
 void DeviceConfigurationPane::OnColorThemeUpdated()

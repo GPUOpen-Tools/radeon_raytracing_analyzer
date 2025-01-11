@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the acceleration structure build info class.
@@ -22,14 +22,14 @@ namespace rta
     // This includes the general type of the BVH (top level, bottom level), the builder type (CPU / GPU),
     // the build mode (PLOC), triangle compression mode, fp16 box node mode, general DXR build flags set
     // by the app, and triangle splitting.
-    class IRtIp11AccelerationStructurePostBuildInfo
+    class IRtIpCommonAccelerationStructurePostBuildInfo
     {
     public:
         /// @brief Constructor.
-        IRtIp11AccelerationStructurePostBuildInfo() = default;
+        IRtIpCommonAccelerationStructurePostBuildInfo() = default;
 
         /// @brief Destructor.
-        virtual ~IRtIp11AccelerationStructurePostBuildInfo();
+        virtual ~IRtIpCommonAccelerationStructurePostBuildInfo();
 
         /// @brief Set the BVH type.
         ///
@@ -137,7 +137,7 @@ namespace rta
 
     // Create a new RT IP 1.1 acceleration BVH post-build info. This information can be stored in the
     // acceleration structure header.
-    std::unique_ptr<IRtIp11AccelerationStructurePostBuildInfo> CreateRtIp11AccelerationStructurePostBuildInfo();
+    std::unique_ptr<IRtIpCommonAccelerationStructurePostBuildInfo> CreateRtIp11AccelerationStructurePostBuildInfo();
 
 }  // namespace rta
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ray history interface.
@@ -123,7 +123,7 @@ RraErrorCode RraRayGetRays(uint32_t dispatch_id, GlobalInvocationID invocation_i
     return kRraOk;
 }
 
-RraErrorCode RraRayGetIntersectionResult(uint32_t dispatch_id, GlobalInvocationID invocation_id, uint32_t ray_index, IntersectionResult* out_result)
+RraErrorCode RraRayGetIntersectionResult(uint32_t dispatch_id, GlobalInvocationID invocation_id, uint32_t ray_index, RraIntersectionResult* out_result)
 {
     if (dispatch_id >= data_set_.async_ray_histories.size())
     {
@@ -287,12 +287,11 @@ RraErrorCode RraRayGetDispatchStatus(uint32_t dispatch_id, RraDispatchLoadStatus
     return kRraOk;
 }
 
-
 RraErrorCode RraRayGetDispatchUserMarkerString(uint32_t dispatch_id, char* buffer, uint32_t buffer_size)
 {
     const auto& loader = data_set_.async_ray_histories[dispatch_id];
 
-    if (loader->IsUserMarkerContextValid() == false) 
+    if (loader->IsUserMarkerContextValid() == false)
     {
         // There's no user marker data.
         if (buffer_size == 0 || buffer == nullptr)
@@ -315,7 +314,7 @@ RraErrorCode RraRayGetDispatchUserMarkerString(uint32_t dispatch_id, char* buffe
         return kRraOk;
     }
 
-    auto idxStack      = data_set_.user_marker_histories->GetUserMarkerStringIndices(cbId, markerIdx);
+    auto idxStack = data_set_.user_marker_histories->GetUserMarkerStringIndices(cbId, markerIdx);
 
     const auto& stringTable = data_set_.user_marker_string_tables->GetStringTable(tableId);
 

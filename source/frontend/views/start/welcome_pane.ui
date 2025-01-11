@@ -169,6 +169,13 @@
          </property>
         </spacer>
        </item>
+       <item>
+        <widget class="ScaledLabel" name="empty_recent_files_label_">
+         <property name="text">
+          <string>There are no recently opened BVH scenes</string>
+         </property>
+        </widget>
+       </item>
        <item alignment="Qt::AlignLeft">
         <widget class="QWidget" name="recent_traces_wrapper_" native="true">
          <property name="minimumSize">

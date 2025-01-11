@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the SceneNode class.
@@ -11,9 +11,12 @@
 
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
+#include "public/rra_bvh.h"
+#include "public/rra_rtip_info.h"
 #include "scene_node.h"
 #include "scene.h"
 #include "public/shared.h"
+#include "util/stack_vector.h"
 
 #include "public/intersect.h"
 
@@ -25,7 +28,8 @@
 
 namespace rra
 {
-    const float kVolumeEpsilon = 0.0001f;
+    const float        kVolumeEpsilon = 0.0001f;
+    constexpr uint32_t kObbDisabled{0x7f};
 
     SceneNode::SceneNode()
     {
@@ -249,8 +253,9 @@ namespace rra
 
         SceneNode* root_node = new (child_buffer + current_child_buffer_offset) SceneNode();
         current_child_buffer_offset += sizeof(SceneNode);
-        root_node->node_id_  = root_id;
-        root_node->depth_    = 0;
+        root_node->node_id_   = root_id;
+        root_node->depth_     = 0;
+        root_node->bvh_index_ = blas_index;
 
         std::vector<SceneNode*> traversal_stack;
         traversal_stack.reserve(64);  // It is rare for the traversal stack to get deeper than ~28 so this should be sufficient memory to reserve.
@@ -265,7 +270,7 @@ namespace rra
 
             RraBlasGetBoundingVolumeExtents(blas_index, node->node_id_, &node->bounding_volume_);
 
-            if (RraBvhIsTriangleNode(node->node_id_))
+            if (RraBlasIsTriangleNode(blas_index, node->node_id_))
             {
                 // Get the triangle nodes. If this is not a triangle the triangle count is 0.
                 uint32_t triangle_count;
@@ -342,7 +347,12 @@ namespace rra
                         node->vertex_count_ += 3;
                     }
                 }
+            }
 
+            if (!RraBvhIsBoxNode(node->node_id_))
+            {
+                node->obb_index_ = kObbDisabled;
+                node->rotation_  = glm::mat3(1.0f);
                 continue;
             }
 
@@ -363,11 +373,18 @@ namespace rra
                 // Use placement new operator to allocate child in child_nodes_buffer_.
                 SceneNode* new_node = new (child_buffer + current_child_buffer_offset) SceneNode();
                 current_child_buffer_offset += sizeof(SceneNode);
-                new_node->node_id_ = child_nodes[i];
-                new_node->depth_   = node->depth_ + 1;
-                new_node->parent_  = node;
+                new_node->node_id_   = child_nodes[i];
+                new_node->bvh_index_ = blas_index;
+                new_node->depth_     = node->depth_ + 1;
+                new_node->parent_    = node;
                 node->child_nodes_.PushBack(new_node);
                 traversal_stack.push_back(new_node);
+            }
+
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() >= rta::RayTracingIpLevel::RtIp3_0)
+            {
+                RraBlasGetNodeObbIndex(blas_index, node->node_id_, &node->obb_index_);
+                RraBlasGetNodeBoundingVolumeOrientation(blas_index, node->node_id_, &node->rotation_[0][0]);
             }
         }
 
@@ -419,9 +436,10 @@ namespace rra
 
     SceneNode* SceneNode::ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t node_id, uint32_t depth)
     {
-        SceneNode* node = new SceneNode();
-        node->node_id_  = node_id;
-        node->depth_    = depth;
+        SceneNode* node  = new SceneNode();
+        node->node_id_   = node_id;
+        node->depth_     = depth;
+        node->bvh_index_ = tlas_index;
 
         RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &node->bounding_volume_);
 
@@ -464,10 +482,15 @@ namespace rra
 
             node->instance_ = instance;
 
+            node->obb_index_ = kObbDisabled;
+            node->rotation_  = glm::mat3(1.0f);
             return node;
         }
 
-        uint32_t child_node_count;
+        RraTlasGetNodeObbIndex(tlas_index, node_id, &node->obb_index_);
+        RraTlasGetNodeBoundingVolumeOrientation(tlas_index, node_id, &node->rotation_[0][0]);
+
+        uint32_t child_node_count{};
         RraTlasGetChildNodeCount(tlas_index, node_id, &child_node_count);
 
         std::vector<uint32_t> child_nodes(child_node_count);
@@ -591,7 +614,7 @@ namespace rra
             }
         }
         // Enable split triangle siblings.
-        if (!GetTriangles().empty() && scene)
+        if (!GetTriangles().Empty() && scene)
         {
             for (auto sibling : scene->GetSplitTriangles(geometry_index_, primitive_index_))
             {
@@ -623,7 +646,7 @@ namespace rra
             }
         }
         // Disable split triangle siblings.
-        if (!GetTriangles().empty() && scene)
+        if (!GetTriangles().Empty() && scene)
         {
             for (auto sibling : scene->GetSplitTriangles(geometry_index_, primitive_index_))
             {
@@ -697,7 +720,7 @@ namespace rra
     }
 
     /// @brief Reduces the volume by min max on opposite corners.
-    BoundingVolumeExtents ReduceVolumeExtents(BoundingVolumeExtents global_volume, BoundingVolumeExtents local_volume)
+    BoundingVolumeExtents ReduceVolumeExtents(const BoundingVolumeExtents& global_volume, const BoundingVolumeExtents& local_volume)
     {
         BoundingVolumeExtents reduced;
         reduced.max_x = glm::max(global_volume.max_x, local_volume.max_x);
@@ -706,6 +729,26 @@ namespace rra
         reduced.min_x = glm::min(global_volume.min_x, local_volume.min_x);
         reduced.min_y = glm::min(global_volume.min_y, local_volume.min_y);
         reduced.min_z = glm::min(global_volume.min_z, local_volume.min_z);
+        return reduced;
+    }
+
+    /// @brief Reduces the volume after applying rotation.
+    BoundingVolumeExtents ReduceVolumeExtentsOBB(const BoundingVolumeExtents& global_volume,
+                                                 const BoundingVolumeExtents& local_volume,
+                                                 const glm::mat3&             rotation)
+    {
+        BoundingVolumeExtents reduced;
+        glm::vec3             rotated_max{local_volume.max_x, local_volume.max_y, local_volume.max_z};
+        glm::vec3             rotated_min{local_volume.min_x, local_volume.min_y, local_volume.min_z};
+        rotated_max = rotation * rotated_max;
+        rotated_min = rotation * rotated_min;
+
+        reduced.max_x = glm::max(global_volume.max_x, rotated_max.x);
+        reduced.max_y = glm::max(global_volume.max_y, rotated_max.y);
+        reduced.max_z = glm::max(global_volume.max_z, rotated_max.z);
+        reduced.min_x = glm::min(global_volume.min_x, rotated_min.x);
+        reduced.min_y = glm::min(global_volume.min_y, rotated_min.y);
+        reduced.min_z = glm::min(global_volume.min_z, rotated_min.z);
         return reduced;
     }
 
@@ -723,7 +766,8 @@ namespace rra
 
         if (selected_)
         {
-            volume = ReduceVolumeExtents(volume, bounding_volume_);
+            bool is_obb{parent_ && parent_->rotation_ != glm::mat3(1.0f)};
+            volume = is_obb ? ReduceVolumeExtentsOBB(volume, bounding_volume_, parent_->rotation_) : ReduceVolumeExtents(volume, bounding_volume_);
         }
     }
 
@@ -760,17 +804,17 @@ namespace rra
         return &instance_.value();
     }
 
-    std::vector<SceneTriangle> SceneNode::GetTriangles() const
+    StackVector<SceneTriangle, 8> SceneNode::GetTriangles() const
     {
         RRA_ASSERT(vertex_count_ % 3 == 0);
-        std::vector<SceneTriangle> triangles;
+        StackVector<SceneTriangle, 8> triangles;
         for (size_t i = 0; i < vertex_count_; i += 3)
         {
             SceneTriangle triangle;
             triangle.a = vertices_[i];
             triangle.b = vertices_[i + 1];
             triangle.c = vertices_[i + 2];
-            triangles.push_back(triangle);
+            triangles.PushBack(triangle);
         }
         return triangles;
     }
@@ -828,7 +872,7 @@ namespace rra
                 {
                     bvi.metadata.x = 4.0f;
                 }
-                else if (RraBvhIsTriangleNode(node_id_))
+                else if (RraBlasIsTriangleNode(bvh_index_, node_id_))
                 {
                     bvi.metadata.x = 5.0f;
                 }
@@ -837,6 +881,8 @@ namespace rra
                 {
                     bvi.metadata.x = 0.0f;
                 }
+
+                bvi.rotation = parent_ ? parent_->rotation_ : glm::mat3(1.0f);
 
                 volume_list.push_back(bvi);
             }
@@ -887,8 +933,9 @@ namespace rra
             uint32_t   current_index{pair.second};
 
             renderer::TraversalVolume& traversal_volume = traversal_tree.volumes[current_index];
-            traversal_volume.min = glm::vec4(node->bounding_volume_.min_x, node->bounding_volume_.min_y, node->bounding_volume_.min_z, 1.0f);
-            traversal_volume.max = glm::vec4(node->bounding_volume_.max_x, node->bounding_volume_.max_y, node->bounding_volume_.max_z, 1.0f);
+            traversal_volume.min       = glm::vec4(node->bounding_volume_.min_x, node->bounding_volume_.min_y, node->bounding_volume_.min_z, 1.0f);
+            traversal_volume.max       = glm::vec4(node->bounding_volume_.max_x, node->bounding_volume_.max_y, node->bounding_volume_.max_z, 1.0f);
+            traversal_volume.obb_index = node->obb_index_;
 
             if (RraBvhIsInstanceNode(node->node_id_))
             {
@@ -910,7 +957,7 @@ namespace rra
 
                 traversal_volume.leaf_end = static_cast<uint32_t>(traversal_tree.instances.size());
             }
-            else if (RraBvhIsTriangleNode(node->node_id_))
+            else if (RraBlasIsTriangleNode(bvh_index_, node->node_id_))
             {
                 traversal_volume.volume_type = renderer::TraversalVolumeType::kTriangle;
                 if (populate_vertex_buffer)
@@ -931,8 +978,6 @@ namespace rra
                 traversal_volume.volume_type = renderer::TraversalVolumeType::kBox;
 
                 // Separate for loops needed to preserve alignment.
-
-                RRA_ASSERT(node->child_nodes_.Size() <= 4);
 
                 uint32_t child_index = 0;
                 for (auto child : node->child_nodes_)

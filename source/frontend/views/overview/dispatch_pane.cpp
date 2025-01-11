@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the dispatch pane.
@@ -7,6 +7,8 @@
 
 #include "dispatch_pane.h"
 
+#include "qt_common/custom_widgets/scaled_label.h"
+#include "qt_common/custom_widgets/scaled_push_button.h"
 #include "qt_common/utils/qt_util.h"
 
 #include "managers/message_manager.h"
@@ -15,6 +17,7 @@
 #include "settings/settings.h"
 #include "util/string_util.h"
 #include "views/widget_util.h"
+#include "views/overview/summary_pane.h"
 #include "constants.h"
 
 #include "public/rra_api_info.h"
@@ -37,6 +40,10 @@ DispatchPane::DispatchPane(QWidget* parent)
     ui_->donut_->SetSize(kDonutSize);
     ui_->donut_->SetFontSizes(kValueFontSize, kTextFontSize);
     ui_->donut_->SetTextLineTwo("Total");
+
+    ui_->traversal_counts_layout_->setColumnMinimumWidth(0, 100);
+    ui_->traversal_counts_layout_->setColumnMinimumWidth(1, 100);
+    ui_->traversal_counts_layout_->setColumnMinimumWidth(2, 20);
 
     connect(&timer_, &QTimer::timeout, this, &DispatchPane::Update);
 
@@ -68,9 +75,9 @@ void DispatchPane::showEvent(QShowEvent* event)
 
 void DispatchPane::paintEvent(QPaintEvent* event)
 {
-    const QPalette& palette = QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette();
-    const QColor background_color = palette.color(QPalette::AlternateBase);
-    QPainter painter(this);
+    const QPalette& palette          = QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette();
+    const QColor    background_color = palette.color(QPalette::AlternateBase);
+    QPainter        painter(this);
     painter.fillRect(rect(), background_color);
     QWidget::paintEvent(event);
 }
@@ -129,6 +136,68 @@ void DispatchPane::SetInvocationParameters(DispatchType dispatch_type,
     ui_->donut_->SetTextLineOne(rra::string_util::LocalizedValue(total));
 }
 
+void DispatchPane::SetTlasMap(std::unordered_map<uint64_t, uint32_t>* tlas_address_to_index)
+{
+    tlas_address_to_index_ = tlas_address_to_index;
+}
+
+void DispatchPane::SetSummaryPane(SummaryPane* summary_pane)
+{
+    summary_pane_ = summary_pane;
+}
+
+void DispatchPane::SetTlasesParameters(const std::vector<uint64_t>& tlases_traversed)
+{
+    // Delete previous widgets.
+    for (QWidget* widget : tlases_traversed_)
+    {
+        ui_->tlases_horizontal_layout_->removeWidget(widget);
+        widget->deleteLater();
+    }
+    tlases_traversed_.clear();
+
+    for (size_t i{0}; i < tlases_traversed.size(); ++i)
+    {
+        uint64_t          addr        = tlases_traversed[i];
+        ScaledPushButton* tlas_button = new ScaledPushButton();
+        tlases_traversed_.push_back(tlas_button);
+
+        QString text = "0x" + QString("%1").arg(addr, 0, 16);
+        if (i != tlases_traversed.size() - 1)
+        {
+            text += ", ";
+        }
+        tlas_button->setText(text);
+
+        tlas_button->setObjectName(QString::fromUtf8("rebraid_button_"));
+        QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(tlas_button->sizePolicy().hasHeightForWidth());
+        tlas_button->setSizePolicy(sizePolicy);
+        tlas_button->setCursor(Qt::PointingHandCursor);
+        tlas_button->SetLinkStyleSheet();
+
+        const auto& it = tlas_address_to_index_->find(addr);
+        RRA_ASSERT_MESSAGE(it != tlas_address_to_index_->end(), "Can't find address for TLAS");
+        if (it != tlas_address_to_index_->end())
+        {
+            uint32_t tlas_index = (*it).second;
+            connect(tlas_button, &ScaledPushButton::clicked, this, [=]() { summary_pane_->SelectTlas(tlas_index, true); });
+        }
+        ui_->tlases_horizontal_layout_->addWidget(tlas_button);
+    }
+
+    // If no intersections, add a blank text label.
+    if (tlases_traversed.size() == 0)
+    {
+        ScaledLabel* tlas_label = new ScaledLabel(nullptr);
+        tlases_traversed_.push_back(tlas_label);
+        tlas_label->setText("--");
+        ui_->tlases_horizontal_layout_->addWidget(tlas_label);
+    }
+}
+
 void DispatchPane::ConfigureForRaytracingPipeline()
 {
     ui_->shader_invocations_label_->setText("Shader invocations");
@@ -175,6 +244,7 @@ void DispatchPane::Update()
 
     SetTraversalParameters(stats.ray_count, stats.loop_iteration_count, stats.instance_intersection_count, stats.ray_count / (float)stats.pixel_count);
     SetInvocationParameters(dispatch_type, stats.raygen_count, stats.closest_hit_count, stats.any_hit_count, stats.intersection_count, stats.miss_count);
+    SetTlasesParameters(stats.tlases_traversed_);
 
     // Start of with the dispatch region and error label hidden.
     ui_->dispatch_region_->hide();

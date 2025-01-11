@@ -49,7 +49,8 @@ If Qt is installed from a Qt installer, it should be installed to ~/Qt/Qt6.7.0 (
 Required dependencies can be installed as follows:
 ```bash
 sudo apt-get update
-sudo apt-get install build-essential python3 chrpath
+sudo apt-get install build-essential python3
+sudo apt-get install chrpath patchelf
 sudo apt-get install python3-pip
 pip install sphinx_rtd_theme
 sudo snap install cmake --classic
@@ -58,7 +59,6 @@ sudo apt-get install git-lfs
 sudo apt-get install python3-sphinx
 sudo apt-get install libxcb-xinerama0
 sudo apt-get install mesa-common-dev libglu1-mesa-dev
-sudo apt install libtbb-dev
 ```
 
 Qt6 can be installed from the package manager using:

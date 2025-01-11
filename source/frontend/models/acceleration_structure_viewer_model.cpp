@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure viewer model base class.
@@ -24,6 +24,7 @@
 #include "public/rra_blas.h"
 #include "public/rra_print.h"
 #include "public/intersect.h"
+#include "ray/ray_inspector_model.h"
 
 #include "constants.h"
 #include "qt_common/custom_widgets/scaled_check_box.h"
@@ -61,6 +62,7 @@ namespace rra
             delete bvh_delegate.second;
         }
         delete extents_table_model_;
+        delete bottom_table_model_;
     }
 
     void AccelerationStructureViewerModel::InitializeExtentsTableModel(ScaledTableView* table_view)
@@ -69,6 +71,7 @@ namespace rra
 
         QStandardItem* extents = new QStandardItem("Extents");
         extents->setTextAlignment(Qt::AlignLeft);
+        extents->setToolTip("The bounding volume extents.");
         extents_table_model_->setHorizontalHeaderItem(0, extents);
         QStandardItem* min = new QStandardItem("Min");
         min->setTextAlignment(Qt::AlignRight);
@@ -82,6 +85,26 @@ namespace rra
         widget_util::SetTableModelData(extents_table_model_, "X", 0, 0);
         widget_util::SetTableModelData(extents_table_model_, "Y", 1, 0);
         widget_util::SetTableModelData(extents_table_model_, "Z", 2, 0);
+    }
+
+    void AccelerationStructureViewerModel::InitializeRotationTableModel(ScaledTableView* table_view)
+    {
+        bottom_table_model_ = new QStandardItemModel(3, 3);
+        table_view->GetHeaderView()->setVisible(false);
+        table_view->setModel(bottom_table_model_);
+    }
+
+    void AccelerationStructureViewerModel::PopulateRotationTable(const glm::mat3& rotation)
+    {
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[0][0], 0, 0, Qt::AlignRight);
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[0][1], 1, 0, Qt::AlignRight);
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[0][2], 2, 0, Qt::AlignRight);
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[1][0], 0, 1, Qt::AlignRight);
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[1][1], 1, 1, Qt::AlignRight);
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[1][2], 2, 1, Qt::AlignRight);
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[2][0], 0, 2, Qt::AlignRight);
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[2][1], 1, 2, Qt::AlignRight);
+        widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[2][2], 2, 2, Qt::AlignRight);
     }
 
     void AccelerationStructureViewerModel::PopulateExtentsTable(const BoundingVolumeExtents& bounding_volume_extents)
@@ -263,8 +286,6 @@ namespace rra
                         {
                             if (frustum_culling)
                             {
-                                // Set near clip to 0 since we don't know ahead of time how close the closest object is.
-                                // It will be updated appropriately after frustum culling.
                                 camera->SetNearClipScale(0.0f);
                                 auto frustum_info                = camera->GetFrustumInfo();
                                 frustum_info.fov_threshold_ratio = rra::Settings::Get().GetFrustumCullRatio();
@@ -279,7 +300,11 @@ namespace rra
                                 info.instance_map            = bvh_scene->GetInstanceMap();
                                 info.closest_point_to_camera = camera->GetPosition() + glm::vec3(closest_point_distance, 0.0f, 0.0f);
                             }
-                            camera->SetNearClipScale(glm::distance(camera->GetPosition(), info.closest_point_to_camera));
+
+                            auto near_plane = GetNearPlane(bvh_scene, camera);
+                            camera->SetNearClipMultiplier(1.0f);
+                            camera->SetNearClipScale(near_plane);
+
                             info.camera = camera;
                         }
 
@@ -324,7 +349,8 @@ namespace rra
         std::for_each(std::execution::par, blas_indices.begin(), blas_indices.end(), [&](uint32_t blas_index) {
             renderer::TraversalTree& traversal_tree{info->acceleration_structures[blas_index]};
 
-            SceneNode* scene_root = SceneNode::ConstructFromBlas(static_cast<uint32_t>(blas_index), traversal_tree.vertices.data(), traversal_tree.child_nodes_buffer);
+            SceneNode* scene_root =
+                SceneNode::ConstructFromBlas(static_cast<uint32_t>(blas_index), traversal_tree.vertices.data(), traversal_tree.child_nodes_buffer);
 
             // Add to the tree using the scene root.
             scene_root->AddToTraversalTree(false, traversal_tree);
@@ -356,7 +382,7 @@ namespace rra
         if (selected_node_index_.isValid())
         {
             uint32_t node_id = GetNodeIdFromModelIndex(selected_node_index_, tlas_index, is_tlas_);
-            return RraBvhIsTriangleNode(node_id);
+            return is_tlas_ ? false : RraBlasIsTriangleNode(tlas_index, node_id);
         }
         return false;
     }

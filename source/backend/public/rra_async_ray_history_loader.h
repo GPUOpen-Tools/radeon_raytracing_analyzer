@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the asynchronous ray history loader.
@@ -11,6 +11,7 @@
 #include <future>
 #include <memory>
 #include <mutex>
+#include <unordered_set>
 
 #include "rra_ray_history.h"
 #include <ray_history/ray_history.h>
@@ -62,8 +63,14 @@ public:
         return (user_marker_context_.cb_id != 0) && (user_marker_context_.user_marker_idx != 0);
     }
 
-    uint32_t GetUserMarkerContextCbId() const { return user_marker_context_.cb_id; }
-    uint32_t GetUserMarkerContextIdx() const { return user_marker_context_.user_marker_idx; }
+    uint32_t GetUserMarkerContextCbId() const
+    {
+        return user_marker_context_.cb_id;
+    }
+    uint32_t GetUserMarkerContextIdx() const
+    {
+        return user_marker_context_.user_marker_idx;
+    }
 
 private:
     /// @brief Get the percentage of the loader's progress.
@@ -84,6 +91,11 @@ private:
     /// @brief Process the invocation counts.
     void ProcessInvocationCounts();
 
+    /// @brief Propagate invocation counts to the main thread.
+    ///
+    /// @param stats The ray history stats to propagate to the main thread.
+    void UpdateInvocationCountsUi(const RraRayHistoryStats& stats);
+
     /// @brief Waits for everthing to finish.
     void WaitProcess();
 
@@ -93,6 +105,7 @@ private:
     int64_t           dispatch_index_ = 0;              ///< The dispatch index to load.
     std::future<void> process_;                         ///< The future of the loading process.
     std::mutex        process_mutex_;                   ///< A mutex to manage loading steps and feedback.
+    std::mutex        tlases_traversed_mutex_;          ///< A mutex for tlases_traversed_ set access.
     bool              process_complete_       = false;  ///< A flag to indicate if the loading is complete.
     bool              process_complete_local_ = false;  ///< A thread-local flag to check if the process is complete, so it can be accessed without a lock.
 
@@ -109,6 +122,7 @@ private:
     GpuRt::CounterInfo counter_info_;  ///< The counter info from the metadata chunk.
 
     std::shared_ptr<rta::RayHistoryTrace> ray_history_trace_ = nullptr;  ///< The actual trace data.
+    std::unordered_set<uint64_t>          tlases_traversed_  = {};       ///< All the TLASes traversed by rays in this dispatch.
 
     RayDispatchData       dispatch_data_     = {};  ///< All of the indexing and individual stats that we've gathered.
     RraRayHistoryStats    invocation_counts_ = {};  ///< The general stats of the dispatch.
@@ -120,8 +134,8 @@ private:
 
     struct
     {
-        uint32_t user_marker_idx;   ///< Index into marker infos contained in user_marker_history_map_
-        uint32_t cb_id;             ///< key of UserMarkerHistory::user_marker_history_map_
+        uint32_t user_marker_idx;  ///< Index into marker infos contained in user_marker_history_map_
+        uint32_t cb_id;            ///< key of UserMarkerHistory::user_marker_history_map_
     } user_marker_context_ = {};
 };
 

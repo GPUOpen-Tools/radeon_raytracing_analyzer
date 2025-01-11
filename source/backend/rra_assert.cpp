@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of assert.
@@ -34,7 +34,7 @@ bool RraAssertReport(const char* file, int32_t line, const char* condition, cons
 
 #ifdef _WIN32
     // form the final assertion string and output to the TTY.
-    const size_t buffer_size  = (size_t)snprintf(nullptr, 0, "%s(%d): ASSERTION FAILED. %s\n", file, line, message ? message : condition) + 1;
+    const size_t buffer_size = (size_t)snprintf(nullptr, 0, "%s(%d): ASSERTION FAILED. %s\n", file, line, message ? message : condition) + 1;
     char*        temp_buffer = static_cast<char*>(malloc(buffer_size));
     if (!temp_buffer)
     {

@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -16,6 +16,7 @@ include_directories(AFTER ../backend ../../external/rdf/rdf/inc)
 set( SOURCES
     # common interface include files
     "public/rra_api_info.h"
+    "public/rra_rtip_info.h"
     "public/rra_asic_info.h"
     "public/rra_system_info.h"
     "public/rra_assert.h"
@@ -37,6 +38,7 @@ set( SOURCES
     "math_util.cpp"
     "math_util.h"
     "rra_api_info.cpp"
+    "rra_rtip_info.cpp"
     "rra_asic_info.cpp"
     "rra_assert.cpp"
     "rra_blas.cpp"
@@ -56,7 +58,9 @@ set( SOURCES
     "surface_area_heuristic.h"
     "rra_async_ray_history_loader.cpp"
     "string_table.cpp"
+    "string_table.h"
     "user_marker_history.cpp"
+    "user_marker_history.h"
 
     # other dependencies
     "bvh/bvh_bundle.cpp"
@@ -94,17 +98,37 @@ set( SOURCES
     "bvh/node_types/procedural_node.h"
     "bvh/node_types/triangle_node.cpp"
     "bvh/node_types/triangle_node.h"
+    "bvh/rtip31/child_info.h"
+    "bvh/rtip31/internal_node.h"
+    "bvh/rtip31/primitive_node.h"
+    "bvh/rtip31/math.h"
+    "bvh/rtip31/ray_tracing_defs.h"
+    "bvh/rtip31/common.h"
+    "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.cpp"
+    "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
+    "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.cpp"
+    "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
+    "bvh/rtip31/rt_ip_31_acceleration_structure_header.cpp"
+    "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
     "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.cpp"
     "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
     "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.cpp"
     "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
-    "bvh/rtip11/iencoded_rt_ip_11_bvh.cpp"
-    "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
-    "bvh/rtip11/irt_ip_11_acceleration_structure_header.cpp"
-    "bvh/rtip11/irt_ip_11_acceleration_structure_header.h"
-    "bvh/rtip11/irt_ip_11_acceleration_structure_post_build_info.cpp"
-    "bvh/rtip11/irt_ip_11_acceleration_structure_post_build_info.h"
+    "bvh/rtip11/rt_ip_11_header.h"
+    "bvh/rtip11/rt_ip_11_acceleration_structure_header.cpp"
+    "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
     "bvh/rtip_common/gpurt_accel_struct.h"
+    "bvh/rtip_common/i_acceleration_structure_header.cpp"
+    "bvh/rtip_common/i_acceleration_structure_header.h"
+    "bvh/rtip_common/acceleration_structure_header.cpp"
+    "bvh/rtip_common/acceleration_structure_header.h"
+    "bvh/rtip_common/i_acceleration_structure_post_build_info.cpp"
+    "bvh/rtip_common/i_acceleration_structure_post_build_info.h"
+    "bvh/rtip_common/encoded_top_level_bvh.cpp"
+    "bvh/rtip_common/encoded_top_level_bvh.h"
+    "bvh/rtip_common/encoded_bottom_level_bvh.cpp"
+    "bvh/rtip_common/encoded_bottom_level_bvh.h"
+
 
     # Ray history
     "ray_history/ray_history.h"
@@ -130,18 +154,22 @@ ENDIF(WIN32)
 # Apply common developer tools target options and definitions
 devtools_target_options(${PROJECT_NAME})
 
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_CXX_BINDINGS)
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DSYSTEM_INFO_ENABLE_RDF)
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DDRIVER_OVERRIDES_ENABLE_RDF)
 
 IF (WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_PLATFORM_WINDOWS -D_CRT_SECURE_NO_WARNINGS)
+    target_compile_options(${PROJECT_NAME} PRIVATE /wd4505 /wd4189 /wd4100)
 ELSEIF(UNIX)
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_PLATFORM_UNIX)
     target_compile_options(${PROJECT_NAME} PRIVATE -mavx2 -mf16c)
 ENDIF(WIN32)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+add_compile_options(/W4 /WX /wd4189)
 
 IF(WIN32)
 # Create Visual Studio filters so that the source files in the project match the directory structure

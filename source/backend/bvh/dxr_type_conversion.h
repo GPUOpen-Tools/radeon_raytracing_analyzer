@@ -1,4 +1,12 @@
-#pragma once
+//=============================================================================
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of the DXR type conversion helper functions.
+//=============================================================================
+
+#ifndef RRA_BACKEND_BVH_TYPE_CONVERSION_H_
+#define RRA_BACKEND_BVH_TYPE_CONVERSION_H_
 
 #include <array>
 #include <cstdint>
@@ -80,3 +88,5 @@ namespace rta
     BvhNodeType ToBvhNodeType(const dxr::amd::NodeType type);
 
 }  // namespace rta
+
+#endif  // RRA_BACKEND_BVH_TYPE_CONVERSION_H_

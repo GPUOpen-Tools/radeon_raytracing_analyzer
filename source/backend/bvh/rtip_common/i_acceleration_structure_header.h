@@ -1,17 +1,17 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the RT IP 1.1 acceleration structure header class.
 //=============================================================================
 
-#ifndef RRA_BACKEND_BVH_IRT_IP_11_ACCELERATION_STRUCTURE_HEADER_H_
-#define RRA_BACKEND_BVH_IRT_IP_11_ACCELERATION_STRUCTURE_HEADER_H_
+#ifndef RRA_BACKEND_BVH_I_ACCELERATION_STRUCTURE_HEADER_H_
+#define RRA_BACKEND_BVH_I_ACCELERATION_STRUCTURE_HEADER_H_
 
 #include <assert.h>
 
 #include "bvh/dxr_definitions.h"
-#include "bvh/rtip11/irt_ip_11_acceleration_structure_post_build_info.h"
+#include "bvh/rtip_common/i_acceleration_structure_post_build_info.h"
 #include "bvh/rt_binary_file_defs.h"
 #include "../rtip_common/gpurt_accel_struct.h"
 
@@ -42,19 +42,19 @@ namespace rta
     // The BVH attributes are comprised of meta data size, build infos, total file size
     // (active) primitive counts, description counts, geometry type, offsets, and
     // interior / leaf node counts.
-    class IRtIp11AccelerationStructureHeader
+    class IRtIpCommonAccelerationStructureHeader
     {
     public:
         /// @brief Constructor.
-        IRtIp11AccelerationStructureHeader() = default;
+        IRtIpCommonAccelerationStructureHeader() = default;
 
         /// @brief Destructor.
-        virtual ~IRtIp11AccelerationStructureHeader();
+        virtual ~IRtIpCommonAccelerationStructureHeader();
 
         /// @brief Obtain the post-build information, e.g., the settings used to build the BVH.
         ///
         /// @return The build info.
-        const IRtIp11AccelerationStructurePostBuildInfo& GetPostBuildInfo() const;
+        const IRtIpCommonAccelerationStructurePostBuildInfo& GetPostBuildInfo() const;
 
         /// @brief Get the metadata size.
         ///
@@ -152,7 +152,7 @@ namespace rta
         /// @param [in] branching_factor The branching factor.
         ///
         /// @return The buffer size.
-        std::uint64_t CalculateWorstCaseInteriorNodeBufferSize(const std::uint32_t branching_factor = 4) const;
+        std::uint64_t CalculateWorstCaseInteriorNodeBufferSize(const std::uint32_t branching_factor = 8) const;
 
         /// @brief Get the total number of leaf nodes.
         ///
@@ -205,7 +205,7 @@ namespace rta
         bool IsValid() const;
 
     private:
-        virtual const IRtIp11AccelerationStructurePostBuildInfo& GetPostBuildInfoImpl() const = 0;
+        virtual const IRtIpCommonAccelerationStructurePostBuildInfo& GetPostBuildInfoImpl() const = 0;
 
         virtual std::uint32_t GetMetaDataSizeImpl() const = 0;
 
@@ -233,6 +233,8 @@ namespace rta
 
         virtual RayTracingBinaryVersion GetGpuRtDriverInterfaceVersionImpl() const = 0;
 
+        virtual std::uint32_t GetInteriorNodeCountImpl() const = 0;
+
         virtual std::uint64_t CalculateInteriorNodeBufferSizeImpl() const = 0;
 
         virtual std::uint64_t CalculateWorstCaseInteriorNodeBufferSizeImpl(const std::uint32_t branching_factor = 4) const = 0;
@@ -255,11 +257,6 @@ namespace rta
 
         virtual bool IsValidImpl() const = 0;
     };
-
-    /// @brief Create a new RT IP 1.1 acceleration structure header.
-    ///
-    /// @return The new acceleration structure header.
-    std::unique_ptr<IRtIp11AccelerationStructureHeader> CreateRtIp11AccelerationStructureHeader();
 }  // namespace rta
 
-#endif  // RRA_BACKEND_BVH_IRT_IP_11_ACCELERATION_STRUCTURE_HEADER_H_
+#endif  // RRA_BACKEND_BVH_I_ACCELERATION_STRUCTURE_HEADER_H_

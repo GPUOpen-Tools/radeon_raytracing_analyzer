@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS list item model.
@@ -20,6 +20,7 @@
 #include "util/string_util.h"
 #include "settings/settings.h"
 #include "public/rra_api_info.h"
+#include "public/rra_rtip_info.h"
 
 namespace rra
 {
@@ -289,7 +290,14 @@ namespace rra
                 case kBlasListColumnBoxCount:
                     return "Boxes";
                 case kBlasListColumnBox32Count:
-                    return "32-bit boxes";
+                    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+                    {
+                        return "128-bit boxes";
+                    }
+                    else
+                    {
+                        return "32-bit boxes";
+                    }
                 case kBlasListColumnBox16Count:
                     return "16-bit boxes";
                 case kBlasListColumnTriangleNodeCount:

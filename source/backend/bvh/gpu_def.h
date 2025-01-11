@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for miscellaneous GPU definitions.
@@ -25,8 +25,14 @@ namespace rta
     {
         _None = 0,
 
-        RtIp1_0 = 0x1,  ///< First Implementation of HW RT
-        RtIp1_1 = 0x2,  ///< Added computation of triangle barycentrics into HW
+        RtIp1_0      = 0x1,  ///< First Implementation of HW RT
+        RtIp1_1      = 0x2,  ///< Added computation of triangle barycentrics into HW
+        RtIp2_0      = 0x3,  ///< Added more Hardware RayTracing features, such as BoxSort, PointerFlag, etc
+        RtIp3_0      = 0x4,  ///< Added high precision box node, HW instance node, dual intersect ray, BVH8 intersect ray,
+        RtIpReserved = 0x5,  ///< Special value, should not be used
+        RtIp3_1      = 0x6,  ///< Added improved bvh footprints (change to node pointer, 128 Byte primitive structure format,
+                             ///  128 Byte Quantized box node, obb support, wide sort)
+        RtIpCount,           ///< The number of supported RtIp levels.
     };
 
     // Defines the generic type of a BVH.

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS triangles model.
@@ -17,10 +17,13 @@
 #include "qt_common/utils/qt_util.h"
 
 #include "models/blas/blas_triangles_item_model.h"
+#include "util/stack_vector.h"
 
 #include "public/rra_bvh.h"
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
+#include "public/rra_print.h"
+#include "public/rra_rtip_info.h"
 
 namespace rra
 {
@@ -70,6 +73,9 @@ namespace rra
             std::deque<uint32_t> traversal_stack;
             traversal_stack.push_back(root_node);
 
+            // Create a temporary stack vector once and reuse it.
+            StackVector<VertexPosition, 4> verts{};
+
             // Traverse the tree and add all triangle nodes to the table.
             while (!traversal_stack.empty())
             {
@@ -92,7 +98,7 @@ namespace rra
                         // Add box nodes to the list of nodes to process.
                         traversal_stack.push_back(child_node);
                     }
-                    else if (RraBvhIsTriangleNode(child_node))
+                    else if (RraBlasIsTriangleNode(blas_index, child_node))
                     {
                         stats.node_id = child_node;
 
@@ -114,7 +120,7 @@ namespace rra
                         {
                             continue;
                         }
-                        stats.geometry_flag_opaque            = geometry_flags & VK_GEOMETRY_OPAQUE_BIT_KHR;
+                        stats.geometry_flag_opaque               = geometry_flags & VK_GEOMETRY_OPAQUE_BIT_KHR;
                         stats.geometry_flag_no_duplicate_any_hit = geometry_flags & VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
                         if (RraBlasGetIsInactive(blas_index, child_node, &stats.is_inactive) != kRraOk)
                         {
@@ -129,22 +135,27 @@ namespace rra
                             continue;
                         }
 
-                        uint32_t triangle_count;
+                        uint32_t triangle_count{};
                         if (RraBlasGetNodeTriangleCount(blas_index, child_node, &triangle_count) != kRraOk)
                         {
                             continue;
                         }
+                        stats.triangle_count = triangle_count;
 
-                        const uint32_t vertex_count = (triangle_count == 1 ? 3 : 4);
-
-                        std::vector<VertexPosition> verts(vertex_count);
-                        if (RraBlasGetNodeVertices(blas_index, child_node, verts.data()) != kRraOk)
+                        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() <= rta::RayTracingIpLevel::RtIp2_0)
                         {
-                            continue;
+                            uint32_t vertex_count{};
+                            RraBlasGetNodeVertexCount(blas_index, child_node, &vertex_count);
+                            verts.Resize(vertex_count);
+
+                            if (RraBlasGetNodeVertices(blas_index, child_node, verts.Data()) != kRraOk)
+                            {
+                                continue;
+                            }
+                            stats.vertex_0 = rra::renderer::float3(verts[0].x, verts[0].y, verts[0].z);
+                            stats.vertex_1 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
+                            stats.vertex_2 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
                         }
-                        stats.vertex_0 = rra::renderer::float3(verts[0].x, verts[0].y, verts[0].z);
-                        stats.vertex_1 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
-                        stats.vertex_2 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
 
                         if (RraBlasGetPrimitiveIndex(blas_index, child_node, 0, &stats.primitive_index) != kRraOk)
                         {
@@ -154,19 +165,21 @@ namespace rra
                         // Add this node and 0th index to the table.
                         stats_list.push_back(stats);
 
-                        // Get the second triangle if node has more than one.
-                        RRA_ASSERT(triangle_count < 3);
-                        if (triangle_count == 2)
+                        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() <= rta::RayTracingIpLevel::RtIp2_0)
                         {
-                            if (RraBlasGetPrimitiveIndex(blas_index, child_node, 1, &stats.primitive_index) != kRraOk)
+                            // Get the second triangle if node has more than one.
+                            if (triangle_count == 2)
                             {
-                                continue;
-                            }
+                                if (RraBlasGetPrimitiveIndex(blas_index, child_node, 1, &stats.primitive_index) != kRraOk)
+                                {
+                                    continue;
+                                }
 
-                            stats.vertex_0 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
-                            stats.vertex_1 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
-                            stats.vertex_2 = rra::renderer::float3(verts[3].x, verts[3].y, verts[3].z);
-                            stats_list.push_back(stats);
+                                stats.vertex_0 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
+                                stats.vertex_1 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
+                                stats.vertex_2 = rra::renderer::float3(verts[3].x, verts[3].y, verts[3].z);
+                                stats_list.push_back(stats);
+                            }
                         }
                     }
                 }
@@ -208,7 +221,8 @@ namespace rra
 
     uint32_t BlasTrianglesModel::GetNodeId(int row) const
     {
-        return proxy_model_->GetData(row, rra::kBlasTrianglesColumnVertex1);
+        // The padding column is used to return the node id since it's not used for anything else.
+        return proxy_model_->GetData(row, rra::kBlasTrianglesColumnPadding);
     }
 
     void BlasTrianglesModel::SearchTextChanged(const QString& filter)

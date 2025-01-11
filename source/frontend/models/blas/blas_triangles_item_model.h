@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the BLAS triangles item model.
@@ -25,6 +25,7 @@ namespace rra
         uint64_t              triangle_address;                    ///< The base address of the triangle.
         uint64_t              triangle_offset;                     ///< The offset of the triangle in the TLAS.
         uint32_t              geometry_index;                      ///< The geometry index.
+        uint32_t              triangle_count;                      ///< The number of triangles in this node.
         bool                  geometry_flag_opaque;                ///< The opaque geometry flag.
         bool                  geometry_flag_no_duplicate_any_hit;  ///< The no duplicate anyhit invocation geometry flag.
         bool                  is_inactive;                         ///< Whether or not this triangle is inactive.
@@ -43,6 +44,7 @@ namespace rra
         kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit,
         kBlasTrianglesColumnPrimitiveIndex,
         kBlasTrianglesColumnNodeAddress,
+        kBlasTrianglesColumnTriangleCount,
         kBlasTrianglesColumnNodeOffset,
         kBlasTrianglesColumnActive,
         kBlasTrianglesColumnTriangleSurfaceArea,

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the viewer container widget class.
@@ -213,7 +213,7 @@ void ViewerContainerWidget::SetHeatmapMode()
 
 void ViewerContainerWidget::SetGeometryColoringMode()
 {
-    int                                 row        = ui_->content_geometry_coloring_mode_->CurrentRow();
+    int                                 row        = std::clamp(ui_->content_geometry_coloring_mode_->CurrentRow(), 0, (int)filtered_color_modes_.size() - 1);
     rra::renderer::GeometryColoringMode mode_value = filtered_color_modes_[row].value;
     model_->SetGeometryColoringMode(mode_value);
     rra::Settings::Get().SetColoringMode(parent_pane_id_, kColoringModeGeometryColor, row);

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS viewer pane.
@@ -14,6 +14,10 @@
 #include "models/acceleration_structure_tree_view_item.h"
 #include "settings/settings.h"
 #include "views/widget_util.h"
+#include "ui_triangle_group.h"
+#include "public/rra_rtip_info.h"
+
+#undef min
 
 static const int kSplitterWidth = 300;
 
@@ -40,10 +44,8 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     ui_->splitter_->setSizes(splitter_sizes);
 
     SetTableParams(ui_->extents_table_);
-    SetTableParams(ui_->geometry_flags_table_1_);
-    SetTableParams(ui_->vertex_table_1_);
-    SetTableParams(ui_->vertex_table_2_);
-    ui_->geometry_flags_table_1_->horizontalHeader()->setStretchLastSection(true);
+    SetTableParams(ui_->geometry_flags_table_);
+    ui_->geometry_flags_table_->horizontalHeader()->setStretchLastSection(true);
 
     derived_model_                    = new rra::BlasViewerModel(ui_->blas_tree_);
     model_                            = derived_model_;
@@ -51,20 +53,44 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
 
     ui_->content_parent_blas_->setCursor(Qt::PointingHandCursor);
 
+    // Create list of triangle widgets to use when a triangle node is selected.
+    Ui_TriangleGroup triangle_group{};
+    ui_->triangle_list_->setSpacing(0);
+    ui_->triangle_scroll_area_->setWidgetResizable(true);
+    uint32_t max_tri_count{8};
+    for (uint32_t i{0}; i < max_tri_count; ++i)
+    {
+        QWidget* triangle_widget = new QWidget();
+        triangle_widgets_.push_back(triangle_widget);
+        triangle_group.setupUi(triangle_widget);
+
+        // Set triangle_group data here.
+        SetTableParams(triangle_group.vertex_table_);
+        model_->InitializeModel(triangle_group.content_primitive_index_, rra::kBlasStatsPrimitiveIndexTriangle1 + i, "text");
+        derived_model_->InitializeVertexTableModels(triangle_group.vertex_table_);
+
+        ui_->triangle_list_->addWidget(triangle_widget);
+    }
+
     // Initialize tables.
     model_->InitializeExtentsTableModel(ui_->extents_table_);
-    derived_model_->InitializeFlagsTableModel(ui_->geometry_flags_table_1_);
-    derived_model_->InitializeVertexTableModels(ui_->vertex_table_1_, ui_->vertex_table_2_);
+    derived_model_->InitializeFlagsTableModel(ui_->geometry_flags_table_);
+
+    model_->InitializeRotationTableModel(ui_->bottom_table_);
+    SetTableParams(ui_->bottom_table_);
+    ui_->label_bottom_table_->setText("Bounding box orientation");
+    ui_->label_bottom_table_->setToolTip("The rotation matrix of the bounding volume.");
+    ui_->label_bottom_table_->setVisible(false);
+    ui_->bottom_table_->setVisible(false);
 
     model_->InitializeModel(ui_->content_node_address_, rra::kBlasStatsAddress, "text");
     model_->InitializeModel(ui_->content_node_type_, rra::kBlasStatsType, "text");
     model_->InitializeModel(ui_->content_focus_selected_volume_, rra::kBlasStatsFocus, "visible");
+    ui_->node_pointer_group_->hide();
     model_->InitializeModel(ui_->content_current_sah_, rra::kBlasStatsCurrentSAH, "text");
     model_->InitializeModel(ui_->content_subtree_min_, rra::kBlasStatsSAHSubTreeMax, "text");
     model_->InitializeModel(ui_->content_subtree_mean_, rra::kBlasStatsSAHSubTreeMean, "text");
-    model_->InitializeModel(ui_->content_primitive_index_1_, rra::kBlasStatsPrimitiveIndexTriangle1, "text");
-    model_->InitializeModel(ui_->content_primitive_index_2_, rra::kBlasStatsPrimitiveIndexTriangle2, "text");
-    model_->InitializeModel(ui_->content_geometry_index_1_, rra::kBlasStatsGeometryIndex, "text");
+    model_->InitializeModel(ui_->content_geometry_index_, rra::kBlasStatsGeometryIndex, "text");
     model_->InitializeModel(ui_->content_parent_blas_, rra::kBlasStatsParent, "text");
 
     ui_->content_parent_blas_->SetLinkStyleSheet();
@@ -117,8 +143,8 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     ui_->side_panel_container_->MarkAsBLAS();
 
     flag_table_delegate_ = new FlagTableItemDelegate();
-    ui_->geometry_flags_table_1_->setItemDelegate(flag_table_delegate_);
-    
+    ui_->geometry_flags_table_->setItemDelegate(flag_table_delegate_);
+
     if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
     {
         ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable-dark-theme.svg"));
@@ -151,6 +177,13 @@ void BlasViewerPane::OnTraceClose()
     ui_->content_node_address_->setDisabled(true);
     ui_->content_node_address_->setToolTip("");
     ui_->search_box_->setText("");
+
+    for (QWidget* widget : triangle_widgets_)
+    {
+        ui_->triangle_list_->removeWidget(widget);
+        delete widget;
+    }
+    triangle_widgets_.clear();
 
     AccelerationStructureViewerPane::OnTraceClose();
 }
@@ -201,15 +234,28 @@ void BlasViewerPane::UpdateWidgets(const QModelIndex& index)
     bool common_valid = index.isValid();
 
     ui_->common_group_->setVisible(common_valid);
-    ui_->triangle_group_->setVisible(model_->SelectedNodeIsLeaf());
-    ui_->triangle_information_2_->setVisible(derived_model_->SelectedNodeHasSecondTriangle());
+    ui_->geometry_information_->setVisible(model_->SelectedNodeIsLeaf());
+    ui_->triangle_scroll_area_->setVisible(model_->SelectedNodeIsLeaf());
     ui_->triangle_split_group_->setVisible(model_->IsTriangleSplit(last_selected_as_id_));
+
+    uint32_t tri_count{derived_model_->SelectedNodeTriangleCount()};
+    ui_->triangle_scroll_area_->setMinimumHeight(150 * std::min(tri_count, 2u));
+    for (uint32_t i{0}; i < (uint32_t)triangle_widgets_.size(); ++i)
+    {
+        triangle_widgets_[i]->setVisible(i < tri_count);
+    }
 
     // Subtrees are redundant for leaf nodes.
     ui_->label_subtree_max_->setVisible(!model_->SelectedNodeIsLeaf());
     ui_->content_subtree_min_->setVisible(!model_->SelectedNodeIsLeaf());
     ui_->label_subtree_mean_->setVisible(!model_->SelectedNodeIsLeaf());
     ui_->content_subtree_mean_->setVisible(!model_->SelectedNodeIsLeaf());
+
+    if (RraRtipInfoGetOBBSupported())
+    {
+        ui_->label_bottom_table_->setVisible(true);
+        ui_->bottom_table_->setVisible(true);
+    }
 }
 
 void BlasViewerPane::UpdateSelectedBlas()

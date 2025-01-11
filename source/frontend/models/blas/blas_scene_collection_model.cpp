@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS scene model.
@@ -55,13 +55,13 @@ namespace rra
 
         // Allocate buffers needed by BLAS nodes.
         renderer::RraVertex* vertex_buffer{blas_scene->AllocateVertexBuffer(blas_index)};
-        std::byte* child_buffer{blas_scene->AllocateChildBuffer(blas_index)};
+        std::byte*           child_buffer{blas_scene->AllocateChildBuffer(blas_index)};
 
         // Construct a tree by using the blas_index.
         auto blas_node = SceneNode::ConstructFromBlas(blas_index, vertex_buffer, child_buffer);
 
         // Initialize the scene with the given node.
-        blas_scene->Initialize(blas_node);
+        blas_scene->Initialize(blas_node, blas_index, false);
 
         return blas_scene;
     }

@@ -2,7 +2,7 @@
 // Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief
+/// @brief  Color geometry by build type.
 //=============================================================================
 
 #include "Common.hlsl"

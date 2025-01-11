@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public BLAS interface.
@@ -114,6 +114,14 @@ RraErrorCode RraBlasGetAvgTreeDepth(uint64_t blas_index, uint32_t* out_tree_dept
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetChildNodePtr(uint64_t blas_index, uint32_t parent_node, uint32_t child_index, uint32_t* out_node_ptr);
 
+/// @brief Check if the given node is a triangle node.
+///
+/// @param [in] blas_index     The index of the BLAS to use.
+/// @param [in] node_ptr       The encoded node pointer.
+///
+/// @return True if the given node is a triangle node, and false if it's not.
+bool RraBlasIsTriangleNode(uint64_t blas_index, uint32_t node_ptr);
+
 /// @brief Get the base address for a given node.
 ///
 /// @param [in]  blas_index     The index of the BLAS to use.
@@ -222,6 +230,28 @@ RraErrorCode RraBlasGetTriangleNodeCount(uint64_t blas_index, uint32_t* out_tria
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetProceduralNodeCount(uint64_t blas_index, uint32_t* out_procedural_node_count);
 
+/// @brief Get name of the node provided.
+///
+/// This is encoded in the node data passed in.
+///
+/// @param [in]  blas_index The index of the BLAS to use.
+/// @param [in]  node_ptr   The encoded node pointer.
+/// @param [in]  out_name   The text string of the node name.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetNodeName(uint64_t blas_index, uint32_t node_ptr, const char** out_name);
+
+/// @brief Get tooltip of the node provided.
+///
+/// This is encoded in the node data passed in.
+///
+/// @param [in]  blas_index  The index of the BLAS to use.
+/// @param [in]  node_ptr    The encoded node pointer.
+/// @param [in]  out_tooltip The tooltip text string of the node name.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetNodeNameToolTip(uint64_t blas_index, uint32_t node_ptr, const char** out_tooltip);
+
 /// @brief Retrieve the geometry index for the triangle node.
 ///
 /// @param [in]  blas_index         The index of the BLAS to use.
@@ -298,6 +328,15 @@ RraErrorCode RraBlasGetNodeTriangles(uint64_t blas_index, uint32_t node_ptr, str
 ///
 /// @param [in] blas_index The index of the BLAS to use.
 /// @param [in] node_ptr The node ID to retrieve the vertices for.
+/// @param [out] out_count The number of vertices in the triangle node.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetNodeVertexCount(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_count);
+
+/// @brief Retrieve the vertices stored in the given node id.
+///
+/// @param [in] blas_index The index of the BLAS to use.
+/// @param [in] node_ptr The node ID to retrieve the vertices for.
 /// @param [out] out_triangles A preallocated pointer to dump the vertices into.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
@@ -318,6 +357,24 @@ RraErrorCode RraBlasGetBuildFlags(uint64_t blas_index, VkBuildAccelerationStruct
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetSizeInBytes(uint64_t blas_index, uint32_t* out_size_in_bytes);
+
+/// @brief Get the index of the node's OBB matrix.
+///
+/// @param [in] blas_index The index of the BLAS to use.
+/// @param [in] node_ptr   The node of interest.
+/// @param [out] obb_index A pointer to have the OBB index written to.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetNodeObbIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t* obb_index);
+
+/// @brief Get the orientation of the node's OBB.
+///
+/// @param [in]  blas_index   The index of the BLAS to use.
+/// @param [in]  node_ptr     The node of interest.
+/// @param [out] out_rotation A pointer to 9 floats to have the column-major matrix written to.
+///
+/// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetNodeBoundingVolumeOrientation(uint64_t blas_index, uint32_t node_ptr, float* out_rotation);
 
 #ifdef __cplusplus
 }

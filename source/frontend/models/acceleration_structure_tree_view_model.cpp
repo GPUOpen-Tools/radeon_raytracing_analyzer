@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure tree-view model.
@@ -11,6 +11,7 @@
 
 #include "public/rra_assert.h"
 #include "public/rra_bvh.h"
+#include "public/rra_rtip_info.h"
 
 #include "models/acceleration_structure_tree_view_item.h"
 
@@ -78,9 +79,14 @@ namespace rra
 
             node_data_to_item_[node_data] = item;
 
+            uint32_t max_child_count{4};
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                max_child_count = 8;
+            }
             // For each item on the stack, add the children if valid.
             // Sort node types. Loop once for box (interior) nodes, then once for leaf nodes.
-            for (auto child_index = 0; child_index < 4; child_index++)
+            for (uint32_t child_index = 0; child_index < max_child_count; child_index++)
             {
                 uint32_t child_node = UINT32_MAX;
                 if (function(index, node_data, child_index, &child_node) == kRraOk)
@@ -92,7 +98,7 @@ namespace rra
                 }
             }
 
-            for (auto child_index = 0; child_index < 4; child_index++)
+            for (uint32_t child_index = 0; child_index < max_child_count; child_index++)
             {
                 uint32_t child_node = UINT32_MAX;
                 if (function(index, node_data, child_index, &child_node) == kRraOk)
@@ -110,8 +116,7 @@ namespace rra
         return true;
     }
 
-    AccelerationStructureTreeViewItem* AccelerationStructureTreeViewModel::AllocateMemory(uint32_t                           node_data,
-                                                                                          AccelerationStructureTreeViewItem* parent)
+    AccelerationStructureTreeViewItem* AccelerationStructureTreeViewModel::AllocateMemory(uint32_t node_data, AccelerationStructureTreeViewItem* parent)
     {
         RRA_ASSERT(buffer_item_index_ < item_buffer_size_);
         AccelerationStructureTreeViewItem* item = GetItemAtIndex(buffer_item_index_);
@@ -188,6 +193,11 @@ namespace rra
         }
 
         if (role == Qt::DisplayRole)
+        {
+            return item->Data(index.column(), role, is_tlas_, as_index_);
+        }
+
+        else if (role == Qt::ToolTipRole)
         {
             return item->Data(index.column(), role, is_tlas_, as_index_);
         }
@@ -358,7 +368,7 @@ namespace rra
             item_buffer_      = nullptr;
             item_buffer_size_ = 0;
         }
-        root_item_ = nullptr;
+        root_item_         = nullptr;
         buffer_item_index_ = 0;
     }
 

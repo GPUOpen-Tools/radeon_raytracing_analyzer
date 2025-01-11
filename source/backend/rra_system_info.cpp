@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the System info interface.
@@ -49,6 +49,11 @@ const char* RraSystemInfoGetSystemMemoryType()
     return data_set_.system_info->os.memory.type.c_str();
 }
 
+const char* RraSystemInfoGetOsName()
+{
+    return data_set_.system_info->os.name.c_str();
+}
+
 const char* RraSystemInfoGetDriverPackagingVersion()
 {
     return data_set_.system_info->driver.packaging_version.c_str();
@@ -57,6 +62,24 @@ const char* RraSystemInfoGetDriverPackagingVersion()
 const char* RraSystemInfoGetDriverSoftwareVersion()
 {
     return data_set_.system_info->driver.software_version.c_str();
+}
+
+const char* RraSystemInfoGetGpuName()
+{
+    if (active_gpu < data_set_.system_info->gpus.size())
+    {
+        return data_set_.system_info->gpus[active_gpu].name.c_str();
+    }
+    return nullptr;
+}
+
+const char* RraSystemInfoGetGpuMemoryType()
+{
+    if (active_gpu < data_set_.system_info->gpus.size())
+    {
+        return data_set_.system_info->gpus[active_gpu].memory.type.c_str();
+    }
+    return nullptr;
 }
 
 bool RraSystemInfoAvailable()

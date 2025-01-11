@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Triangles pane on the BLAS tab.
@@ -37,6 +37,9 @@ public:
     ///
     /// @param [in] event the show event object.
     virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
+
+    /// @brief Trace opened.
+    virtual void OnTraceOpen() Q_DECL_OVERRIDE;
 
     /// @brief Trace closed.
     virtual void OnTraceClose() Q_DECL_OVERRIDE;

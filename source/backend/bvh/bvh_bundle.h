@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH bundle definition.
@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include "public/rra_error.h"
 
@@ -39,11 +40,12 @@ namespace rta
         ///
         /// @param [in] top_level_bvhs                   The top level bvh structures.
         /// @param [in] bottom_level_bvhs                The bottom level bvh structures.
-        explicit BvhBundle(std::vector<std::unique_ptr<IBvh>>&& top_level_bvhs,
-                           std::vector<std::unique_ptr<IBvh>>&& bottom_level_bvhs,
-                           bool                                 empty_placeholder,
-                           uint64_t                             missing_blas_count,
-                           uint64_t                             inactive_instance_count);
+        explicit BvhBundle(std::vector<std::unique_ptr<IBvh>>&&                 top_level_bvhs,
+                           std::vector<std::unique_ptr<IBvh>>&&                 bottom_level_bvhs,
+                           bool                                                 empty_placeholder,
+                           uint64_t                                             missing_blas_count,
+                           uint64_t                                             inactive_instance_count,
+                           std::unordered_map<GpuVirtualAddress, std::uint64_t> blas_va_to_index_map);
 
         /// @brief Destructor.
         ~BvhBundle();
@@ -108,9 +110,18 @@ namespace rta
         /// @return true if a placeholder has been added, false otherwise.
         bool ContainsEmptyPlaceholder() const;
 
+        /// @brief Get the blas index from virtual address.
+        ///
+        /// @param address The address of the blas.
+        ///
+        /// @return The index of the blas.
+        std::optional<uint64_t> GetBlasIndexFromVirtualAddress(GpuVirtualAddress address);
+
     protected:
         std::vector<std::unique_ptr<IBvh>> top_level_bvhs_;     ///< The list of top level BVH's.
         std::vector<std::unique_ptr<IBvh>> bottom_level_bvhs_;  ///< The list of bottom level BVH's.
+
+        std::unordered_map<GpuVirtualAddress, std::uint64_t> blas_va_to_index_map_;  ///< A map from blas virtual address to index.
 
         bool     empty_placeholder_       = false;  ///< Has an empty BLAS been placed at index 0 in the bottom_level_bvhs_ array.
         uint64_t missing_blas_count_      = 0;      ///< The number of missing BLASes in the trace.
@@ -137,7 +148,7 @@ namespace rta
     /// @param [in,out] io_error_code  An error code indicating whether the file loaded successfully.
     ///
     /// @return The ray tracing IP level.
-    RayTracingIpLevel GetRtIpLevel(rdf::ChunkFile& chunk_file, RraErrorCode* io_error_code);
+    RayTracingIpLevel DecodeRtIpLevel(rdf::ChunkFile& chunk_file, RraErrorCode* io_error_code);
 
     /// @brief Get maximum major versions from the chunk file.
     ///

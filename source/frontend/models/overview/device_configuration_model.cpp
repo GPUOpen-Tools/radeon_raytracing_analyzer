@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Device configuration model.
@@ -157,6 +157,15 @@ namespace rra
     bool DeviceConfigurationModel::SystemInfoAvailable()
     {
         return RraSystemInfoAvailable();
+    }
+
+    bool DeviceConfigurationModel::IsDriverSoftwareVersionNeeded()
+    {
+        if (std::strstr(RraSystemInfoGetOsName(), "Windows") != nullptr)
+        {
+            return true;
+        }
+        return false;
     }
 
 }  // namespace rra

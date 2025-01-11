@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Vulkan device object.
@@ -165,7 +165,7 @@ namespace rra
                               VkDeviceSize       size);
 
             /// @brief Transfer CPU buffer to a device local Vulkan buffer. Handles staging buffer and transfer command.
-            /// 
+            ///
             /// @param cmd        The command buffer for the transfer command.
             /// @param queue      The queue to submit the transfer command to.
             /// @param buffer     The destination buffer.

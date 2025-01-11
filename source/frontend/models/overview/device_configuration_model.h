@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Device configuration model.
@@ -60,6 +60,14 @@ namespace rra
         ///
         /// @return true if SystemInfo available, false if not.
         bool SystemInfoAvailable();
+
+        /// @brief Does the UI need to show the driver software version.
+        ///
+        /// This will be true if the loaded scene comes from a Windows
+        /// machine.
+        ///
+        /// @return true if the driver software version is to be shown.
+        bool IsDriverSoftwareVersionNeeded();
 
     private:
         /// @brief Update the device information from the system info chunk.

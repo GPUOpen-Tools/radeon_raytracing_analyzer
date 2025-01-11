@@ -605,7 +605,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Show axis aligned BVH</string>
+           <string>Show bounding volumes</string>
           </property>
           <property name="toolTip">
            <string>Toggle the bounding volume overlay. Pressing "B" offers the same functionality.</string>

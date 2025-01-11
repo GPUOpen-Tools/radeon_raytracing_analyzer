@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the TLAS instances model.
@@ -60,7 +60,7 @@ namespace rra
         }
 
         Scene scene;
-        scene.Initialize(SceneNode::ConstructFromTlas(tlas_index));
+        scene.Initialize(SceneNode::ConstructFromTlas(tlas_index), tlas_index, true);
 
         // Get the total instance count to allocate.
         uint64_t total_instance_count = 0;

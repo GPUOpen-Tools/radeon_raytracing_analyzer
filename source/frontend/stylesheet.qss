@@ -16,7 +16,7 @@ QTableView::item:selected
 
 QSplitter::handle
 {
-    color: grey;
+    background: grey;
     width: 1px;
 }
 
@@ -120,6 +120,11 @@ ScaledTabWidget > QTabBar::tab:!selected:hover
 ScaledLabel, ScaledPushButton, QLabel, QPushButton
 {
     font-size: 9.75pt;
+}
+
+ScaledLabel#empty_recent_files_label_
+{
+    font-size: 10pt;
 }
 
 ColoredLegendGraphicsView
@@ -654,6 +659,26 @@ ColoredRadioButton
 }
 
 QScrollArea#triangle_split_scroll_area_
+{
+    border-style: none;
+}
+
+QScrollArea#triangle_scroll_area_
+{
+    border-style: none;
+}
+
+QWidget#triangle_scroll_area_contents_
+{
+    border-style: none;
+}
+
+QWidget#triangle_pane_
+{
+    border-style: none;
+}
+
+QFrame#triangle_information_
 {
     border-style: none;
 }

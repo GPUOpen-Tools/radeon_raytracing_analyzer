@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS viewer pane.
@@ -17,6 +17,7 @@
 #include "settings/settings.h"
 #include "views/widget_util.h"
 #include "public/rra_api_info.h"
+#include "public/rra_rtip_info.h"
 
 static const int kSplitterWidth = 300;
 
@@ -64,6 +65,15 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     derived_model_->InitializeFlagsTableModel(ui_->flags_table_);
     derived_model_->InitializeTransformTableModel(ui_->transform_table_);
     derived_model_->InitializePositionTableModel(ui_->position_table_);
+
+    model_->InitializeRotationTableModel(ui_->bottom_table_);
+    SetTableParams(ui_->bottom_table_);
+    ui_->label_bottom_table_->setVisible(false);
+    ui_->bottom_table_->setVisible(false);
+    ui_->label_bottom_table_->setText("Bounding box orientation");
+    ui_->label_bottom_table_->setToolTip("The rotation matrix of the bounding volume.");
+
+    ui_->node_pointer_group_->hide();
 
     model_->InitializeModel(ui_->content_node_address_, rra::kTlasStatsAddress, "text");
     model_->InitializeModel(ui_->content_node_type_, rra::kTlasStatsType, "text");
@@ -245,7 +255,7 @@ void TlasViewerPane::UpdateRebraidUI()
             auto     node_id        = scene->GetMostRecentSelectedNodeId();
             uint32_t instance_index = model->GetInstanceIndexFromNode(tlas_index, node_id);
 
-            if (derived_model_->SelectedNodeIsLeaf())
+            if (derived_model_->SelectedNodeIsLeaf() && instance_index != UINT32_MAX)
             {
                 if (scene->IsInstanceRebraided(instance_index))
                 {
@@ -417,6 +427,11 @@ void TlasViewerPane::UpdateWidgets(const QModelIndex& index)
 
     ui_->common_group_->setVisible(common_valid);
     ui_->instance_group_->setVisible(instance_valid);
+    if (RraRtipInfoGetOBBSupported())
+    {
+        ui_->label_bottom_table_->setVisible(!instance_valid);
+        ui_->bottom_table_->setVisible(!instance_valid);
+    }
     if (model_)
     {
         ui_->rebraid_group_->setVisible(model_->IsRebraidedNode(last_selected_as_id_));
@@ -459,16 +474,19 @@ void TlasViewerPane::SetBlasInstanceSelection(uint64_t tlas_index, uint64_t blas
             // Move the camera to focus on the selected BLAS instance's bounding volume.
             rra::renderer::Camera& scene_camera      = renderer_interface_->GetCamera();
             rra::ViewerIO*         camera_controller = static_cast<rra::ViewerIO*>(scene_camera.GetCameraController());
-            camera_controller->FocusCameraOnVolume(&renderer_interface_->GetCamera(), instance_info.bounding_volume);
+            if (camera_controller)
+            {
+                camera_controller->FocusCameraOnVolume(&renderer_interface_->GetCamera(), instance_info.bounding_volume);
 
-            scene->SetSceneSelection(instance_info.instance_node);
+                scene->SetSceneSelection(instance_info.instance_node);
 
-            // Update the scene selection, which will select the instance in the viewport and the treeview.
-            UpdateSceneSelection(ui_->tlas_tree_);
+                // Update the scene selection, which will select the instance in the viewport and the treeview.
+                UpdateSceneSelection(ui_->tlas_tree_);
 
-            HandleSceneSelectionChanged();
+                HandleSceneSelectionChanged();
 
-            emit rra::MessageManager::Get().BlasSelected(instance_info.blas_index);
+                emit rra::MessageManager::Get().BlasSelected(instance_info.blas_index);
+            }
         }
     }
 }

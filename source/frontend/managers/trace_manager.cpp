@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Trace Manager.
@@ -101,6 +101,10 @@ namespace rra
         else if (error_code == kRraMajorVersionIncompatible)
         {
             return kTraceLoadReturnFailIncompatible;
+        }
+        else if (error_code == kRraErrorUnrecognizedRtIpLevel)
+        {
+            return kTraceLoadUnrecognizedRtIpLevel;
         }
         else if (error_code != kRraOk)
         {
@@ -271,6 +275,10 @@ namespace rra
             else if (error_code == kTraceLoadReturnFailIncompatible)
             {
                 text += text::kDeleteRecentTraceTextIncompatible;
+            }
+            else if (error_code == kTraceLoadUnrecognizedRtIpLevel)
+            {
+                text += text::kDeleteRecentTraceTextUnrecognizedRtIpLevel;
             }
 
             ShowMessageBox(active_trace_path_, text::kDeleteRecentTraceTitle, text);

@@ -1,92 +1,92 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the acceleration structure build info class.
 //=============================================================================
 
-#include "bvh/rtip11/irt_ip_11_acceleration_structure_post_build_info.h"
+#include "bvh/rtip_common/i_acceleration_structure_post_build_info.h"
 #include "bvh/dxr_type_conversion.h"
 
 #include <string.h>  // for memcpy()
 
 namespace rta
 {
-    IRtIp11AccelerationStructurePostBuildInfo::~IRtIp11AccelerationStructurePostBuildInfo()
+    IRtIpCommonAccelerationStructurePostBuildInfo::~IRtIpCommonAccelerationStructurePostBuildInfo()
     {
     }
 
-    void IRtIp11AccelerationStructurePostBuildInfo::SetBvhType(const BvhType type)
+    void IRtIpCommonAccelerationStructurePostBuildInfo::SetBvhType(const BvhType type)
     {
         SetBvhTypeImpl(type);
     }
 
-    BvhType IRtIp11AccelerationStructurePostBuildInfo::GetBvhType() const
+    BvhType IRtIpCommonAccelerationStructurePostBuildInfo::GetBvhType() const
     {
         return GetBvhTypeImpl();
     }
 
-    bool IRtIp11AccelerationStructurePostBuildInfo::IsTopLevel() const
+    bool IRtIpCommonAccelerationStructurePostBuildInfo::IsTopLevel() const
     {
         return GetBvhTypeImpl() == BvhType::kTopLevel;
     }
 
-    bool IRtIp11AccelerationStructurePostBuildInfo::IsBottomLevel() const
+    bool IRtIpCommonAccelerationStructurePostBuildInfo::IsBottomLevel() const
     {
         return GetBvhTypeImpl() == BvhType::kBottomLevel;
     }
 
-    void IRtIp11AccelerationStructurePostBuildInfo::SetTriangleCompressionMode(const BvhTriangleCompressionMode compression_mode)
+    void IRtIpCommonAccelerationStructurePostBuildInfo::SetTriangleCompressionMode(const BvhTriangleCompressionMode compression_mode)
     {
         SetTriangleCompressionModeImpl(compression_mode);
     }
 
-    BvhTriangleCompressionMode IRtIp11AccelerationStructurePostBuildInfo::GetTriangleCompressionMode() const
+    BvhTriangleCompressionMode IRtIpCommonAccelerationStructurePostBuildInfo::GetTriangleCompressionMode() const
     {
         return GetTriangleCompressionModeImpl();
     }
 
-    void IRtIp11AccelerationStructurePostBuildInfo::SetBottomLevelFp16Mode(const BvhLowPrecisionInteriorNodeMode mode)
+    void IRtIpCommonAccelerationStructurePostBuildInfo::SetBottomLevelFp16Mode(const BvhLowPrecisionInteriorNodeMode mode)
     {
         SetBottomLevelFp16ModeImpl(mode);
     }
 
-    BvhLowPrecisionInteriorNodeMode IRtIp11AccelerationStructurePostBuildInfo::GetBottomLevelFp16Mode() const
+    BvhLowPrecisionInteriorNodeMode IRtIpCommonAccelerationStructurePostBuildInfo::GetBottomLevelFp16Mode() const
     {
         return GetBottomLevelFp16ModeImpl();
     }
 
-    void IRtIp11AccelerationStructurePostBuildInfo::SetBuildFlags(const BvhBuildFlags flags)
+    void IRtIpCommonAccelerationStructurePostBuildInfo::SetBuildFlags(const BvhBuildFlags flags)
     {
         SetBuildFlagsImpl(flags);
     }
 
-    BvhBuildFlags IRtIp11AccelerationStructurePostBuildInfo::GetBuildFlags() const
+    BvhBuildFlags IRtIpCommonAccelerationStructurePostBuildInfo::GetBuildFlags() const
     {
         return GetBuildFlagsImpl();
     }
 
-    bool IRtIp11AccelerationStructurePostBuildInfo::GetRebraiding() const
+    bool IRtIpCommonAccelerationStructurePostBuildInfo::GetRebraiding() const
     {
         return GetRebraidingImpl();
     }
 
-    std::uint32_t IRtIp11AccelerationStructurePostBuildInfo::GetTriangleSplitting() const
+    std::uint32_t IRtIpCommonAccelerationStructurePostBuildInfo::GetTriangleSplitting() const
     {
         return GetTriangleSplittingImpl();
     }
 
-    void IRtIp11AccelerationStructurePostBuildInfo::LoadFromBuffer(std::size_t size, void* buffer)
+    void IRtIpCommonAccelerationStructurePostBuildInfo::LoadFromBuffer(std::size_t size, void* buffer)
     {
         return LoadFromBufferImpl(size, buffer);
     }
 
-    void IRtIp11AccelerationStructurePostBuildInfo::SaveToBuffer(void* buffer) const
+    void IRtIpCommonAccelerationStructurePostBuildInfo::SaveToBuffer(void* buffer) const
     {
         SaveToBufferImpl(buffer);
     }
 
-    bool IRtIp11AccelerationStructurePostBuildInfo::GetFusedInstances() const
+    bool IRtIpCommonAccelerationStructurePostBuildInfo::GetFusedInstances() const
     {
         return GetFusedInstancesImpl();
     }
@@ -103,7 +103,7 @@ namespace rta
         std::uint32_t build_flags : 16;            ///< Build flags of acceleration structure.
     };
 
-    class DxrRtIp11AccelerationStructurePostBuildInfo final : public IRtIp11AccelerationStructurePostBuildInfo
+    class DxrRtIp11AccelerationStructurePostBuildInfo final : public IRtIpCommonAccelerationStructurePostBuildInfo
     {
     public:
         DxrRtIp11AccelerationStructurePostBuildInfo() = default;
@@ -231,7 +231,7 @@ namespace rta
                   "DxrAccelerationStructureBuildInfoDeprecatedVersion1 does not match the expected "
                   "size of uint32_t");
 
-    std::unique_ptr<IRtIp11AccelerationStructurePostBuildInfo> CreateRtIp11AccelerationStructurePostBuildInfo()
+    std::unique_ptr<IRtIpCommonAccelerationStructurePostBuildInfo> CreateRtIp11AccelerationStructurePostBuildInfo()
     {
         return std::make_unique<DxrRtIp11AccelerationStructurePostBuildInfo>();
     }

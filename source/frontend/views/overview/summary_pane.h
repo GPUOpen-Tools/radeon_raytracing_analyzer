@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the summary pane.
@@ -60,16 +60,20 @@ private slots:
     void SetTlasIndex(uint64_t tlas_index);
 
 private:
+    /// @brief Populate the TLAS address to index map.
+    void UpdateTlasMap();
+
     /// @brief Add all the dispatch panes to the summary pane.
     void AddDispatchPanes();
 
     /// @brief Add all the TLAS panes to the summary pane.
     void AddTlasPanes();
 
-    Ui::SummaryPane*      ui_;                     ///< Pointer to the Qt UI design.
-    rra::SummaryModel*    model_;                  ///< The model for this pane.
-    uint64_t              tlas_index_;             ///< The index in the table.
-    std::vector<QWidget*> widget_deletion_queue_;  ///< A list of dynamic widgets in the pane which need manual deletion.
+    Ui::SummaryPane*                       ui_;                     ///< Pointer to the Qt UI design.
+    rra::SummaryModel*                     model_;                  ///< The model for this pane.
+    uint64_t                               tlas_index_;             ///< The index in the table.
+    std::vector<QWidget*>                  widget_deletion_queue_;  ///< A list of dynamic widgets in the pane which need manual deletion.
+    std::unordered_map<uint64_t, uint32_t> tlas_address_to_index_;  ///< Maps the TLAS addresses to their indices.
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_SUMMARY_PANE_H_

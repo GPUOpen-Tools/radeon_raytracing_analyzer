@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2016-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2016-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Linux implementation of Windows safe CRT functions.
@@ -27,17 +27,16 @@ static errno_t validate_string_params(char* destination, size_t size, const char
     else if (source == nullptr)
     {
         destination[0] = '\0';
-        result = EINVAL;
+        result         = EINVAL;
     }
     else if (size == 0)
     {
         result = ERANGE;
-
     }
     else if (strlen(source) > size)
     {
         destination[0] = '\0';
-        result = ERANGE;
+        result         = ERANGE;
     }
 
     return result;
@@ -52,7 +51,7 @@ errno_t fopen_s(FILE** file, const char* filename, const char* mode)
 
     *file = fopen(filename, mode);
 
-    if (*file)
+    if (*file == nullptr)
     {
         return errno;
     }
@@ -153,6 +152,5 @@ errno_t strcat_s(char* destination, size_t size, const char* source)
 
     return result;
 }
-
 
 #endif  // !_WIN32

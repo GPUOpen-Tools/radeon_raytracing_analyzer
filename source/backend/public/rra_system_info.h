@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public System info interface.
@@ -19,12 +19,12 @@ extern "C" {
 
 /// @brief Get the CPU name as a string.
 ///
-/// @return
-const char*  RraSystemInfoGetCpuName();
+/// @return The CPU name.
+const char* RraSystemInfoGetCpuName();
 
 /// @brief Get the CPU clock speed.
 ///
-/// @return The CPU clock speed, in MHz
+/// @return The CPU clock speed, in MHz.
 RraErrorCode RraSystemInfoGetCpuClockSpeed(uint32_t* out_clock_speed);
 
 /// @brief Get the number of physical CPU cores.
@@ -53,6 +53,11 @@ RraErrorCode RraSystemInfoGetSystemMemorySize(uint64_t* out_memory_size);
 /// @return  The system memory type.
 const char* RraSystemInfoGetSystemMemoryType();
 
+/// @brief Get the operating system name, as a string.
+///
+/// @return  The operating system name.
+const char* RraSystemInfoGetOsName();
+
 /// @brief Get the driver packaging version, as a string.
 ///
 /// @return The driver packaging version.
@@ -62,6 +67,16 @@ const char* RraSystemInfoGetDriverPackagingVersion();
 ///
 /// @return The driver software version.
 const char* RraSystemInfoGetDriverSoftwareVersion();
+
+/// @brief Get the GPU name as a string.
+///
+/// @return The GPU name, or nullptr if error.
+const char* RraSystemInfoGetGpuName();
+
+/// @brief Get the type of video memory, as a string.
+///
+/// @return  The video memory type, or nullptr if error.
+const char* RraSystemInfoGetGpuMemoryType();
 
 /// @brief Is the system info data available.
 ///

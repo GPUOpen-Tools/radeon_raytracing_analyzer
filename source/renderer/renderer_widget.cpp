@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Renderer Widget.
@@ -16,8 +16,8 @@
 #include "public/renderer_types.h"
 #include "public/orientation_gizmo.h"
 
-const char*   kFocusInBorderStyle   = "border-style: solid; border-width: 3px; border-color: rgb(0, 122, 217);";
-const char*   kFocusOutBorderStyle  = "border-style: solid; border-width: 3px; border-color: rgb(200,200,200);";
+const char* kFocusInBorderStyle  = "border-style: solid; border-width: 3px; border-color: rgb(0, 122, 217);";
+const char* kFocusOutBorderStyle = "border-style: solid; border-width: 3px; border-color: rgb(200,200,200);";
 
 RendererWidget::RendererWidget(QWidget* parent)
     : QWidget(parent)

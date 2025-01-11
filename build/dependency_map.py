@@ -1,6 +1,6 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief List of all external dependencies.
@@ -22,9 +22,9 @@ github_root  = "https://github.com/"
 # each git dependency has a desired directory where it will be cloned - along with a commit to checkout
 # The third parameter in the value field is whether to do a shallow clone. Usually, this will be True but if a commit hash is used as a branch, a full clone is needed.
 git_mapping = {
-    github_tools + "qt_common"                                      : ["../external/qt_common",          "v4.1.0",                                   True],
+    github_tools + "qt_common"                                      : ["../external/qt_common",          "v4.2.0",                                   True],
     github_tools + "update_check_api"                               : ["../external/update_check_api",   "v2.1.1",                                   True],
-    github_tools + "system_info_utils"                              : ["../external/system_info_utils",  "v2.0",                                     True],
+    github_tools + "system_info_utils"                              : ["../external/system_info_utils",  "v2.1",                                     True],
     github_root  + "g-truc/glm"                                     : ["../external/third_party/glm",    "0.9.9.8",                                  True],
     github_root  + "KhronosGroup/Vulkan-Headers"                    : ["../external/third_party/vulkan", "sdk-1.3.211",                              True],
     github_root  + "zeux/volk"                                      : ["../external/third_party/volk",   "1.2.190",                                  True],

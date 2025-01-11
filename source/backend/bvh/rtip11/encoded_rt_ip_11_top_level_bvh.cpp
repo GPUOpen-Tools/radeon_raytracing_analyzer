@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific top level acceleration structure
@@ -7,22 +7,67 @@
 //=============================================================================
 
 #include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
 
 #include <iostream>
 #include <vector>
 #include <cassert>
 #include <deque>
 #include <unordered_set>
+#include "bvh/dxr_type_conversion.h"
 
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_error.h"
+#include "bvh/rtip11/rt_ip_11_header.h"
 
 namespace rta
 {
+    EncodedRtIp11TopLevelBvh::EncodedRtIp11TopLevelBvh()
+    {
+        header_ = std::make_unique<DxrRtIp11AccelerationStructureHeader>();
+    }
 
     EncodedRtIp11TopLevelBvh::~EncodedRtIp11TopLevelBvh()
     {
+    }
+
+    void EncodedRtIp11TopLevelBvh::SetRelativeReferences(const std::unordered_map<GpuVirtualAddress, std::uint64_t>& reference_map,
+                                                         bool                                                        map_self,
+                                                         std::unordered_set<GpuVirtualAddress>&                      missing_set)
+    {
+        if (map_self)
+        {
+            IBvh::SetRelativeReferences(reference_map, map_self, missing_set);
+        }
+        else
+        {
+            // Fix up the instance node addresses.
+            size_t byte_offset = 0;
+            while (byte_offset < instance_node_data_.size())
+            {
+                dxr::amd::InstanceNode* instance_node = reinterpret_cast<dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
+                if (!instance_node->IsInactive())
+                {
+                    uint64_t address = instance_node->GetDesc().GetBottomLevelBvhGpuVa(dxr::InstanceDescType::kRaw);
+
+                    const auto it = reference_map.find(address);
+                    if (it != reference_map.end())
+                    {
+                        const auto new_relative_reference = it->second;
+                        instance_node->GetDesc().SetBottomLevelBvhGpuVa(new_relative_reference << 3, dxr::InstanceDescType::kRaw);
+                    }
+                    else
+                    {
+                        missing_set.insert(address);
+                        const auto new_relative_reference = 0;
+                        instance_node->GetDesc().SetBottomLevelBvhGpuVa(new_relative_reference << 3, dxr::InstanceDescType::kRaw);
+                    }
+                }
+
+                byte_offset += GetInstanceNodeSize();
+            }
+        }
     }
 
     std::int32_t EncodedRtIp11TopLevelBvh::GetInstanceNodeSize() const
@@ -100,7 +145,9 @@ namespace rta
 
         if (!skip_meta_data)
         {
-            memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, chunk_header.meta_header_size);
+            meta_data_  = {};
+            size_t size = std::min(chunk_header.meta_header_size, dxr::amd::kMetaDataV1Size);
+            memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, size);
         }
 
         header_->LoadFromBuffer(dxr::amd::kAccelerationStructureHeaderSize, buffer.data() + chunk_header.header_offset);
@@ -110,7 +157,8 @@ namespace rta
             return false;
         }
 
-        uint64_t address = (static_cast<std::uint64_t>(chunk_header.accel_struct_base_va_hi) << 32) | chunk_header.accel_struct_base_va_lo;
+        uint64_t address =
+            ((static_cast<std::uint64_t>(chunk_header.accel_struct_base_va_hi) << 32) | chunk_header.accel_struct_base_va_lo) + chunk_header.header_offset;
         SetVirtualAddress(address);
 
         auto buffer_offset = chunk_header.header_offset + chunk_header.header_size;
@@ -126,7 +174,7 @@ namespace rta
         LoadBaseDataFromFile(metadata_stream, buffer_stream, static_cast<uint32_t>(interior_node_buffer_size), import_option);
         metadata_stream.Close();
 
-        auto rt_ip11_header = CreateRtIp11AccelerationStructureHeader();
+        auto rt_ip11_header = std::make_unique<DxrRtIp11AccelerationStructureHeader>();
         rt_ip11_header->LoadFromBuffer(dxr::amd::kAccelerationStructureHeaderSize, buffer.data() + chunk_header.header_offset);
 
         int32_t num_instance_nodes = rt_ip11_header->GetPrimitiveCount();
@@ -134,10 +182,13 @@ namespace rta
         buffer_stream.Read(instance_node_data_.size(), instance_node_data_.data());
 
         const auto prim_node_ptr_size = num_instance_nodes * sizeof(dxr::amd::NodePointer);
-        primitive_node_ptrs_.resize(prim_node_ptr_size);
+        primitive_node_ptrs_.resize(num_instance_nodes);
         buffer_stream.Read(prim_node_ptr_size, primitive_node_ptrs_.data());
 
         buffer_stream.Close();
+
+        // Set the root node offset.
+        header_offset_ = static_cast<uint64_t>(chunk_header.header_offset);
 
         return true;
     }
@@ -148,46 +199,6 @@ namespace rta
         ScanTreeDepth();
         instance_surface_area_heuristic_.resize(header_->GetPrimitiveCount(), 0);
         return result;
-    }
-
-    void EncodedRtIp11TopLevelBvh::SetRelativeReferences(const std::unordered_map<GpuVirtualAddress, std::uint64_t>& reference_map,
-                                                         bool                                                        map_self,
-                                                         std::unordered_set<GpuVirtualAddress>&                      missing_set)
-    {
-        if (map_self)
-        {
-            IEncodedRtIp11Bvh::SetRelativeReferences(reference_map, map_self, missing_set);
-        }
-        else
-        {
-            // Fix up the instance node addresses.
-            size_t byte_offset = 0;
-            while (byte_offset < instance_node_data_.size())
-            {
-                dxr::amd::InstanceNode* instance_node = reinterpret_cast<dxr::amd::InstanceNode*>(&instance_node_data_[byte_offset]);
-                if (!instance_node->IsInactive())
-                {
-                    uint64_t                address        = instance_node->GetDesc().GetBottomLevelBvhGpuVa(dxr::InstanceDescType::kRaw);
-                    uint32_t                meta_data_size = instance_node->GetExtraData().GetBottomLevelBvhMetaDataSize();
-                    const GpuVirtualAddress old_reference  = address - meta_data_size;
-
-                    const auto it = reference_map.find(old_reference);
-                    if (it != reference_map.end())
-                    {
-                        const auto new_relative_reference = it->second;
-                        instance_node->GetDesc().SetBottomLevelBvhGpuVa(new_relative_reference << 3, dxr::InstanceDescType::kRaw);
-                    }
-                    else
-                    {
-                        missing_set.insert(old_reference);
-                        const auto new_relative_reference = 0;
-                        instance_node->GetDesc().SetBottomLevelBvhGpuVa(new_relative_reference << 3, dxr::InstanceDescType::kRaw);
-                    }
-                }
-
-                byte_offset += GetInstanceNodeSize();
-            }
-        }
     }
 
     bool EncodedRtIp11TopLevelBvh::BuildInstanceList()
@@ -372,22 +383,6 @@ namespace rta
         return triangle_count;
     }
 
-    uint64_t EncodedRtIp11TopLevelBvh::GetTotalProceduralNodeCount() const
-    {
-        uint64_t procedural_count = 0;
-        for (const auto& it : instance_list_)
-        {
-            uint32_t     procedural_nodes = 0;
-            RraErrorCode status           = RraBlasGetProceduralNodeCount(it.first, &procedural_nodes);
-            RRA_ASSERT(status == kRraOk);
-            if (status == kRraOk)
-            {
-                procedural_count += static_cast<uint64_t>(procedural_nodes);
-            }
-        }
-        return procedural_count;
-    }
-
     uint64_t EncodedRtIp11TopLevelBvh::GetInstanceCount(uint64_t index) const
     {
         auto iter = instance_list_.find(index);
@@ -427,6 +422,25 @@ namespace rta
         assert(index != -1);
         assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
         instance_surface_area_heuristic_[index] = surface_area_heuristic;
+    }
+
+    dxr::amd::NodePointer EncodedRtIp11TopLevelBvh::GetParentNode(const dxr::amd::NodePointer* node_ptr) const
+    {
+        assert(!node_ptr->IsInvalid());
+
+        const auto& parent_data       = parent_data_;
+        const auto& parent_links      = parent_data.GetLinkData();
+        const auto  compression_mode  = ToDxrTriangleCompressionMode(GetHeader().GetPostBuildInfo().GetTriangleCompressionMode());
+        const auto  parent_link_index = node_ptr->CalculateParentLinkIndex(parent_data.GetSizeInBytes(), compression_mode);
+
+        if (parent_link_index >= parent_data.GetLinkCount())
+        {
+            return {};
+        }
+
+        dxr::amd::NodePointer parent_node = parent_links[parent_link_index];
+
+        return parent_node;
     }
 
 }  // namespace rta

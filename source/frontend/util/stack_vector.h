@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of a vector-like class that is entirely stack allocated to avoid allocation/deletion bottlenecks.

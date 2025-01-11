@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for ray intersections.
@@ -20,10 +20,27 @@ namespace rra
         /// @param [in] ray_direction   The direction of the ray.
         /// @param [in] min             The min bound of a volume.
         /// @param [in] origin          The max bound of a volume.
-        /// @param [out] closest         The closest point intersected on bound.
+        /// @param [out] closest        The closest point intersected on bound.
         ///
         /// @return True if the ray hits the min max.
         bool IntersectAABB(const glm::vec3& ray_origin, const glm::vec3& ray_direction, const glm::vec3& min, const glm::vec3& max, float& closest);
+
+        /// @brief Check for the intersection between a ray and an oriented bounding box.
+        ///
+        /// @param [in] ray_origin      The origin of the ray.
+        /// @param [in] ray_direction   The direction of the ray.
+        /// @param [in] min             The min bound of a volume.
+        /// @param [in] origin          The max bound of a volume.
+        /// @param [in] rotation        Rotation of the OBB.
+        /// @param [out] closest        The closest point intersected on bound.
+        ///
+        /// @return True if the ray hits the min max.
+        bool IntersectOBB(const glm::vec3& ray_origin,
+                          const glm::vec3& ray_direction,
+                          const glm::vec3& min,
+                          const glm::vec3& max,
+                          const glm::mat3& rotation,
+                          float&           closest);
 
         /// @brief Check for the intersection between a ray and a triangle.
         ///

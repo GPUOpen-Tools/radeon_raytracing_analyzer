@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the Surface area heuristic calculator.
@@ -8,10 +8,11 @@
 #ifndef RRA_BACKEND_SURFACE_AREA_HEURISTIC_H_
 #define RRA_BACKEND_SURFACE_AREA_HEURISTIC_H_
 
-#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 #include "rra_data_set.h"
 
 // Surface area heuristic calculator functions. Used only by the backend; no public interface.
+
+struct PrimitiveStructure;
 
 namespace rra
 {
@@ -29,7 +30,7 @@ namespace rra
     /// @param [in] tri_only All non-triangle nodes will be ignored if this is true.
     ///
     /// @return The minimum surface area heuristic.
-    float GetMinimumSurfaceAreaHeuristic(const rta::IEncodedRtIp11Bvh* bvh, const dxr::amd::NodePointer node_ptr, bool tri_only);
+    float GetMinimumSurfaceAreaHeuristic(const rta::IBvh* bvh, const dxr::amd::NodePointer node_ptr, bool tri_only);
 
     /// @brief Get the average (mean) surface area heuristic for a given node and its children.
     ///
@@ -38,7 +39,7 @@ namespace rra
     /// @param [in] tri_only All non-triangle nodes will be ignored if this is true.
     ///
     /// @return The average surface area heuristic.
-    float GetAverageSurfaceAreaHeuristic(const rta::IEncodedRtIp11Bvh* bvh, const dxr::amd::NodePointer node_ptr, bool tri_only);
+    float GetAverageSurfaceAreaHeuristic(const rta::IBvh* bvh, const dxr::amd::NodePointer node_ptr, bool tri_only);
 }  // namespace rra
 
 #endif  // RRA_BACKEND_SURFACE_AREA_HEURISTIC_H_

@@ -1,3 +1,10 @@
+//=============================================================================
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Implementation for the orientation gizmo.
+//=============================================================================
+
 #include "public/orientation_gizmo.h"
 
 #include <algorithm>

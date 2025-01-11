@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a data set.
@@ -20,6 +20,7 @@
 #include "public/rra_async_ray_history_loader.h"
 #include "api_info.h"
 #include "asic_info.h"
+#include "bvh/gpu_def.h"
 #include "system_info_utils/source/system_info_reader.h"
 #include "string_table.h"
 #include "user_marker_history.h"
@@ -37,11 +38,12 @@ typedef struct RraDataSet
     time_t                          create_time;                       ///< The time the trace was created.
     std::unique_ptr<rta::BvhBundle> bvh_bundle;                        ///< The BVH bundle class encapsulating all the BLAS and TLAS for the loaded trace.
 
-    char*                                                  driver_overrides_json_text;           ///< The Driver Overrides JSON text.
-    std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> async_ray_histories;                  ///< The ray histories made available per asnyc work.
-    rra::ApiInfo                                           api_info                  = {};       ///< The API info.
-    rra::AsicInfo                                          asic_info                 = {};       ///< The ASIC info.
-    system_info_utils::SystemInfo*                         system_info               = nullptr;  ///< The System Info.
+    char*                                                  driver_overrides_json_text;      ///< The Driver Overrides JSON text.
+    std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> async_ray_histories;             ///< The ray histories made available per asnyc work.
+    rra::ApiInfo                                           api_info                  = {};  ///< The API info.
+    rra::AsicInfo                                          asic_info                 = {};  ///< The ASIC info.
+    rta::RayTracingIpLevel                                 rtip_level                = rta::RayTracingIpLevel::_None;  // The ray tracing IP level
+    system_info_utils::SystemInfo*                         system_info               = nullptr;                        ///< The System Info.
     rra::StringTables*                                     user_marker_string_tables = nullptr;
     rra::UserMarkerHistory*                                user_marker_histories     = nullptr;
 } RraDataSet;

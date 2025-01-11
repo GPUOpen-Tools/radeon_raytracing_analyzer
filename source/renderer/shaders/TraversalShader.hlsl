@@ -2,7 +2,7 @@
 // Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief
+/// @brief  Shader for the Traversal counter rendering.
 //=============================================================================
 
 #include "Common.hlsl"
@@ -58,10 +58,12 @@ struct TraversalVolume
     uint leaf_end;
 
     int  child_masks;
-    uint child_nodes[4];
+    uint child_nodes[8];
 
-    float4 child_nodes_min[4];
-    float4 child_nodes_max[4];
+    float4 child_nodes_min[8];
+    float4 child_nodes_max[8];
+    
+    float4 reserved;
 };
 
 struct TraversalInstance

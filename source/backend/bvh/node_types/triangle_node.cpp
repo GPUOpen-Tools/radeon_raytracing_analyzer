@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a triangle node class.
@@ -8,7 +8,7 @@
 #include "bvh/node_types/triangle_node.h"
 
 #include <cassert>
-#include <cmath>  // --> isnan, isinf
+#include <cmath>    // --> isnan, isinf
 #include <cstring>  // --> Linux, memcpy
 
 #include "bvh/flags_util.h"

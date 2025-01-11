@@ -1,4 +1,10 @@
 //{{NO_DEPENDENCIES}}
+//=============================================================================
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief Microsoft Visual C++ generated include file used by RRA.rc.
+//=============================================================================
 // Microsoft Visual C++ generated include file.
 // Used by RRC.rc
 //

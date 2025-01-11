@@ -1,3 +1,10 @@
+//=============================================================================
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// @author AMD Developer Tools Team
+/// @file
+/// @brief  Definition of the DXR type conversion helper functions.
+//=============================================================================
+
 #include "dxr_type_conversion.h"
 
 #include "flags_util.h"
@@ -40,7 +47,7 @@ namespace rta
             {BvhTriangleCompressionMode::kPairTriangles, dxr::amd::TriangleCompressionMode::kAmdPairTriangleCompression},
             {BvhTriangleCompressionMode::kAutomaticNumberOfTriangles, dxr::amd::TriangleCompressionMode::kAmdAutoTriangleCompression}};
 
-        /// @brief BVH FP16 interior node mode map structure. 
+        /// @brief BVH FP16 interior node mode map structure.
         struct BvhLowPrecisionInteriorNodeModeMap
         {
             BvhLowPrecisionInteriorNodeMode lowPrecisionInteriorNodeMode;

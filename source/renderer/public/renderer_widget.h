@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration of the Renderer Widget.
@@ -47,7 +47,7 @@ public:
     void SetRendererInterface(rra::renderer::RendererInterface* renderer_interface);
 
     /// @brief Query whether the 3D renderer is currently in focus.
-    /// 
+    ///
     /// @return True if the 3D renderer is in focus.
     bool GetRendererIsFocused();
 

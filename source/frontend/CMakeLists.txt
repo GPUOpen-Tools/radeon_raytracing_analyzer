@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -213,6 +213,7 @@ set(SOURCES
         "views/blas/blas_viewer_pane.cpp"
         "views/blas/blas_viewer_pane.h"
         "views/blas/blas_viewer_pane.ui"
+        "views/blas/triangle_group.ui"
         "views/custom_widgets/colored_checkbox.cpp"
         "views/custom_widgets/colored_checkbox.h"
         "views/custom_widgets/binary_checkbox.cpp"
@@ -332,19 +333,19 @@ set(SOURCES ${SOURCES} ${GENERATED_UI})
 # Specify output executable name. For windows, indicate this is a Windows application
 # and not a console application
 IF (WIN32)
-    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${WINDOWS_SOURCES})
+    qt_add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${WINDOWS_SOURCES})
 ELSEIF (APPLE)
     IF (NO_APP_BUNDLE)
-        add_executable(${PROJECT_NAME} ${SOURCES})
+        qt_add_executable(${PROJECT_NAME} ${SOURCES})
     ELSE ()
         set(MACOSX_BUNDLE_ICON_FILE rra.icns)
         set(MACOSX_ICON mac_osx/rra.icns)
         set_source_files_properties(${MACOSX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-        add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${MACOSX_ICON} ${SOURCES})
+        qt_add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${MACOSX_ICON} ${SOURCES})
         set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_RPATH TRUE MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/mac_osx/MacOSXBundleInfo.plist.in)
     ENDIF ()
 ELSEIF (UNIX)
-    add_executable(${PROJECT_NAME} ${SOURCES})
+    qt_add_executable(${PROJECT_NAME} ${SOURCES})
     # Setting RPATH here results in local build directory also being appended to RPATH
     # RPATH set instead by calling chrpath command line command for cleaner solution.
     # Correct cmake solution will likely require use of a separate make install
@@ -374,26 +375,45 @@ ENDIF (CMAKE_RELEASE_POSTFIX)
 
 # executable file library dependency list
 IF (WIN32)
-    target_link_libraries(${PROJECT_NAME} Backend Renderer system_info rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE Backend Renderer system_info rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
 ELSEIF (UNIX)
-    target_link_libraries(${PROJECT_NAME} Backend Renderer system_info rdf Qt::Widgets Qt::GuiPrivate QtCustomWidgets QtUtils Threads::Threads tbb ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE Backend Renderer system_info rdf Qt::Widgets Qt::GuiPrivate QtCustomWidgets QtUtils Threads::Threads ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
 ENDIF ()
+
+if (LINUX)
+    # Ensure that wayland plugin integration is enabled for deployment to work
+    # TODO(mguerret): This could eventually be removed if Qt improves their deployment script logic
+    qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QWaylandIntegrationPlugin)
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt::WaylandClient)
+endif ()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "copying rtda to output directory"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RTDA_PATH} $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
-IF (APPLE)
-    IF (NOT NO_APP_BUNDLE)
-        # Run macdeployqt if it can be found
-        find_program(MACDEPLOYQT_EXECUTABLE NAMES macdeployqt)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                # macdeployqt expects to be passed the "${PROJECT_NAME}.app" directory rather than the final target
-                COMMAND ${MACDEPLOYQT_EXECUTABLE} $<TARGET_FILE_DIR:${PROJECT_NAME}>/../../
-        )
-    ENDIF ()
-ENDIF (APPLE)
+# Set the RPATH properly on Linux
+if (LINUX)
+    set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "$ORIGIN/lib")
+endif ()
+
+# Install commands for CPack
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION . COMPONENT apps
+        BUNDLE DESTINATION . COMPONENT apps
+        ARCHIVE DESTINATION lib/ COMPONENT apps
+        LIBRARY DESTINATION lib/ COMPONENT apps)
+
+if (LINUX)
+    install(FILES ${RTDA_PATH} PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE DESTINATION . COMPONENT apps)
+else()
+    install(FILES ${RTDA_PATH} DESTINATION . COMPONENT apps)
+endif()
+
+if (WIN32)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION . OPTIONAL COMPONENT debug)
+endif()
 
 IF (WIN32)
     # Copy the VisualStudio redist files
@@ -423,34 +443,7 @@ IF (WIN32)
 
 ENDIF (WIN32)
 
-# Copy QT components into appropriate location in build destination
-if (WIN32)
-    DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
-elseif (UNIX AND NOT APPLE)
-    DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${PROJECT_BINARY_DIR})
-elseif (APPLE)
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG})
-    elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
-        DEPLOY_QT_BUILD(${PROJECT_NAME} TRUE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE})
-    endif ()
-endif ()
-
-IF (UNIX AND NOT APPLE)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E echo "copying Linux runtime binaries"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different /usr/lib/x86_64-linux-gnu/libtbb.so.12 $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib/libtbb.so.12
-    )
-
-    IF (NOT QT_SYSTEM)
-        # Call chrpath on system to override executable file RPATH.
-        find_program(CHRPATH_EXECUTABLE NAMES chrpath)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E echo "trying chrpath"
-                COMMAND ${CHRPATH_EXECUTABLE} -r "\\$$ORIGIN/lib" $<TARGET_FILE:${PROJECT_NAME}>
-        )
-    ENDIF (NOT QT_SYSTEM)
-
-ENDIF (UNIX AND NOT APPLE)
+# Deploy Qt binaries for build and install
+deploy_qt(${PROJECT_NAME} apps)
 
 

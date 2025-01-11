@@ -2,7 +2,7 @@
 // Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief
+/// @brief  Shader to draw the BVH wireframe.
 //=============================================================================
 
 #include "Common.hlsl"
@@ -47,6 +47,7 @@ struct VSInput
     [[vk::location(1)]] float4 instanceMin : INSTANCE_MIN;
     [[vk::location(2)]] float3 instanceMax : INSTANCE_MAX;
     [[vk::location(3)]] float4 color : METADATA;
+    [[vk::location(4)]] float3x3 rotation : ROTATION;
 };
 
 PSInput VSMain(VSInput input, uint currentInstance : SV_InstanceID)
@@ -59,7 +60,9 @@ PSInput VSMain(VSInput input, uint currentInstance : SV_InstanceID)
         float boxX      = lerp(input.instanceMin.x, input.instanceMax.x, max(input.position.x, 0.0f));
         float boxY      = lerp(input.instanceMin.y, input.instanceMax.y, max(input.position.y, 0.0f));
         float boxZ      = lerp(input.instanceMin.z, input.instanceMax.z, max(input.position.z, 0.0f));
-        result.position = mul(scene_ubo.view_projection, float4(boxX, boxY, boxZ, 1.0f));
+        
+        float3 rotated_box = mul(transpose(input.rotation), float3(boxX, boxY, boxZ));
+        result.position = mul(scene_ubo.view_projection, float4(rotated_box, 1.0f));
     }
     else
     {

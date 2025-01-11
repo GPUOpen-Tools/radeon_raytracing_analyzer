@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the settings.
@@ -263,15 +263,15 @@ namespace rra
         }
 
         rra::SceneNodeColors scene_palette;
-        scene_palette.box16_node_color                      = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeBox16));
-        scene_palette.box32_node_color                      = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeBox32));
-        scene_palette.instance_node_color                   = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeInstance));
-        scene_palette.procedural_node_color                 = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeProcedural));
-        scene_palette.triangle_node_color                   = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeTriangle));
-        scene_palette.selected_node_color                   = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeSelected));
-        scene_palette.wireframe_normal_color                = QColorToGLM(GetColorValue(kSettingThemesAndColorsWireframeNormal));
-        scene_palette.wireframe_selected_color              = QColorToGLM(GetColorValue(kSettingThemesAndColorsWireframeSelected));
-        scene_palette.selected_geometry_color               = QColorToGLM(GetColorValue(kSettingThemesAndColorsGeometrySelected));
+        scene_palette.box16_node_color         = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeBox16));
+        scene_palette.box32_node_color         = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeBox32));
+        scene_palette.instance_node_color      = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeInstance));
+        scene_palette.procedural_node_color    = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeProcedural));
+        scene_palette.triangle_node_color      = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeTriangle));
+        scene_palette.selected_node_color      = QColorToGLM(GetColorValue(kSettingThemesAndColorsBoundingVolumeSelected));
+        scene_palette.wireframe_normal_color   = QColorToGLM(GetColorValue(kSettingThemesAndColorsWireframeNormal));
+        scene_palette.wireframe_selected_color = QColorToGLM(GetColorValue(kSettingThemesAndColorsWireframeSelected));
+        scene_palette.selected_geometry_color  = QColorToGLM(GetColorValue(kSettingThemesAndColorsGeometrySelected));
         if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeLight)
         {
             scene_palette.background1_color = QColorToGLM(GetColorValue(kSettingThemesAndColorsBackgroundLight1));

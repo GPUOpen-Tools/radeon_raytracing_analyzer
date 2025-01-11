@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan device object.
@@ -248,6 +248,7 @@ namespace rra
             physical_device_features.vertexPipelineStoresAndAtomics = true;
             physical_device_features.shaderImageGatherExtended      = true;
             physical_device_features.wideLines                      = true;  // Needed for drawing lines with a specific width.
+            physical_device_features.shaderInt64                    = true;
 
             VkPhysicalDeviceExtendedDynamicStateFeaturesEXT extended_dynamic_state_features = {};
             extended_dynamic_state_features.sType                = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT;

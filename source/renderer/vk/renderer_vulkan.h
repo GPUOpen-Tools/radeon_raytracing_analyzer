@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Vulkan renderer.
@@ -169,14 +169,14 @@ namespace rra
 
             std::vector<std::vector<VkCommandBuffer>> command_buffers_per_frame_;  ///< The command buffers for each frame in the swapchain.
 
-            Device&                     device_;               ///< The renderer device.
-            SwapChain                   swapchain_;            ///< The swapchain used to present images.
-            CommandBufferRing           command_buffer_ring_;  ///< The ring of command buffer objects.
-            VkViewport                  viewport_;             ///< The viewport dimensions.
-            VkRect2D                    scissor_;              ///< The scissor rectangle.
-            float                       clear_color_[4];       ///< The scene clear color.
-            uint32_t                    current_frame_index_;  ///< The current frame index.
-            bool                        initialized_;          ///< The flag used to track renderer initialization.
+            Device&           device_;               ///< The renderer device.
+            SwapChain         swapchain_;            ///< The swapchain used to present images.
+            CommandBufferRing command_buffer_ring_;  ///< The ring of command buffer objects.
+            VkViewport        viewport_;             ///< The viewport dimensions.
+            VkRect2D          scissor_;              ///< The scissor rectangle.
+            float             clear_color_[4];       ///< The scene clear color.
+            uint32_t          current_frame_index_;  ///< The current frame index.
+            bool              initialized_;          ///< The flag used to track renderer initialization.
 
             RenderModuleContext        render_module_context_;  ///< The render module context to use across modules.
             std::vector<RenderModule*> render_modules_;         ///< The list of render modules to aid rendering.

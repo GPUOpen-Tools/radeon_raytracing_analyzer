@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific bottom level acceleration structure
@@ -10,23 +10,25 @@
 #define RRA_BACKEND_BVH_ENCODED_RT_IP_11_BOTTOM_LEVEL_BVH_H_
 
 #include "bvh/geometry_info.h"
-#include "bvh/rtip11/iencoded_rt_ip_11_bvh.h"
 #include "bvh/node_types/triangle_node.h"
 #include "bvh/node_types/procedural_node.h"
+#include "bvh/rtip_common/encoded_bottom_level_bvh.h"
 
 namespace rta
 {
-    class EncodedRtIp11BottomLevelBvh final : public IEncodedRtIp11Bvh
+    class EncodedRtIp11BottomLevelBvh final : public EncodedBottomLevelBvh
     {
     public:
         // Global identifier of tlas dump in chunk files.
         static constexpr const char* kChunkIdentifier = "GpuEncBlasDump";
 
         /// @brief Default constructor.
-        EncodedRtIp11BottomLevelBvh() = default;
+        EncodedRtIp11BottomLevelBvh();
 
         /// @brief Destructor.
         virtual ~EncodedRtIp11BottomLevelBvh();
+
+        virtual uint32_t GetLeafNodeCount() const override;
 
         /// @brief Get the data for the leaf nodes.
         ///
@@ -78,19 +80,6 @@ namespace rta
         /// @return true if successful, false if error.
         bool PostLoad() override;
 
-        /// @brief Get the surface area heuristic for a given leaf node.
-        ///
-        /// @param [in] node_ptr The leaf node whose SAH is to be found.
-        ///
-        /// @return The surface area heuristic.
-        float GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const override;
-
-        /// @brief Set the surface area heuristic for a given leaf node.
-        ///
-        /// @param [in] leaf_index             The leaf index whose SAH is to be set.
-        /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
-        void SetLeafNodeSurfaceAreaHeuristic(uint64_t leaf_index, float surface_area_heuristic);
-
         /// @brief Get the top-level surface area heuristic for this BLAS.
         ///
         /// @return The surface area heuristic.
@@ -100,6 +89,43 @@ namespace rta
         ///
         /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
         void SetSurfaceAreaHeuristic(float surface_area_heuristic);
+
+        /// @brief Get the triangle node associated with the node pointer.
+        ///
+        /// Assumes that the node pointer passed in is a triangle node.
+        ///
+        /// @param node_pointer The node pointer.
+        /// @param offset       Defines which node should be returned. Offset 0 => the one referenced by node_pointer, 1 => the node behind the node with offset 0.
+        const dxr::amd::TriangleNode* GetTriangleNode(const dxr::amd::NodePointer node_pointer, const int offset = 0) const;
+
+        /// @brief Get the procedural node associated with the node pointer.
+        ///
+        /// Assumes that the node pointer passed in is a procedural node.
+        ///
+        /// @param node_pointer The node pointer.
+        /// @param offset       Defines which node should be returned. Offset 0 => the one referenced by node_pointer, 1 => the node behind the node with offset 0.
+        const dxr::amd::ProceduralNode* GetProceduralNode(const dxr::amd::NodePointer node_pointer, const int offset = 0) const;
+
+        /// @brief Get the parent node of the node passed in.
+        ///
+        /// @param [in] node_ptr The node whose parent is to be found.
+        ///
+        /// @return The parent node. If the node passed in is the root node, the
+        /// parent node will be an invalid node.
+        virtual dxr::amd::NodePointer GetParentNode(const dxr::amd::NodePointer* node_ptr) const;
+
+        /// @brief Get the surface area heuristic for a given leaf node.
+        ///
+        /// @param [in] node_ptr The leaf node whose SAH is to be found.
+        ///
+        /// @return The surface area heuristic.
+        float GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const override;
+
+        /// @brief Set the surface area heuristic for a given leaf node.
+        ///
+        /// @param [in] node_ptr               The node pointer whose SAH is to be set.
+        /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
+        void SetLeafNodeSurfaceAreaHeuristic(uint32_t node_ptr, float surface_area_heuristic);
 
     private:
         /// @brief Obtain the byte size of the encoded buffer.
@@ -114,11 +140,7 @@ namespace rta
         /// @return true if data is valid, false otherwise.
         bool Validate();
 
-        std::vector<std::uint8_t>           leaf_nodes_                      = {};    ///< Leaf nodes (triangle, procedural).
-        std::vector<dxr::amd::GeometryInfo> geom_infos_                      = {};    ///< Array of geometry info.
-        std::vector<std::uint8_t>           sideband_data_                   = {};    ///< Sideband data for compression.
-        std::vector<float>                  triangle_surface_area_heuristic_ = {};    ///< Surface area heuristic values for the triangles.
-        float                               surface_area_heuristic_          = 0.0f;  ///< The precalculated Surface area heuristic for this BLAS.
+        std::vector<std::uint8_t> leaf_nodes_ = {};  ///< Leaf nodes (triangle, procedural).
     };
 
 }  // namespace rta

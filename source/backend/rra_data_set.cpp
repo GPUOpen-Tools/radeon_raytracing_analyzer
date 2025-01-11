@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
@@ -155,13 +155,30 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     bool system_info_result = system_info_utils::SystemInfoReader::Parse(chunk_file, *data_set->system_info);
     RRA_UNUSED(system_info_result);
 
-    // Launch ray history loaders.
-    data_set->async_ray_histories.clear();
-    data_set->async_ray_histories = LaunchAsyncRayHistoryLoaders(chunk_file, path);
+    data_set->rtip_level = rta::DecodeRtIpLevel(chunk_file, &error_code);
+    if (error_code != kRraOk)
+    {
+        return error_code;
+    }
+
+    RRA_ASSERT(data_set->rtip_level != rta::RayTracingIpLevel::RtIpReserved);
+
+    if (data_set->rtip_level >= rta::RayTracingIpLevel::RtIpCount)
+    {
+        return kRraErrorUnrecognizedRtIpLevel;
+    }
 
     // Load the BVH chunks.
-    rta::RayTracingIpLevel rtip_level = rta::GetRtIpLevel(chunk_file, &error_code);
-    data_set->bvh_bundle              = rta::LoadBvhBundleFromFile(chunk_file, rtip_level, rta::BvhBundleReadOption::kDefault, &error_code);
+    data_set->bvh_bundle = rta::LoadBvhBundleFromFile(chunk_file, data_set->rtip_level, rta::BvhBundleReadOption::kDefault, &error_code);
+    if (error_code != kRraOk)
+    {
+        return error_code;
+    }
+
+    // Launch ray history loaders after the dataset has loaded.
+    // If an error is returned before here, the dataset will be cleared, meaning the ray history loaders will be dangling.
+    data_set->async_ray_histories.clear();
+    data_set->async_ray_histories = LaunchAsyncRayHistoryLoaders(chunk_file, path);
 
     return error_code;
 }

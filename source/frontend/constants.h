@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -43,7 +43,7 @@ namespace rra
     static const float kDebugWindowDesktopHeightPercentage = 25.0F;
 
     // @brief App colors.
-    static const QColor kCheckboxEnableColor   = QColor(0, 122, 217);
+    static const QColor kCheckboxEnableColor = QColor(0, 122, 217);
 
     /// @brief Control print formatting.
     static const int  kQtTooltipFloatPrecision = 7;    ///< Decimal place precision for tooltip of printed floating point values.
@@ -70,6 +70,9 @@ namespace rra
         static const QString kDeleteRecentTraceTextIncompatible =
             "\nThe scene file contains newer data structures that are incompatible with this version of RRA. "
             "Please ensure that you have the latest version of Radeon Developer Tool Suite to continue.\n";
+        static const QString kDeleteRecentTraceTextUnrecognizedRtIpLevel =
+            "\nThe scene file contains an unsupported ray tracing IP level. Please ensure that you have the "
+            "latest version of Radeon Developer Tool Suite to continue.\n";
 
         static const QString kRemoveRecentTraceText = "\nThe scene is in the recent files list. Would you like to remove it?";
 

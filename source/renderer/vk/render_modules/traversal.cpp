@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the traversal module.
@@ -11,6 +11,7 @@
 #include "../framework/ext_debug_utils.h"
 
 #include <algorithm>
+#include "public/rra_rtip_info.h"
 
 namespace rra
 {
@@ -85,9 +86,21 @@ namespace rra
             dynamic_state_info.flags                            = 0;
 
             // Load shaders.
-            const char* full_vertex_shader_path    = "TraversalShader.vs.spv";
-            const char* full_pixel_shader_path     = "TraversalShader.ps.spv";
-            const char* full_compute_shader_path   = "TraversalShader.cs.spv";
+            const char* full_vertex_shader_path;
+            const char* full_pixel_shader_path;
+            const char* full_compute_shader_path;
+            if (RraRtipInfoGetOBBSupported())
+            {
+                full_vertex_shader_path  = "TraversalShaderOBB.vs.spv";
+                full_pixel_shader_path   = "TraversalShaderOBB.ps.spv";
+                full_compute_shader_path = "TraversalShaderOBB.cs.spv";
+            }
+            else
+            {
+                full_vertex_shader_path  = "TraversalShader.vs.spv";
+                full_pixel_shader_path   = "TraversalShader.ps.spv";
+                full_compute_shader_path = "TraversalShader.cs.spv";
+            }
             const char* full_subsample_shader_path = "TraversalShaderSubsample.cs.spv";
 
             std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages;

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header of a widget that implements a custom radio button.
@@ -84,7 +84,7 @@ private:
     /// @return The switch height.
     qreal GetSwitchHeight(const QFontMetricsF& font_metrics) const;
 
-    QColor color_;      ///< Color for radio button.
+    QColor color_;              ///< Color for radio button.
     qreal  button_text_ratio_;  ///< The button-to-text ratio ie how much bigger the button is relative to the button text.
 };
 

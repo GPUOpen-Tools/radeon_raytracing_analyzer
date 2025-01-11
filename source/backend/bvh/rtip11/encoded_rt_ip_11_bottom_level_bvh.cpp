@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific bottom level acceleration structure
@@ -7,18 +7,30 @@
 //=============================================================================
 
 #include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
 
 #include <iostream>
 #include <vector>
 #include <cassert>
 #include <deque>
 #include <limits>
+#include "bvh/dxr_type_conversion.h"
+#include "bvh/rtip11/rt_ip_11_header.h"
 
 namespace rta
 {
+    EncodedRtIp11BottomLevelBvh::EncodedRtIp11BottomLevelBvh()
+    {
+        header_ = std::make_unique<DxrRtIp11AccelerationStructureHeader>();
+    }
 
     EncodedRtIp11BottomLevelBvh::~EncodedRtIp11BottomLevelBvh()
     {
+    }
+
+    uint32_t EncodedRtIp11BottomLevelBvh::GetLeafNodeCount() const
+    {
+        return (uint32_t)(leaf_nodes_.size() / sizeof(dxr::amd::TriangleNode));
     }
 
     const std::vector<uint8_t>& EncodedRtIp11BottomLevelBvh::GetLeafNodesData() const
@@ -62,21 +74,21 @@ namespace rta
             size_t geometry_index  = 0;
             auto   primitive_index = 0;
 
-            if (header_->GetGeometryType() == BottomLevelBvhGeometryType::kTriangle)
-            {
-                const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(leaf_nodes_.data());
-                const auto& triangle_node  = triangle_nodes[i];
-                geometry_index             = triangle_node.GetGeometryIndex();
-                primitive_index            = triangle_node.GetPrimitiveIndex(dxr::amd::NodeType::kAmdNodeTriangle0);
-                node_ptr                   = dxr::amd::NodePointer(dxr::amd::NodeType::kAmdNodeTriangle0, byte_offset);
-            }
-            else
+            if (is_procedural_)
             {
                 const auto* procedural_nodes = reinterpret_cast<const dxr::amd::ProceduralNode*>(leaf_nodes_.data());
                 const auto& procedural_node  = procedural_nodes[i];
                 geometry_index               = procedural_node.GetGeometryIndex();
                 primitive_index              = procedural_node.GetPrimitiveIndex();
                 node_ptr                     = dxr::amd::NodePointer(dxr::amd::NodeType::kAmdNodeProcedural, byte_offset);
+            }
+            else
+            {
+                const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(leaf_nodes_.data());
+                const auto& triangle_node  = triangle_nodes[i];
+                geometry_index             = triangle_node.GetGeometryIndex();
+                primitive_index            = triangle_node.GetPrimitiveIndex(dxr::amd::NodeType::kAmdNodeTriangle0);
+                node_ptr                   = dxr::amd::NodePointer(dxr::amd::NodeType::kAmdNodeTriangle0, byte_offset);
             }
 
             assert(geometry_index < geom_infos_.size());
@@ -112,8 +124,9 @@ namespace rta
 
         if (!skip_meta_data)
         {
-            meta_data_ = {};
-            memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, chunk_header.meta_header_size);
+            meta_data_  = {};
+            size_t size = std::min(chunk_header.meta_header_size, dxr::amd::kMetaDataV1Size);
+            memcpy(&meta_data_, buffer.data() + chunk_header.meta_header_offset, size);
         }
 
         if (buffer.size() < ((size_t)dxr::amd::kAccelerationStructureHeaderSize + chunk_header.header_offset))
@@ -126,6 +139,8 @@ namespace rta
         {
             return false;
         }
+
+        is_procedural_ = header_->GetGeometryType() == BottomLevelBvhGeometryType::kAABB;
 
         uint64_t address = (static_cast<std::uint64_t>(chunk_header.accel_struct_base_va_hi) << 32) | chunk_header.accel_struct_base_va_lo;
         SetVirtualAddress(address);
@@ -157,6 +172,17 @@ namespace rta
 
         buffer_stream.Close();
 
+        // Set the root node offset.
+        header_offset_ = static_cast<uint64_t>(chunk_header.header_offset);
+
+        return true;
+    }
+
+    bool EncodedRtIp11BottomLevelBvh::PostLoad()
+    {
+        uint32_t primitive_node_count = (uint32_t)primitive_node_ptrs_.size();
+        ScanTreeDepth();
+        triangle_surface_area_heuristic_.resize(primitive_node_count, 0);
         return true;
     }
 
@@ -179,12 +205,64 @@ namespace rta
         return true;
     }
 
-    bool EncodedRtIp11BottomLevelBvh::PostLoad()
+    float EncodedRtIp11BottomLevelBvh::GetSurfaceAreaHeuristic() const
     {
-        size_t num_leaf_nodes = leaf_nodes_.size() / sizeof(dxr::amd::TriangleNode);
-        ScanTreeDepth();
-        triangle_surface_area_heuristic_.resize(num_leaf_nodes, 0);
-        return true;
+        return surface_area_heuristic_;
+    }
+
+    void EncodedRtIp11BottomLevelBvh::SetSurfaceAreaHeuristic(float surface_area_heuristic)
+    {
+        surface_area_heuristic_ = surface_area_heuristic;
+    }
+
+    const dxr::amd::TriangleNode* EncodedRtIp11BottomLevelBvh::GetTriangleNode(const dxr::amd::NodePointer node_pointer, const int offset) const
+    {
+        assert(node_pointer.IsTriangleNode());
+        if (header_->GetPostBuildInfo().IsBottomLevel() && node_pointer.GetByteOffset() >= header_->GetBufferOffsets().leaf_nodes)
+        {
+            return reinterpret_cast<const dxr::amd::TriangleNode*>(
+                &GetLeafNodesData()[node_pointer.GetByteOffset() + (size_t)offset * dxr::amd::kLeafNodeSize - header_->GetBufferOffsets().leaf_nodes]);
+        }
+        else
+        {
+            // Bottom BHV cannot have instance nodes.
+            return nullptr;
+        }
+    }
+
+    const dxr::amd::ProceduralNode* EncodedRtIp11BottomLevelBvh::GetProceduralNode(const dxr::amd::NodePointer node_pointer, const int offset) const
+    {
+        assert(is_procedural_);
+        if (header_->GetPostBuildInfo().IsBottomLevel())
+        {
+            return reinterpret_cast<const dxr::amd::ProceduralNode*>(
+                &GetLeafNodesData()[node_pointer.GetByteOffset() + (size_t)offset * dxr::amd::kLeafNodeSize - header_->GetBufferOffsets().leaf_nodes]);
+        }
+        else
+        {
+            // Bottom BHV cannot have instance nodes
+            assert(false);
+            return nullptr;
+        }
+    }
+
+    dxr::amd::NodePointer EncodedRtIp11BottomLevelBvh::GetParentNode(const dxr::amd::NodePointer* node_ptr) const
+    {
+        assert(!node_ptr->IsInvalid());
+
+        const auto& parent_data       = parent_data_;
+        const auto& parent_links      = parent_data.GetLinkData();
+        const auto  compression_mode  = ToDxrTriangleCompressionMode(GetHeader().GetPostBuildInfo().GetTriangleCompressionMode());
+        const auto  parent_link_index = node_ptr->CalculateParentLinkIndex(parent_data.GetSizeInBytes(), compression_mode);
+
+        if (parent_link_index >= parent_data.GetLinkCount())
+        {
+            return {};
+        }
+
+        dxr::amd::NodePointer parent_node = parent_links[parent_link_index];
+
+        return parent_node;
     }
 
     float EncodedRtIp11BottomLevelBvh::GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const
@@ -197,26 +275,23 @@ namespace rta
             return std::numeric_limits<float>::quiet_NaN();
         }
         const uint32_t index = (byte_offset - leaf_nodes) / sizeof(dxr::amd::TriangleNode);
-        assert(index < (leaf_nodes_.size() / sizeof(dxr::amd::TriangleNode)));
         assert(index < triangle_surface_area_heuristic_.size());
-        return triangle_surface_area_heuristic_[index];
+        return triangle_surface_area_heuristic_.at(index);
     }
 
-    void EncodedRtIp11BottomLevelBvh::SetLeafNodeSurfaceAreaHeuristic(uint64_t leaf_index, float surface_area_heuristic)
+    void EncodedRtIp11BottomLevelBvh::SetLeafNodeSurfaceAreaHeuristic(uint32_t node_ptr, float surface_area_heuristic)
     {
-        assert(leaf_index < (leaf_nodes_.size() / sizeof(dxr::amd::TriangleNode)));
-        assert(leaf_index < triangle_surface_area_heuristic_.size());
-        triangle_surface_area_heuristic_[leaf_index] = surface_area_heuristic;
-    }
-
-    float EncodedRtIp11BottomLevelBvh::GetSurfaceAreaHeuristic() const
-    {
-        return surface_area_heuristic_;
-    }
-
-    void EncodedRtIp11BottomLevelBvh::SetSurfaceAreaHeuristic(float surface_area_heuristic)
-    {
-        surface_area_heuristic_ = surface_area_heuristic;
+        dxr::amd::NodePointer node        = (dxr::amd::NodePointer)node_ptr;
+        const uint32_t        byte_offset = node.GetByteOffset();
+        const uint32_t        leaf_nodes  = GetHeader().GetBufferOffsets().leaf_nodes;
+        if (byte_offset < leaf_nodes)
+        {
+            // Bad address for a triangle.
+            return;
+        }
+        const uint32_t index = (byte_offset - leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+        assert(index < triangle_surface_area_heuristic_.size());
+        triangle_surface_area_heuristic_[index] = surface_area_heuristic;
     }
 
 }  // namespace rta

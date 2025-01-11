@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the selection rendering module.
@@ -19,7 +19,7 @@ namespace rra
 {
     namespace renderer
     {
-        /// @brief Render module to render the checkerboard background
+        /// @brief Render module to render bounding box showing the current selection.
         class SelectionRenderModule : public RenderModule
         {
         public:
@@ -51,7 +51,7 @@ namespace rra
             void DisableOutlineRendering();
 
             /// @brief Whether or not instance transform is being rendered.
-            /// 
+            ///
             /// @returns True if transform is being rendered, false if not.
             bool IsTransformRenderingEnabled();
 

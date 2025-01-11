@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for traversal module.
@@ -139,7 +139,7 @@ namespace rra
             uint32_t max_traversal_count_setting_{};  ///< Maximum traversal count value from the settings.
             bool     traversal_count_setting_changed_{};
 
-            bool rendered_this_frame_{}; ///< True when the traversal module draw function was called this frame.
+            bool rendered_this_frame_{};  ///< True when the traversal module draw function was called this frame.
 
             std::function<void(const std::vector<uint32_t>& data, uint32_t buffer_width, uint32_t buffer_height)> histogram_update_function_ =
                 nullptr;  ///< The update function to call for histogram data.

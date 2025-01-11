@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Definition of RRA's instance flag table item delegate.
@@ -23,7 +23,7 @@ public:
     virtual ~FlagTableItemDelegate();
 
     /// @brief Custom painting for the flag table item.
-    /// 
+    ///
     /// @param painter The Qt painter.
     /// @param option  The Qt option.
     /// @param index   The Qt index.

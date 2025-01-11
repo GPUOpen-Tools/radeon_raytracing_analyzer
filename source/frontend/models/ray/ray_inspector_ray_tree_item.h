@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the ray inspector ray list item model.
@@ -63,9 +63,9 @@ namespace rra
         void ClearRays();
 
         /// @brief Finds the ray by its index.
-        /// 
+        ///
         /// @param ray_index.
-        /// 
+        ///
         /// @return A model index.
         QModelIndex FindRay(int ray_index);
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header of the dispatch loading bar.
@@ -67,10 +67,11 @@ protected:
 private:
     qreal fill_percentage_;  ///< Percentage of the bar that was filled in
 
-    const QColor kEmptyColor_[ColorThemeType::kColorThemeTypeCount] = {QColor(204, 204, 204),
-                                                                       QColor(50, 50, 50)};  ///< The default color for the empty portion of the widget for each color theme.
-    const QColor kFillColor_  = QColor(0, 118, 215);    ///< The default color for the filled portion of the widget.
-    const QColor kErrorColor_ = QColor(255, 0, 0);      ///< The default color for error.
+    const QColor kEmptyColor_[ColorThemeType::kColorThemeTypeCount] = {
+        QColor(204, 204, 204),
+        QColor(50, 50, 50)};                          ///< The default color for the empty portion of the widget for each color theme.
+    const QColor kFillColor_  = QColor(0, 118, 215);  ///< The default color for the filled portion of the widget.
+    const QColor kErrorColor_ = QColor(255, 0, 0);    ///< The default color for error.
 
     const int kDefaultWidth_  = 350;  ///< Default width of the widget.
     const int kDefaultHeight_ = 20;   ///< Default height of the widget.

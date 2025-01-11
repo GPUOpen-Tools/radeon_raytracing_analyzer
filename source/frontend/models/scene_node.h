@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the SceneNode class.
@@ -177,7 +177,7 @@ namespace rra
         /// @brief Get triangles of this node.
         ///
         /// @returns A list of triangles.
-        std::vector<SceneTriangle> GetTriangles() const;
+        StackVector<SceneTriangle, 8> GetTriangles() const;
 
         /// @brief Get the primitive index of this node.
         ///
@@ -271,20 +271,23 @@ namespace rra
         /// @param [in] scene The scene to collect rebraid siblings from.
         void AppendMergedInstanceToInstanceMap(renderer::Instance instance, renderer::InstanceMap& instance_map, const Scene* scene) const;
 
-        SceneNode*                        parent_ = nullptr;              ///< The parent node.
-        uint32_t                          node_id_;                       ///< The node id for this node.
-        uint32_t                          depth_              = 0;        ///< The depth of this node.
-        bool                              enabled_            = true;     ///< A flag to represent enablement of this node.
-        bool                              filtered_           = false;    ///< A flag to represent whether this node is disabled by being filtered.
-        bool                              visible_            = true;     ///< A flag to represent the visibility of this node.
-        bool                              selected_           = false;    ///< A flag to represent if this node is selected.
-        BoundingVolumeExtents             bounding_volume_    = {};       ///< The bounding volume of this node.
-        StackVector<SceneNode*, 8>        child_nodes_        = {};       ///< The child nodes of this node.
-        std::optional<renderer::Instance> instance_;                      ///< The optional instance that this node contains.
-        uint32_t                          vertex_count_    = 0;           ///< The number of vertices.
-        renderer::RraVertex*              vertices_        = nullptr;     ///< The vertices that this node contains. Aligned by 3.
-        uint32_t                          primitive_index_ = 0;           ///< The primitive index of this node.
-        uint32_t                          geometry_index_  = 0;           ///< The geometry index of this node.
+        SceneNode*                        parent_ = nullptr;                   ///< The parent node.
+        uint32_t                          node_id_;                            ///< The node id for this node.
+        uint64_t                          bvh_index_;                          ///< The BVH index of the scene.
+        uint32_t                          depth_           = 0;                ///< The depth of this node.
+        bool                              enabled_         = true;             ///< A flag to represent enablement of this node.
+        bool                              filtered_        = false;            ///< A flag to represent whether this node is disabled by being filtered.
+        bool                              visible_         = true;             ///< A flag to represent the visibility of this node.
+        bool                              selected_        = false;            ///< A flag to represent if this node is selected.
+        BoundingVolumeExtents             bounding_volume_ = {};               ///< The bounding volume of this node.
+        StackVector<SceneNode*, 8>        child_nodes_     = {};               ///< The child nodes of this node.
+        std::optional<renderer::Instance> instance_;                           ///< The optional instance that this node contains.
+        uint32_t                          vertex_count_    = 0;                ///< The number of vertices.
+        renderer::RraVertex*              vertices_        = nullptr;          ///< The vertices that this node contains. Aligned by 3.
+        uint32_t                          primitive_index_ = 0;                ///< The primitive index of this node.
+        uint32_t                          geometry_index_  = 0;                ///< The geometry index of this node.
+        uint32_t                          obb_index_       = {};               ///< The oriented bounding box matrix index.
+        glm::mat3                         rotation_        = glm::mat3(1.0f);  ///< The rotation of a box node.
     };
 
 }  // namespace rra

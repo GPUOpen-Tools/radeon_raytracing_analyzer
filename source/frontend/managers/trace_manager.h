@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for the Trace Manager.
@@ -29,6 +29,7 @@ enum TraceLoadReturnCode
     kTraceLoadReturnFailIncompatible,
     kTraceLoadReturnFail,
     kTraceLoadReturnAlreadyOpened,
+    kTraceLoadUnrecognizedRtIpLevel,
 };
 
 Q_DECLARE_METATYPE(TraceLoadReturnCode)

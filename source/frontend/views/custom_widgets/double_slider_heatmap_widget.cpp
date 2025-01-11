@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Implementation of a double slider with heatmap widget.
@@ -723,7 +723,7 @@ void DoubleSliderHeatmapWidget::paintEvent(QPaintEvent* event)
     }
     else
     {
-        auto heatmap_half_width = static_cast<int>(width()  / (4 * scaled_factor));
+        auto heatmap_half_width = static_cast<int>(width() / (4 * scaled_factor));
         span_rect               = QRect(QPoint(center_point.x() - heatmap_half_width, min_value), QPoint(center_point.x() + heatmap_half_width, max_value));
     }
 

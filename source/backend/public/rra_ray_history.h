@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public ray history interface.
@@ -79,7 +79,7 @@ enum DispatchType : uint32_t
     kGraphics,
 };
 
-struct IntersectionResult
+struct RraIntersectionResult
 {
     uint32_t        hit_kind;
     uint32_t        instance_index;
@@ -93,15 +93,16 @@ struct IntersectionResult
 
 struct RraRayHistoryStats
 {
-    uint64_t raygen_count                = 0;
-    uint64_t closest_hit_count           = 0;
-    uint64_t any_hit_count               = 0;
-    uint64_t intersection_count          = 0;
-    uint64_t miss_count                  = 0;
-    uint64_t ray_count                   = 0;
-    uint64_t loop_iteration_count        = 0;
-    uint64_t instance_intersection_count = 0;
-    uint64_t pixel_count                 = 0;
+    uint64_t              raygen_count                = 0;
+    uint64_t              closest_hit_count           = 0;
+    uint64_t              any_hit_count               = 0;
+    uint64_t              intersection_count          = 0;
+    uint64_t              miss_count                  = 0;
+    uint64_t              ray_count                   = 0;
+    uint64_t              loop_iteration_count        = 0;
+    uint64_t              instance_intersection_count = 0;
+    uint64_t              pixel_count                 = 0;
+    std::vector<uint64_t> tlases_traversed_;  ///< All the TLASes traversed by rays in this dispatch.
 };
 
 struct RraDispatchLoadStatus
@@ -208,7 +209,7 @@ RraErrorCode RraRayGetRays(uint32_t dispatch_id, GlobalInvocationID invocation_i
 /// @param [out] out_count     The number of instance intersections.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraRayGetIntersectionResult(uint32_t dispatch_id, GlobalInvocationID invocation_id, uint32_t ray_index, IntersectionResult* out_result);
+RraErrorCode RraRayGetIntersectionResult(uint32_t dispatch_id, GlobalInvocationID invocation_id, uint32_t ray_index, RraIntersectionResult* out_result);
 
 /// @brief Get all the stats related to a dispatch.
 ///

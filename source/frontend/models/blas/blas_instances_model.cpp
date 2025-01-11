@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS instances model.
@@ -69,7 +69,7 @@ namespace rra
         table_model_->SetRowCount(instance_count);
 
         rra::Scene scene;
-        scene.Initialize(SceneNode::ConstructFromTlas(tlas_index));
+        scene.Initialize(SceneNode::ConstructFromTlas(tlas_index), tlas_index, true);
 
         InstancesTableStatistics stats      = {};
         uint64_t                 rows_added = 0;

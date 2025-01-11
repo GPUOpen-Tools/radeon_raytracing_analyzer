@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure (AS) tree-view item delegate.
@@ -98,7 +98,7 @@ namespace rra
     }
 
     /// @brief Toggle visibility of node and its children.
-    /// 
+    ///
     /// @param scene The scene containing the node.
     /// @param node The node to toggle.
     void ToggleNodeSelection(Scene* scene, SceneNode* node)
@@ -147,7 +147,7 @@ namespace rra
                         }
                     }
                     // Select split triangles in lockstep.
-                    else if (!node->GetTriangles().empty())
+                    else if (!node->GetTriangles().Empty())
                     {
                         for (auto sibling : scene_->GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex()))
                         {
@@ -174,9 +174,9 @@ namespace rra
 
     QRect AccelerationStructureTreeViewItemDelegate::GetCheckboxRect(const QStyleOptionViewItem& option)
     {
-        QStyleOptionButton                dummy_option_button;
-        dummy_option_button.QStyleOption::operator      =(option);
-        QRect                             checkbox_size = QApplication::style()->subElementRect(QStyle::SE_ItemViewItemCheckIndicator, &dummy_option_button);
+        QStyleOptionButton dummy_option_button;
+        dummy_option_button.QStyleOption::operator=(option);
+        QRect checkbox_size = QApplication::style()->subElementRect(QStyle::SE_ItemViewItemCheckIndicator, &dummy_option_button);
 
         QRect final_rectangle = option.rect;
         final_rectangle.setTop(final_rectangle.top() + (option.rect.height() - checkbox_size.height()) / 2);

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS properties model.
@@ -138,16 +138,16 @@ namespace rra
                              QString::number(root_sah, kQtFloatFormat, kQtTooltipFloatPrecision));
             }
 
-            float max_sah = 0.0f;
-            if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, root_node, false, &max_sah) == kRraOk)
+            float min_sah = 0.0f;
+            if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, root_node, true, &min_sah) == kRraOk)
             {
                 SetModelData(kBlasPropertiesMinSAH,
-                             QString::number(max_sah, kQtFloatFormat, decimal_precision),
-                             QString::number(max_sah, kQtFloatFormat, kQtTooltipFloatPrecision));
+                             QString::number(min_sah, kQtFloatFormat, decimal_precision),
+                             QString::number(min_sah, kQtFloatFormat, kQtTooltipFloatPrecision));
             }
 
             float mean_sah = 0.0f;
-            if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, root_node, false, &mean_sah) == kRraOk)
+            if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, root_node, true, &mean_sah) == kRraOk)
             {
                 SetModelData(kBlasPropertiesMeanSAH,
                              QString::number(mean_sah, kQtFloatFormat, decimal_precision),

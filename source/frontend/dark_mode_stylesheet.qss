@@ -86,14 +86,14 @@ QScrollBar::sub-line:vertical
 
 QScrollBar:up-arrow:vertical
 {
-    image: url(:/Resources/assets/PullDownOn_Gray.svg);
+    image: url(:/Resources/assets/pulldown_on_gray.svg);
     width: 8px;
     height: 8px;
 }
 
 QScrollBar::down-arrow:vertical
 {
-    image: url(:/Resources/assets/PullDownOff_Gray.svg);
+    image: url(:/Resources/assets/pulldown_off_gray.svg);
     width: 8px;
     height: 8px;
 }

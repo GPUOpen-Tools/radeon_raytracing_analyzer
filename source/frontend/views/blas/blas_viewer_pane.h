@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the BLAS viewer pane.
@@ -109,6 +109,7 @@ private:
     rra::BlasViewerModel*          derived_model_ = nullptr;  ///< Pointer to the model. This is a copy of the model in the base class and is deleted there.
     FlagTableItemDelegate*         flag_table_delegate_ = nullptr;   ///< Delegate for drawing the geometry flags table.
     std::vector<ScaledPushButton*> split_triangle_sibling_buttons_;  ///< The buttons to navigate to split triangle siblings for split triangles.
+    std::vector<QWidget*>          triangle_widgets_;                ///< A list of dynamic triangle widgets in the pane which need manual deletion.
 };
 
 #endif  // RRA_VIEWS_BLAS_BLAS_VIEWER_PANE_H_

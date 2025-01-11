@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration of types used in the renderer.
@@ -52,6 +52,7 @@ namespace rra
             glm::vec4 min;       ///< The bounding volume minimum bounds in the XYZ components. The W component is the tree-level.
             glm::vec3 max;       ///< The bounding volume maximum bounds.
             glm::vec4 metadata;  ///< Packed metadata for the volume instance.
+            glm::mat3 rotation;
         };
 
         /// @brief A structure to represent the volume selection.
@@ -278,10 +279,13 @@ namespace rra
             uint32_t            leaf_end    = 0;                               ///< The leaf end index.
 
             int32_t  child_mask     = 0;   ///< The mask to represent which children are enabled.
-            uint32_t child_nodes[4] = {};  ///< The child node indexes.
+            uint32_t child_nodes[8] = {};  ///< The child node indexes.
 
-            glm::vec4 child_nodes_min[4] = {};  ///< The min bounds for the child nodes.
-            glm::vec4 child_nodes_max[4] = {};  ///< The max bounds for the child nodes.
+            glm::vec4 child_nodes_min[8] = {};  ///< The min bounds for the child nodes.
+            glm::vec4 child_nodes_max[8] = {};  ///< The max bounds for the child nodes.
+
+            uint32_t  obb_index = 0;
+            glm::vec3 padding;
         };
 
         /// @brief Structure to represent a transform in the traversal tree.
@@ -298,9 +302,9 @@ namespace rra
         /// @brief Structure to represent the traversal tree as a whole.
         struct TraversalTree
         {
-            std::vector<TraversalVolume>   volumes;            ///< The volumes of the structure.
-            std::vector<RraVertex>         vertices;           ///< The aligned vertices of the volumes.
-            std::vector<TraversalInstance> instances;          ///< The aligned instances under volumes.
+            std::vector<TraversalVolume>   volumes;    ///< The volumes of the structure.
+            std::vector<RraVertex>         vertices;   ///< The aligned vertices of the volumes.
+            std::vector<TraversalInstance> instances;  ///< The aligned instances under volumes.
             std::byte* child_nodes_buffer;  ///< Buffer to be referenced by all the nodes in tree so they don't have to do individual small allocations.
         };
 

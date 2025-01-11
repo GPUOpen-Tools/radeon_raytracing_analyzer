@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for orientation gizmo.
@@ -52,14 +52,14 @@ namespace rra
         };
 
         /// @brief Return orientation of each gizmo element and draw order.
-        /// 
+        ///
         /// @param [in] rotation Camera rotation.
         /// @param [in] window_ratio The viewport's width / height.
         /// @returns Transform info.
         OrientationGizmoTransformInfo GetOrientationGizmoTransformInfo(glm::mat4 rotation, float window_ratio);
 
         /// @brief Get the closest orientation gizmo element that the mouse is over.
-        /// 
+        ///
         /// @param [in] rotation Camera rotation.
         /// @param [in] window_ratio The viewport's width / height.
         /// @param [in] hit_coords Normalized mouse coordinates.
@@ -67,13 +67,13 @@ namespace rra
         OrientationGizmoHitType CheckOrientationGizmoHit(glm::mat4 rotation, float window_ratio, glm::vec2 hit_coords);
 
         /// @brief Convert gizmo hit into a forward vector to assign to the camera.
-        /// 
+        ///
         /// @param [in] gizmo_hit The element that was clicked on the orientation gizmo.
         /// @returns Camera's new forward vector.
         glm::vec3 GetForwardFromGizmoHit(OrientationGizmoHitType gizmo_hit);
 
         /// @brief Set the element of the gizmo that the mouse is currently hovering over.
-        /// 
+        ///
         /// @param [in] gizmo_hit The orientation gizmo element that should be highlighted.
         void SetOrientationGizmoSelected(OrientationGizmoHitType gizmo_hit);
 

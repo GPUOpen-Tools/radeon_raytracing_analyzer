@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the viewer container model class.
@@ -76,7 +76,7 @@ namespace rra
         uint32_t GetInstanceMaskFilter() const;
 
         /// @brief Set the current scene.
-        /// 
+        ///
         /// @param scene The scene.
         void SetScene(rra::Scene* scene);
 

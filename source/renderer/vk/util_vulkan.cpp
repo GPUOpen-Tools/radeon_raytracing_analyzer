@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for Vulkan utility functions.
@@ -84,12 +84,12 @@ namespace rra
             full_shader_path.append("/shaders/");
             full_shader_path.append(shader_file_path);
 
-            QFile shader_source_stream(full_shader_path);
+            QFile          shader_source_stream(full_shader_path);
             VkShaderModule shader_module = VK_NULL_HANDLE;
             if (shader_source_stream.open(QIODevice::ReadOnly))
             {
-                qint64 size = shader_source_stream.size();
-                char* shader_code = new char[size];
+                qint64 size        = shader_source_stream.size();
+                char*  shader_code = new char[size];
                 shader_source_stream.read(shader_code, size);
                 shader_source_stream.close();
 

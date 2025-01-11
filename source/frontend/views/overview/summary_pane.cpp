@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Summary pane.
@@ -10,6 +10,7 @@
 #include "qt_common/utils/qt_util.h"
 
 #include "public/rra_assert.h"
+#include "public/rra_tlas.h"
 
 #include "constants.h"
 #include "managers/message_manager.h"
@@ -53,15 +54,34 @@ SummaryPane::~SummaryPane()
     delete model_;
 }
 
+void SummaryPane::UpdateTlasMap()
+{
+    tlas_address_to_index_.clear();
+
+    uint64_t tlas_count = 0;
+    RraBvhGetTlasCount(&tlas_count);
+
+    for (uint64_t i = 0; i < tlas_count; i++)
+    {
+        uint64_t address;
+        RraTlasGetBaseAddress(i, &address);
+        tlas_address_to_index_[address] = i;
+    }
+}
+
 void SummaryPane::AddDispatchPanes()
 {
     uint32_t num_dispatches = model_->GetDispatchCount();
     if (num_dispatches > 0)
     {
+        UpdateTlasMap();
         for (uint64_t index = 0; index < num_dispatches; index++)
         {
             DispatchPane* dispatch_pane = new DispatchPane();
             dispatch_pane->SetDispatchId(index);
+            dispatch_pane->SetSummaryPane(this);
+            dispatch_pane->SetTlasMap(&tlas_address_to_index_);
+
             widget_deletion_queue_.push_back(dispatch_pane);
 
             ui_->dispatch_pane_list_->addWidget(dispatch_pane, 0, Qt::AlignLeft | Qt::AlignTop);

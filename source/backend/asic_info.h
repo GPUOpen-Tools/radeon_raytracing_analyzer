@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the ASIC Info class.
@@ -283,11 +283,11 @@ namespace rra
             TraceMemoryType memory_chip_type;                            ///< The GPU memory type.
             uint32_t        lds_allocation_granularity;                  ///< LDS allocation granularity expressed in bytes.
             uint16_t        cu_mask[TRACE_MAX_NUM_SE][TRACE_SA_PER_SE];  ///< Mask of present, non-harvested CUs (physical layout).
-            uint32_t        pixel_packer_mask[4];                        ///< Mask of present, non-harvested pixel packers -- 4 bits per shader engine (up to a max of 32 shader engines)
-            uint32_t        gl1_cache_size;                              ///< Total number of GL1 cache bytes per shader array
-            uint32_t        inst_cache_size;                             ///< Total number of Instruction cache bytes per CU
-            uint32_t        scalar_cache_size;                           ///< Total number of Scalar cache (K$) bytes per CU
-            uint32_t        mall_cache_size;                             ///< Total number of MALL cache (Infinity cache) bytes
+            uint32_t pixel_packer_mask[4];  ///< Mask of present, non-harvested pixel packers -- 4 bits per shader engine (up to a max of 32 shader engines)
+            uint32_t gl1_cache_size;        ///< Total number of GL1 cache bytes per shader array
+            uint32_t inst_cache_size;       ///< Total number of Instruction cache bytes per CU
+            uint32_t scalar_cache_size;     ///< Total number of Scalar cache (K$) bytes per CU
+            uint32_t mall_cache_size;       ///< Total number of MALL cache (Infinity cache) bytes
         };
 
     private:

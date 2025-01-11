@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS viewer model.
@@ -15,6 +15,7 @@
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
+#include "public/rra_rtip_info.h"
 
 #include "constants.h"
 #include "models/acceleration_structure_tree_view_model.h"
@@ -137,7 +138,9 @@ namespace rra
         AccelerationStructureViewerModel::SetSelectedNodeIndex(model_index);
         uint32_t node_id = GetNodeIdFromModelIndex(model_index, tlas_index, kIsTlasModel);
 
-        std::string node_type{RraBvhGetNodeName(node_id)};
+        const char* node_str{};
+        RraTlasGetNodeName(node_id, &node_str);
+        std::string node_type{node_str};
 
         if (IsRebraidedNode(tlas_index))
         {
@@ -151,6 +154,14 @@ namespace rra
         SetModelData(kTlasStatsFocus, true);
 
         SetModelData(kTlasStatsAddress, AddressString(tlas_index, node_id));
+
+        uint32_t parent_id{};
+        RraTlasGetNodeParent(tlas_index, node_id, &parent_id);
+        bool parent_valid{parent_id != std::numeric_limits<uint32_t>::max()};
+        if (parent_valid)
+        {
+            SetModelData(kTlasStatsParent, AddressString(tlas_index, parent_id));
+        }
 
         // Show instance node info.
         uint64_t blas_address   = 0;
@@ -210,12 +221,18 @@ namespace rra
             SetModelData(kTlasStatsInstanceId, "");
             SetModelData(kTlasStatsInstanceMask, "");
             SetModelData(kTlasStatsInstanceHitGroupIndex, "");
+
+            if (RraRtipInfoGetOBBSupported())
+            {
+                glm::mat3 rotation(1.0f);
+                if (parent_valid)
+                {
+                    RraErrorCode result = RraTlasGetNodeBoundingVolumeOrientation(tlas_index, parent_id, &rotation[0][0]);
+                    RRA_ASSERT(result == kRraOk);
+                }
+                PopulateRotationTable(rotation);
+            }
         }
-
-
-        uint32_t parent_id{};
-        RraTlasGetNodeParent(tlas_index, node_id, &parent_id);
-        SetModelData(kTlasStatsParent, AddressString(tlas_index, parent_id));
 
         // Show bounding box extents.
         BoundingVolumeExtents bounding_volume_extents;

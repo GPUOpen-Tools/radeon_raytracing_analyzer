@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Main entry point.
@@ -60,6 +60,10 @@ int main(int argc, char* argv[])
 {
 #ifdef _DEBUG
     RraSetPrintingCallback(PrintCallback, true);
+#endif
+
+#ifdef _LINUX
+    qputenv("QT_QPA_PLATFORM", "xcb");
 #endif
 
     QApplication a(argc, argv);

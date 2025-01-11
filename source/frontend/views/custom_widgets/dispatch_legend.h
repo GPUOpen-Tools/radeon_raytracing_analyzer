@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief Widget for a colored legend.
@@ -26,12 +26,6 @@ public:
     /// @brief Set the color of this widget.
     void SetColor(const QColor& color);
 
-    /// @brief Custom sizeHint implementation that supports DPI scaling.
-    ///
-    /// @return A default sizeHint since the size of this widget can grow to fit
-    /// the space allowed by the layout.
-    virtual QSize sizeHint() const Q_DECL_OVERRIDE;
-
 protected:
     /// @brief Implementation of Qt's paint for this widget.
     ///
@@ -39,7 +33,7 @@ protected:
     virtual void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE;
 
 private:
-    QColor color_;   ///< The color of the legend.
+    QColor color_;  ///< The color of the legend.
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_DISPATCH_LEGEND_H_

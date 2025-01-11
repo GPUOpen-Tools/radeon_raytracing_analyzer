@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for UserMarkerHistory class (a RDF chunk type).
@@ -97,11 +97,6 @@ namespace rra
                 {
                     stack.pop();
                 }
-            }
-            else
-            {
-                // Currently don't support SetMarkerOp.
-                RRA_ASSERT_FAIL("Invalid marker op");
             }
         }
 

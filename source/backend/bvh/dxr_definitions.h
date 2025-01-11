@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the DXR helper functions and definitions.
@@ -176,11 +176,15 @@ namespace dxr
         constexpr std::uint32_t kFp16BoxNodeSize                 = 64;
         constexpr std::uint32_t kLeafNodeSize                    = 64;
         constexpr std::uint32_t kInstanceExtraDataSize           = 64;
-        constexpr std::uint32_t kMetaDataV1Size                  = 108;
+        constexpr std::uint32_t kMetaDataV1Size                  = 256;
         constexpr std::uint32_t kAccelerationStructureHeaderSize = 128;
         constexpr std::uint32_t kParentChunkSize                 = 64;
         constexpr std::uint32_t kGeometryInfoSize                = 12;
         constexpr std::uint32_t kMetaDataAlignment               = 128;
+
+        // Byte sizes for structs contained in BVH4 dumps on RT IP 3.1.
+        constexpr std::uint32_t kParentChunkSizeRtIp31 = 128;
+        constexpr std::uint32_t kBvh8BoxNodeSize       = 256;
 
         // Custom float3 definition
         class Float3 final

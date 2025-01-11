@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for ray intersections.
@@ -53,6 +53,60 @@ namespace rra
 
             const float eps = 5.960464478e-8f;  // 2^-24;
             return (min_t <= (max_t * (1 + 6 * eps)));
+        }
+
+        /// @brief Transform a ray for a given OBB transform.
+        ///
+        /// @param [in]  transform    The OBB transform.
+        /// @param [in]  origin       The ray origin.
+        /// @param [in]  direction    The ray direction.
+        /// @param [out] newOrigin    The transformed ray origin.
+        /// @param [out] newDirection The transformed ray direction.
+        static void OBBTransform(const glm::mat3& transform, const glm::vec3& origin, const glm::vec3& direction, glm::vec3* newOrigin, glm::vec3* newDirection)
+        {
+            glm::vec3 t0 = transform[0];
+            glm::vec3 t1 = transform[1];
+            glm::vec3 t2 = transform[2];
+
+            float r0x = origin.z * t0.z;
+            float r0y = origin.z * t1.z;
+            float r0z = origin.z * t2.z;
+
+            float r1x = direction.z * t0.z;
+            float r1y = direction.z * t1.z;
+            float r1z = direction.z * t2.z;
+
+            r0x = origin.y * t0.y + r0x;
+            r0y = origin.y * t1.y + r0y;
+            r0z = origin.y * t2.y + r0z;
+
+            r1x = direction.y * t0.y + r1x;
+            r1y = direction.y * t1.y + r1y;
+            r1z = direction.y * t2.y + r1z;
+
+            r0x = origin.x * t0.x + r0x;
+            r0y = origin.x * t1.x + r0y;
+            r0z = origin.x * t2.x + r0z;
+
+            r1x = direction.x * t0.x + r1x;
+            r1y = direction.x * t1.x + r1y;
+            r1z = direction.x * t2.x + r1z;
+
+            *newOrigin    = glm::vec3(r0x, r0y, r0z);
+            *newDirection = glm::vec3(r1x, r1y, r1z);
+        }
+
+        bool IntersectOBB(const glm::vec3& ray_origin,
+                          const glm::vec3& ray_direction,
+                          const glm::vec3& min,
+                          const glm::vec3& max,
+                          const glm::mat3& rotation,
+                          float&           closest)
+        {
+            glm::vec3 new_origin{};
+            glm::vec3 new_direction{};
+            OBBTransform(rotation, ray_origin, ray_direction, &new_origin, &new_direction);
+            return IntersectAABB(new_origin, new_direction, min, max, closest);
         }
 
         bool IntersectTriangle(const glm::vec3& ray_origin,

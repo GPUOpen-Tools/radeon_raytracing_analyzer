@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the TLAS properties pane.
@@ -39,7 +39,7 @@ private slots:
 private:
     Ui::TlasPropertiesPane* ui_;  ///< Pointer to the Qt UI design.
 
-    rra::TlasPropertiesModel* model_;       ///< Container class for the widget models.
+    rra::TlasPropertiesModel* model_;  ///< Container class for the widget models.
 };
 
 #endif  // RRA_VIEWS_TLAS_TLAS_PROPERTIES_PANE_H_

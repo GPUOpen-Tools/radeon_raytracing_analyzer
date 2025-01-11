@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the viewer container widget class.
@@ -130,7 +130,7 @@ private:
     std::vector<rra::renderer::TraversalCounterModeInfo> filtered_traversal_modes_;  ///< The traversal counter modes available to the viewer.
     std::vector<rra::renderer::HeatmapGenerator>         heatmap_generators_;        ///< The heatmap modes available at update.
     rra::renderer::BvhTypeFlags                          bvh_type_;                  ///< The type of the bvh.
-    bool instance_mask_interaction_disabled_ = false;                                ///< A flag to indicate if the mask interaction is disabled.
+    bool           instance_mask_interaction_disabled_ = false;                      ///< A flag to indicate if the mask interaction is disabled.
     rra::RRAPaneId parent_pane_id_                     = rra::kPaneIdInvalid;        ///< The parent pane id.
 };
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the welcome pane.
@@ -159,13 +159,24 @@ void WelcomePane::SetupFileList()
         ui_->recent_traces_wrapper_->layout()->addWidget(trace_widget);
     }
 
-    if (files.size() > kMaxRecentFilesToShow)
+    const size_t recent_file_count = files.size();
+
+    if (recent_file_count > kMaxRecentFilesToShow)
     {
         ui_->see_more_recent_files_button_->show();
     }
     else
     {
         ui_->see_more_recent_files_button_->hide();
+    }
+
+    if (recent_file_count == 0)
+    {
+        ui_->empty_recent_files_label_->show();
+    }
+    else
+    {
+        ui_->empty_recent_files_label_->hide();
     }
 }
 

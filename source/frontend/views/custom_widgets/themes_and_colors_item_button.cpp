@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a helper class for custom button rendering for
@@ -33,7 +33,7 @@ void ThemesAndColorsItemButton::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
 
-    QPainter        painter(this);
+    QPainter painter(this);
 
     const int position_adjust = 1;
     const int size_adjust     = position_adjust * 2;

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter used to filter a tree view.
@@ -28,8 +28,8 @@ namespace rra
 
     bool TreeViewProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
     {
-        QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
-        auto item_data = qvariant_cast<AccelerationStructureTreeViewItemData>(index.data(Qt::DisplayRole));
+        QModelIndex index     = sourceModel()->index(source_row, 0, source_parent);
+        auto        item_data = qvariant_cast<AccelerationStructureTreeViewItemData>(index.data(Qt::DisplayRole));
         return (item_data.display_name.contains(search_text_));
     }
 

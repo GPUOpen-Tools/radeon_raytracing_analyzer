@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS interface.
@@ -10,6 +10,8 @@
 #include "rra_blas_impl.h"
 
 #include <math.h>  // for sqrt
+#include <unordered_set>
+#include "glm/glm/glm.hpp"
 
 #include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
 #include "bvh/flags_util.h"
@@ -17,6 +19,10 @@
 #include "rra_bvh_impl.h"
 #include "rra_data_set.h"
 #include "surface_area_heuristic.h"
+#include "public/rra_rtip_info.h"
+#include "bvh/rtip31/ray_tracing_defs.h"
+#include "bvh/rtip31/primitive_node.h"
+#include "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
 
 // External reference to the global dataset.
 extern RraDataSet data_set_;
@@ -39,7 +45,7 @@ static float GetLength(const dxr::amd::Float3& vert_1, const dxr::amd::Float3& v
     return sqrt(x_squared + y_squared + z_squared);
 }
 
-rta::EncodedRtIp11BottomLevelBvh* RraBlasGetBlasFromBlasIndex(uint64_t blas_index)
+rta::EncodedBottomLevelBvh* RraBlasGetBlasFromBlasIndex(uint64_t blas_index)
 {
     RRA_ASSERT(data_set_.bvh_bundle.get() != nullptr);
     const auto& bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
@@ -47,12 +53,12 @@ rta::EncodedRtIp11BottomLevelBvh* RraBlasGetBlasFromBlasIndex(uint64_t blas_inde
     {
         return nullptr;
     }
-    return dynamic_cast<rta::EncodedRtIp11BottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
+    return dynamic_cast<rta::EncodedBottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
 }
 
 RraErrorCode RraBlasGetBaseAddress(uint64_t blas_index, uint64_t* out_address)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -64,7 +70,7 @@ RraErrorCode RraBlasGetBaseAddress(uint64_t blas_index, uint64_t* out_address)
 
 bool RraBlasIsEmpty(uint64_t blas_index)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return true;
@@ -82,14 +88,19 @@ RraErrorCode RraBlasGetTotalNodeCount(uint64_t blas_index, uint64_t* out_node_co
     }
 
     const auto& blas = RraBlasGetBlasFromBlasIndex(blas_index);
-    *out_node_count  = blas->GetNodeCount(rta::BvhNodeFlags::kNone);
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    *out_node_count = blas->GetNodeCount(rta::BvhNodeFlags::kNone);
 
     return kRraOk;
 }
 
 RraErrorCode RraBlasGetChildNodeCount(uint64_t blas_index, uint32_t parent_node, uint32_t* out_child_count)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -99,7 +110,7 @@ RraErrorCode RraBlasGetChildNodeCount(uint64_t blas_index, uint32_t parent_node,
 
 RraErrorCode RraBlasGetChildNodes(uint64_t blas_index, uint32_t parent_node, uint32_t* out_child_nodes)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -204,7 +215,7 @@ RraErrorCode RraBlasGetAvgTreeDepth(uint64_t blas_index, uint32_t* out_tree_dept
 
 RraErrorCode RraBlasGetChildNodePtr(uint64_t blas_index, uint32_t parent_node, uint32_t child_index, uint32_t* out_node_ptr)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -212,9 +223,21 @@ RraErrorCode RraBlasGetChildNodePtr(uint64_t blas_index, uint32_t parent_node, u
     return RraBvhGetChildNodePtr(blas, parent_node, child_index, out_node_ptr);
 }
 
+bool RraBlasIsTriangleNode(uint64_t blas_index, uint32_t node_ptr)
+{
+    rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    if (blas == nullptr)
+    {
+        return false;
+    }
+    bool out_is_tri{};
+    RraBvhIsTriangleNode(blas, node_ptr, &out_is_tri);
+    return out_is_tri;
+}
+
 RraErrorCode RraBlasGetNodeBaseAddress(uint64_t blas_index, uint32_t node_ptr, uint64_t* out_address)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -229,22 +252,28 @@ RraErrorCode RraBlasGetNodeBaseAddress(uint64_t blas_index, uint32_t node_ptr, u
 
 RraErrorCode RraBlasGetNodeParent(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_parent_node_ptr)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
-    const dxr::amd::NodePointer* node        = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-    dxr::amd::NodePointer  parent_node = blas->GetParentNode(node);
+    const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
 
-    *out_parent_node_ptr = *reinterpret_cast<uint32_t*>(&parent_node);
+    const auto& interior_nodes = blas->GetInteriorNodesData();
+    if (interior_nodes.size() == 0)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    dxr::amd::NodePointer parent_node = blas->GetParentNode(node);
+    *out_parent_node_ptr              = *reinterpret_cast<uint32_t*>(&parent_node);
 
     return kRraOk;
 }
 
 RraErrorCode RraBlasGetSurfaceArea(uint64_t blas_index, uint32_t node_ptr, float* out_surface_area)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -255,10 +284,7 @@ RraErrorCode RraBlasGetSurfaceArea(uint64_t blas_index, uint32_t node_ptr, float
 
 RraErrorCode RraBlasGetSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_ptr, float* out_surface_area_heuristic)
 {
-    uint32_t tri_count{};
-    RraBlasGetNodeTriangleCount(blas_index, node_ptr, &tri_count);
-
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -304,34 +330,63 @@ float RraBlasGetTriangleSurfaceArea(const dxr::amd::TriangleNode& triangle_node,
     return surface_area;
 }
 
-RraErrorCode RraBlasGetSurfaceAreaImpl(const rta::EncodedRtIp11BottomLevelBvh* blas, const dxr::amd::NodePointer* node_ptr, float* out_surface_area)
+dxr::amd::Float3 Vec3ToFloat3(const glm::vec3& v)
+{
+    return {v.x, v.y, v.z};
+}
+
+RraErrorCode RraBlasGetSurfaceAreaImpl(const rta::EncodedBottomLevelBvh* blas, const dxr::amd::NodePointer* node_ptr, float* out_surface_area)
 {
     if (node_ptr->IsTriangleNode())
     {
         const auto& header_offsets = blas->GetHeader().GetBufferOffsets();
 
-        if (node_ptr->GetByteOffset() < header_offsets.leaf_nodes)
+        if (node_ptr->GetByteOffset() < header_offsets.interior_nodes)
         {
             *out_surface_area = std::numeric_limits<float>::quiet_NaN();
             return kRraOk;
         }
 
-        const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*node_ptr);
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+        {
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            uint32_t                          pair_indices_count{};
+            auto                              triangle_pair_indices = blas_rtip31->GetTrianglePairIndices(*node_ptr, &pair_indices_count);
 
-#ifdef _DEBUG
-        const uint32_t node_index = (node_ptr->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+            float surface_area{0.0f};
 
-        // Get the triangle vertices for this node index.
-        const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
-        const auto& tri_node       = triangle_nodes[node_index];
+            for (uint32_t i = 0; i < pair_indices_count; ++i)
+            {
+                auto&        tri_pair_idx = triangle_pair_indices[i];
+                TriangleData tri0         = tri_pair_idx.first->UnpackTriangleVertices(tri_pair_idx.second, 0);
+                surface_area += TriangleSurfaceArea(Vec3ToFloat3(tri0.v0), Vec3ToFloat3(tri0.v1), Vec3ToFloat3(tri0.v2));
 
-        RRA_ASSERT(&tri_node == triangle_node);
-#endif  // DEBUG
+                if (tri_pair_idx.first->ReadTrianglePairDesc(tri_pair_idx.second).Tri1Valid())
+                {
+                    TriangleData tri1 = tri_pair_idx.first->UnpackTriangleVertices(tri_pair_idx.second, 1);
+                    surface_area += TriangleSurfaceArea(Vec3ToFloat3(tri1.v0), Vec3ToFloat3(tri1.v1), Vec3ToFloat3(tri1.v2));
+                }
+            }
 
-        uint32_t tri_count{};
-        RraBlasGetNodeTriangleCount(blas->GetID(), node_ptr->GetRawPointer(), &tri_count);
+            *out_surface_area = surface_area;
+        }
+        else
+        {
+            if (node_ptr->GetByteOffset() < header_offsets.leaf_nodes)
+            {
+                *out_surface_area = std::numeric_limits<float>::quiet_NaN();
+                return kRraOk;
+            }
 
-        *out_surface_area = RraBlasGetTriangleSurfaceArea(*triangle_node, tri_count);
+            const rta::EncodedRtIp11BottomLevelBvh* blas_rtip11   = (rta::EncodedRtIp11BottomLevelBvh*)blas;
+            const dxr::amd::TriangleNode*           triangle_node = blas_rtip11->GetTriangleNode(*node_ptr);
+
+            uint32_t tri_count{};
+            RraBlasGetNodeTriangleCount(blas->GetID(), node_ptr->GetRawPointer(), &tri_count);
+
+            *out_surface_area = RraBlasGetTriangleSurfaceArea(*triangle_node, tri_count);
+        }
+
         return kRraOk;
     }
     else if (node_ptr->IsBoxNode())
@@ -343,7 +398,7 @@ RraErrorCode RraBlasGetSurfaceAreaImpl(const rta::EncodedRtIp11BottomLevelBvh* b
 
 RraErrorCode RraBlasGetMinimumSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_ptr, bool tri_only, float* out_min_surface_area_heuristic)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -363,7 +418,7 @@ RraErrorCode RraBlasGetMinimumSurfaceAreaHeuristic(uint64_t blas_index, uint32_t
 
 RraErrorCode RraBlasGetAverageSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_ptr, bool tri_only, float* out_avg_surface_area_heuristic)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -383,7 +438,7 @@ RraErrorCode RraBlasGetAverageSurfaceAreaHeuristic(uint64_t blas_index, uint32_t
 
 RraErrorCode RraBlasGetTriangleSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_ptr, float* out_tri_surface_area_heuristic)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -397,7 +452,7 @@ RraErrorCode RraBlasGetTriangleSurfaceAreaHeuristic(uint64_t blas_index, uint32_
 
 RraErrorCode RraBlasGetUniqueTriangleCount(uint64_t blas_index, uint32_t* out_triangle_count)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -426,7 +481,7 @@ RraErrorCode RraBlasGetUniqueTriangleCount(uint64_t blas_index, uint32_t* out_tr
 
 RraErrorCode RraBlasGetActivePrimitiveCount(uint64_t blas_index, uint32_t* out_triangle_count)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -439,7 +494,7 @@ RraErrorCode RraBlasGetActivePrimitiveCount(uint64_t blas_index, uint32_t* out_t
 
 RraErrorCode RraBlasGetTriangleNodeCount(uint64_t blas_index, uint32_t* out_triangle_count)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -448,7 +503,16 @@ RraErrorCode RraBlasGetTriangleNodeCount(uint64_t blas_index, uint32_t* out_tria
 
     if (blas->GetHeader().GetGeometryType() == rta::BottomLevelBvhGeometryType::kTriangle)
     {
-        *out_triangle_count = blas->GetHeader().GetLeafNodeCount();
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+        {
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            *out_triangle_count                           = blas_rtip31->GetNodeCount(rta::BvhNodeFlags::kIsLeafNode);
+        }
+        else
+        {
+            rta::EncodedRtIp11BottomLevelBvh* blas_rtip11 = (rta::EncodedRtIp11BottomLevelBvh*)blas;
+            *out_triangle_count                           = blas_rtip11->GetNodeCount(rta::BvhNodeFlags::kIsLeafNode);
+        }
     }
     else
     {
@@ -460,7 +524,7 @@ RraErrorCode RraBlasGetTriangleNodeCount(uint64_t blas_index, uint32_t* out_tria
 
 RraErrorCode RraBlasGetProceduralNodeCount(uint64_t blas_index, uint32_t* out_procedural_Node_count)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -479,9 +543,130 @@ RraErrorCode RraBlasGetProceduralNodeCount(uint64_t blas_index, uint32_t* out_pr
     return kRraOk;
 }
 
+RraErrorCode RraBlasGetNodeName(uint64_t blas_index, uint32_t node_ptr, const char** out_name)
+{
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+
+    switch ((uint32_t)node->GetType())
+    {
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle0:
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+        {
+            *out_name = blas->IsProcedural() ? "Procedural" : "Triangles";
+            break;
+        }
+        *out_name = blas->IsProcedural() ? "Procedural" : "Triangle";
+        break;
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle1:
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle2:
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle3:
+    case NODE_TYPE_TRIANGLE_4:
+    case NODE_TYPE_TRIANGLE_5:
+    case NODE_TYPE_TRIANGLE_6:
+    case NODE_TYPE_TRIANGLE_7:
+        *out_name = blas->IsProcedural() ? "Procedural" : "Triangles";
+        break;
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeBoxFp16:
+        *out_name = "Box16";
+        break;
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeBoxFp32:
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+        {
+            *out_name = "Bvh8";
+            break;
+        }
+        else
+        {
+            *out_name = "Box32";
+            break;
+        }
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeInstance:
+        *out_name = "Instance";
+        break;
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeProcedural:
+        *out_name = "Procedural";
+        break;
+
+    default:
+        *out_name = "Unknown";
+        break;
+    }
+
+    return kRraOk;
+}
+
+RraErrorCode RraBlasGetNodeNameToolTip(uint64_t blas_index, uint32_t node_ptr, const char** out_tooltip)
+{
+    static const char* proc_string = "A node containing procedural geometry data";
+    static const char* tri_string  = "A node containing triangle geometry data";
+
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+
+    switch ((uint32_t)node->GetType())
+    {
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle0:
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle1:
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle2:
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle3:
+    case NODE_TYPE_TRIANGLE_4:
+    case NODE_TYPE_TRIANGLE_5:
+    case NODE_TYPE_TRIANGLE_6:
+    case NODE_TYPE_TRIANGLE_7:
+        *out_tooltip = blas->IsProcedural() ? proc_string : tri_string;
+        break;
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeProcedural:
+        *out_tooltip = proc_string;
+        break;
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeBoxFp16:
+        *out_tooltip = "A 16-bit floating point bounding volume node with up to 4 child nodes";
+        break;
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeBoxFp32:
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+        {
+            *out_tooltip = "A compressed bounding volume node with up to 8 child nodes";
+            break;
+        }
+        else
+        {
+            *out_tooltip = "A 32-bit floating point bounding volume node with up to 4 child nodes";
+            break;
+        }
+
+    case (uint32_t)dxr::amd::NodeType::kAmdNodeInstance:
+        *out_tooltip = "A node containing an instance of a BLAS";
+        break;
+
+    default:
+        *out_tooltip = "";
+        break;
+    }
+
+    return kRraOk;
+}
+
 RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_geometry_index)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -491,25 +676,40 @@ RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_ptr, uin
     const dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
     if (current_node->IsTriangleNode())
     {
-        const auto& header_offsets = blas->GetHeader().GetBufferOffsets();
-        if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
         {
-            *out_geometry_index = 0;
-            return kRraErrorInvalidPointer;
-        }
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            uint32_t                          pair_indices_count{};
+            auto                              pair_indices = blas_rtip31->GetTrianglePairIndices(node_ptr, &pair_indices_count);
 
-        const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*current_node);
+            auto pair_index = uint32_t(current_node->GetType());
+            RRA_UNUSED(pair_index);
+
+            *out_geometry_index = (pair_indices_count == 0) ? 0 : pair_indices.front().first->UnpackGeometryIndex(pair_indices.front().second, 0);
+        }
+        else
+        {
+            const auto& header_offsets = blas->GetHeader().GetBufferOffsets();
+            if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+            {
+                *out_geometry_index = 0;
+                return kRraErrorInvalidPointer;
+            }
+
+            const rta::EncodedRtIp11BottomLevelBvh* blas_rtip11   = (rta::EncodedRtIp11BottomLevelBvh*)blas;
+            const dxr::amd::TriangleNode*           triangle_node = blas_rtip11->GetTriangleNode(*current_node);
 
 #ifdef _DEBUG
-        const uint32_t index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+            const uint32_t index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
-        const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
-        const auto& tri_node       = triangle_nodes[index];
+            const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas_rtip11->GetLeafNodesData().data());
+            const auto& tri_node       = triangle_nodes[index];
 
-        RRA_ASSERT(&tri_node == triangle_node);
+            RRA_ASSERT(&tri_node == triangle_node);
 #endif  // DEBUG
 
-        *out_geometry_index = triangle_node->GetGeometryIndex();
+            *out_geometry_index = triangle_node->GetGeometryIndex();
+        }
     }
     else
     {
@@ -523,7 +723,7 @@ RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_ptr, uin
 
 RraErrorCode RraBlasGetGeometryPrimitiveCount(uint64_t blas_index, uint32_t geometry_index, uint32_t* out_primitive_count)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -542,7 +742,7 @@ RraErrorCode RraBlasGetGeometryPrimitiveCount(uint64_t blas_index, uint32_t geom
 
 RraErrorCode RraBlasGetGeometryCount(uint64_t blas_index, uint32_t* out_geometry_count)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -556,7 +756,7 @@ RraErrorCode RraBlasGetGeometryCount(uint64_t blas_index, uint32_t* out_geometry
 
 RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t local_primitive_index, uint32_t* out_primitive_index)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -566,29 +766,42 @@ RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, ui
     const dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
     if (current_node->IsTriangleNode())
     {
-        const dxr::amd::TriangleNode* triangle_node  = blas->GetTriangleNode(*current_node);
-        const auto&                   header_offsets = blas->GetHeader().GetBufferOffsets();
-        if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
         {
-            *out_primitive_index = 0;
-            return kRraErrorInvalidPointer;
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            uint32_t                          pair_indices_count{};
+            auto                              pair_indices = blas_rtip31->GetTrianglePairIndices(node_ptr, &pair_indices_count);
+
+            *out_primitive_index =
+                (pair_indices_count == 0) ? 0 : pair_indices.front().first->UnpackPrimitiveIndex(pair_indices.front().second, local_primitive_index);
         }
+        else
+        {
+            const rta::EncodedRtIp11BottomLevelBvh* blas_rtip11    = (rta::EncodedRtIp11BottomLevelBvh*)blas;
+            const dxr::amd::TriangleNode*           triangle_node  = blas_rtip11->GetTriangleNode(*current_node);
+            const auto&                             header_offsets = blas->GetHeader().GetBufferOffsets();
+            if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+            {
+                *out_primitive_index = 0;
+                return kRraErrorInvalidPointer;
+            }
 
 #ifdef _DEBUG
-        const uint32_t node_index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+            const uint32_t node_index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
-        // Get the primitive index for this node index.
-        const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
-        const auto& tri_node       = triangle_nodes[node_index];
+            // Get the primitive index for this node index.
+            const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas_rtip11->GetLeafNodesData().data());
+            const auto& tri_node       = triangle_nodes[node_index];
 
-        RRA_ASSERT(&tri_node == triangle_node);
+            RRA_ASSERT(&tri_node == triangle_node);
 #endif  // DEBUG
 
-        // No way to exctract more than 2 primitive indexes as of yet.
-        RRA_ASSERT(local_primitive_index < 2);
+            // No way to exctract more than 2 primitive indexes as of yet.
+            RRA_ASSERT(local_primitive_index < 2);
 
-        *out_primitive_index =
-            triangle_node->GetPrimitiveIndex(local_primitive_index == 0 ? dxr::amd::NodeType::kAmdNodeTriangle0 : dxr::amd::NodeType::kAmdNodeTriangle1);
+            *out_primitive_index =
+                triangle_node->GetPrimitiveIndex(local_primitive_index == 0 ? dxr::amd::NodeType::kAmdNodeTriangle0 : dxr::amd::NodeType::kAmdNodeTriangle1);
+        }
     }
     else
     {
@@ -602,7 +815,7 @@ RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_ptr, ui
 
 RraErrorCode RraBlasGetGeometryFlags(uint64_t blas_index, uint32_t geometry_index, uint32_t* out_geometry_flags)
 {
-    const rta::EncodedRtIp11BottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
 
     if (blas == nullptr)
     {
@@ -635,8 +848,8 @@ RraErrorCode RraBlasGetGeometryFlags(uint64_t blas_index, uint32_t geometry_inde
 
 RraErrorCode RraBlasGetIsInactive(uint64_t blas_index, uint32_t node_ptr, bool* out_is_inactive)
 {
-    const auto&                             bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
-    const rta::EncodedRtIp11BottomLevelBvh* blas              = dynamic_cast<rta::EncodedRtIp11BottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
+    const auto&                       bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
+    const rta::EncodedBottomLevelBvh* blas              = dynamic_cast<rta::EncodedBottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -651,22 +864,50 @@ RraErrorCode RraBlasGetIsInactive(uint64_t blas_index, uint32_t node_ptr, bool* 
 
     if (current_node->IsTriangleNode())
     {
-        const dxr::amd::TriangleNode* triangle_node = blas->GetTriangleNode(*current_node);
-        if (triangle_node == nullptr)
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
         {
-            return kRraErrorInvalidPointer;
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            uint32_t                          pair_indices_count{};
+            auto                              pair_indices = blas_rtip31->GetTrianglePairIndices(node_ptr, &pair_indices_count);
+
+            *out_is_inactive =
+                (pair_indices_count == 0) ? true : std::isnan(pair_indices.front().first->UnpackTriangleVertices(pair_indices.front().second, 0).v0.x);
         }
-        *out_is_inactive = triangle_node->IsInactive(current_node->GetType());
+        else
+        {
+            const rta::EncodedRtIp11BottomLevelBvh* blas_rtip11   = (rta::EncodedRtIp11BottomLevelBvh*)blas;
+            const dxr::amd::TriangleNode*           triangle_node = blas_rtip11->GetTriangleNode(*current_node);
+            if (triangle_node == nullptr)
+            {
+                return kRraErrorInvalidPointer;
+            }
+            *out_is_inactive = triangle_node->IsInactive(current_node->GetType());
+        }
         return kRraOk;
     }
-    else if (current_node->IsProceduralNode())
+    else if (blas->IsProcedural())
     {
-        const dxr::amd::ProceduralNode* procedural_node = blas->GetProceduralNode(*current_node);
-        if (procedural_node == nullptr)
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
         {
-            return kRraErrorInvalidPointer;
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            uint32_t                          pair_indices_count{};
+            auto                              pair_indices = blas_rtip31->GetTrianglePairIndices(node_ptr, &pair_indices_count);
+            if ((pair_indices_count == 0) || pair_indices.front().first == nullptr || !pair_indices.front().first->IsProcedural(pair_indices.front().second, 0))
+            {
+                return kRraErrorInvalidPointer;
+            }
+            *out_is_inactive = std::isnan(pair_indices.front().first->UnpackTriangleVertices(pair_indices.front().second, 0).v0.x);
         }
-        *out_is_inactive = procedural_node->IsInactive();
+        else
+        {
+            const rta::EncodedRtIp11BottomLevelBvh* blas_rtip11     = (rta::EncodedRtIp11BottomLevelBvh*)blas;
+            const dxr::amd::ProceduralNode*         procedural_node = blas_rtip11->GetProceduralNode(*current_node);
+            if (procedural_node == nullptr)
+            {
+                return kRraErrorInvalidPointer;
+            }
+            *out_is_inactive = procedural_node->IsInactive();
+        }
         return kRraOk;
     }
 
@@ -675,8 +916,8 @@ RraErrorCode RraBlasGetIsInactive(uint64_t blas_index, uint32_t node_ptr, bool* 
 
 RraErrorCode RraBlasGetNodeTriangleCount(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_triangle_count)
 {
-    const auto&                             bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
-    const rta::EncodedRtIp11BottomLevelBvh* blas              = dynamic_cast<rta::EncodedRtIp11BottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
+    const auto&                       bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
+    const rta::EncodedBottomLevelBvh* blas              = dynamic_cast<rta::EncodedBottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -695,6 +936,27 @@ RraErrorCode RraBlasGetNodeTriangleCount(uint64_t blas_index, uint32_t node_ptr,
         return kRraErrorInvalidPointer;
     }
 
+    if (!current_node->IsTriangleNode())
+    {
+        *out_triangle_count = 0;
+        return kRraOk;
+    }
+
+    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+    {
+        rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+        uint32_t                          pair_indices_count{};
+        auto                              pair_indices = blas_rtip31->GetTrianglePairIndices(node_ptr, &pair_indices_count);
+
+        uint32_t tri_count{};
+        for (uint32_t i = 0; i < pair_indices_count; ++i)
+        {
+            tri_count += 1 + pair_indices[i].first->ReadTrianglePairDesc(pair_indices[i].second).Tri1Valid();
+        }
+        *out_triangle_count = tri_count;
+
+        return kRraOk;
+    }
     // The incoming node id should be a triangle node. If it's not, we can't extract triangle data.
     if (current_node->GetType() == dxr::amd::NodeType::kAmdNodeTriangle0)
     {
@@ -703,6 +965,30 @@ RraErrorCode RraBlasGetNodeTriangleCount(uint64_t blas_index, uint32_t node_ptr,
     else if (current_node->GetType() == dxr::amd::NodeType::kAmdNodeTriangle1)
     {
         *out_triangle_count = 2;
+    }
+    else if (current_node->GetType() == dxr::amd::NodeType::kAmdNodeTriangle2)
+    {
+        *out_triangle_count = 3;
+    }
+    else if (current_node->GetType() == dxr::amd::NodeType::kAmdNodeTriangle3)
+    {
+        *out_triangle_count = 4;
+    }
+    else if ((int)current_node->GetType() == NODE_TYPE_TRIANGLE_4)
+    {
+        *out_triangle_count = 5;
+    }
+    else if ((int)current_node->GetType() == NODE_TYPE_TRIANGLE_5)
+    {
+        *out_triangle_count = 6;
+    }
+    else if ((int)current_node->GetType() == NODE_TYPE_TRIANGLE_6)
+    {
+        *out_triangle_count = 7;
+    }
+    else if ((int)current_node->GetType() == NODE_TYPE_TRIANGLE_7)
+    {
+        *out_triangle_count = 8;
     }
     else
     {
@@ -713,8 +999,8 @@ RraErrorCode RraBlasGetNodeTriangleCount(uint64_t blas_index, uint32_t node_ptr,
 
 RraErrorCode RraBlasGetNodeTriangles(uint64_t blas_index, uint32_t node_ptr, TriangleVertices* out_triangles)
 {
-    const auto&                             bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
-    const rta::EncodedRtIp11BottomLevelBvh* blas              = dynamic_cast<rta::EncodedRtIp11BottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
+    const auto&                       bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
+    const rta::EncodedBottomLevelBvh* blas              = dynamic_cast<rta::EncodedBottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -730,48 +1016,148 @@ RraErrorCode RraBlasGetNodeTriangles(uint64_t blas_index, uint32_t node_ptr, Tri
     // The incoming node id should be a triangle node. If it's not, we can't extract triangle data.
     if (current_node->IsTriangleNode())
     {
-        const dxr::amd::TriangleNode* triangle_node  = blas->GetTriangleNode(*current_node);
-        const auto&                   header_offsets = blas->GetHeader().GetBufferOffsets();
-
-        if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
         {
-            return kRraErrorInvalidPointer;
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            uint32_t                          pair_indices_count{};
+            auto                              pair_indices = blas_rtip31->GetTrianglePairIndices(node_ptr, &pair_indices_count);
+
+            uint32_t triangle_idx = 0;
+
+            for (uint32_t i = 0; i < pair_indices_count; ++i)
+            {
+                auto& pair_index{pair_indices[i]};
+                auto  pair_descriptor = pair_index.first->ReadTrianglePairDesc(pair_index.second);
+
+                auto tri0_data                  = pair_index.first->UnpackTriangleVertices(pair_index.second, 0);
+                out_triangles[triangle_idx].a.x = tri0_data.v0.x;
+                out_triangles[triangle_idx].a.y = tri0_data.v0.y;
+                out_triangles[triangle_idx].a.z = tri0_data.v0.z;
+                out_triangles[triangle_idx].b.x = tri0_data.v1.x;
+                out_triangles[triangle_idx].b.y = tri0_data.v1.y;
+                out_triangles[triangle_idx].b.z = tri0_data.v1.z;
+                out_triangles[triangle_idx].c.x = tri0_data.v2.x;
+                out_triangles[triangle_idx].c.y = tri0_data.v2.y;
+                out_triangles[triangle_idx].c.z = tri0_data.v2.z;
+                triangle_idx++;
+
+                if (pair_descriptor.Tri1Valid())
+                {
+                    auto tri1_data                  = pair_index.first->UnpackTriangleVertices(pair_index.second, 1);
+                    out_triangles[triangle_idx].a.x = tri1_data.v0.x;
+                    out_triangles[triangle_idx].a.y = tri1_data.v0.y;
+                    out_triangles[triangle_idx].a.z = tri1_data.v0.z;
+                    out_triangles[triangle_idx].b.x = tri1_data.v1.x;
+                    out_triangles[triangle_idx].b.y = tri1_data.v1.y;
+                    out_triangles[triangle_idx].b.z = tri1_data.v1.z;
+                    out_triangles[triangle_idx].c.x = tri1_data.v2.x;
+                    out_triangles[triangle_idx].c.y = tri1_data.v2.y;
+                    out_triangles[triangle_idx].c.z = tri1_data.v2.z;
+                    triangle_idx++;
+                }
+            }
         }
+        else
+        {
+            const rta::EncodedRtIp11BottomLevelBvh* blas_rtip11    = (rta::EncodedRtIp11BottomLevelBvh*)blas;
+            const dxr::amd::TriangleNode*           triangle_node  = blas_rtip11->GetTriangleNode(*current_node);
+            const auto&                             header_offsets = blas->GetHeader().GetBufferOffsets();
+
+            if (current_node->GetByteOffset() < header_offsets.leaf_nodes)
+            {
+                return kRraErrorInvalidPointer;
+            }
 
 #ifdef _DEBUG
-        const uint32_t node_index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+            const uint32_t node_index = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
-        // Get the triangle vertices for this node index.
-        const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
-        const auto& tri_node       = triangle_nodes[node_index];
+            const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas_rtip11->GetLeafNodesData().data());
+            const auto& tri_node       = triangle_nodes[node_index];
 
-        RRA_ASSERT(&tri_node == triangle_node);
+            RRA_ASSERT(&tri_node == triangle_node);
 #endif  // DEBUG
 
-        const auto& verts = triangle_node->GetVertices();
+            const auto& verts = triangle_node->GetVertices();
 
-        // Copy the triangle vertices to the output pointer.
-        const size_t vertex_size = sizeof(VertexPosition);
-        memcpy(&out_triangles->a, &verts[0], vertex_size);
-        memcpy(&out_triangles->b, &verts[1], vertex_size);
-        memcpy(&out_triangles->c, &verts[2], vertex_size);
-
-        if (current_node->GetType() == dxr::amd::NodeType::kAmdNodeTriangle1)
-        {
-            out_triangles++;
-            memcpy(&out_triangles->a, &verts[2], vertex_size);
+            // Copy the triangle vertices to the output pointer.
+            const size_t vertex_size = sizeof(VertexPosition);
+            memcpy(&out_triangles->a, &verts[0], vertex_size);
             memcpy(&out_triangles->b, &verts[1], vertex_size);
-            memcpy(&out_triangles->c, &verts[3], vertex_size);
+            memcpy(&out_triangles->c, &verts[2], vertex_size);
+
+            if (current_node->GetType() == dxr::amd::NodeType::kAmdNodeTriangle1)
+            {
+                out_triangles++;
+                memcpy(&out_triangles->a, &verts[2], vertex_size);
+                memcpy(&out_triangles->b, &verts[1], vertex_size);
+                memcpy(&out_triangles->c, &verts[3], vertex_size);
+            }
         }
     }
 
+    return kRraOk;
+}
+
+RraErrorCode RraBlasGetNodeVertexCount(uint64_t blas_index, uint32_t node_ptr, uint32_t* out_count)
+{
+    const auto&                       bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
+    const rta::EncodedBottomLevelBvh* blas              = dynamic_cast<rta::EncodedBottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+
+    if (current_node == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    // The incoming node id should be a triangle node. If it's not, we can't extract triangle data.
+    if (current_node->IsTriangleNode())
+    {
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+        {
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            uint32_t                          pair_indices_count{};
+            auto                              pair_indices = blas_rtip31->GetTrianglePairIndices(node_ptr, &pair_indices_count);
+
+            // Leftmost 32 bits are pair_indices_idx and rightmost are vertex index. Since vertices may index into separate PrimitiveStructures.
+            std::unordered_set<uint64_t> vertex_index_set{};
+            uint32_t                     pair_indices_idx{0};
+            for (uint32_t i = 0; i < pair_indices_count; ++i)
+            {
+                TrianglePairDesc desc{pair_indices[i].first->ReadTrianglePairDesc(pair_indices[i].second)};
+                vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri0V0());
+                vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri0V1());
+                vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri0V2());
+
+                if (desc.Tri1Valid())
+                {
+                    vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri1V0());
+                    vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri1V1());
+                    vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri1V2());
+                }
+                ++pair_indices_idx;
+            }
+
+            *out_count = (uint32_t)vertex_index_set.size();
+        }
+        else
+        {
+            uint32_t triangle_count{};
+            RraBlasGetNodeTriangleCount(blas_index, node_ptr, &triangle_count);
+            *out_count = (triangle_count == 1 ? 3 : 4);
+        }
+    }
     return kRraOk;
 }
 
 RraErrorCode RraBlasGetNodeVertices(uint64_t blas_index, uint32_t node_ptr, struct VertexPosition* out_vertices)
 {
-    const auto&                             bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
-    const rta::EncodedRtIp11BottomLevelBvh* blas              = dynamic_cast<rta::EncodedRtIp11BottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
+    const auto&                       bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
+    const rta::EncodedBottomLevelBvh* blas              = dynamic_cast<rta::EncodedBottomLevelBvh*>(&(*bottom_level_bvhs[blas_index]));
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -787,32 +1173,72 @@ RraErrorCode RraBlasGetNodeVertices(uint64_t blas_index, uint32_t node_ptr, stru
     // The incoming node id should be a triangle node. If it's not, we can't extract triangle data.
     if (current_node->IsTriangleNode())
     {
-        const auto&    header_offsets = blas->GetHeader().GetBufferOffsets();
-        const uint32_t node_index     = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+        const auto& header_offsets = blas->GetHeader().GetBufferOffsets();
 
-        // Get the triangle vertices for this node index.
-        const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas->GetLeafNodesData().data());
-        const auto& tri_node       = triangle_nodes[node_index];
-        const auto& verts          = tri_node.GetVertices();
-
-        // Copy the triangle vertices to the output pointer.
-        const size_t vertex_size = sizeof(VertexPosition);
-        memcpy(&out_vertices[0], &verts[0], vertex_size);
-        memcpy(&out_vertices[1], &verts[1], vertex_size);
-        memcpy(&out_vertices[2], &verts[2], vertex_size);
-
-        if (current_node->GetType() == dxr::amd::NodeType::kAmdNodeTriangle1)
+        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
         {
-            memcpy(&out_vertices[3], &verts[3], vertex_size);
+            rta::EncodedRtIp31BottomLevelBvh* blas_rtip31 = (rta::EncodedRtIp31BottomLevelBvh*)blas;
+            uint32_t                          pair_indices_count{};
+            auto                              pair_indices = blas_rtip31->GetTrianglePairIndices(node_ptr, &pair_indices_count);
+
+            // Leftmost 32 bits are pair_indices_idx and rightmost are vertex index. Since vertices may index into separate PrimitiveStructures.
+            std::unordered_set<uint64_t> vertex_index_set{};
+            {
+                uint32_t pair_indices_idx{0};
+                for (uint32_t i = 0; i < pair_indices_count; ++i)
+                {
+                    TrianglePairDesc desc{pair_indices[i].first->ReadTrianglePairDesc(pair_indices[i].second)};
+                    vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri0V0());
+                    vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri0V1());
+                    vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri0V2());
+
+                    if (desc.Tri1Valid())
+                    {
+                        vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri1V0());
+                        vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri1V1());
+                        vertex_index_set.insert(((uint64_t)pair_indices_idx << 32) | desc.Tri1V2());
+                    }
+                    ++pair_indices_idx;
+                }
+            }
+
+            uint32_t vertex_idx{0};
+            for (uint64_t vertex_index_pair : vertex_index_set)
+            {
+                uint32_t  pair_indices_idx = (uint32_t)(vertex_index_pair >> 32);
+                uint32_t  vertex_index     = (uint32_t)vertex_index_pair;
+                glm::vec3 v                = pair_indices[pair_indices_idx].first->ReadVertex(vertex_index, false);
+
+                out_vertices[vertex_idx++] = {v.x, v.y, v.z};
+            }
+        }
+        else
+        {
+            const uint32_t                          node_index  = (current_node->GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
+            const rta::EncodedRtIp11BottomLevelBvh* blas_rtip11 = (rta::EncodedRtIp11BottomLevelBvh*)blas;
+            // Get the triangle vertices for this node index.
+            const auto* triangle_nodes = reinterpret_cast<const dxr::amd::TriangleNode*>(blas_rtip11->GetLeafNodesData().data());
+            const auto& tri_node       = triangle_nodes[node_index];
+            const auto& verts          = tri_node.GetVertices();
+
+            // Copy the triangle vertices to the output pointer.
+            const size_t vertex_size = sizeof(VertexPosition);
+            memcpy(&out_vertices[0], &verts[0], vertex_size);
+            memcpy(&out_vertices[1], &verts[1], vertex_size);
+            memcpy(&out_vertices[2], &verts[2], vertex_size);
+
+            if (current_node->GetType() == dxr::amd::NodeType::kAmdNodeTriangle1)
+            {
+                memcpy(&out_vertices[3], &verts[3], vertex_size);
+            }
         }
     }
-
     return kRraOk;
 }
 
 RraErrorCode RraBlasGetBoundingVolumeExtents(uint64_t blas_index, uint32_t node_ptr, BoundingVolumeExtents* out_extents)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
@@ -839,13 +1265,13 @@ RraErrorCode RraBlasGetBoundingVolumeExtents(uint64_t blas_index, uint32_t node_
 
 RraErrorCode RraBlasGetBuildFlags(uint64_t blas_index, VkBuildAccelerationStructureFlagBitsKHR* out_flags)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
 
-    const rta::IRtIp11AccelerationStructureHeader& header = blas->GetHeader();
+    const rta::IRtIpCommonAccelerationStructureHeader& header = blas->GetHeader();
 
     // Internally, the build flags have the same values as those in the vulkan enum passed in, so currently just
     // need to do a simple cast. If the internal structure changes, then the internal flags will need mapping
@@ -856,12 +1282,49 @@ RraErrorCode RraBlasGetBuildFlags(uint64_t blas_index, VkBuildAccelerationStruct
 
 RraErrorCode RraBlasGetSizeInBytes(uint64_t blas_index, uint32_t* out_size_in_bytes)
 {
-    const rta::IEncodedRtIp11Bvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    const rta::IBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
     if (blas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
 
     *out_size_in_bytes = blas->GetHeader().GetFileSize();
+    return kRraOk;
+}
+
+RraErrorCode RraBlasGetNodeObbIndex(uint64_t blas_index, uint32_t node_ptr, uint32_t* obb_index)
+{
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+
+    glm::mat3    rotation{};
+    RraErrorCode error_code = RraBvhGetNodeObbIndex(blas, node, obb_index);
+    return error_code;
+}
+
+RraErrorCode RraBlasGetNodeBoundingVolumeOrientation(uint64_t blas_index, uint32_t node_ptr, float* out_rotation)
+{
+    const rta::EncodedBottomLevelBvh* blas = RraBlasGetBlasFromBlasIndex(blas_index);
+    if (blas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+
+    glm::mat3    rotation{};
+    RraErrorCode error_code = RraBvhGetNodeBoundingVolumeOrientation(blas, node, rotation);
+
+    if (error_code != kRraOk)
+    {
+        return error_code;
+    }
+
+    std::memcpy(out_rotation, &rotation, sizeof(glm::mat3));
     return kRraOk;
 }

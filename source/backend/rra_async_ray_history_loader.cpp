@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the asynchronous ray history loader.
@@ -56,7 +56,7 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
         int64_t offset = 0;
 
         // Iterate through each metadata field and load them if possible.
-        while (offset <= metadata_chunk_size)
+        while (offset < metadata_chunk_size)
         {
             rta::RayHistoryMetadataInfo current_info = {};
             std::memcpy(&current_info, metadata_buffer.data() + offset, sizeof(rta::RayHistoryMetadataInfo));
@@ -97,7 +97,7 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
             else if (current_info.kind == rta::RayHistoryMetadataKind::UserMarkerInfo)
             {
                 // Copy user marker context.
-                std::memcpy(&user_marker_context_, metadata_buffer.data() + offset, sizeof(uint64_t));  
+                std::memcpy(&user_marker_context_, metadata_buffer.data() + offset, sizeof(uint64_t));
                 break;
             }
 
@@ -683,6 +683,16 @@ void RraAsyncRayHistoryLoader::PreProcessDispatchData()
                     total_ray_count_ += coordinate_data.stats.ray_count;
                 }
 
+                {
+                    uint64_t addr = ((uint64_t)begin_data->accelStructAddrHi << 32) | begin_data->accelStructAddrLo;
+
+                    std::scoped_lock<std::mutex> plock(tlases_traversed_mutex_);
+                    if (tlases_traversed_.find(addr) == tlases_traversed_.end())
+                    {
+                        tlases_traversed_.insert(addr);
+                    }
+                }
+
                 coordinate_data.begin_identifiers.emplace_back((uint32_t)dispatch_coord_index, begin_token_index);
             }
 
@@ -709,6 +719,8 @@ void RraAsyncRayHistoryLoader::ProcessInvocationCounts()
         invocation_counts_.pixel_count = invocation_counts_.raygen_count;
 
         invocation_counts_.ray_count = total_ray_count_;
+
+        invocation_counts_.tlases_traversed_.assign(tlases_traversed_.begin(), tlases_traversed_.end());
     }
 
     auto&              rh = ray_history_trace_;
@@ -750,14 +762,21 @@ void RraAsyncRayHistoryLoader::ProcessInvocationCounts()
             // Periodically synch values with the main thread.
             if (loop_idx++ % kLoadUpdateFrequency == 0)
             {
-                std::scoped_lock<std::mutex> plock(process_mutex_);
-                invocation_counts_.intersection_count          = local_stats.intersection_count;
-                invocation_counts_.any_hit_count               = local_stats.any_hit_count;
-                invocation_counts_.miss_count                  = local_stats.miss_count;
-                invocation_counts_.closest_hit_count           = local_stats.closest_hit_count;
-                invocation_counts_.loop_iteration_count        = local_stats.loop_iteration_count;
-                invocation_counts_.instance_intersection_count = local_stats.instance_intersection_count;
+                UpdateInvocationCountsUi(local_stats);
             }
         }
     }
+
+    UpdateInvocationCountsUi(local_stats);
+}
+
+void RraAsyncRayHistoryLoader::UpdateInvocationCountsUi(const RraRayHistoryStats& stats)
+{
+    std::scoped_lock<std::mutex> plock(process_mutex_);
+    invocation_counts_.intersection_count          = stats.intersection_count;
+    invocation_counts_.any_hit_count               = stats.any_hit_count;
+    invocation_counts_.miss_count                  = stats.miss_count;
+    invocation_counts_.closest_hit_count           = stats.closest_hit_count;
+    invocation_counts_.loop_iteration_count        = stats.loop_iteration_count;
+    invocation_counts_.instance_intersection_count = stats.instance_intersection_count;
 }

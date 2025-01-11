@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a proxy filter that processes the ray list table.
@@ -60,7 +60,7 @@ namespace rra
         void GetFilterMinAndMax(GlobalInvocationID* filter_min_out, GlobalInvocationID* filter_max_out);
 
         /// @brief Set whether or not the row filter will accept all rows.
-        /// 
+        ///
         /// @param accepts_all Will accept all if true.
         void SetFilterAcceptsAll(bool accepts_all);
 

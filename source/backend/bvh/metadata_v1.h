@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the V1 MetaData class.
@@ -47,9 +47,13 @@ namespace dxr
             std::uint32_t id_high_   = 0;
             std::uint32_t byte_size_ = 0;  // == Size of meta data header == offset to real as header
 
-            std::uint32_t reserved0[18];  // Reserved
-            std::uint32_t reserved1[3];   // Reserved
-            std::uint32_t reserved2[3];   // Reserved
+            std::uint32_t task_counter_   = 0;  // Task counter for dispatch-wide spin loop sync
+            std::uint32_t num_tasks_done_ = 0;  // Number of tasks done
+            std::uint32_t reserved0_[16] = {};  // Reserved
+            std::uint32_t reserved1_[3] = {};  // Reserved - padding for 64-bit alignment
+            std::uint32_t reserved2_[3] = {};  // Reserved
+            std::uint32_t padding_[5] = {};  // 128-byte alignment padding
+            std::uint32_t reserved3_[32] = {};  // BLAS KDOP data
         };
 
     }  // namespace amd

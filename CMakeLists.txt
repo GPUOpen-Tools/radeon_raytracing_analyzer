@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -15,7 +15,7 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 7)
+set(RRA_MINOR_VERSION 8)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()
@@ -51,13 +51,9 @@ ENDIF()
 set (CMAKE_DEBUG_POSTFIX -d)
 set (CMAKE_RELEASE_POSTFIX)
 
-IF(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../release)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../debug)
-ELSE(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../../release)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../../debug)
-ENDIF(WIN32)
+# Add definitions for supported hardware
+add_definitions(-DGPURT_BUILD_RTIP3)
+add_definitions(-DGPURT_BUILD_RTIP3_1)
 
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
@@ -153,6 +149,8 @@ set (RELEASE_DOCS_IN_ROOT
 set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
 source_group("release_docs" FILES ${RELEASE_DOCS})
 
+install(FILES ${RELEASE_DOCS_IN_ROOT} DESTINATION . COMPONENT apps)
+
 find_program(SPHINX_EXECUTABLE sphinx-build)
 if(SPHINX_EXECUTABLE)
     # Define the option to pass to the sphinx documentation job
@@ -168,6 +166,7 @@ if(SPHINX_EXECUTABLE)
         COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rra/. -t ${SPHINX_OPTION}
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/help/rra/.doctrees
     )
+    install(DIRECTORY ${DOCS_OUTPUT_DIR}/help DESTINATION . COMPONENT apps)
 else()
     message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
     # If the sphinx binary isn't found, then just create the Documentation project with only the release docs in it.
@@ -181,3 +180,38 @@ add_custom_command(TARGET Documentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/landscape.rra  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rra
 )
+
+install(FILES
+       ${DOCS_OUTPUT_DIR}/samples/sample_trace.rra
+        DESTINATION
+        samples
+        COMPONENT apps
+)
+
+if (WIN32)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+    include(InstallRequiredSystemLibraries)
+
+    install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION . COMPONENT apps)
+endif (WIN32)
+
+# CPack packaging
+
+set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+set(CPACK_COMPONENTS_GROUPING IGNORE)
+
+set(CPACK_ARCHIVE_APPS_FILE_NAME "RadeonRaytracingAnalyzer_${RRA_MAJOR_VERSION}.${RRA_MINOR_VERSION}.${RRA_BUGFIX_NUMBER}.${RRA_BUILD_NUMBER}")
+set(CPACK_ARCHIVE_DEBUG_FILE_NAME "RadeonRaytracingAnalyzer-PDB_${RRA_MAJOR_VERSION}.${RRA_MINOR_VERSION}.${RRA_BUGFIX_NUMBER}.${RRA_BUILD_NUMBER}")
+
+include(CPack)
+
+cpack_add_component(apps
+        DISPLAY_NAME "Applications"
+        DESCRIPTION "RRA application")
+cpack_add_component(debug
+        DISPLAY_NAME "Debug Symbols"
+        DESCRIPTION "Debug Symbols")
+
+
+

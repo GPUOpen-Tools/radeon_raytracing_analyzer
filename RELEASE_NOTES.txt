@@ -1,14 +1,11 @@
-Radeon Raytracing Analyzer V1.7 10/01/2024
+Radeon Raytracing Analyzer V1.8 03/11/2025
 ------------------------------------------
 
-V1.7 Changes
+V1.8 Changes
 ------------------------------------
-1) Dark mode user interface support, allowing the user to choose between a light and dark theme (or have RRA follow the OS theme setting).
-2) UI support for driver experiments.
-3) Support for naming dispatches with user markers.
-4) The total number of procedural nodes has been added for each TLAS in the Overview|Summary pane.
-5) The "Device configuration" pane has been renamed to "System information."
-6) Bug/stability fixes.
+1) Support for AMD Radeon RX 9000 series GPUs
+2) Support for the Wayland display manager on Ubuntu.
+3) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -21,12 +18,21 @@ Known Issues
 (7) There is currently no default "Application 'up' axis" in the viewer panes. When loading or reloading RRA scenes, orient your scene and press the "U" key to automatically set the up axis.
 (8) The axis free camera does not properly "Jump to ray" when the view is reset with 'F' key press.
 (9) Only the X dimension is captured for the applications that use indirect dispatches.
-(10) The fov and camera speed does not get properly transmitted when jumping from ray inspector to TLAS viewer via the links on the left panel.
+(10) The FOV and camera speed does not get properly transmitted when jumping from ray inspector to TLAS viewer via the links on the left panel.
 (11) The ray dispatches feature is currently experimental on Linux and requires at least 16GB of system memory to work reliably in most cases.
-(12) The Wayland display manager is currently unsupported on Linux. Please use X11 instead.
+(12) Please ensure to load RRA scenes on a machine with a similar GPU to the GPU that was used to capture the trace. Large scenes (those taken at 4K) typically require a large amount of video memory so may not load on lower end GPUs.
 
 Release Notes History
 ------------------------------------
+
+V1.7 Changes
+------------------------------------
+1) Dark mode user interface support, allowing the user to choose between a light and dark theme (or have RRA follow the OS theme setting).
+2) UI support for driver experiments.
+3) Support for naming dispatches with user markers.
+4) The total number of procedural nodes has been added for each TLAS in the Overview|Summary pane.
+5) The "Device configuration" pane has been renamed to "System information."
+6) Bug/stability fixes.
 
 V1.6 Changes
 ------------------------------------

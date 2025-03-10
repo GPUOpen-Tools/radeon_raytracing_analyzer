@@ -114,17 +114,8 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-FindXCB.cmake used courtesy of Valve Corporation, LunarG, Inc.
-https://github.com/LunarG/VulkanTools/blob/master/cmake/FindXCB.cmake
-Licensed under Apache 2.0
-
 Vulkan Header files and API registry
 https://github.com/KhronosGroup/Vulkan-Headers
-Licensed under Apache 2.0
-
-Threading Building Blocks
-https://github.com/oneapi-src/oneTBB
-libtbb.so.12
 Licensed under Apache 2.0
 
 Apache License

@@ -49,6 +49,10 @@ Viewer pane.
 If dispatches was enabled from the Radeon Developer Panel, the **Dispatch list** shows
 a list of all ray dispatches that were executed during the captured frame.
 
+A splitter between the TLAS list and the Dispatch list, indicated by a horizontal
+line, allows the area of interest to be expanded. This can be useful on smaller displays or
+where more than one TLAS needs to be viewed.
+
 Each dispatch is shown as a card. The title text shows the API function name that launched
 the dispatch and the dispatch dimensions. If the dispatch has been named (using
 vkCmdBeginDebugUtilsLabelEXT or equivalent in Vulkan, or agsDriverExtensionsDX12_PushMarker
@@ -58,6 +62,11 @@ The **Traversal statistics** show information pertaining to how much computation
 was done by this dispatch, such as the number of rays that were cast, the traversal loop counts
 and the number of instance intersections. The size of these values relative to the size of the
 dispatch may give the user an indication of the efficiency of a particular dispatch.
+
+The **TLASes traversed** shows which TLASes were intersected by rays from this dispatch. Each
+intersected TLAS will be shown as an address. In the example here, just one TLAS was intersected.
+Clicking on an address will navigate to the TLAS Viewer pane and show the appropriate TLAS.
+If no TLASes were intersected, the list will be empty and represented by a "--".
 
 The **Shader invocations** shows the number of shaders that were executed and their type. This
 is also represented as a donut, showing the relative counts of the shader types.

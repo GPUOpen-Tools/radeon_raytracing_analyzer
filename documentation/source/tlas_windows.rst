@@ -42,9 +42,9 @@ The left section shows a summary of the currently selected TLAS:
    treeview.
 
 #. The treeview will show the structure of the TLAS.
-   In a TLAS, there are box nodes (either Box16 or Box32 for 16-bit or 32-bit
-   floating point values, respectively). Each box node can contain up to 4 child nodes,
-   which can be box nodes or instance nodes. Instance nodes are leaf nodes. An instance
+   In a TLAS, there are box nodes (or bounding volumes, either Box16, Box32, or Bvh8 for 16-bit, 32-bit, or 128-bit
+   floating point values, respectively). Box nodes can contain up to 4 children (Box16, Box32)
+   or 8 children (Bvh8), which can be box nodes or instance nodes. Instance nodes are leaf nodes. An instance
    node contains a reference to a bottom-level acceleration structure which contains
    the geometry to render.
 
@@ -62,8 +62,14 @@ The left section shows a summary of the currently selected TLAS:
 
    d.  Double-clicking on an instance node will open the BLAS it references in the BLAS pane.
 
+   e. If an instance node is shown with red text, it means the BLAS referenced by the instance
+      has a null virtual address, or has zero nodes.
+
 #. The section below the treeview gives details about the currently selected node, including
    the parent node and extents. Clicking the parent address will select the parent node.
+
+#. If the selected node is a Bvh8 node, the bounding box orientation matrix will be shown.
+   Bounding boxes may be rotated to fit the geometry more compactly.
 
 #. If the selected node is an instance then instance specific information passed to the API
    will be displayed, including the instance transform, instance mask, flags, and the BLAS
@@ -79,8 +85,9 @@ The center section shows a rendering of the scene:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the center is a rendering of the scene. The scene will consist of a series of
-bounding volumes with geometry contained within that volume. Various display modes
-can be altered by the user to change how the scene is rendered.
+bounding volumes with geometry contained within that volume. Volumes of Bvh8 nodes
+may be oriented and all others are axis-aligned. Various display modes can be
+altered by the user to change how the scene is rendered.
 
 The viewport camera can be manipulated using a mouse and keyboard
 using a preset control style (described later).
@@ -168,8 +175,7 @@ In geometry rendering mode, there are 4 checkboxes that control what is visible 
 * **Show geometry** will only draw the scene if enabled. Switching it off will allow the bounding
   volumes or wireframes to be seen more easily.
 
-* **Show axis aligned BVH** will display the bounding volumes overlaid as wireframes if enabled.
-  This bounding volume will be axis aligned in the TLAS.
+* **Show bounding volumes** will display the bounding volumes overlaid as wireframes if enabled.
 
 * **Show instance transform** will display the instance bounding volume overlaid as a dashed wireframe.
   This bounding volume has the instance transform applied, so is effectively in BLAS-space.
@@ -219,7 +225,7 @@ In traversal counter rendering mode, the controls are slightly different, as see
   work of clicking on the wand icon to update the color range of the scene. NOTE: When **Continuous update**
   is enabled, the wand icon is disabled.
 
-The **Show axis aligned BVH**, **Show instance transform**, and **Show wireframe** checkboxes are also
+The **Show bounding volumes**, **Show instance transform**, and **Show wireframe** checkboxes are also
 present, along with the culling mode combo box.
 
 In traversal counter rendering mode, the selected culling mode plays the part of the frontface/backface triangle
@@ -628,7 +634,7 @@ The following fields are displayed:
 
 * Nodes – The total number of nodes in the BLAS, including leaf nodes.
 
-* Boxes – The total number of box nodes within the BLAS, including both Box16 and Box32.
+* Boxes – The total number of box nodes within the BLAS, including Box16, Box32, and Bvh8.
 
 * 32-bit boxes – The total number of box nodes with 32-bit floating point precision bounding boxes in the BLAS.
 

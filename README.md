@@ -36,6 +36,7 @@ to reduce performance bottlenecks.
  * Vulkan
 
 ## Supported ASICs
+* AMD Radeon RX 9000 series
 * AMD Radeon RX 7000 series
 * AMD Radeon RX 6000 series
 
@@ -82,4 +83,4 @@ CMake is a registered trademark of Kitware, Inc.
 Qt and the Qt logo are registered trademarks of the Qt Company Ltd and/or its subsidiaries worldwide.
 
 
-© 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
+© 2022-2025 Advanced Micro Devices, Inc. All rights reserved.

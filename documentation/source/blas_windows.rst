@@ -35,6 +35,9 @@ On the left will be information for the bottom level acceleration structure:
 #. The section below the treeview gives details about the currently selected node,
    including the surface area heuristic, and extents.
    
+#. If the selected node is a Bvh8 node, the bounding box orientation matrix will be shown.
+   Bounding boxes may be rotated to fit the geometry more compactly.
+
 #. If the selected node is a triangle node then the triangle vertex positions will be
    displayed, as well as geometry flags of the geometry that the triangle is a part of.
 

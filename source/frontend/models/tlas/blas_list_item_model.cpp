@@ -8,19 +8,20 @@
 ///
 //=============================================================================
 
-#include <math.h>
-
 #include "models/tlas/blas_list_item_model.h"
 
-#include "vulkan/include/vulkan/vulkan_core.h"
+#include <math.h>
 
 #include "qt_common/utils/qt_util.h"
 
-#include "constants.h"
-#include "util/string_util.h"
-#include "settings/settings.h"
 #include "public/rra_api_info.h"
 #include "public/rra_rtip_info.h"
+
+#include "constants.h"
+#include "settings/settings.h"
+#include "util/rra_util.h"
+#include "util/string_util.h"
+#include "views/custom_widgets/index_header_view.h"
 
 namespace rra
 {
@@ -46,35 +47,31 @@ namespace rra
         num_columns_ = columns;
     }
 
-    void BlasListItemModel::Initialize(ScaledTableView* acceleration_structure_table)
+    void BlasListItemModel::Initialize(QTableView* acceleration_structure_table)
     {
-        acceleration_structure_table->horizontalHeader()->setSectionsClickable(true);
+        acceleration_structure_table->setHorizontalHeader(new IndexHeaderView(kBlasListColumnIndex, Qt::Horizontal, acceleration_structure_table));
+        rra_util::InitializeTableView(acceleration_structure_table);
+        acceleration_structure_table->sortByColumn(kBlasListColumnAddress, Qt::AscendingOrder);
 
-        // Set default column widths wide enough to show table contents.
-        acceleration_structure_table->SetColumnPadding(0);
-
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnAddress, 12);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnAllowUpdate, 10);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnAllowCompaction, 12);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnLowMemory, 10);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnBuildType, 8);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnInstanceCount, 8);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnNodeCount, 6);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnBoxCount, 6);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnBox32Count, 9);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnBox16Count, 9);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnTriangleNodeCount, 10);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnProceduralNodeCount, 12);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnMemoryUsage, 10);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnRootSAH, 9);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnMinSAH, 9);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnMeanSAH, 9);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnMaxDepth, 9);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnAvgDepth, 9);
-        acceleration_structure_table->SetColumnWidthEms(kBlasListColumnBlasIndex, 7);
-
-        // Allow users to resize columns if desired.
-        acceleration_structure_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnAddress, 120);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnAllowUpdate, 100);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnAllowCompaction, 120);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnLowMemory, 100);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnBuildType, 80);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnInstanceCount, 80);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnNodeCount, 60);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnBoxCount, 60);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnBox32Count, 90);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnBox16Count, 90);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnTriangleNodeCount, 100);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnProceduralNodeCount, 120);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnMemoryUsage, 100);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnRootSAH, 90);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnMinSAH, 90);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnMeanSAH, 90);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnMaxDepth, 90);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnAvgDepth, 90);
+        acceleration_structure_table->setColumnWidth(kBlasListColumnBlasIndex, 70);
     }
 
     void BlasListItemModel::AddAccelerationStructure(const BlasListStatistics& stats)
@@ -273,6 +270,8 @@ namespace rra
             {
                 switch (section)
                 {
+                case kBlasListColumnIndex:
+                    return "Row Id";
                 case kBlasListColumnAddress:
                     return "Address";
                 case kBlasListColumnAllowUpdate:
@@ -328,6 +327,8 @@ namespace rra
             {
                 switch (section)
                 {
+                case kBlasListColumnIndex:
+                    return "The index of the row in the table";
                 case kBlasListColumnAddress:
                     return "The base address of this BLAS";
                 case kBlasListColumnAllowUpdate:
@@ -437,3 +438,4 @@ namespace rra
         return num_columns_;
     }
 }  // namespace rra
+

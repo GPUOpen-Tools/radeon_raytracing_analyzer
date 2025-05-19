@@ -8,17 +8,16 @@
 #include "views/license_dialog.h"
 
 #include <QApplication>
+#include <QDir>
+#include <QScrollBar>
 #include <QtDebug>
 #include <QtGlobal>
-#include <QScrollBar>
-#include <QDir>
 
 #include "public/rra_macro.h"
 
 #include "settings/settings.h"
-#include "views/widget_util.h"
-
 #include "version.h"
+#include "views/widget_util.h"
 
 LicenseDialog::LicenseDialog()
     : QDialog(nullptr)
@@ -139,3 +138,4 @@ void LicenseDialog::ScrollbarChanged()
         }
     }
 }
+

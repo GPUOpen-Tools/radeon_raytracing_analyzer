@@ -8,17 +8,18 @@
 
 #include "bvh/rtip_common/encoded_top_level_bvh.h"
 
-#include <iostream>
-#include <vector>
 #include <cassert>
 #include <deque>
+#include <iostream>
 #include <unordered_set>
+#include <vector>
 
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_error.h"
-#include "bvh/rtip_common/i_acceleration_structure_header.h"
+
 #include "bvh/rtip11/rt_ip_11_header.h"
+#include "bvh/rtip_common/i_acceleration_structure_header.h"
 
 namespace rta
 {
@@ -117,3 +118,4 @@ namespace rta
     }
 
 }  // namespace rta
+

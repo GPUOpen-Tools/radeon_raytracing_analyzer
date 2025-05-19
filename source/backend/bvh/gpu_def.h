@@ -23,16 +23,16 @@ namespace rta
 
     enum class RayTracingIpLevel : uint32_t
     {
-        _None = 0,
-
-        RtIp1_0      = 0x1,  ///< First Implementation of HW RT
-        RtIp1_1      = 0x2,  ///< Added computation of triangle barycentrics into HW
-        RtIp2_0      = 0x3,  ///< Added more Hardware RayTracing features, such as BoxSort, PointerFlag, etc
-        RtIp3_0      = 0x4,  ///< Added high precision box node, HW instance node, dual intersect ray, BVH8 intersect ray,
+        RtIpNone = 0x0,      ///< The device does not have an RayTracing Ip Level
+        RtIp1_0  = 0x1,      ///< First Implementation of HW RT
+        RtIp1_1  = 0x2,      ///< Added computation of triangle barycentrics into HW
+        RtIp2_0  = 0x3,      ///< Added more Hardware RayTracing features, such as BoxSort, PointerFlag, etc
+        RtIp3_0  = 0x4,      ///< Added high precision box node, HW instance node, dual intersect ray, BVH8 intersect
+                             ///  ray, LDS stack push 8 pop 1, and LDS stack push 8 pop 2
         RtIpReserved = 0x5,  ///< Special value, should not be used
-        RtIp3_1      = 0x6,  ///< Added improved bvh footprints (change to node pointer, 128 Byte primitive structure format,
-                             ///  128 Byte Quantized box node, obb support, wide sort)
-        RtIpCount,           ///< The number of supported RtIp levels.
+        RtIp3_1      = 0x6,  ///< Added improved bvh footprints (change to node pointer, 128 Byte primitive structure
+                             ///  format, 128 Byte Quantized box node, obb support, wide sort)
+        RtIpCount = 0x8,
     };
 
     // Defines the generic type of a BVH.
@@ -103,3 +103,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_GPU_DEF_H_
+

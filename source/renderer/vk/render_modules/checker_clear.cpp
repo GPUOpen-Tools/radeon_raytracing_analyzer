@@ -5,7 +5,7 @@
 /// @brief  Implementation for the checker clear module.
 //=============================================================================
 
-#include "checker_clear.h"
+#include "vk/render_modules/checker_clear.h"
 
 namespace rra
 {
@@ -155,3 +155,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

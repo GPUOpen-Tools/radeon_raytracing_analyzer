@@ -11,14 +11,14 @@
 #ifndef RRA_BACKEND_BVH_BVH_BUNDLE_H_
 #define RRA_BACKEND_BVH_BVH_BUNDLE_H_
 
-#include <vector>
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "public/rra_error.h"
 
 #include "bvh/bvh_index_reference_map.h"
-#include "ibvh.h"
+#include "bvh/ibvh.h"
 
 namespace rta
 {
@@ -162,3 +162,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_BVH_BUNDLE_H_
+

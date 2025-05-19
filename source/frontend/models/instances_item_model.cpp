@@ -10,11 +10,13 @@
 
 #include "qt_common/utils/qt_util.h"
 
+#include "public/rra_api_info.h"
 #include "public/rra_assert.h"
 
 #include "constants.h"
 #include "settings/settings.h"
-#include "public/rra_api_info.h"
+#include "util/rra_util.h"
+#include "views/custom_widgets/index_header_view.h"
 
 namespace rra
 {
@@ -54,38 +56,34 @@ namespace rra
         num_columns_ = columns;
     }
 
-    void InstancesItemModel::Initialize(ScaledTableView* acceleration_structure_table)
+    void InstancesItemModel::Initialize(QTableView* acceleration_structure_table)
     {
-        acceleration_structure_table->horizontalHeader()->setSectionsClickable(true);
+        acceleration_structure_table->setHorizontalHeader(new IndexHeaderView(kInstancesColumnIndex, Qt::Horizontal, acceleration_structure_table));
+        rra_util::InitializeTableView(acceleration_structure_table);
+        acceleration_structure_table->sortByColumn(kInstancesColumnInstanceIndex, Qt::AscendingOrder);
 
-        // Set default column widths wide enough to show table contents.
-        acceleration_structure_table->SetColumnPadding(0);
-
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnInstanceIndex, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnInstanceAddress, 18);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnInstanceOffset, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnInstanceMask, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnCullDisableFlag, 10);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnFlipFacingFlag, 10);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnForceOpaqueFlag, 10);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnForceNoOpaqueFlag, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnRebraidSiblingCount, 14);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnXPosition, 10);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnYPosition, 10);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnYPosition, 10);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnZPosition, 10);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM11, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM12, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM13, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM21, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM22, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM23, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM31, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM32, 12);
-        acceleration_structure_table->SetColumnWidthEms(kInstancesColumnM33, 12);
-
-        // Allow users to resize columns if desired.
-        acceleration_structure_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnInstanceIndex, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnInstanceAddress, 140);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnInstanceOffset, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnInstanceMask, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnCullDisableFlag, 100);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnFlipFacingFlag, 100);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnForceOpaqueFlag, 100);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnForceNoOpaqueFlag, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnRebraidSiblingCount, 140);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnXPosition, 100);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnYPosition, 100);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnYPosition, 100);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnZPosition, 100);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM11, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM12, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM13, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM21, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM22, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM23, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM31, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM32, 120);
+        acceleration_structure_table->setColumnWidth(kInstancesColumnM33, 120);
     }
 
     void InstancesItemModel::AddAccelerationStructure(const InstancesTableStatistics& stats)
@@ -267,6 +265,8 @@ namespace rra
             {
                 switch (section)
                 {
+                case kInstancesColumnIndex:
+                    return "Row Id";
                 case kInstancesColumnInstanceIndex:
                     return "Instance index";
                 case kInstancesColumnInstanceAddress:
@@ -319,6 +319,10 @@ namespace rra
             {
                 switch (section)
                 {
+                case kInstancesColumnIndex:
+                    return "The index of the row in the table";
+                case kInstancesColumnInstanceIndex:
+                    return "The index of this instance";
                 case kInstancesColumnInstanceMask:
                     if (RraApiInfoIsVulkan())
                     {
@@ -429,3 +433,4 @@ namespace rra
         return num_columns_;
     }
 }  // namespace rra
+

@@ -8,9 +8,11 @@
 #ifndef RRA_RENDERER_SCENE_NODE_H_
 #define RRA_RENDERER_SCENE_NODE_H_
 
-#include <unordered_set>
 #include <optional>
+#include <unordered_set>
+
 #include "public/renderer_types.h"
+
 #include "util/stack_vector.h"
 
 namespace rra
@@ -293,3 +295,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_SCENE_NODE_H_
+

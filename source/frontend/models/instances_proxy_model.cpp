@@ -62,6 +62,18 @@ namespace rra
         return model;
     }
 
+    QVariant InstancesProxyModel::data(const QModelIndex& index, int role) const
+    {
+        if (index.column() == kInstancesColumnIndex)
+        {
+            return index.row();
+        }
+        else
+        {
+            return TableProxyModel::data(index, role);
+        }
+    }
+
     bool InstancesProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
     {
         if (FilterSearchString(source_row, source_parent) == false)
@@ -133,3 +145,4 @@ namespace rra
         return QSortFilterProxyModel::lessThan(left, right);
     }
 }  // namespace rra
+

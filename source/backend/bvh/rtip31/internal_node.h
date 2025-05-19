@@ -8,12 +8,14 @@
 #ifndef RRA_BACKEND_INTERNAL_NODE_H_
 #define RRA_BACKEND_INTERNAL_NODE_H_
 
-#include <cstdint>
 #include <algorithm>
+#include <cstdint>
 #include <limits>
-#include "child_info.h"
-#include "math.h"
+
 #include "glm/glm/glm.hpp"
+
+#include "bvh/rtip31/child_info.h"
+#include "bvh/rtip_common/math.h"
 
 #ifndef _WIN32
 // Switch off Linux warnings-as-errors for now.
@@ -716,3 +718,4 @@ inline void QuantizedBVH8BoxNode::EncodeObbOnly(Float32BoxNode f32BoxNode0, Floa
 #endif
 
 #endif  // RRA_BACKEND_INTERNAL_NODE_H_
+

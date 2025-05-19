@@ -2,11 +2,11 @@
 // Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief Header for the RGP histogram graphics view.
+/// @brief Header for the histogram graphics view.
 //=============================================================================
 
-#ifndef RGP_VIEWS_CUSTOM_WIDGETS_RGP_HISTOGRAM_WIDGET_H_
-#define RGP_VIEWS_CUSTOM_WIDGETS_RGP_HISTOGRAM_WIDGET_H_
+#ifndef RRA_VIEWS_CUSTOM_WIDGETS_HISTOGRAM_WIDGET_H_
+#define RRA_VIEWS_CUSTOM_WIDGETS_HISTOGRAM_WIDGET_H_
 
 #include <vector>
 
@@ -14,13 +14,13 @@
 #include <QGraphicsView>
 
 /// @brief Implements a histogram with range selection indicators.
-class RgpHistogramWidget : public QGraphicsView
+class HistogramWidget : public QGraphicsView
 {
     Q_OBJECT
 
 public:
     /// @brief Storage struct that represents a value range and the number of entries contained within.
-    struct RgpHistogramData
+    struct HistogramData
     {
         uint32_t min_value;  ///< The minimum of the value range.
         uint32_t max_value;  ///< The maximum of the value range.
@@ -38,10 +38,10 @@ public:
     /// @brief Constructor.
     ///
     /// @param [in] parent The parent widget.
-    explicit RgpHistogramWidget(QWidget* parent = nullptr);
+    explicit HistogramWidget(QWidget* parent = nullptr);
 
     /// @brief Virtual destructor.
-    virtual ~RgpHistogramWidget();
+    virtual ~HistogramWidget();
 
     /// @brief Clears all data from the histogram.
     void Clear();
@@ -50,12 +50,12 @@ public:
     ///
     /// @param [in] data     Pointer to an array of data elements to build the histogram of.
     /// @param [in] num_data Number of elements the data consists of.
-    void SetData(const RgpHistogramData* data, uint32_t num_data);
+    void SetData(const HistogramData* data, uint32_t num_data);
 
     /// @brief Returns the bounding data for the histogram.
     ///
     /// @return The min/max range and max count for the histogram.
-    RgpHistogramData GetBoundingData() const
+    HistogramData GetBoundingData() const
     {
         return bounding_data_;
     }
@@ -80,7 +80,7 @@ protected:
     void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
 private:
-    RgpHistogramData bounding_data_;  ///< Stores the min/max range and the max count found in the provided data.
+    HistogramData bounding_data_;  ///< Stores the min/max range and the max count found in the provided data.
 
     int32_t selection_min_value_;  ///< The minimum of the selected range.
     int32_t selection_max_value_;  ///< The maximum of the selected range.
@@ -88,10 +88,12 @@ private:
     QGraphicsLineItem* selection_range_indicator_left_;   ///< The range minimum selection indicator.
     QGraphicsLineItem* selection_range_indicator_right_;  ///< The range maximum selection indicator.
     QGraphicsRectItem* selection_range_indicator_range_;  ///< The range selection indicator.
+    QGraphicsScene*    graphics_scene_;                   ///< The graphics scene containing the indicators.
 
     HistogramSelectionMode active_selection_mode_;  ///< The active wavefront range selection mode.
 
     std::vector<QGraphicsRectItem*> histogram_elements_;  ///< Vector keeping track of all of the bucket rectangles in the scene.
 };
 
-#endif  // RGP_VIEWS_CUSTOM_WIDGETS_RGP_HISTOGRAM_WIDGET_H_
+#endif  // RRA_VIEWS_CUSTOM_WIDGETS_HISTOGRAM_WIDGET_H_
+

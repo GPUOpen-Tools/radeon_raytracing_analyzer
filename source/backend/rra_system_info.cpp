@@ -12,7 +12,6 @@
 // External reference to the global dataset.
 extern RraDataSet data_set_;
 
-static const int active_gpu = 0;
 static const int active_cpu = 0;
 
 const char* RraSystemInfoGetCpuName()
@@ -66,19 +65,43 @@ const char* RraSystemInfoGetDriverSoftwareVersion()
 
 const char* RraSystemInfoGetGpuName()
 {
-    if (active_gpu < data_set_.system_info->gpus.size())
+    // Find the active GPU.
+    uint32_t     active_gpu = 0;
+    RraErrorCode status     = data_set_.asic_info.GetPciID(&active_gpu);
+
+    // Use active GPU entry if valid.
+    if (status == kRraOk && active_gpu < data_set_.system_info->gpus.size())
     {
         return data_set_.system_info->gpus[active_gpu].name.c_str();
     }
+
+    // Else GPU 0 if valid.
+    else if (data_set_.system_info->gpus.size() > 0)
+    {
+        return data_set_.system_info->gpus[0].name.c_str();
+    }
+
     return nullptr;
 }
 
 const char* RraSystemInfoGetGpuMemoryType()
 {
-    if (active_gpu < data_set_.system_info->gpus.size())
+    // Find the active GPU.
+    uint32_t     active_gpu = 0;
+    RraErrorCode status     = data_set_.asic_info.GetPciID(&active_gpu);
+
+    // Use active GPU entry if valid.
+    if (status == kRraOk && active_gpu < data_set_.system_info->gpus.size())
     {
         return data_set_.system_info->gpus[active_gpu].memory.type.c_str();
     }
+
+    // Else GPU 0 if valid.
+    else if (data_set_.system_info->gpus.size() > 0)
+    {
+        return data_set_.system_info->gpus[0].memory.type.c_str();
+    }
+
     return nullptr;
 }
 
@@ -86,3 +109,4 @@ bool RraSystemInfoAvailable()
 {
     return data_set_.system_info->version.major > 0;
 }
+

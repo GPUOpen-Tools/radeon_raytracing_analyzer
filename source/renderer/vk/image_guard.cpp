@@ -5,7 +5,7 @@
 /// @brief  Implementation for the image safety helper.
 //=============================================================================
 
-#include "image_guard.h"
+#include "vk/image_guard.h"
 
 #include <algorithm>
 
@@ -65,3 +65,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

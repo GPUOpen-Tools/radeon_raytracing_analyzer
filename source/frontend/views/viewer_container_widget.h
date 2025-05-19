@@ -12,15 +12,14 @@
 #ifndef RRA_VIEWS_VIEWER_CONTAINER_WIDGET_H_
 #define RRA_VIEWS_VIEWER_CONTAINER_WIDGET_H_
 
-#include "ui_viewer_container_widget.h"
-
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
-
-#include "managers/pane_manager.h"
-#include "models/viewer_container_model.h"
 
 #include "public/renderer_adapter.h"
 
+#include "ui_viewer_container_widget.h"
+
+#include "managers/pane_manager.h"
+#include "models/viewer_container_model.h"
 #include "settings/settings.h"
 
 /// @brief Class declaration.
@@ -135,3 +134,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_VIEWER_CONTAINER_WIDGET_H_
+

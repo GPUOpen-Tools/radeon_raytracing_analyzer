@@ -8,13 +8,13 @@
 #ifndef RRA_VIEWS_START_RECENT_TRACES_PANE_H_
 #define RRA_VIEWS_START_RECENT_TRACES_PANE_H_
 
-#include "ui_recent_traces_pane.h"
-
+#include <QLabel>
 #include <QVector>
 #include <QWidget>
-#include <QLabel>
 
 #include "qt_common/custom_widgets/recent_trace_widget.h"
+
+#include "ui_recent_traces_pane.h"
 
 #include "views/base_pane.h"
 
@@ -62,3 +62,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_START_RECENT_TRACES_PANE_H_
+

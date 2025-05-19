@@ -9,8 +9,8 @@
 #define RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_ITEM_H_
 
 #include <QAbstractItemModel>
-#include <QString>
 #include <QMetaObject>
+#include <QString>
 
 namespace rra
 {
@@ -110,3 +110,4 @@ namespace rra
 Q_DECLARE_METATYPE(rra::AccelerationStructureTreeViewItemData);  // Declare as QT meta type to be used by the delegate.
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_ITEM_H_
+

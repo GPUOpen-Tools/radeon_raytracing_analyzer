@@ -5,12 +5,13 @@
 /// @brief  Implementation of the parent ptr data block.
 //=============================================================================
 
-#include "parent_block.h"
+#include "bvh/parent_block.h"
 
 #include <cassert>
 
-#include "node_pointer.h"
 #include "public/rra_rtip_info.h"
+
+#include "bvh/node_pointer.h"
 
 namespace dxr
 {
@@ -66,3 +67,4 @@ namespace dxr
 
     }  // namespace amd
 }  // namespace dxr
+

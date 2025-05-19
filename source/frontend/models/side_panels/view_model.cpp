@@ -7,11 +7,13 @@
 
 #include "models/side_panels/view_model.h"
 
-#include <QVariant>
 #include <cmath>
 
-#include "constants.h"
+#include <QVariant>
+
 #include "public/rra_print.h"
+
+#include "constants.h"
 #include "settings/settings.h"
 
 namespace rra
@@ -643,3 +645,4 @@ namespace rra
     }
 
 }  // namespace rra
+

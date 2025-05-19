@@ -7,9 +7,9 @@
 
 #include "views/start/about_pane.h"
 
-#include <QFileInfo>
 #include <QDesktopServices>
 #include <QDialogButtonBox>
+#include <QFileInfo>
 #include <QUrl>
 
 #include "qt_common/utils/qt_util.h"
@@ -50,6 +50,7 @@ AboutPane::AboutPane(QWidget* parent)
 
 AboutPane::~AboutPane()
 {
+    delete ui_;
 }
 
 void AboutPane::showEvent(QShowEvent* event)
@@ -227,3 +228,4 @@ void AboutPane::CheckForUpdatesCancelled(UpdateCheck::ThreadController* thread)
         }
     }
 }
+

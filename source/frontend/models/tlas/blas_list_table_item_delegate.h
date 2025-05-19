@@ -36,3 +36,4 @@ public:
 };
 
 #endif  // RRA_MODELS_BLAS_LIST_TABLE_ITEM_DELEGATE_H_
+

@@ -7,27 +7,27 @@
 
 #include "views/side_panels/view_pane.h"
 
+#include <algorithm>
 #include <limits>
 #include <sstream>
-#include <algorithm>
 
 #include <QClipboard>
-#include "constants.h"
-#include "managers/message_manager.h"
-#include "managers/pane_manager.h"
-#include "models/side_panels/view_model.h"
-#include "io/viewer_io.h"
-#include "views/widget_util.h"
+
 #include "qt_common/utils/qt_util.h"
-#include "util/string_util.h"
-#include "settings/settings.h"
-#include "views/custom_widgets/slider_style.h"
-#include "views/custom_widgets/rgp_histogram_widget.h"
-#include "settings/settings.h"
-#include "constants.h"
 
 #include "public/heatmap.h"
 #include "public/rra_asic_info.h"
+
+#include "constants.h"
+#include "io/viewer_io.h"
+#include "managers/message_manager.h"
+#include "managers/pane_manager.h"
+#include "models/side_panels/view_model.h"
+#include "settings/settings.h"
+#include "util/string_util.h"
+#include "views/custom_widgets/histogram_widget.h"
+#include "views/custom_widgets/slider_style.h"
+#include "views/widget_util.h"
 
 static const int kTraversalCounterDefaultMinValue = 0;
 static const int kTraversalCounterDefaultMaxValue = 100;
@@ -135,7 +135,7 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_camera_rotation_row_2_col_2_->hide();
     ui_->label_camera_rotation_->hide();
 
-    ui_->histogram_content_->SetSelectionMode(RgpHistogramWidget::kHistogramSelectionModeRange);
+    ui_->histogram_content_->SetSelectionMode(HistogramWidget::kHistogramSelectionModeRange);
 
     if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
     {
@@ -269,8 +269,10 @@ ViewPane::ViewPane(QWidget* parent)
         ui_->traversal_counter_slider_->repaint();
     });
 
-    ui_->content_field_of_view_->setStyle(new AbsoluteSliderPositionStyle(ui_->content_field_of_view_->style()));
-    ui_->content_movement_speed_->setStyle(new AbsoluteSliderPositionStyle(ui_->content_movement_speed_->style()));
+    field_of_view_style_  = new AbsoluteSliderPositionStyle(ui_->content_field_of_view_->style());
+    movement_speed_style_ = new AbsoluteSliderPositionStyle(ui_->content_movement_speed_->style());
+    ui_->content_field_of_view_->setStyle(field_of_view_style_);
+    ui_->content_movement_speed_->setStyle(movement_speed_style_);
 
     if (QtCommon::QtUtils::ColorTheme::Get().GetColorTheme() == ColorThemeType::kColorThemeTypeDark)
     {
@@ -301,6 +303,9 @@ ViewPane::ViewPane(QWidget* parent)
 ViewPane::~ViewPane()
 {
     delete model_;
+    delete field_of_view_style_;
+    delete movement_speed_style_;
+    delete ui_;
 }
 
 void ViewPane::OnTraceOpen()
@@ -346,7 +351,7 @@ void HistogramUpdateFunction(Ui::ViewPane* ui, const std::vector<uint32_t>& hist
     const uint32_t bin_size{(uint32_t)(hist_data.size() / bin_count)};
     uint32_t       average{0};
 
-    std::vector<RgpHistogramWidget::RgpHistogramData> bin_data{};
+    std::vector<HistogramWidget::HistogramData> bin_data{};
     bin_data.reserve(bin_count);
 
     for (uint32_t i{0}; i < bin_count; ++i)
@@ -912,3 +917,4 @@ void ViewPane::OnColorThemeUpdated()
 
     ui_->lock_camera_button_->SetNormalIcon(QIcon(model_->GetCameraLock() ? closed_icon : open_icon));
 }
+

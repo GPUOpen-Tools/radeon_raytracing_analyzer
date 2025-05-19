@@ -9,6 +9,7 @@
 #define RRA_ORIENTATION_GIZMO_H_
 
 #include <vector>
+
 #include "glm/glm/glm.hpp"
 
 namespace rra
@@ -82,3 +83,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

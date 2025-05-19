@@ -8,16 +8,15 @@
 #ifndef RRA_RENDERER_VULKAN_RENDERER_VULKAN_H_
 #define RRA_RENDERER_VULKAN_RENDERER_VULKAN_H_
 
-#include "../public/renderer_interface.h"
-#include "../public/heatmap.h"
-
-#include "framework/device.h"
-#include "framework/swap_chain.h"
-#include "framework/command_buffer_ring.h"
-
-#include "render_module.h"
-
 #include <chrono>
+
+#include "public/heatmap.h"
+#include "public/renderer_interface.h"
+
+#include "vk/framework/command_buffer_ring.h"
+#include "vk/framework/device.h"
+#include "vk/framework/swap_chain.h"
+#include "vk/render_module.h"
 
 namespace rra
 {
@@ -189,3 +188,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VULKAN_RENDERER_VULKAN_H_
+

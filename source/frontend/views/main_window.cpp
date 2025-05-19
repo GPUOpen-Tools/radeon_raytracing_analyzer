@@ -19,27 +19,26 @@
 
 #include "public/rra_trace_loader.h"
 
+#include "constants.h"
 #include "managers/load_animation_manager.h"
 #include "managers/message_manager.h"
 #include "managers/navigation_manager.h"
 #include "managers/pane_manager.h"
 #include "managers/trace_manager.h"
+#include "settings/geometry_settings.h"
+#include "settings/settings.h"
+#include "util/rra_util.h"
+#include "version.h"
 #include "views/overview/device_configuration_pane.h"
 #include "views/overview/summary_pane.h"
 #include "views/ray/ray_history_pane.h"
+#include "views/settings/keyboard_shortcuts_pane.h"
 #include "views/settings/settings_pane.h"
 #include "views/settings/themes_and_colors_pane.h"
-#include "views/settings/keyboard_shortcuts_pane.h"
 #include "views/start/about_pane.h"
 #include "views/start/recent_traces_pane.h"
 #include "views/start/welcome_pane.h"
-#include "settings/settings.h"
-#include "settings/geometry_settings.h"
-#include "util/rra_util.h"
 #include "views/widget_util.h"
-
-#include "constants.h"
-#include "version.h"
 
 using namespace driver_overrides;
 
@@ -221,6 +220,22 @@ MainWindow::~MainWindow()
     disconnect(ui_->blas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
     disconnect(ui_->ray_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
 
+    delete open_trace_action_;
+    delete close_trace_action_;
+    delete exit_action_;
+    delete help_action_;
+    delete about_action_;
+
+    for (auto action : recent_trace_actions_)
+    {
+        delete action;
+    }
+
+    for (auto action : navigation_actions_)
+    {
+        delete action;
+    }
+
 #ifdef BETA_LICENSE
     delete license_dialog_;
 #endif  // BETA_LICENSE
@@ -332,7 +347,7 @@ void MainWindow::SetupTabBar()
         if (item != nullptr)
         {
             item->setCursor(Qt::PointingHandCursor);
-            item->setContentsMargins(10, 10, 10, 10);
+            item->setContentsMargins(10, 0, 10, 0);
         }
     }
 
@@ -340,7 +355,7 @@ void MainWindow::SetupTabBar()
     ui_->main_tab_widget_->SetSpacerIndex(rra::kMainPaneSpacer);
 
     // Adjust spacing around the navigation bar so that it appears centered on the tab bar.
-    navigation_bar_.layout()->setContentsMargins(15, 3, 35, 2);
+    navigation_bar_.layout()->setContentsMargins(15, 0, 35, 0);
 
     // Setup navigation browser toolbar on the main tab bar.
     ui_->main_tab_widget_->SetTabTool(rra::kMainPaneNavigation, &navigation_bar_);
@@ -415,6 +430,7 @@ void MainWindow::SetupHotkeyNavAction(int key, int pane)
 {
     QAction* action = new QAction(this);
     action->setShortcut(key | Qt::ALT);
+    navigation_actions_.push_back(action);
 
     this->addAction(action);
     connect(action, &QAction::triggered, [=]() { ViewPane(pane); });
@@ -447,18 +463,21 @@ void MainWindow::CreateActions()
     // Set up forward/backward navigation.
     QAction* shortcut = new QAction(this);
     shortcut->setShortcut(QKeySequence(Qt::ALT | rra::kKeyNavForwardArrow));
+    navigation_actions_.push_back(shortcut);
 
     connect(shortcut, &QAction::triggered, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateForward);
     this->addAction(shortcut);
 
     shortcut = new QAction(this);
     shortcut->setShortcut(QKeySequence(Qt::ALT | rra::kKeyNavBackwardArrow));
+    navigation_actions_.push_back(shortcut);
 
     connect(shortcut, &QAction::triggered, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateBack);
     this->addAction(shortcut);
 
     shortcut = new QAction(this);
     shortcut->setShortcut(rra::kKeyNavBackwardBackspace);
+    navigation_actions_.push_back(shortcut);
 
     connect(shortcut, &QAction::triggered, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateBack);
     this->addAction(shortcut);
@@ -844,3 +863,4 @@ void MainWindow::DontShowDriverOverridesNotification()
 {
     rra::Settings::Get().SetDriverOverridesAllowNotifications(false);
 }
+

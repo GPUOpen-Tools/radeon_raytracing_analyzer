@@ -7,10 +7,11 @@
 
 #include "views/tlas/tlas_properties_pane.h"
 
+#include "public/rra_rtip_info.h"
+
 #include "managers/message_manager.h"
 #include "models/tlas/tlas_properties_model.h"
 #include "views/widget_util.h"
-#include "public/rra_rtip_info.h"
 
 TlasPropertiesPane::TlasPropertiesPane(QWidget* parent)
     : BasePane(parent)
@@ -45,6 +46,7 @@ TlasPropertiesPane::TlasPropertiesPane(QWidget* parent)
 TlasPropertiesPane::~TlasPropertiesPane()
 {
     delete model_;
+    delete ui_;
 }
 
 void TlasPropertiesPane::SetTlasIndex(uint64_t tlas_index)
@@ -55,3 +57,4 @@ void TlasPropertiesPane::SetTlasIndex(uint64_t tlas_index)
     }
     model_->Update(tlas_index);
 }
+

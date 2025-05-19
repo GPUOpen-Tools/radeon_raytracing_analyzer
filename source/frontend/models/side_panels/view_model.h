@@ -8,10 +8,11 @@
 #ifndef RRA_MODELS_SIDE_PANELS_VIEW_MODEL_H_
 #define RRA_MODELS_SIDE_PANELS_VIEW_MODEL_H_
 
-#include "side_panel_model.h"
 #include "public/view_state_adapter.h"
+
 #include "io/camera_controllers.h"
 #include "managers/pane_manager.h"
+#include "side_panel_model.h"
 
 namespace rra
 {
@@ -365,3 +366,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_SIDE_PANELS_VIEW_MODEL_H_
+

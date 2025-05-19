@@ -5,13 +5,14 @@
 /// @brief  Implementation of a node pointer class.
 //=============================================================================
 
-#include "node_pointer.h"
+#include "bvh/node_pointer.h"
 
-#include "flags_util.h"
-#include "public/rra_rtip_info.h"
-#include "bvh/gpu_def.h"
 #include "public/rra_assert.h"
-#include "bvh/rtip31/ray_tracing_defs.h"
+#include "public/rra_rtip_info.h"
+
+#include "bvh/flags_util.h"
+#include "bvh/gpu_def.h"
+#include "bvh/rtip_common/ray_tracing_defs.h"
 
 namespace dxr
 {
@@ -251,3 +252,4 @@ namespace dxr
 
     }  // namespace amd
 }  // namespace dxr
+

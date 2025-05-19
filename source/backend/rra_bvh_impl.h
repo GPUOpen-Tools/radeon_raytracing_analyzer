@@ -11,8 +11,10 @@
 #define RRA_BACKEND_RRA_BVH_IMPL_H_
 
 #include "glm/glm/glm.hpp"
-#include "bvh/dxr_definitions.h"
+
 #include "public/rra_bvh.h"
+
+#include "bvh/dxr_definitions.h"
 #include "bvh/ibvh.h"
 
 /// @brief Check if the given node is a triangle node.
@@ -101,3 +103,4 @@ RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const rta::IBvh* bvh, const dxr:
 RraErrorCode RraBvhGetSurfaceAreaHeuristic(const rta::IBvh* bvh, const dxr::amd::NodePointer node_ptr, float* out_surface_area_heuristic);
 
 #endif  // RRA_BACKEND_RRA_BVH_IMPL_H_
+

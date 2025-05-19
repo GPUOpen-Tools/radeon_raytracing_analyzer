@@ -8,13 +8,12 @@
 
 #include <math.h>
 
-#include "models/ray/ray_inspector_ray_tree_proxy_model.h"
-
 #include <QTreeView>
 
 #include "public/rra_assert.h"
 
 #include "models/ray/ray_inspector_ray_tree_model.h"
+#include "models/ray/ray_inspector_ray_tree_proxy_model.h"
 #include "util/string_util.h"
 
 namespace rra
@@ -71,3 +70,4 @@ namespace rra
         return QSortFilterProxyModel::lessThan(left, right);
     }
 }  // namespace rra
+

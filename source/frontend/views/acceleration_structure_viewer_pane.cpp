@@ -7,20 +7,19 @@
 
 #include "views/acceleration_structure_viewer_pane.h"
 
-#include "public/rra_assert.h"
-#include "public/camera.h"
-#include "public/renderer_adapter.h"
-
-#include "models/acceleration_structure_tree_view_item.h"
-#include "models/acceleration_structure_viewer_model.h"
-#include "views/widget_util.h"
-#include "settings/settings.h"
-
-#include "io/viewer_io.h"
-
-#include <QMenu>
 #include <QContextMenuEvent>
 #include <QCursor>
+#include <QMenu>
+
+#include "public/camera.h"
+#include "public/renderer_adapter.h"
+#include "public/rra_assert.h"
+
+#include "io/viewer_io.h"
+#include "models/acceleration_structure_tree_view_item.h"
+#include "models/acceleration_structure_viewer_model.h"
+#include "settings/settings.h"
+#include "views/widget_util.h"
 
 AccelerationStructureViewerPane::AccelerationStructureViewerPane(QWidget* parent)
     : BasePane(parent)
@@ -52,7 +51,7 @@ void AccelerationStructureViewerPane::SetTableParams(ScaledTableView* table_view
     table_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table_view->setFocusPolicy(Qt::NoFocus);
     table_view->setSelectionMode(QAbstractItemView::NoSelection);
-    table_view->GetHeaderView()->setSectionResizeMode(QHeaderView::Stretch);
+    table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
 void AccelerationStructureViewerPane::keyPressEvent(QKeyEvent* event)
@@ -785,3 +784,4 @@ void AccelerationStructureViewerPane::FocusIn()
         }
     }
 }
+

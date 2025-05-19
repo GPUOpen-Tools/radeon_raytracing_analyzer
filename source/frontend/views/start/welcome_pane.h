@@ -8,16 +8,16 @@
 #ifndef RRA_VIEWS_START_WELCOME_PANE_H_
 #define RRA_VIEWS_START_WELCOME_PANE_H_
 
-#include "ui_welcome_pane.h"
-
-#include <QVector>
 #include <QScrollArea>
 #include <QVBoxLayout>
+#include <QVector>
 
 #include "qt_common/custom_widgets/quick_link_button_widget.h"
 #include "qt_common/custom_widgets/recent_trace_mini_widget.h"
 #include "qt_common/custom_widgets/scaled_push_button.h"
 #include "update_check_api/source/update_check_results_dialog.h"
+
+#include "ui_welcome_pane.h"
 
 #include "views/base_pane.h"
 
@@ -99,6 +99,13 @@ private:
 
     Ui::WelcomePane*                ui_;             ///< Pointer to the Qt UI design.
     QVector<RecentTraceMiniWidget*> trace_widgets_;  ///< Array of trace widgets.
+
+    /// @brief This class creates and interacts with the background thread that performs the check for updates.
+    ///
+    /// We need to store a member variable so that we can cancel the thread if needed. The thread will emit a
+    /// signal when the check for updates has either been cancelled or after it has completed.
+    std::unique_ptr<UpdateCheck::ThreadController> check_for_updates_thread_;
 };
 
 #endif  // RRA_VIEWS_START_WELCOME_PANE_H_
+

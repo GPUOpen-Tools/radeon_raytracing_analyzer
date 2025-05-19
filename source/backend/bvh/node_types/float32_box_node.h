@@ -50,3 +50,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_NODE_TYPES_FLOAT32_BOX_NODE_H_
+

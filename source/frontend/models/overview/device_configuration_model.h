@@ -80,3 +80,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_OVERVIEW_DEVICE_CONFIGURATION_MODEL_H_
+

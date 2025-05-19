@@ -5,14 +5,17 @@
 /// @brief  BVH base class implementations.
 //=============================================================================
 
-#include <deque>
-#include <float.h>
 #include "bvh/ibvh.h"
+
+#include <float.h>
+#include <deque>
+
 #include "public/rra_assert.h"
-#include "dxr_type_conversion.h"
-#include "flags_util.h"
 #include "public/rra_print.h"
 #include "public/rra_rtip_info.h"
+
+#include "bvh/dxr_type_conversion.h"
+#include "bvh/flags_util.h"
 #include "bvh/rtip31/internal_node.h"
 #include "bvh/rtip31/primitive_node.h"
 
@@ -144,7 +147,7 @@ namespace rta
 
         rta::RayTracingIpLevel rtip_level{(rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel()};
         bool                   rtip_1_or_2{rtip_level == rta::RayTracingIpLevel::RtIp1_0 || rtip_level == rta::RayTracingIpLevel::RtIp1_1 ||
-                         rtip_level == rta::RayTracingIpLevel::RtIp2_0 || rtip_level == rta::RayTracingIpLevel::_None};
+                         rtip_level == rta::RayTracingIpLevel::RtIp2_0 || rtip_level == rta::RayTracingIpLevel::RtIpNone};
 
         if (rtip_1_or_2 && meta_data_.GetByteSize() > 0)
         {
@@ -209,9 +212,9 @@ namespace rta
         uint32_t    leaf_count     = 0;
         while (!traversal_stack.empty())
         {
-            auto index_to_level = traversal_stack.front();
-            auto node_ptr       = index_to_level.first;
-            auto level          = index_to_level.second;
+            const auto& index_to_level = traversal_stack.front();
+            auto        node_ptr       = index_to_level.first;
+            auto        level          = index_to_level.second;
 
             max_tree_depth_ = std::max(max_tree_depth_, level + 1);
 
@@ -374,7 +377,7 @@ namespace rta
         return node.OBBMatrixIndex();
     }
 
-    glm::mat3 DecodeRotationMatrix(uint32_t id)
+    static glm::mat3 DecodeRotationMatrix(uint32_t id)
     {
         constexpr uint32_t NUM_OBB_TRANSFORMS{104};
         assert(id < NUM_OBB_TRANSFORMS);
@@ -506,7 +509,7 @@ namespace rta
         return &primitive_node_ptrs_[index];
     }
 
-    uint64_t IBvh::GetHeaderOffset()
+    uint64_t IBvh::GetHeaderOffset() const
     {
         return header_offset_;
     }
@@ -532,3 +535,4 @@ namespace rta
     }
 
 }  // namespace rta
+

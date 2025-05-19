@@ -7,8 +7,8 @@
 
 #include "public/rra_asic_info.h"
 
-#include "rra_data_set.h"
 #include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
+#include "rra_data_set.h"
 #include "rra_tlas_impl.h"
 
 // External reference to the global dataset.
@@ -116,3 +116,4 @@ RraErrorCode RraAsicInfoGetRaytracingVersion(uint16_t* out_version_major, uint16
 
     return kRraOk;
 }
+

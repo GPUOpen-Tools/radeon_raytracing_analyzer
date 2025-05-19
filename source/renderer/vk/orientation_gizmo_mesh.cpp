@@ -5,7 +5,7 @@
 /// @brief  Implementation for the orientation gizmo mesh types.
 //=============================================================================
 
-#include "orientation_gizmo_mesh.h"
+#include "vk/orientation_gizmo_mesh.h"
 
 namespace rra
 {
@@ -194,3 +194,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

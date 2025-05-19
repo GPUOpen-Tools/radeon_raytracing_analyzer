@@ -10,8 +10,7 @@
 #define RRA_MODELS_INSTANCES_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
-
-#include "qt_common/custom_widgets/scaled_table_view.h"
+#include <QTableView>
 
 #include "public/rra_bvh.h"
 
@@ -36,6 +35,7 @@ namespace rra
     /// @brief Column Id's for the fields in the acceleration structure list.
     enum InstancesColumn
     {
+        kInstancesColumnIndex,
         kInstancesColumnInstanceIndex,
         kInstancesColumnInstanceAddress,
         kInstancesColumnInstanceOffset,
@@ -90,7 +90,7 @@ namespace rra
         /// An instance of this table is present in the TLAS and BLAS list panes.
         ///
         /// @param [in] acceleration_structure_table  The table to initialize.
-        void Initialize(ScaledTableView* acceleration_structure_table);
+        void Initialize(QTableView* acceleration_structure_table);
 
         /// @brief Add an acceleration structure to the table.
         ///
@@ -114,3 +114,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_INSTANCES_ITEM_MODEL_H_
+

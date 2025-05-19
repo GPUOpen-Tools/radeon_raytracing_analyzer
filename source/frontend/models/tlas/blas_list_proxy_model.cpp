@@ -6,9 +6,9 @@
 /// table.
 //=============================================================================
 
-#include <math.h>
-
 #include "models/tlas/blas_list_proxy_model.h"
+
+#include <math.h>
 
 #include <QTableView>
 
@@ -64,6 +64,18 @@ namespace rra
         view->setModel(this);
 
         return model;
+    }
+
+    QVariant BlasListProxyModel::data(const QModelIndex& index, int role) const
+    {
+        if (index.column() == kBlasListColumnIndex)
+        {
+            return index.row();
+        }
+        else
+        {
+            return TableProxyModel::data(index, role);
+        }
     }
 
     void BlasListProxyModel::SetFilterByAllowUpdate(bool filter)
@@ -193,3 +205,4 @@ namespace rra
         return QSortFilterProxyModel::lessThan(left, right);
     }
 }  // namespace rra
+

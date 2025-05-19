@@ -11,9 +11,9 @@
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/scaled_tree_view.h"
 
+#include "models/acceleration_structure_flags_table_item_model.h"
 #include "models/acceleration_structure_tree_view_model.h"
 #include "models/acceleration_structure_viewer_model.h"
-#include "models/acceleration_structure_flags_table_item_model.h"
 
 namespace rra
 {
@@ -130,7 +130,15 @@ namespace rra
         /// @param blas_index The index of the BLAS to check.
         ///
         /// @return true if the BLAS is valid, false if not.
-        uint64_t BlasValid(uint64_t blas_index) const;
+        bool BlasValid(uint64_t blas_index) const;
+
+        /// @brief Is a node in the tree selectable (checked and not grayed out).
+        ///
+        /// @param [in] tlas_index   The index of the TLAS to use.
+        /// @param [in] model_index  The model index of the TLAS instance selected in the UI.
+        ///
+        /// @return true if node is visible, false if not.
+        bool IsNodeSelectable(int tlas_index, const QModelIndex& model_index) const;
 
         /// @brief Update the UI elements based on what is selected in the tree view.
         ///
@@ -188,3 +196,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TLAS_TLAS_VIEWER_MODEL_H_
+

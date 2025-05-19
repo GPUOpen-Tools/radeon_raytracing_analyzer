@@ -60,3 +60,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_COLOR_PICKER_BUTTON_H_
+

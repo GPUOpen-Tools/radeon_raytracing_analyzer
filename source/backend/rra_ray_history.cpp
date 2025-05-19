@@ -9,8 +9,8 @@
 
 #include "public/rra_ray_history.h"
 
-#include "rra_data_set.h"
 #include "ray_history/raytracing_counter.h"
+#include "rra_data_set.h"
 
 // External reference to the global dataset.
 extern RraDataSet data_set_;
@@ -21,7 +21,7 @@ DispatchCoordinateData& RayDispatchData::GetCoordinate(uint32_t x, uint32_t y, u
     return dispatch_ray_indices[idx];
 }
 
-bool RayDispatchData::CoordinateIsValid(uint32_t x, uint32_t y, uint32_t z)
+bool RayDispatchData::CoordinateIsValid(uint32_t x, uint32_t y, uint32_t z) const
 {
     auto idx = x + (y * dispatch_width) + (z * dispatch_width * dispatch_height);
     return idx < dispatch_ray_indices.size();
@@ -341,3 +341,4 @@ RayDispatchBeginIdentifier::RayDispatchBeginIdentifier(uint32_t coord_index, uin
     , begin_token_index{begin_index}
 {
 }
+

@@ -5,10 +5,11 @@
 /// @brief  Implementation for the Vulkan Command Buffer Ring.
 //=============================================================================
 
+#include "vk/framework/command_buffer_ring.h"
+
 #include <cassert>
 
-#include "device.h"
-#include "command_buffer_ring.h"
+#include "vk/framework/device.h"
 
 namespace rra
 {
@@ -119,3 +120,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

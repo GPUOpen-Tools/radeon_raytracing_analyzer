@@ -13,16 +13,15 @@
 #include "qt_common/custom_widgets/scaled_table_view.h"
 #include "qt_common/utils/model_view_mapper.h"
 
+#include "public/renderer_interface.h"
+#include "public/renderer_types.h"
+#include "public/rra_ray_history.h"
+
+#include "io/viewer_io.h"
+#include "models/acceleration_structure_flags_table_item_model.h"
 #include "models/ray/ray_inspector_ray_tree_model.h"
 #include "models/ray/ray_inspector_ray_tree_proxy_model.h"
-#include "public/rra_ray_history.h"
-#include "public/renderer_interface.h"
-
 #include "ray_inspector_scene_collection_model.h"
-#include "io/viewer_io.h"
-
-#include "public/renderer_types.h"
-#include <models/acceleration_structure_flags_table_item_model.h>
 
 namespace rra
 {
@@ -200,3 +199,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_MODEL_H_
+

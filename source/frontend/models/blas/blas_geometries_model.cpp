@@ -9,18 +9,18 @@
 
 #include <deque>
 
-#include <QTableView>
-#include <QScrollBar>
 #include <QHeaderView>
+#include <QScrollBar>
 #include <QSortFilterProxyModel>
+#include <QTableView>
 
 #include "qt_common/utils/qt_util.h"
 
-#include "models/blas/blas_geometries_item_model.h"
-
-#include "public/rra_bvh.h"
 #include "public/rra_blas.h"
+#include "public/rra_bvh.h"
 #include "public/rra_tlas.h"
+
+#include "models/blas/blas_geometries_item_model.h"
 
 namespace rra
 {
@@ -98,7 +98,7 @@ namespace rra
         return !stats_list.empty();
     }
 
-    void BlasGeometriesModel::InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns)
+    void BlasGeometriesModel::InitializeTableModel(QTableView* table_view, uint num_rows, uint num_columns)
     {
         if (proxy_model_ != nullptr)
         {
@@ -128,3 +128,4 @@ namespace rra
     }
 
 }  // namespace rra
+

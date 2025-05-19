@@ -9,8 +9,7 @@
 #define RRA_MODELS_BLAS_BLAS_TRIANGLES_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
-
-#include "qt_common/custom_widgets/scaled_table_view.h"
+#include <QTableView>
 
 #include "public/rra_bvh.h"
 #include "public/shared.h"
@@ -39,6 +38,7 @@ namespace rra
     /// @brief Column Id's for the fields in the triangle list.
     enum BlasTrianglesColumn
     {
+        kBlasTrianglesColumnIndex,
         kBlasTrianglesColumnGeometryIndex,
         kBlasTrianglesColumnGeometryFlagOpaque,
         kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit,
@@ -82,7 +82,7 @@ namespace rra
         /// @brief Initialize the acceleration structure list table.
         ///
         /// @param [in] acceleration_structure_table  The table to initialize.
-        void Initialize(ScaledTableView* acceleration_structure_table);
+        void Initialize(QTableView* acceleration_structure_table);
 
         /// @brief Add a triangle structure to the table.
         ///
@@ -106,3 +106,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_TRIANGLES_ITEM_MODEL_H_
+

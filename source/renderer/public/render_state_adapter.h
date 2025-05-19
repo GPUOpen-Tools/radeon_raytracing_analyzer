@@ -9,10 +9,10 @@
 #ifndef RRA_RENDERER_RENDER_STATE_ADAPTER_H_
 #define RRA_RENDERER_RENDER_STATE_ADAPTER_H_
 
+#include <functional>
+
 #include "public/renderer_adapter.h"
 #include "public/renderer_interface.h"
-
-#include <functional>
 
 namespace rra
 {
@@ -203,7 +203,7 @@ namespace rra
             void SetArchitectureToNavi3();
 
             /// @brief Check if the current Architecture is Navi 3.
-            bool IsUsingNavi3();
+            bool IsUsingNavi3() const;
 
             /// @brief Set accept first hit ray flag.
             void SetRayFlagAcceptFirstHit(bool accept_first_hit);
@@ -238,3 +238,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_RENDER_STATE_ADAPTER_H_
+

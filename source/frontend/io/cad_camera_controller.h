@@ -8,8 +8,9 @@
 #ifndef RRA_IO_CAD_CAMERA_CONTROLLER_H_
 #define RRA_IO_CAD_CAMERA_CONTROLLER_H_
 
-#include "viewer_io.h"
 #include <map>
+
+#include "io/viewer_io.h"
 
 namespace rra
 {
@@ -98,3 +99,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

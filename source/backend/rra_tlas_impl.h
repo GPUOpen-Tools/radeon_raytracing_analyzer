@@ -10,9 +10,10 @@
 #ifndef RRA_BACKEND_RRA_TLAS_IMPL_H_
 #define RRA_BACKEND_RRA_TLAS_IMPL_H_
 
-#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
-#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
 #include "public/rra_tlas.h"
+
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
 
 /// @brief Get a pointer to the TLAS from the tlas index passed in.
 ///
@@ -58,3 +59,4 @@ RraErrorCode RraTlasGetNodeTransformedSurfaceArea(const rta::EncodedRtIp11TopLev
                                                   float*                               out_surface_area);
 
 #endif  // RRA_BACKEND_RRA_TLAS_IMPL_H_
+

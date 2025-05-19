@@ -155,3 +155,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_NODE_POINTER_H_
+

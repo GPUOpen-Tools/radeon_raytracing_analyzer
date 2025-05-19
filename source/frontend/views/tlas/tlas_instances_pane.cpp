@@ -8,8 +8,8 @@
 #include "views/tlas/tlas_instances_pane.h"
 
 #include "managers/message_manager.h"
-#include "models/tlas/tlas_instances_model.h"
 #include "models/instance_list_table_item_delegate.h"
+#include "models/tlas/tlas_instances_model.h"
 #include "views/widget_util.h"
 
 TlasInstancesPane::TlasInstancesPane(QWidget* parent)
@@ -51,6 +51,7 @@ TlasInstancesPane::~TlasInstancesPane()
 {
     delete model_;
     delete table_delegate_;
+    delete ui_;
 }
 
 void TlasInstancesPane::keyPressEvent(QKeyEvent* event)
@@ -199,3 +200,4 @@ void TlasInstancesPane::ScrollToSelectedInstance()
     }
     ui_->instances_table_->scrollToTop();
 }
+

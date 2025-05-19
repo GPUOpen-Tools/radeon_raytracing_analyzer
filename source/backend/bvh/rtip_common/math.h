@@ -19,10 +19,12 @@
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
 
-#include <cstdint>
 #include <algorithm>
 #include <cfenv>
-#include "ray_tracing_defs.h"
+#include <cstdint>
+
+#include "bvh/rtip_common/bits.h"
+#include "bvh/rtip_common/ray_tracing_defs.h"
 
 #define AmdExtD3DShaderIntrinsicsFloatOpWithRoundMode_TiesToEven 0x0
 #define AmdExtD3DShaderIntrinsicsFloatOpWithRoundMode_TowardPositive 0x1
@@ -39,11 +41,6 @@ static constexpr uint32_t RoundModeTable[] = {
     FE_DOWNWARD,
     FE_TOWARDZERO,
 };
-
-#ifdef RRA_INTERNAL_COMMENTS
-// FloatOpWithRoundMode is taken from
-// https://github.amd.com/AMD-Radeon-Driver/gpurt/blob/87ec895fba48df3c3a15f81409a6043407d75b3e/src/shaders/Extensions.hlsl
-#endif
 
 inline float asfloat(uint32_t t)
 {
@@ -78,7 +75,7 @@ static glm::vec3 FloatOpWithRoundMode(uint32_t roundMode, uint32_t operation, gl
 {
     std::fesetround(RoundModeTable[roundMode]);
 
-    glm::vec3 result;
+    glm::vec3 result = {};
 
     switch (operation)
     {
@@ -118,69 +115,6 @@ static BoundingBox CombineAABB(BoundingBox b0, BoundingBox b1)
     bbox.max.z = std::max(b0.max.z, b1.max.z);
 
     return bbox;
-}
-
-//=====================================================================================================================
-// Helper function for producing a 32 bit mask of one bit
-inline uint32_t bit(uint32_t index)
-{
-    return 1u << index;
-}
-
-//=====================================================================================================================
-// Helper function for producing a 64 bit mask of one bit
-inline uint64_t bit64(uint32_t index)
-{
-    return 1ull << index;
-}
-
-//=====================================================================================================================
-// Helper function for generating a 32-bit bit mask
-inline uint32_t bits(uint32_t bitcount)
-{
-    return (bitcount == 32) ? 0xFFFFFFFF : ((1u << bitcount) - 1);
-}
-
-//=====================================================================================================================
-// Helper function for generating a 32-bit bit mask
-inline uint64_t bits64(uint64_t bitcount)
-{
-    return (bitcount == 64) ? 0xFFFFFFFFFFFFFFFFull : ((1ull << bitcount) - 1ull);
-}
-
-//=====================================================================================================================
-//# The uint64 overload for countbits() is broken in older versions of the DXIL translator. This is a workaround until
-//# SSC is updated.
-/* Temporarily comment out since some things in this function are undefined.
-inline uint32_t countbits64(uint64_t val)
-{
-    return countbits(LowPart(val)) + countbits(HighPart(val));
-}
-*/
-
-//=====================================================================================================================
-// Helper function for inserting data into a src bitfield and returning the output
-static uint32_t bitFieldInsert(uint32_t src, uint32_t bitOffset, uint32_t numBits, uint32_t data)
-{
-    const uint32_t mask = bits(numBits);
-    src &= ~(mask << bitOffset);
-    return (src | ((data & mask) << bitOffset));
-}
-
-//=====================================================================================================================
-// Helper function for inserting data into a uint64_t src bitfield and returning the output
-static uint64_t bitFieldInsert64(uint64_t src, uint64_t bitOffset, uint64_t numBits, uint64_t data)
-{
-    const uint64_t mask = bits64(numBits);
-    src &= ~(mask << bitOffset);
-    return (src | ((data & mask) << bitOffset));
-}
-
-//=====================================================================================================================
-// Helper function for extracting data from a src bitfield
-static uint32_t bitFieldExtract(uint32_t src, uint32_t bitOffset, uint32_t numBits)
-{
-    return (src >> bitOffset) & bits(numBits);
 }
 
 //=====================================================================================================================
@@ -398,3 +332,4 @@ static float Dequantize(float origin, uint32_t exponent, uint32_t plane, uint32_
 #endif
 
 #endif  // RRA_BACKEND_MATH_H_
+

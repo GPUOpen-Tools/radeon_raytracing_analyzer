@@ -10,8 +10,9 @@
 
 #include "public/camera.h"
 
-#include <glm/glm/gtc/matrix_transform.hpp>
-#include <glm/glm/gtx/euler_angles.hpp>
+#include "glm/glm/gtc/matrix_transform.hpp"
+#include "glm/glm/gtx/euler_angles.hpp"
+
 #include "public/renderer_types.h"
 
 // windows.h defined near and far for some reason.
@@ -332,3 +333,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

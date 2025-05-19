@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.11)
 
-project(Backend)
+project(RraBackend)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER ../backend ../../external/rdf/rdf/inc)
@@ -16,19 +16,19 @@ include_directories(AFTER ../backend ../../external/rdf/rdf/inc)
 set( SOURCES
     # common interface include files
     "public/rra_api_info.h"
-    "public/rra_rtip_info.h"
     "public/rra_asic_info.h"
-    "public/rra_system_info.h"
     "public/rra_assert.h"
+    "public/rra_async_ray_history_loader.h"
     "public/rra_blas.h"
     "public/rra_bvh.h"
     "public/rra_error.h"
     "public/rra_macro.h"
     "public/rra_print.h"
+    "public/rra_ray_history.h"
+    "public/rra_rtip_info.h"
+    "public/rra_system_info.h"
     "public/rra_tlas.h"
     "public/rra_trace_loader.h"
-    "public/rra_ray_history.h"
-    "public/rra_async_ray_history_loader.h"
 
     # private backend files
     "api_info.cpp"
@@ -38,9 +38,9 @@ set( SOURCES
     "math_util.cpp"
     "math_util.h"
     "rra_api_info.cpp"
-    "rra_rtip_info.cpp"
     "rra_asic_info.cpp"
     "rra_assert.cpp"
+    "rra_async_ray_history_loader.cpp"
     "rra_blas.cpp"
     "rra_blas_impl.h"
     "rra_bvh.cpp"
@@ -50,15 +50,15 @@ set( SOURCES
     "rra_data_set.h"
     "rra_print.cpp"
     "rra_ray_history.cpp"
+    "rra_rtip_info.cpp"
     "rra_system_info.cpp"
     "rra_tlas.cpp"
     "rra_tlas_impl.h"
     "rra_trace_loader.cpp"
-    "surface_area_heuristic.cpp"
-    "surface_area_heuristic.h"
-    "rra_async_ray_history_loader.cpp"
     "string_table.cpp"
     "string_table.h"
+    "surface_area_heuristic.cpp"
+    "surface_area_heuristic.h"
     "user_marker_history.cpp"
     "user_marker_history.h"
 
@@ -98,51 +98,52 @@ set( SOURCES
     "bvh/node_types/procedural_node.h"
     "bvh/node_types/triangle_node.cpp"
     "bvh/node_types/triangle_node.h"
+    "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.cpp"
+    "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+    "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.cpp"
+    "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
+    "bvh/rtip11/rt_ip_11_acceleration_structure_header.cpp"
+    "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
+    "bvh/rtip11/rt_ip_11_header.h"
     "bvh/rtip31/child_info.h"
-    "bvh/rtip31/internal_node.h"
-    "bvh/rtip31/primitive_node.h"
-    "bvh/rtip31/math.h"
-    "bvh/rtip31/ray_tracing_defs.h"
     "bvh/rtip31/common.h"
     "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.cpp"
     "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
     "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.cpp"
     "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
+    "bvh/rtip31/internal_node.h"
+    "bvh/rtip31/primitive_node.h"
     "bvh/rtip31/rt_ip_31_acceleration_structure_header.cpp"
     "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
-    "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.cpp"
-    "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
-    "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.cpp"
-    "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
-    "bvh/rtip11/rt_ip_11_header.h"
-    "bvh/rtip11/rt_ip_11_acceleration_structure_header.cpp"
-    "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
-    "bvh/rtip_common/gpurt_accel_struct.h"
-    "bvh/rtip_common/i_acceleration_structure_header.cpp"
-    "bvh/rtip_common/i_acceleration_structure_header.h"
     "bvh/rtip_common/acceleration_structure_header.cpp"
     "bvh/rtip_common/acceleration_structure_header.h"
-    "bvh/rtip_common/i_acceleration_structure_post_build_info.cpp"
-    "bvh/rtip_common/i_acceleration_structure_post_build_info.h"
+    "bvh/rtip_common/bits.h"
     "bvh/rtip_common/encoded_top_level_bvh.cpp"
     "bvh/rtip_common/encoded_top_level_bvh.h"
     "bvh/rtip_common/encoded_bottom_level_bvh.cpp"
     "bvh/rtip_common/encoded_bottom_level_bvh.h"
-
+    "bvh/rtip_common/gpurt_accel_struct.h"
+    "bvh/rtip_common/i_acceleration_structure_header.cpp"
+    "bvh/rtip_common/i_acceleration_structure_header.h"
+    "bvh/rtip_common/i_acceleration_structure_post_build_info.cpp"
+    "bvh/rtip_common/i_acceleration_structure_post_build_info.h"
+    "bvh/rtip_common/math.h"
+    "bvh/rtip_common/ray_tracing_defs.h"
 
     # Ray history
-    "ray_history/ray_history.h"
-    "ray_history/ray_history.cpp"
     "ray_history/counter.h"
-    "ray_history/raytracing_counter.h"
     "ray_history/loader.h"
     "ray_history/loader.cpp"
+    "ray_history/raytracing_counter.h"
+    "ray_history/ray_history.h"
+    "ray_history/ray_history.cpp"
 )
 
 set( LINUX_SOURCES
     "public/linux/safe_crt.h"
     "linux/safe_crt.cpp"
 )
+
 
 # specify output library name
 IF(WIN32)

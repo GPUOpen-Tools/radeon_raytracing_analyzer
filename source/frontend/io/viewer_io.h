@@ -8,10 +8,13 @@
 #ifndef RRA_IO_VIEWER_IO_H_
 #define RRA_IO_VIEWER_IO_H_
 
-#include <QWidget>
 #include <functional>
 #include <optional>
+
+#include <QWidget>
+
 #include "public/camera.h"
+
 #include "models/acceleration_structure_viewer_model.h"
 
 namespace rra
@@ -346,3 +349,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

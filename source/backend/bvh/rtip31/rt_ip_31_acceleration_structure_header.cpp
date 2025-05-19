@@ -6,9 +6,10 @@
 /// implementation.
 //=============================================================================
 
-#include "rt_ip_31_acceleration_structure_header.h"
+#include "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
 
 #include <cstring>  // --> Linux, memcpy
+
 #include "bvh/dxr_type_conversion.h"
 #include "bvh/utils.h"
 
@@ -24,12 +25,6 @@ namespace rta
         assert(size == struct_size);
         memcpy(&header_, buffer, struct_size);
         build_info_->LoadFromBuffer(sizeof(header_.info), &header_.info);
-#ifdef RRA_INTERNAL
-        auto converted_version = rta::RayTracingBinaryVersion(header_.accelStructVersion);
-        while (converted_version < kSupportedRayTracingBinaryHeaderVersion)
-        {
-            converted_version = ConvertToNextHeaderVersion(converted_version.version);
-        }
-#endif
     }
 }  // namespace rta
+

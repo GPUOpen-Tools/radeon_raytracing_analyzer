@@ -54,6 +54,7 @@ BlasInstancesPane::~BlasInstancesPane()
 {
     delete model_;
     delete table_delegate_;
+    delete ui_;
 }
 
 void BlasInstancesPane::keyPressEvent(QKeyEvent* event)
@@ -214,3 +215,4 @@ void BlasInstancesPane::ScrollToSelectedInstance()
     }
     ui_->instances_table_->scrollToTop();
 }
+

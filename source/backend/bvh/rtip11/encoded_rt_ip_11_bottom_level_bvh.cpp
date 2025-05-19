@@ -7,14 +7,15 @@
 //=============================================================================
 
 #include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
-#include "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
 
-#include <iostream>
-#include <vector>
 #include <cassert>
 #include <deque>
+#include <iostream>
 #include <limits>
+#include <vector>
+
 #include "bvh/dxr_type_conversion.h"
+#include "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
 #include "bvh/rtip11/rt_ip_11_header.h"
 
 namespace rta
@@ -295,3 +296,4 @@ namespace rta
     }
 
 }  // namespace rta
+

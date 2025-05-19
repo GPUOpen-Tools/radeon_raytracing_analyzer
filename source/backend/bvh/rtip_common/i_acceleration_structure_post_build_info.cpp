@@ -6,9 +6,10 @@
 //=============================================================================
 
 #include "bvh/rtip_common/i_acceleration_structure_post_build_info.h"
-#include "bvh/dxr_type_conversion.h"
 
 #include <string.h>  // for memcpy()
+
+#include "bvh/dxr_type_conversion.h"
 
 namespace rta
 {
@@ -237,3 +238,4 @@ namespace rta
     }
 
 }  // namespace rta
+

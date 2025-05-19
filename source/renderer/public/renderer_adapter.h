@@ -9,8 +9,8 @@
 #ifndef RRA_RENDERER_RENDERER_ADAPTER_H_
 #define RRA_RENDERER_RENDERER_ADAPTER_H_
 
-#include <map>
 #include <cstdint>
+#include <map>
 
 namespace rra
 {
@@ -60,3 +60,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_RENDERER_ADAPTER_H_
+

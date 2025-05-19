@@ -8,9 +8,10 @@
 #ifndef RRA_RENDERER_CAMERA_H_
 #define RRA_RENDERER_CAMERA_H_
 
-#include <glm/glm/glm.hpp>
-#include <glm/glm/gtx/transform.hpp>
 #include <map>
+
+#include "glm/glm/glm.hpp"
+#include "glm/glm/gtx/transform.hpp"
 
 #include "public/renderer_types.h"
 
@@ -290,3 +291,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_CAMERA_H_
+

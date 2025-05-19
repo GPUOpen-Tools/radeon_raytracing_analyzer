@@ -10,7 +10,7 @@
 
 #include <time.h>
 
-#include "rra_error.h"
+#include "public/rra_error.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,3 +58,4 @@ char* RraTraceLoaderGetDriverOverridesString();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_TRACE_LOADER_H_
+

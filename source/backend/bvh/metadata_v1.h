@@ -8,7 +8,7 @@
 #ifndef RRA_BACKEND_BVH_METADATA_V1_H_
 #define RRA_BACKEND_BVH_METADATA_V1_H_
 
-#include "dxr_definitions.h"
+#include "bvh/dxr_definitions.h"
 
 namespace dxr
 {
@@ -49,14 +49,27 @@ namespace dxr
 
             std::uint32_t task_counter_   = 0;  // Task counter for dispatch-wide spin loop sync
             std::uint32_t num_tasks_done_ = 0;  // Number of tasks done
+#if GPURT_BUILD_RTIP3_1
+            std::uint32_t instance_node_[16] = {};  // Intersectable instance node data (BVH4)
+#else
             std::uint32_t reserved0_[16] = {};  // Reserved
+#endif
             std::uint32_t reserved1_[3] = {};  // Reserved - padding for 64-bit alignment
+#if GPURT_BUILD_RTIP3_1
+            std::uint32_t update_group_count_[3] = {};  // Indirect dispatch group count x, y, z for updates
+#else
             std::uint32_t reserved2_[3] = {};  // Reserved
+#endif
             std::uint32_t padding_[5] = {};  // 128-byte alignment padding
+#if GPURT_BUILD_RTIP3_1
+            std::uint32_t kdop_[32] = {};  // BLAS KDOP data
+#else
             std::uint32_t reserved3_[32] = {};  // BLAS KDOP data
+#endif
         };
 
     }  // namespace amd
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_METADATA_V1_H_
+

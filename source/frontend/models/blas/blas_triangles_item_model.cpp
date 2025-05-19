@@ -7,13 +7,17 @@
 
 #include "models/blas/blas_triangles_item_model.h"
 
+#include <unordered_set>
+
 #include "qt_common/utils/qt_util.h"
 
-#include "public/rra_assert.h"
 #include "public/rra_api_info.h"
+#include "public/rra_assert.h"
 
 #include "constants.h"
 #include "settings/settings.h"
+#include "util/rra_util.h"
+#include "views/custom_widgets/index_header_view.h"
 
 namespace rra
 {
@@ -39,30 +43,29 @@ namespace rra
         num_columns_ = columns;
     }
 
-    void BlasTrianglesItemModel::Initialize(ScaledTableView* acceleration_structure_table)
+    void BlasTrianglesItemModel::Initialize(QTableView* acceleration_structure_table)
     {
-        acceleration_structure_table->horizontalHeader()->setSectionsClickable(true);
+        acceleration_structure_table->setHorizontalHeader(
+            new IndexHeaderView({kBlasTrianglesColumnIndex, kBlasTrianglesColumnVertex0, kBlasTrianglesColumnVertex1, kBlasTrianglesColumnVertex2},
+                                Qt::Horizontal,
+                                acceleration_structure_table));
+        rra_util::InitializeTableView(acceleration_structure_table);
+        acceleration_structure_table->sortByColumn(kBlasTrianglesColumnGeometryIndex, Qt::AscendingOrder);
 
-        // Set default column widths wide enough to show table contents.
-        acceleration_structure_table->SetColumnPadding(0);
-
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnGeometryIndex, 13);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnGeometryFlagOpaque, 10);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit, 20);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnPrimitiveIndex, 13);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnNodeAddress, 18);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnNodeOffset, 15);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnTriangleCount, 15);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnActive, 10);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnTriangleSurfaceArea, 15);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnSAH, 10);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex0, 20);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex1, 20);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnVertex2, 20);
-        acceleration_structure_table->SetColumnWidthEms(kBlasTrianglesColumnPadding, 5);
-
-        // Allow users to resize columns if desired.
-        acceleration_structure_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnGeometryIndex, 130);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnGeometryFlagOpaque, 100);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnGeometryFlagNoDuplicateAnyHit, 150);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnPrimitiveIndex, 130);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnNodeAddress, 180);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnNodeOffset, 150);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnTriangleCount, 150);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnActive, 100);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnTriangleSurfaceArea, 150);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnSAH, 100);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnVertex0, 210);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnVertex1, 210);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnVertex2, 210);
+        acceleration_structure_table->setColumnWidth(kBlasTrianglesColumnPadding, 50);
     }
 
     void BlasTrianglesItemModel::AddTriangleStructure(const BlasTrianglesStatistics& stats)
@@ -204,6 +207,8 @@ namespace rra
             {
                 switch (section)
                 {
+                case kBlasTrianglesColumnIndex:
+                    return "Row Id";
                 case kBlasTrianglesColumnGeometryIndex:
                     return "Geometry index";
                 case kBlasTrianglesColumnGeometryFlagOpaque:
@@ -240,6 +245,8 @@ namespace rra
             {
                 switch (section)
                 {
+                case kBlasTrianglesColumnIndex:
+                    return "The index of the row in the table";
                 case kBlasTrianglesColumnGeometryIndex:
                     return "The index of the geometry that this triangle belongs to";
                 case kBlasTrianglesColumnGeometryFlagOpaque:
@@ -318,3 +325,4 @@ namespace rra
         return num_columns_;
     }
 }  // namespace rra
+

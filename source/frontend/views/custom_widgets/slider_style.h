@@ -24,3 +24,4 @@ public:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_SLIDER_STYLE_H_
+

@@ -9,18 +9,17 @@
 
 #include <QVariant>
 
-#include "public/rra_tlas.h"
+#ifdef _LINUX
+#include "public/linux/safe_crt.h"
+#endif
+#include "public/rra_api_info.h"
 #include "public/rra_ray_history.h"
+#include "public/rra_tlas.h"
 
 #include "managers/trace_manager.h"
 #include "settings/settings.h"
 #include "util/string_util.h"
 #include "views/widget_util.h"
-#include "public/rra_api_info.h"
-
-#ifdef _LINUX
-#include "public/linux/safe_crt.h"
-#endif
 
 namespace rra
 {
@@ -31,6 +30,7 @@ namespace rra
 
     SummaryModel::~SummaryModel()
     {
+        delete global_stats_table_model_;
     }
 
     void SummaryModel::ResetModelValues()
@@ -78,13 +78,15 @@ namespace rra
     bool SummaryModel::RebraidingEnabled()
     {
         uint64_t tlas_count = 0;
-        RraBvhGetTlasCount(&tlas_count);
+        RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
+        RRA_ASSERT(error_code);
 
         bool rebraiding_enabled{false};
         for (uint64_t tlas_index = 0; tlas_index < tlas_count; ++tlas_index)
         {
             bool tlas_rebraiding_enabled{};
-            RraTlasGetRebraidingEnabled(tlas_index, &tlas_rebraiding_enabled);
+            error_code = RraTlasGetRebraidingEnabled(tlas_index, &tlas_rebraiding_enabled);
+            RRA_ASSERT(error_code == kRraOk);
             rebraiding_enabled |= tlas_rebraiding_enabled;
         }
 
@@ -94,13 +96,15 @@ namespace rra
     bool SummaryModel::FusedInstancesEnabled()
     {
         uint64_t tlas_count = 0;
-        RraBvhGetTlasCount(&tlas_count);
+        RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
+        RRA_ASSERT(error_code);
 
         bool fused_instances_enabled{false};
         for (uint64_t tlas_index = 0; tlas_index < tlas_count; ++tlas_index)
         {
             bool tlas_fused_instance_enabled{};
-            RraTlasGetFusedInstancesEnabled(tlas_index, &tlas_fused_instance_enabled);
+            error_code = RraTlasGetFusedInstancesEnabled(tlas_index, &tlas_fused_instance_enabled);
+            RRA_ASSERT(error_code == kRraOk);
             fused_instances_enabled |= tlas_fused_instance_enabled;
         }
 
@@ -185,7 +189,8 @@ namespace rra
     void SummaryModel::UpdateTlasList()
     {
         uint64_t tlas_count = 0;
-        RraBvhGetTlasCount(&tlas_count);
+        RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
+        RRA_ASSERT(error_code);
 
         uint64_t rows_added = 0;
 
@@ -298,3 +303,4 @@ namespace rra
     }
 
 }  // namespace rra
+

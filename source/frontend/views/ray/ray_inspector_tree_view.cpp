@@ -7,11 +7,11 @@
 /// Based on a scaled treeview, it adds a right-click context menu.
 //=============================================================================
 
-#include "ray_inspector_tree_view.h"
+#include "views/ray/ray_inspector_tree_view.h"
 
-#include <QMenu>
-#include <QContextMenuEvent>
 #include <QApplication>
+#include <QContextMenuEvent>
+#include <QMenu>
 
 #include "io/viewer_io.h"
 
@@ -73,3 +73,4 @@ bool RayInspectorTreeView::event(QEvent* event)
 
     return ScaledTreeView::event(event);
 }
+

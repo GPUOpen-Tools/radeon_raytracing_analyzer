@@ -5,10 +5,12 @@
 /// @brief  Implementation of the BVH scene model.
 //=============================================================================
 
-#include "scene_collection_model.h"
-#include "public/rra_blas.h"
+#include "models/scene_collection_model.h"
+
 #include "public/intersect.h"
+#include "public/rra_blas.h"
 #include "public/rra_rtip_info.h"
+
 #include "util/stack_vector.h"
 
 namespace rra
@@ -103,9 +105,11 @@ namespace rra
                 if (RraRtipInfoGetOBBSupported() && (*traverse_nodes_ptr)[i] != root_node)
                 {
                     uint32_t parent_node{};
-                    RraBlasGetNodeParent(bvh_index, (*traverse_nodes_ptr)[i], &parent_node);
+                    RraErrorCode error_code = RraBlasGetNodeParent(bvh_index, (*traverse_nodes_ptr)[i], &parent_node);
+                    RRA_ASSERT(error_code);
 
-                    RraBlasGetNodeBoundingVolumeOrientation(bvh_index, parent_node, &rotation[0][0]);
+                    error_code = RraBlasGetNodeBoundingVolumeOrientation(bvh_index, parent_node, &rotation[0][0]);
+                    RRA_ASSERT(error_code);
                     intersected = renderer::IntersectOBB(origin,
                                                          direction,
                                                          glm::vec3(extent.min_x, extent.min_y, extent.min_z),
@@ -184,3 +188,4 @@ namespace rra
         }
     }
 }  // namespace rra
+

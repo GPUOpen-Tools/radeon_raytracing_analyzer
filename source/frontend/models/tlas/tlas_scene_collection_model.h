@@ -10,7 +10,7 @@
 
 #include <map>
 
-#include "../scene_collection_model.h"
+#include "models/scene_collection_model.h"
 
 namespace rra
 {
@@ -99,3 +99,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

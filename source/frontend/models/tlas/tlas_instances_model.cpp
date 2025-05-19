@@ -7,19 +7,18 @@
 
 #include "models/tlas/tlas_instances_model.h"
 
-#include <QTableView>
-#include <QScrollBar>
 #include <QHeaderView>
+#include <QScrollBar>
 #include <QSortFilterProxyModel>
+#include <QTableView>
 
 #include "qt_common/utils/qt_util.h"
-
-#include "models/instances_item_model.h"
 
 #include "public/rra_bvh.h"
 #include "public/rra_tlas.h"
 
-#include "../scene.h"
+#include "models/instances_item_model.h"
+#include "models/scene.h"
 
 namespace rra
 {
@@ -115,13 +114,13 @@ namespace rra
                     continue;
                 }
 
-                if (RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_ptr, &stats.unique_instance_index))
+                if (RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_ptr, &stats.unique_instance_index) != kRraOk)
                 {
                     continue;
                 }
 
                 uint32_t tlas_instance_index = 0;
-                if (RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_ptr, &tlas_instance_index))
+                if (RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_ptr, &tlas_instance_index) != kRraOk)
                 {
                     continue;
                 }
@@ -174,7 +173,7 @@ namespace rra
         return total_instance_count > 0;
     }
 
-    void TlasInstancesModel::InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns)
+    void TlasInstancesModel::InitializeTableModel(QTableView* table_view, uint num_rows, uint num_columns)
     {
         if (proxy_model_ != nullptr)
         {
@@ -219,3 +218,4 @@ namespace rra
         return proxy_model_;
     }
 }  // namespace rra
+

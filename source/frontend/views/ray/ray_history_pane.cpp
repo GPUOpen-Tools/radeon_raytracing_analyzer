@@ -7,23 +7,26 @@
 
 #include "views/ray/ray_history_pane.h"
 
+#include <algorithm>
+#include <chrono>
+
 #include "qt_common/utils/zoom_icon_group_manager.h"
 
-#include <chrono>
-#include <algorithm>
-#include "managers/message_manager.h"
-#include "views/widget_util.h"
-#include "constants.h"
-#include "public/rra_api_info.h"
-#include "util/string_util.h"
 #include "public/renderer_types.h"
+#include "public/rra_api_info.h"
+
+#include "constants.h"
+#include "managers/message_manager.h"
+#include "settings/settings.h"
+#include "util/string_util.h"
+#include "views/widget_util.h"
 
 /// @brief Get the plane that should be shown for a 2D dispatch.
 ///
 /// @param dispatch_id The dispatch ID of a 2D dispatch.
 ///
 /// @return The slice plane.
-rra::renderer::SlicePlane GetSlicePlaneFor2DDispatch(uint64_t dispatch_id)
+static rra::renderer::SlicePlane GetSlicePlaneFor2DDispatch(uint64_t dispatch_id)
 {
     uint32_t x{};
     uint32_t y{};
@@ -52,7 +55,7 @@ rra::renderer::SlicePlane GetSlicePlaneFor2DDispatch(uint64_t dispatch_id)
 /// @param dispatch_id The dispatch ID of a 2D dispatch.
 ///
 /// @return The index of the dimension with the RH data.
-uint32_t GetDimensionIndexOf1DDispatch(uint64_t dispatch_id)
+static uint32_t GetDimensionIndexOf1DDispatch(uint64_t dispatch_id)
 {
     uint32_t x{};
     uint32_t y{};
@@ -76,7 +79,7 @@ uint32_t GetDimensionIndexOf1DDispatch(uint64_t dispatch_id)
 /// @param dispatch_id The dispatch ID.
 ///
 /// @return The dimension.
-uint32_t GetDispatchDimension(uint64_t dispatch_id)
+static uint32_t GetDispatchDimension(uint64_t dispatch_id)
 {
     uint32_t x{};
     uint32_t y{};
@@ -251,7 +254,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
     ui_->shader_binding_table_->setColumnWidth(0, 5);
     model_->InitializeShaderBindingTableModel(ui_->shader_binding_table_);
 
-    connect(ray_history_viewer_.heatmap_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &RayHistoryPane::SetHeatmapSpectrum);
+    connect(ray_history_viewer_.heatmap_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &RayHistoryPane::SetHeatmapMode);
     connect(ray_history_viewer_.color_mode_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &RayHistoryPane::SetColorMode);
     connect(ray_history_viewer_.dispatch_plane_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &RayHistoryPane::SetSlicePlane);
     connect(ui_->dispatch_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &RayHistoryPane::UpdateSelectedDispatch);
@@ -268,6 +271,19 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
 
     connect(&rra::MessageManager::Get(), &rra::MessageManager::DispatchSelected, [=](uint32_t dispatch_id) {
         ui_->dispatch_combo_box_->SetSelectedRow(dispatch_id);
+    });
+
+    // Handle what happens when an offset from the current position in the ray table is selected.
+    // This is done when clicking the 'Next/Previous Ray' buttons on the Ray Inspector pane.
+    // The message is emitted when clicking the button and this function simply selects the next or previous entry in the table
+    // (depending on how it is sorted), which will automatically repopulate the Ray Inspector pane.
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::RayStepSelected, [=](int32_t step_size) {
+        QModelIndex current_index = ui_->ray_table_->currentIndex();
+        QModelIndex index         = model_->GetProxyModel()->index(current_index.row() + step_size, current_index.column(), QModelIndex());
+        if (index.isValid())
+        {
+            ui_->ray_table_->setCurrentIndex(index);
+        }
     });
 
     // Set up the zoom buttons.
@@ -302,7 +318,9 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
 
 RayHistoryPane::~RayHistoryPane()
 {
+    delete model_;
     delete zoom_icon_manager_;
+    delete ui_;
 }
 
 void RayHistoryPane::OnTraceOpen()
@@ -314,7 +332,7 @@ void RayHistoryPane::OnTraceOpen()
     heatmap_generators_ = rra::renderer::Heatmap::GetHeatmapGenerators();
 
     // Construct heatmap name vector.
-    for (auto generator : heatmap_generators_)
+    for (const auto& generator : heatmap_generators_)
     {
         heatmap_mode_names.push_back(generator.name);
     }
@@ -800,7 +818,6 @@ void RayHistoryPane::SetTraversalCounterRange(int min_value, int max_value)
     {
         ray_history_viewer_.rh_traversal_min_value_->setText(QString::number(min_value));
         ray_history_viewer_.rh_traversal_max_value_->setText(QString::number(max_value));
-
         QImage heatmap_image{RenderRayHistoryImage()};
         ray_history_viewer_.ray_graphics_view_->SetHeatmapImage(heatmap_image);
     }
@@ -811,7 +828,6 @@ void RayHistoryPane::SetCurrentRayIndex(int ray_index)
     if (show_event_occured_)
     {
         ray_history_viewer_.rh_traversal_ray_index_value_->setText(QString::number(ray_index));
-
         QImage heatmap_image{RenderRayHistoryImage()};
         ray_history_viewer_.ray_graphics_view_->SetHeatmapImage(heatmap_image);
     }
@@ -820,7 +836,6 @@ void RayHistoryPane::SetCurrentRayIndex(int ray_index)
 void RayHistoryPane::DispatchSliceChanged(int slice_index)
 {
     model_->SetSliceIndex((uint32_t)slice_index);
-
     QImage heatmap_image{RenderRayHistoryImage()};
     ray_history_viewer_.ray_graphics_view_->SetHeatmapImage(heatmap_image);
 }
@@ -868,7 +883,7 @@ QImage RayHistoryPane::RenderRayHistoryImage()
                                          dispatch_reshaped_dimensions_[dispatch_id_].z);
 }
 
-uint32_t RayHistoryPane::GetCurrentColorModeMaxStatistic()
+uint32_t RayHistoryPane::GetCurrentColorModeMaxStatistic() const
 {
     switch (model_->GetColorMode())
     {
@@ -908,11 +923,22 @@ void RayHistoryPane::showEvent(QShowEvent* event)
 
     SetDispatchId(dispatch_id_);
     SetColorMode();
+    CreateGrayscaleImage();
 
     BasePane::showEvent(event);
 }
 
-void RayHistoryPane::SetHeatmapSpectrum()
+void RayHistoryPane::CreateGrayscaleImage()
+{
+    QImage grayscale_image;
+
+    model_->SetHeatmapData(heatmap_generators_[HeatmapColorType::kHeatmapColorTypeTemperature].generator_function());
+    grayscale_image = RenderRayHistoryImage();
+    grayscale_image = grayscale_image.convertToFormat(QImage::Format_Grayscale8);
+    ray_history_viewer_.ray_graphics_view_->SetGrayscaleImage(grayscale_image);
+}
+
+void RayHistoryPane::SetHeatmapMode()
 {
     int row = ray_history_viewer_.heatmap_combo_box_->CurrentRow();
     model_->SetHeatmapData(heatmap_generators_[row].generator_function());
@@ -928,3 +954,4 @@ void RayHistoryPane::UpdateZoomButtons(bool zoom_in, bool zoom_out, bool zoom_se
 {
     zoom_icon_manager_->SetButtonStates(zoom_in, zoom_out, zoom_selection, reset);
 }
+

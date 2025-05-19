@@ -9,7 +9,7 @@
 #define RRA_BACKEND_RTIP3_TYPES_H_
 
 #include <stdint.h>
-#include "../rt_binary_file_defs.h"
+#include "bvh/rt_binary_file_defs.h"
 
 /// @brief Offsets into the node data of the acceleration structure to separate the
 /// different interior / leaf node buffers and geometry descriptions.
@@ -36,6 +36,11 @@ union AccelStructHeaderInfo
         uint32_t rebraid : 1;                 // Enable Rebraid
         uint32_t fusedInstanceNode : 1;       // Enable fused instance nodes
 
+#if GPURT_BUILD_RTIP3
+        uint32_t highPrecisionBoxNodeEnable : 1;  // Internal nodes are encoded as high precision box nodes
+        uint32_t hwInstanceNodeEnable : 1;        // Instance nodes are formatted in hardware instance node format
+#endif
+
         uint32_t flags : 16;  // AccelStructBuildFlags
     };
 
@@ -49,7 +54,13 @@ union AccelStructHeaderInfo2
     struct
     {
         uint32_t compacted : 1;  // This BVH has been compacted
+#if GPURT_BUILD_RTIP3_1
+        uint32_t bvh8Enable : 1;  // Internal box nodes are BVH8 nodes
+#elif GPURT_BUILD_RTIP3
+        uint32_t bvh8Enable : 1;  // Internal box nodes are BVH8 nodes
+#else
         uint32_t reserved : 1;  // Unused bits
+#endif
         uint32_t reserved2 : 30;  // Unused bits
     };
 
@@ -72,6 +83,22 @@ union AccelStructHeaderInfo2
 #define ACCEL_STRUCT_HEADER_INFO_REBRAID_FLAGS_MASK 0x1
 #define ACCEL_STRUCT_HEADER_INFO_FUSED_INSTANCE_NODE_FLAGS_SHIFT 13
 #define ACCEL_STRUCT_HEADER_INFO_FUSED_INSTANCE_NODE_FLAGS_MASK 0x1
+
+#if GPURT_BUILD_RTIP3
+#define ACCEL_STRUCT_HEADER_INFO_HIGH_PRECISION_BOX_NODE_FLAGS_SHIFT 14
+#define ACCEL_STRUCT_HEADER_INFO_HIGH_PRECISION_BOX_NODE_FLAGS_MASK 0x1
+#define ACCEL_STRUCT_HEADER_INFO_HW_INSTANCE_NODE_FMT_SHIFT 15
+#define ACCEL_STRUCT_HEADER_INFO_HW_INSTANCE_NODE_FMT_MASK 0x1
+
+#define ACCEL_STRUCT_HEADER_INFO_FLAGS_SHIFT 16
+#define ACCEL_STRUCT_HEADER_INFO_FLAGS_MASK 0xffff
+
+#define ACCEL_STRUCT_HEADER_INFO_2_BVH_COMPACTION_FLAGS_SHIFT 0
+#define ACCEL_STRUCT_HEADER_INFO_2_BVH_COMPACTION_FLAGS_MASK 0x1
+
+#define ACCEL_STRUCT_HEADER_INFO_2_BVH8_FLAGS_SHIFT 1
+#define ACCEL_STRUCT_HEADER_INFO_2_BVH8_FLAGS_MASK 0x1
+#endif
 
 struct AccelStructHeader
 {
@@ -122,6 +149,23 @@ struct AccelStructHeader
         return ((GetInfo() >> ACCEL_STRUCT_HEADER_INFO_REBRAID_FLAGS_SHIFT) & ACCEL_STRUCT_HEADER_INFO_REBRAID_FLAGS_MASK);
     }
 
+#if GPURT_BUILD_RTIP3
+    bool UsesHighPrecisionBoxNode()
+    {
+        return ((GetInfo() >> ACCEL_STRUCT_HEADER_INFO_HIGH_PRECISION_BOX_NODE_FLAGS_SHIFT) & ACCEL_STRUCT_HEADER_INFO_HIGH_PRECISION_BOX_NODE_FLAGS_MASK);
+    }
+
+    bool UsesHardwareInstanceNode()
+    {
+        return ((GetInfo() >> ACCEL_STRUCT_HEADER_INFO_HW_INSTANCE_NODE_FMT_SHIFT) & ACCEL_STRUCT_HEADER_INFO_HW_INSTANCE_NODE_FMT_MASK);
+    }
+
+    bool UsesBVH8()
+    {
+        return ((GetInfo2() >> ACCEL_STRUCT_HEADER_INFO_2_BVH8_FLAGS_SHIFT) & ACCEL_STRUCT_HEADER_INFO_2_BVH8_FLAGS_MASK);
+    }
+#endif
 };
 
 #endif  // RRA_BACKEND_RTIP3_TYPES_H_
+

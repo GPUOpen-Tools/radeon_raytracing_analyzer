@@ -7,24 +7,25 @@
 
 #include "models/ray/ray_inspector_model.h"
 
-#include <QTableView>
-#include <QScrollBar>
-#include <QHeaderView>
-#include <QSortFilterProxyModel>
-#include <QStandardItemModel>
-
 #undef emit
-#include <execution>
 #include <algorithm>
+#include <execution>
 #define emit
 #include <mutex>
 
+#include <QHeaderView>
+#include <QScrollBar>
+#include <QSortFilterProxyModel>
+#include <QStandardItemModel>
+#include <QTableView>
+
+#include "public/rra_tlas.h"
+
+#include "managers/message_manager.h"
 #include "models/ray/ray_list_item_model.h"
+#include "settings/settings.h"
 #include "util/string_util.h"
 #include "views/widget_util.h"
-#include "settings/settings.h"
-#include "public/rra_tlas.h"
-#include "managers/message_manager.h"
 
 // We can't use std::max or glm::max since the windows macro ends up overriding the max keyword.
 // So we underfine max for this file only.
@@ -47,6 +48,7 @@ namespace rra
         delete tree_model_;
         delete proxy_model_;
         delete scene_collection_model_;
+        delete flags_table_model_;
     }
 
     void RayInspectorModel::ResetModelValues()
@@ -292,7 +294,8 @@ namespace rra
         for (uint64_t i = 0; i < tlas_count; i++)
         {
             uint64_t address;
-            RraTlasGetBaseAddress(i, &address);
+            RraErrorCode error_code = RraTlasGetBaseAddress(i, &address);
+            RRA_ASSERT(error_code == kRraOk);
             tlas_address_to_index_[address] = i;
         }
     }
@@ -394,7 +397,7 @@ namespace rra
 
         flags_table_model_->Initialize(table_view);
 
-        table_view->GetHeaderView()->setVisible(false);
+        table_view->horizontalHeader()->setVisible(false);
     }
 
     void RayInspectorModel::PopulateFlagsTable(FlagsTableItemModel* flags_table)
@@ -736,25 +739,28 @@ namespace rra
             // Burst resetting camera is no longer necessary, since reset no longer needs to converge.
             // Leave the code for it for testing in case we see issues later.
             auto camera_controller = static_cast<rra::ViewerIO*>(camera->GetCameraController());
-            camera_controller->SetViewerCallbacks(GetViewerCallbacks());
-            if (camera_controller && camera_reset_countdown_ > 0)
+            if (camera_controller != nullptr)
             {
-                camera_reset_countdown_--;
-
-                auto fit_function = GetCameraFitFunction();
-
-                // Since we are casting rays instead of using frustum culling near plane value we can just iterate independently of rendering.
-                for (size_t i = 0; i < 3; i++)
+                camera_controller->SetViewerCallbacks(GetViewerCallbacks());
+                if (camera_reset_countdown_ > 0)
                 {
-                    auto near_plane = GetNearPlane(bvh_scene, camera);
-                    camera->SetNearClipMultiplier(1.0f);
-                    camera->SetNearClipScale(near_plane);
+                    camera_reset_countdown_--;
 
-                    auto fit_values = fit_function(camera);
-                    camera_controller->FitCameraParams(fit_values.position, fit_values.forward, fit_values.up);
+                    auto fit_function = GetCameraFitFunction();
+
+                    // Since we are casting rays instead of using frustum culling near plane value we can just iterate independently of rendering.
+                    for (size_t i = 0; i < 3; i++)
+                    {
+                        auto near_plane = GetNearPlane(bvh_scene, camera);
+                        camera->SetNearClipMultiplier(1.0f);
+                        camera->SetNearClipScale(near_plane);
+
+                        auto fit_values = fit_function(camera);
+                        camera_controller->FitCameraParams(fit_values.position, fit_values.forward, fit_values.up);
+                    }
+
+                    renderer->MarkAsDirty();
                 }
-
-                renderer->MarkAsDirty();
             }
 
             // Burst update camera.
@@ -771,3 +777,4 @@ namespace rra
     }
 
 }  // namespace rra
+

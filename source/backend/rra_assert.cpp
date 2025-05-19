@@ -11,8 +11,8 @@
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>  // required for OutputDebugString()
 #include <stdio.h>    // required for sprintf_s
+#include <windows.h>  // required for OutputDebugString()
 #endif                // #ifndef _WIN32
 
 static RraAssertCallback s_assert_callback;
@@ -70,3 +70,4 @@ bool RraAssertReport(const char* file, int32_t line, const char* condition, cons
 
     return true;
 }
+

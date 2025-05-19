@@ -141,3 +141,4 @@ void RecentTracesPane::HandleTraceNotFoundError(const QString path)
     const QString text = rra::text::kOpenRecentTraceStart + path + rra::text::kOpenRecentTraceEnd;
     QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, rra::text::kOpenRecentTraceTitle, text);
 }
+

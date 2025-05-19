@@ -8,8 +8,9 @@
 #ifndef RRA_RENDERER_VULKAN_UTIL_VULKAN_H_
 #define RRA_RENDERER_VULKAN_UTIL_VULKAN_H_
 
-#include <volk/volk.h>
 #include <string>
+
+#include "volk/volk.h"
 
 namespace rra
 {
@@ -45,3 +46,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VULKAN_UTIL_VULKAN_H_
+

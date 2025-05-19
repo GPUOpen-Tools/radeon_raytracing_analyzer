@@ -9,12 +9,12 @@
 #ifndef RRA_BACKEND_BVH_ENCODED_RT_IP_31_TOP_LEVEL_BVH_H_
 #define RRA_BACKEND_BVH_ENCODED_RT_IP_31_TOP_LEVEL_BVH_H_
 
-#include <unordered_map>
 #include <optional>
+#include <unordered_map>
 
-#include "bvh/rtip_common/encoded_top_level_bvh.h"
 #include "bvh/node_types/instance_node.h"
 #include "bvh/rtip31/primitive_node.h"
+#include "bvh/rtip_common/encoded_top_level_bvh.h"
 
 namespace rta
 {
@@ -191,3 +191,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_RT_IP_31_TOP_LEVEL_BVH_H_
+

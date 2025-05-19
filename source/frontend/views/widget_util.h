@@ -11,17 +11,18 @@
 #ifndef RRA_UTIL_WIDGET_UTIL_H_
 #define RRA_UTIL_WIDGET_UTIL_H_
 
-#include <QWidget>
-#include <QString>
-#include <QGraphicsView>
-#include <QTableView>
-#include <QStandardItemModel>
 #include <stdint.h>
 
-#include "qt_common/custom_widgets/text_search_widget.h"
-#include "qt_common/custom_widgets/double_slider_widget.h"
+#include <QGraphicsView>
+#include <QStandardItemModel>
+#include <QString>
+#include <QTableView>
+#include <QWidget>
+
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/colored_legend_scene.h"
+#include "qt_common/custom_widgets/double_slider_widget.h"
+#include "qt_common/custom_widgets/text_search_widget.h"
 
 namespace rra
 {
@@ -89,3 +90,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_UTIL_WIDGET_UTIL_H_
+

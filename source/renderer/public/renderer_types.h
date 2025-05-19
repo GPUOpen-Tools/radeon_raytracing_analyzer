@@ -9,20 +9,20 @@
 #define RRA_RENDERER_TYPES_H_
 
 #include <array>
-#include <unordered_map>
-#include <vector>
 #include <map>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
-#include "public/shared.h"
 #include "public/rra_bvh.h"
+#include "public/shared.h"
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
 #define NOMINMAX
 #include <windows.h>
 #elif defined(VK_USE_PLATFORM_XCB_KHR)
-#include <xcb/xcb.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
+#include <xcb/xcb.h>
 #include <QGuiApplication>
 #endif
 
@@ -370,3 +370,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_TYPES_H_
+

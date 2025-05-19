@@ -5,15 +5,15 @@
 /// @brief  Implementation for back/fwd navigation manager.
 //=============================================================================
 
-#include "navigation_manager.h"
+#include "managers/navigation_manager.h"
 
 #include <QDebug>
+
+#include "qt_common/custom_widgets/driver_overrides_model.h"
 
 #include "public/rra_assert.h"
 
 #include "managers/message_manager.h"
-
-#include "qt_common/custom_widgets/driver_overrides_model.h"
 
 namespace rra
 {
@@ -287,3 +287,4 @@ namespace rra
         return out;
     }
 }  // namespace rra
+

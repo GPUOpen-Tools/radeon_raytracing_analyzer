@@ -9,6 +9,7 @@
 #define RRA_BACKEND_PUBLIC_RRA_RTIP_INFO_H_
 
 #include <stdint.h>
+
 #include "bvh/gpu_def.h"
 
 #ifdef __cplusplus
@@ -29,3 +30,4 @@ bool RraRtipInfoGetOBBSupported();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_RTIP_INFO_H_
+

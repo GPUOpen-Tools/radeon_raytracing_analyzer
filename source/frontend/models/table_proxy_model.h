@@ -9,6 +9,7 @@
 #define RRA_MODELS_TABLE_PROXY_MODEL_H_
 
 #include <set>
+
 #include <QSortFilterProxyModel>
 
 namespace rra
@@ -115,3 +116,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TABLE_PROXY_MODEL_H_
+

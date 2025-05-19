@@ -124,3 +124,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_TOP_LEVEL_BVH_H_
+

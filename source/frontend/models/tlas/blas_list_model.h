@@ -8,7 +8,6 @@
 #ifndef RRA_MODELS_TLAS_BLAS_LIST_MODEL_H_
 #define RRA_MODELS_TLAS_BLAS_LIST_MODEL_H_
 
-#include "qt_common/custom_widgets/scaled_table_view.h"
 #include "qt_common/utils/model_view_mapper.h"
 
 #include "models/tlas/blas_list_item_model.h"
@@ -42,7 +41,7 @@ namespace rra
         /// @param [in] table_view  The view to the table.
         /// @param [in] num_rows    Total rows of the table.
         /// @param [in] num_columns Total columns of the table.
-        void InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns);
+        void InitializeTableModel(QTableView* table_view, uint num_rows, uint num_columns);
 
         /// @brief Update the acceleration structure table.
         ///
@@ -89,3 +88,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TLAS_BLAS_LIST_MODEL_H_
+

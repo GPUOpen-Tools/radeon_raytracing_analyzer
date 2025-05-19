@@ -8,24 +8,26 @@
 #include "models/table_item_delegate.h"
 
 #include <algorithm>
+
 #include <QMap>
 #include <QPainter>
 #include <QScreen>
 #include <QWindow>
 
-#include "constants.h"
-#include "views/widget_util.h"
-#include "util/string_util.h"
 #include "qt_common/custom_widgets/scaled_table_view.h"
 #include "qt_common/utils/qt_util.h"
+
+#include "constants.h"
 #include "settings/settings.h"
+#include "util/string_util.h"
+#include "views/widget_util.h"
 
 TableItemDelegate::TableItemDelegate(QObject* parent)
     : QAbstractItemDelegate(parent)
 {
 }
 
-TableItemDelegate::TableItemDelegate(ScaledTableView* table_view, QObject* parent)
+TableItemDelegate::TableItemDelegate(QTableView* table_view, QObject* parent)
     : QAbstractItemDelegate(parent)
     , table_view_{table_view}
 {
@@ -105,3 +107,4 @@ void TableItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
         painter->drawText(option.rect, Qt::AlignRight | Qt::AlignVCenter, index.data().toString());
     }
 }
+

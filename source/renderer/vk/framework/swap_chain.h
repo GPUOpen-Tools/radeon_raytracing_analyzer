@@ -91,7 +91,7 @@ namespace rra
             /// @param [in] render_pass_hint The type of the render pass requested.
             ///
             /// @returns The render pass handle.
-            VkRenderPass GetRenderPass(RenderPassHint render_pass_hint);
+            VkRenderPass GetRenderPass(RenderPassHint render_pass_hint) const;
 
             /// @brief Get a handle to the frame buffer associated with a render pass.
             ///
@@ -221,3 +221,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_SWAP_CHAIN_H_
+

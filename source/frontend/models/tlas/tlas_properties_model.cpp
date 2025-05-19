@@ -7,8 +7,8 @@
 
 #include "models/tlas/tlas_properties_model.h"
 
-#include "public/rra_bvh.h"
 #include "public/rra_blas.h"
+#include "public/rra_bvh.h"
 #include "public/rra_tlas.h"
 
 #include "util/string_util.h"
@@ -126,3 +126,4 @@ namespace rra
     }
 
 }  // namespace rra
+

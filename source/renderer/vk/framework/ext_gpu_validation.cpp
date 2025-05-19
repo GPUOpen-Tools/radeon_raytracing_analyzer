@@ -7,9 +7,9 @@
 
 #include "ext_gpu_validation.h"
 
-#include "public/rra_print.h"
+#include "volk/volk.h"
 
-#include <volk/volk.h>
+#include "public/rra_print.h"
 
 namespace rra
 {
@@ -43,3 +43,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

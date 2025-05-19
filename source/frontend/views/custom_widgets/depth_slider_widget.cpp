@@ -5,10 +5,10 @@
 /// \brief  Implementation of a depth slider widget.
 //=============================================================================
 
-#include "depth_slider_widget.h"
+#include "views/custom_widgets/depth_slider_widget.h"
 
-#include <QPainter>
 #include <QMouseEvent>
+#include <QPainter>
 
 static const float kSegmentBorder = 2.0f;  ///< The border around each segment, in pixels.
 
@@ -137,3 +137,4 @@ void DepthSliderWidget::paintEvent(QPaintEvent* event)
         x_offset += segment_width;
     }
 }
+

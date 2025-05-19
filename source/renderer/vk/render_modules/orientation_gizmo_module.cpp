@@ -5,13 +5,15 @@
 /// @brief  Implementation for the transform gizmo render module.
 //=============================================================================
 
+#include "vk/render_modules/orientation_gizmo_module.h"
+
 #include <vector>
 
 #include <QCoreApplication>
 
-#include "public/rra_assert.h"
 #include "public/orientation_gizmo.h"
-#include "orientation_gizmo_module.h"
+#include "public/rra_assert.h"
+
 #include "vk/vk_graphics_context.h"
 
 namespace rra
@@ -538,3 +540,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

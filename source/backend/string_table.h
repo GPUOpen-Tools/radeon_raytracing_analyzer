@@ -8,13 +8,14 @@
 #ifndef RRA_BACKEND_STRING_TABLE_H_
 #define RRA_BACKEND_STRING_TABLE_H_
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
+
+#include "rdf/rdf/inc/amdrdf.h"
 
 #include "public/rra_error.h"
 
-#include "rdf/rdf/inc/amdrdf.h"
 namespace rra
 {
     class StringTables
@@ -91,3 +92,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_STRING_TABLE_H_
+

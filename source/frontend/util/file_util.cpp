@@ -8,12 +8,12 @@
 #include "util/file_util.h"
 
 #ifdef _WIN32
-#include <Windows.h>
 #include <Shlobj.h>
+#include <Windows.h>
 #else
-#include <unistd.h>
-#include <sys/stat.h>
 #include <pwd.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "public/linux/safe_crt.h"
 #endif
@@ -60,3 +60,4 @@ QString file_util::GetFileLocation()
 
     return file_location;
 }
+

@@ -5,16 +5,17 @@
 /// @brief  Implementation for Vulkan debug extension utility functions.
 //=============================================================================
 
+#include <string.h>
 #include <cassert>
 #include <mutex>
-#include <string.h>
 
 #ifndef _WIN32
-#include <public/linux/safe_crt.h>
+#include "public/linux/safe_crt.h"
 #endif
 
 #include "public/rra_print.h"
-#include "ext_debug_utils.h"
+
+#include "vk/framework/ext_debug_utils.h"
 
 namespace rra
 {
@@ -52,23 +53,17 @@ namespace rra
         {
             assert(handle != 0);
 
-            size_t size     = strlen(name);
-            char*  uni_name = (char*)malloc(size + 1);  // Yes, this will cause leaks!
-            if (uni_name)
-            {
-                strcpy_s(uni_name, size + 1, name);
-            }
-
-            VkDebugUtilsObjectNameInfoEXT name_info = {};
-            name_info.sType                         = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
-            name_info.pNext                         = nullptr;
-            name_info.objectType                    = object_type;
-            name_info.objectHandle                  = handle;
-            name_info.pObjectName                   = uni_name;
-
-            if (vkSetDebugUtilsObjectName != nullptr)
+            if (vkSetDebugUtilsObjectName && handle && name)
             {
                 std::unique_lock<std::mutex> lock(object_name_mutex);
+
+                VkDebugUtilsObjectNameInfoEXT name_info = {};
+                name_info.sType                         = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+                name_info.pNext                         = nullptr;
+                name_info.objectType                    = object_type;
+                name_info.objectHandle                  = handle;
+                name_info.pObjectName                   = name;
+
                 vkSetDebugUtilsObjectName(device, &name_info);
             }
         }
@@ -100,3 +95,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

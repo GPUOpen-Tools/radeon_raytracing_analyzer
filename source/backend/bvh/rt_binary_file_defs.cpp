@@ -5,7 +5,7 @@
 /// @brief  Implementation of the binary file definitions class.
 //=============================================================================
 
-#include "rt_binary_file_defs.h"
+#include "bvh/rt_binary_file_defs.h"
 
 #include <iostream>
 #include <vector>
@@ -104,3 +104,4 @@ namespace rta
         return RayTracingBinaryVersion(0, 0);
     }
 }  // namespace rta
+

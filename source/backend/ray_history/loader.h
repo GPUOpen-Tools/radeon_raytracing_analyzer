@@ -8,11 +8,12 @@
 #ifndef RRA_BACKEND_RAY_HISTORY_LOADER_H_
 #define RRA_BACKEND_RAY_HISTORY_LOADER_H_
 
-#include "counter.h"
-#include "raytracing_counter.h"
+#include <vector>
 
 #include <rdf/rdf/inc/amdrdf.h>
-#include <vector>
+
+#include "ray_history/counter.h"
+#include "ray_history/raytracing_counter.h"
 
 namespace rta
 {
@@ -67,3 +68,4 @@ namespace rta
 
 }  // namespace rta
 #endif
+

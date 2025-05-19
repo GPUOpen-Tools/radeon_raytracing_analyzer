@@ -58,6 +58,18 @@ namespace rra
         QSortFilterProxyModel::sort(column, order);
     }
 
+    QVariant BlasGeometriesProxyModel::data(const QModelIndex& index, int role) const
+    {
+        if (index.column() == kBlasGeometriesColumnIndex)
+        {
+            return index.row();
+        }
+        else
+        {
+            return TableProxyModel::data(index, role);
+        }
+    }
+
     bool BlasGeometriesProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
     {
         int left_column  = left.column();
@@ -90,3 +102,4 @@ namespace rra
         return QSortFilterProxyModel::lessThan(left, right);
     }
 }  // namespace rra
+

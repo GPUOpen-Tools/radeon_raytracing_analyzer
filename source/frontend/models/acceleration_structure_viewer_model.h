@@ -15,14 +15,14 @@
 #include "qt_common/custom_widgets/scaled_tree_view.h"
 #include "qt_common/utils/model_view_mapper.h"
 
-#include "models/acceleration_structure_tree_view_model.h"
+#include "public/camera.h"
+#include "public/render_state_adapter.h"
+#include "public/renderer_interface.h"
+
 #include "models/acceleration_structure_tree_view_item_delegate.h"
+#include "models/acceleration_structure_tree_view_model.h"
 #include "models/scene_collection_model.h"
 #include "models/tree_view_proxy_model.h"
-
-#include "public/render_state_adapter.h"
-#include "public/camera.h"
-#include "public/renderer_interface.h"
 
 namespace rra
 {
@@ -356,3 +356,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_VIEWER_MODEL_H_
+

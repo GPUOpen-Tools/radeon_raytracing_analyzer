@@ -9,6 +9,7 @@
 #define RRA_MODELS_BLAS_BLAS_PROPERTIES_MODEL_H_
 
 #include <QVariant>
+
 #include "qt_common/utils/model_view_mapper.h"
 
 namespace rra
@@ -69,3 +70,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_PROPERTIES_MODEL_H_
+

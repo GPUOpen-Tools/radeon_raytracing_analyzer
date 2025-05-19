@@ -13,8 +13,9 @@
 #include <mutex>
 #include <unordered_set>
 
-#include "rra_ray_history.h"
-#include <ray_history/ray_history.h>
+#include "public/rra_ray_history.h"
+
+#include "ray_history/ray_history.h"
 
 /// @brief A class to load the ray history data.
 class RraAsyncRayHistoryLoader
@@ -36,7 +37,7 @@ public:
 
     /// @brief Get the counter info of the dispatch.
     /// @return The counter info.
-    GpuRt::CounterInfo GetCounterInfo();
+    GpuRt::CounterInfo GetCounterInfo() const;
 
     /// @brief Get the indexed dispatch data.
     /// @return The dispatch data.
@@ -140,3 +141,4 @@ private:
 };
 
 #endif
+

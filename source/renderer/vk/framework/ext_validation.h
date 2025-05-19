@@ -8,8 +8,8 @@
 #ifndef RRA_RENDERER_VK_FRAMEWORK_EXT_VALIDATION_H_
 #define RRA_RENDERER_VK_FRAMEWORK_EXT_VALIDATION_H_
 
-#include "instance_properties.h"
-#include "device_properties.h"
+#include "vk/framework/device_properties.h"
+#include "vk/framework/instance_properties.h"
 
 namespace rra
 {
@@ -40,3 +40,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_EXT_VALIDATION_H_
+

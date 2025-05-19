@@ -4,7 +4,7 @@ The RAY windows
 These panes allow dispatches and rays to be visualized.
 
 The Dispatches Tab
----------------
+------------------
 
 The main ray dispatches pane allows you to see more information about the selected dispatch,
 and select individual dispatch coordinates for further inspection.
@@ -105,12 +105,26 @@ The Inspector Tab
 
 The screen layout is similar to the TLAS and BLAS viewer panes, and is split into 3 areas.
 
+The left section
+~~~~~~~~~~~~~~~~
+
 The left section shows a summary of the currently selected dispatch coordinate from the Dispatches tab:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: media/ray/ray_inspector_2.png
 
-In the top-left is the **Ray tree**. The ray index provides the order in which the rays were cast in the
+At the top, to the right of the dispatch and coordinates summary are 2 buttons, which look like **<** and **>**. These
+are used to inspect the previous and next rays, respectively, that were shown in the **Dispatches coordinates** table
+from the **Dispatches** tab. The next and previous rays will respect the current sort order of the table, and any
+selection rectangle that was chosen.
+
+Previously, a typical workflow would be to sort the dispatch table in the **Dispatches** pane by **traversal loop count**,
+and the table entry with the highest value would be selected for viewing in the ray inspector pane. The user would then
+navigate back to the **Dispatches** pane, select the next highest value for inspection, and so on. This can be tedious.
+
+Now, the table can be set up with the desired sorting, and a single ray selected. The table can be navigated using the
+previous and next ray buttons.
+
+Next is the **Ray tree**. The ray index provides the order in which the rays were cast in the
 application's shaders; index 0 will be the first ray generated. The rays that are shifted to the right are child rays,
 these rays were likely shot/invoked directly from a closest-hit shader which was invoked by the parent ray.
 
@@ -123,8 +137,10 @@ the box icon to the right of the Selected ray header will focus ray in the 3D vi
 The Ray result section shows the distance of the accept hit as well as the instance index, geometry index, and primitive
 index of the hit triangle. These fields will be blank if the ray misses.
 
+The center section
+~~~~~~~~~~~~~~~~~~
+
 The center section shows a rendering of the scene:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: media/ray/ray_inspector_3.jpg
 
@@ -141,8 +157,10 @@ view to only show instances which are included by the mask. Unlike in the TLAS t
 read-only in the Ray tab. The rays with an instance filter mask of 0 will be colored red (by default) to indicate
 that the ray will have no chance of invoking a hit shader.
 
+The right section
+~~~~~~~~~~~~~~~~~
+
 The right section allows control over the rendering and camera:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: media/ray/ray_inspector_4.png
 

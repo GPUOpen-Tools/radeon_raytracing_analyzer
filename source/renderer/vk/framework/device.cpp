@@ -5,26 +5,25 @@
 /// @brief  Implementation for the Vulkan device object.
 //=============================================================================
 
-#include <cassert>
-#include <string>
-#include <stdexcept>
 #include <string.h>
+#include <cassert>
+#include <stdexcept>
+#include <string>
 
-#include <volk/volk.h>
+#include "volk/volk.h"
 
 #define VMA_IMPLEMENTATION
 
-#include "device.h"
-#include "instance.h"
-#include "instance_properties.h"
-#include "device_properties.h"
-#include "ext_debug_utils.h"
-#include "ext_validation.h"
-#include "ext_gpu_validation.h"
-
-#include "../util_vulkan.h"
-
 #include "public/rra_print.h"
+
+#include "vk/framework/device.h"
+#include "vk/framework/device_properties.h"
+#include "vk/framework/ext_debug_utils.h"
+#include "vk/framework/ext_gpu_validation.h"
+#include "vk/framework/ext_validation.h"
+#include "vk/framework/instance.h"
+#include "vk/framework/instance_properties.h"
+#include "vk/util_vulkan.h"
 
 namespace rra
 {
@@ -402,7 +401,7 @@ namespace rra
             instance_ = VK_NULL_HANDLE;
         }
 
-        void Device::GPUFlush()
+        void Device::GPUFlush() const
         {
             if (device_ != VK_NULL_HANDLE)
             {
@@ -410,7 +409,7 @@ namespace rra
             }
         }
 
-        void Device::FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, VkCommandPool pool, bool free)
+        void Device::FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, VkCommandPool pool, bool free) const
         {
             if (command_buffer == VK_NULL_HANDLE)
             {
@@ -471,7 +470,7 @@ namespace rra
 
             buffer_allocation_count_++;
 
-            if (result == VK_SUCCESS)
+            if (result == VK_SUCCESS && allocation != VK_NULL_HANDLE)
             {
                 // We will only run into this case during the initial loading. CheckResult will catch others during rendering.
                 WriteToBuffer(allocation, data, size);
@@ -520,7 +519,7 @@ namespace rra
             image_allocation_count_++;
         }
 
-        void Device::WriteToBuffer(const VmaAllocation& allocation, const void* data, VkDeviceSize size)
+        void Device::WriteToBuffer(const VmaAllocation& allocation, const void* data, VkDeviceSize size) const
         {
             if (data)
             {
@@ -537,7 +536,7 @@ namespace rra
             }
         }
 
-        void Device::ZeroOutBuffer(const VmaAllocation& allocation, VkDeviceSize size)
+        void Device::ZeroOutBuffer(const VmaAllocation& allocation, VkDeviceSize size) const
         {
             void*    mapped_data;
             VkResult result = vmaMapMemory(allocator_, allocation, &mapped_data);
@@ -550,7 +549,7 @@ namespace rra
             }
         }
 
-        void Device::ReadFromBuffer(const VmaAllocation& allocation, void* data, VkDeviceSize size)
+        void Device::ReadFromBuffer(const VmaAllocation& allocation, void* data, VkDeviceSize size) const
         {
             void*    mapped_data;
             VkResult result = vmaMapMemory(allocator_, allocation, &mapped_data);
@@ -594,7 +593,7 @@ namespace rra
             allocation = VK_NULL_HANDLE;
         }
 
-        std::vector<VkSampleCountFlagBits> Device::GetPossibleMSAASampleSettings()
+        std::vector<VkSampleCountFlagBits> Device::GetPossibleMSAASampleSettings() const
         {
             auto                  device_properties = GetPhysicalDeviceProperties();
             VkSampleCountFlags    max_counts = device_properties.limits.framebufferColorSampleCounts & device_properties.limits.framebufferDepthSampleCounts;
@@ -615,3 +614,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

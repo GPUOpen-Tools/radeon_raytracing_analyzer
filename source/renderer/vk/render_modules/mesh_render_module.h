@@ -8,16 +8,17 @@
 #ifndef RRA_RENDERER_VK_RENDER_MODULES_BLAS_MESH_RENDER_MODULE_H_
 #define RRA_RENDERER_VK_RENDER_MODULES_BLAS_MESH_RENDER_MODULE_H_
 
-#include "public/renderer_types.h"
-#include "../render_module.h"
-#include "../util_vulkan.h"
-#include "../buffer_guard.h"
-
 #include <stdint.h>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
-#include <volk/volk.h>
+#include "volk/volk.h"
+
+#include "public/renderer_types.h"
+
+#include "vk/buffer_guard.h"
+#include "vk/render_module.h"
+#include "vk/util_vulkan.h"
 
 namespace rra
 {
@@ -208,3 +209,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULES_BLAS_MESH_RENDER_MODULE_H_
+

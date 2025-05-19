@@ -42,3 +42,4 @@ protected:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_VERTICAL_BUTTON_WIDGET_H_
+

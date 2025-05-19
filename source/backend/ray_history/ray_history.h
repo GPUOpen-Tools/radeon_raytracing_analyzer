@@ -11,13 +11,13 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
-#include <vector>
 #include <unordered_set>
-
-#include "raytracing_counter.h"
-#include "counter.h"
+#include <vector>
 
 #include <rdf/rdf/inc/amdrdf.h>
+
+#include "ray_history/counter.h"
+#include "ray_history/raytracing_counter.h"
 
 namespace rta
 {
@@ -750,7 +750,7 @@ namespace rta
                 return data->nodePtr;
             }
 
-            return 0xFFFF'FFFF'FFFF'FFFF;
+            return UINT64_MAX;
         }
 
         operator bool() const
@@ -935,3 +935,4 @@ namespace rta
 }  // namespace rta
 
 #endif
+

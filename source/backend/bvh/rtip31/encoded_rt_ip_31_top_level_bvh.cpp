@@ -7,20 +7,21 @@
 //=============================================================================
 
 #include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
-#include "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
-#include "bvh/rtip31/primitive_node.h"
-#include "bvh/rtip31/internal_node.h"
-#include "bvh/rtip31/common.h"
 
-#include <iostream>
-#include <vector>
 #include <cassert>
 #include <deque>
+#include <iostream>
 #include <unordered_set>
+#include <vector>
 
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_error.h"
+
+#include "bvh/rtip31/common.h"
+#include "bvh/rtip31/internal_node.h"
+#include "bvh/rtip31/primitive_node.h"
+#include "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
 
 namespace rta
 {
@@ -481,3 +482,4 @@ namespace rta
     }
 
 }  // namespace rta
+

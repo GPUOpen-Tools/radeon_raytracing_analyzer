@@ -8,7 +8,7 @@
 #ifndef RRA_RENDERER_VK_ORIENTATION_GIZMO_MESH_H_
 #define RRA_RENDERER_VK_ORIENTATION_GIZMO_MESH_H_
 
-#include "mesh.h"
+#include "vk/mesh.h"
 
 namespace rra
 {
@@ -77,3 +77,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_ORIENTATION_GIZMO_MESH_H_
+

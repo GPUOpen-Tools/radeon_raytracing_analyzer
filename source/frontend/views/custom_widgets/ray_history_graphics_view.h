@@ -9,6 +9,7 @@
 #define RRA_VIEWS_CUSTOM_WIDGETS_RAY_HISTORY_GRAPHICS_VIEW_H_
 
 #include <functional>
+
 #include <QGraphicsView>
 
 /// @brief Information about currently selected pixel of heatmap image.
@@ -55,6 +56,11 @@ public:
     ///
     /// @param image The heatmap image.
     void SetHeatmapImage(const QImage& image);
+
+    /// @brief Set the grayscale image to be displayed.
+    ///
+    /// @param grayscale_image The grayscale image.
+    void SetGrayscaleImage(const QImage& image);
 
     /// @brief Clear the box select that the user drew.
     void ClearBoxSelect();
@@ -163,3 +169,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_RAY_HISTORY_GRAPHICS_VIEW_H_
+

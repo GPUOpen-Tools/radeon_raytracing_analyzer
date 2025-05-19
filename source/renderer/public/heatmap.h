@@ -8,12 +8,14 @@
 #ifndef RRA_HEATMAP_H_
 #define RRA_HEATMAP_H_
 
-#include "glm/glm/glm.hpp"
-#include <vector>
 #include <functional>
 #include <map>
 #include <string>
-#include <volk/volk.h>
+#include <vector>
+
+#include "glm/glm/glm.hpp"
+
+#include "volk/volk.h"
 
 #include "include_vma.h"
 
@@ -84,3 +86,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

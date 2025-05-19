@@ -37,3 +37,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_DISPATCH_LEGEND_H_
+

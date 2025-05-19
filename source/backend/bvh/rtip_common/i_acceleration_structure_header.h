@@ -10,12 +10,12 @@
 
 #include <assert.h>
 
-#include "bvh/dxr_definitions.h"
-#include "bvh/rtip_common/i_acceleration_structure_post_build_info.h"
-#include "bvh/rt_binary_file_defs.h"
-#include "../rtip_common/gpurt_accel_struct.h"
-
 #include "public/rra_macro.h"
+
+#include "bvh/dxr_definitions.h"
+#include "bvh/rt_binary_file_defs.h"
+#include "bvh/rtip_common/gpurt_accel_struct.h"
+#include "bvh/rtip_common/i_acceleration_structure_post_build_info.h"
 
 namespace rta
 {
@@ -260,3 +260,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_I_ACCELERATION_STRUCTURE_HEADER_H_
+

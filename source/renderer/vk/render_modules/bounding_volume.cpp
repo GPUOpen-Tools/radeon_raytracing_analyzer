@@ -5,7 +5,8 @@
 /// @brief  Implementation for the BBox module.
 //=============================================================================
 
-#include "bounding_volume.h"
+#include "vk/render_modules/bounding_volume.h"
+
 #include "glm/glm/gtc/matrix_transform.hpp"
 
 namespace rra
@@ -422,3 +423,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

@@ -5,12 +5,12 @@
 /// @brief  Implementation of miscellaneous utility functions.
 //=============================================================================
 
-#include "utils.h"
+#include "bvh/utils.h"
 
-#include <array>
-#include <cstring>  // --> Linux, memcpy
 #include <immintrin.h>
-#include <cmath>  // --> isnan, isinf, ceil
+#include <array>
+#include <cmath>    // --> isnan, isinf, ceil
+#include <cstring>  // --> Linux, memcpy
 
 namespace rta
 {
@@ -43,3 +43,4 @@ namespace rta
     }
 
 }  // namespace rta
+

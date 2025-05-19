@@ -7,13 +7,13 @@
 
 #include "models/blas/blas_properties_model.h"
 
-#include "public/rra_bvh.h"
 #include "public/rra_blas.h"
+#include "public/rra_bvh.h"
 #include "public/rra_tlas.h"
 
 #include "constants.h"
-#include "util/string_util.h"
 #include "settings/settings.h"
+#include "util/string_util.h"
 
 namespace rra
 {
@@ -169,3 +169,4 @@ namespace rra
     }
 
 }  // namespace rra
+

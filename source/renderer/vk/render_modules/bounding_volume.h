@@ -8,12 +8,12 @@
 #ifndef RRA_RENDERER_VK_RENDER_MODULES_BOUNDING_VOLUME_H_
 #define RRA_RENDERER_VK_RENDER_MODULES_BOUNDING_VOLUME_H_
 
-#include "../render_module.h"
 #include "glm/glm/glm.hpp"
 
-#include "../bounding_volume_mesh.h"
-#include "../vk_graphics_context.h"
-#include "../buffer_guard.h"
+#include "vk/bounding_volume_mesh.h"
+#include "vk/buffer_guard.h"
+#include "vk/render_module.h"
+#include "vk/vk_graphics_context.h"
 
 namespace rra
 {
@@ -92,3 +92,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

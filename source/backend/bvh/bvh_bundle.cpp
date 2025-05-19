@@ -14,16 +14,17 @@
 #include <unordered_set>
 
 #include "rdf/rdf/inc/amdrdf.h"
-#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
-#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
-#include "bvh/ibvh.h"
-#include "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
-#include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
 
 #include "public/rra_assert.h"
 #include "public/rra_error.h"
+#include "public/rra_ray_history.h"
 #include "public/rra_rtip_info.h"
-#include <public/rra_ray_history.h>
+
+#include "bvh/ibvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
+#include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
 
 namespace rta
 {
@@ -268,17 +269,19 @@ namespace rta
                 {
                     bottom_level_bvhs.emplace_back(
                         LoadRawAccelStrucAtChunkFileIndex(chunk_file, ci, rdf_header, bvh_identifier, import_option, std::make_unique<Blas>()));
-                    if (bottom_level_bvhs.back() == nullptr)
+                    if (bottom_level_bvhs.back() != nullptr)
                     {
-                        *io_error_code = kRraErrorMalformedData;
-                        return nullptr;
+                        // Add a mapping of GPU address to index.
+                        auto        index   = bottom_level_bvhs.size() - 1;
+                        const auto& as      = bottom_level_bvhs[index];
+                        auto        address = as->GetVirtualAddress() + as->GetHeaderOffset();
+                        blas_map.insert(std::make_pair(address, index));
                     }
-
-                    // Add a mapping of GPU address to index.
-                    auto        index   = bottom_level_bvhs.size() - 1;
-                    const auto& as      = bottom_level_bvhs[index];
-                    auto        address = as->GetVirtualAddress() + as->GetHeaderOffset();
-                    blas_map.insert(std::make_pair(address, index));
+                    else
+                    {
+                        // In case of error, remove the invalid BVH.
+                        bottom_level_bvhs.pop_back();
+                    }
                 }
                 else
                 {
@@ -367,12 +370,12 @@ namespace rta
         else
         {
             *io_error_code = kRraErrorNoASChunks;
-            return RayTracingIpLevel::_None;
+            return RayTracingIpLevel::RtIpNone;
         }
 
         const auto bvh_chunk_count = chunk_file.GetChunkCount(bvh_identifier);
 
-        uint32_t highest_rtip_level{(uint32_t)RayTracingIpLevel::_None};
+        uint32_t highest_rtip_level{(uint32_t)RayTracingIpLevel::RtIpNone};
         for (auto ci = 0; ci < bvh_chunk_count; ++ci)
         {
             uint64_t header_size = chunk_file.GetChunkHeaderSize(bvh_identifier, ci);
@@ -398,7 +401,7 @@ namespace rta
                 if (offset >= static_cast<uint64_t>(data_size))
                 {
                     *io_error_code = kRraErrorMalformedData;
-                    return RayTracingIpLevel::_None;
+                    return RayTracingIpLevel::RtIpNone;
                 }
                 uint32_t current_rtip_level = *reinterpret_cast<uint32_t*>((char*)buffer.data() + offset);
                 if (current_rtip_level > highest_rtip_level && current_rtip_level < (uint32_t)RayTracingIpLevel::RtIpCount)
@@ -408,7 +411,7 @@ namespace rta
             }
         }
 
-        if (highest_rtip_level == (uint32_t)RayTracingIpLevel::_None)
+        if (highest_rtip_level == (uint32_t)RayTracingIpLevel::RtIpNone)
         {
             *io_error_code = kRraErrorNoASChunks;
         }
@@ -476,3 +479,4 @@ namespace rta
     }
 
 }  // namespace rta
+

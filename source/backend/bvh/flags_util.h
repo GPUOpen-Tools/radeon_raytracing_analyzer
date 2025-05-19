@@ -13,8 +13,8 @@
 #pragma warning(disable : 4505) /* disable: C4505: Removing unused local function */
 #endif
 
-#include <numeric>
 #include <cstdint>
+#include <numeric>
 #include <type_traits>
 
 // Contains all flag, bitfield and bit magic helpers that do not depend on specific types.
@@ -140,3 +140,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_FLAGS_UTIL_H_
+

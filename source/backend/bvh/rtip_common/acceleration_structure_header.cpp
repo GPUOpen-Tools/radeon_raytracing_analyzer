@@ -5,7 +5,7 @@
 /// @brief  Implementation of the RT IP 1.1 acceleration structure header class.
 //=============================================================================
 
-#include "acceleration_structure_header.h"
+#include "bvh/rtip_common/acceleration_structure_header.h"
 
 #include "bvh/dxr_type_conversion.h"
 #include "bvh/utils.h"
@@ -345,3 +345,4 @@ namespace rta
     }
 
 }  // namespace rta
+

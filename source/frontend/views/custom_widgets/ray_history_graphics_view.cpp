@@ -5,14 +5,15 @@
 /// @brief  Implementation of a widget that implements a custom graphics view.
 //=============================================================================
 
-#include "ray_history_graphics_view.h"
+#include "views/custom_widgets/ray_history_graphics_view.h"
 
 #include <algorithm>
-#include <QMouseEvent>
-#include <QScrollBar>
+
 #include <QGraphicsLineItem>
 #include <QGuiApplication>
+#include <QMouseEvent>
 #include <QScreen>
+#include <QScrollBar>
 
 constexpr float viewer_width{1000.0f};
 constexpr float viewer_height{1000.0f};
@@ -48,6 +49,7 @@ RayHistoryGraphicsView::RayHistoryGraphicsView(QWidget* parent)
 
 RayHistoryGraphicsView::~RayHistoryGraphicsView()
 {
+    delete graphics_scene_;
 }
 
 void RayHistoryGraphicsView::SetBoxSelectCallback(std::function<void(uint32_t min_x, uint32_t min_y, uint32_t max_x, uint32_t max_y)> callback)
@@ -70,12 +72,15 @@ void RayHistoryGraphicsView::SetHeatmapImage(const QImage& image)
     heatmap_color_pixmap_.convertFromImage(image);
     heatmap_color_->setPixmap(heatmap_color_pixmap_);
 
-    heatmap_grayscale_pixmap_.convertFromImage(image.convertToFormat(QImage::Format_Grayscale8));
-    heatmap_grayscale_->setPixmap(heatmap_grayscale_pixmap_);
-
     graphics_scene_->setSceneRect(heatmap_grayscale_pixmap_.rect());
 
     CropHeatmap();
+}
+
+void RayHistoryGraphicsView::SetGrayscaleImage(const QImage& image)
+{
+    heatmap_grayscale_pixmap_.convertFromImage(image);
+    heatmap_grayscale_->setPixmap(heatmap_grayscale_pixmap_);
 }
 
 void RayHistoryGraphicsView::ClearBoxSelect()
@@ -431,3 +436,4 @@ void RayHistoryGraphicsView::HideSelectedPixelIcon()
     pixel_selected_info_.selected = false;
     UpdateSelectedPixelIcon();
 }
+

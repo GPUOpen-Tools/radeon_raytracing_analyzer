@@ -9,9 +9,9 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
 #include "public/linux/safe_crt.h"
 #include "public/rra_macro.h"
@@ -154,3 +154,4 @@ errno_t strcat_s(char* destination, size_t size, const char* source)
 }
 
 #endif  // !_WIN32
+

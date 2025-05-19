@@ -8,15 +8,15 @@
 #ifndef RRA_SETTINGS_SETTINGS_H_
 #define RRA_SETTINGS_SETTINGS_H_
 
-#include <QVector>
 #include <QMap>
+#include <QVector>
 
 #include "qt_common/utils/color_palette.h"
 #include "qt_common/utils/common_definitions.h"
 
-#include "constants.h"
 #include "public/renderer_types.h"
 
+#include "constants.h"
 #include "managers/pane_manager.h"
 
 /// @brief A struct for a setting key-value pair.
@@ -773,3 +773,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_SETTINGS_SETTINGS_H_
+

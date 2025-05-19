@@ -10,8 +10,6 @@
 
 #include "models/table_item_delegate.h"
 
-class ScaledTableView;
-
 class TrianglesTableItemDelegate : public TableItemDelegate
 {
     Q_OBJECT
@@ -25,7 +23,7 @@ public:
     ///
     /// @param [in] parent The parent object.
     /// @param [in] table_view The table view that contains this widget.
-    TrianglesTableItemDelegate(ScaledTableView* table_view, QObject* parent = 0);
+    TrianglesTableItemDelegate(QTableView* table_view, QObject* parent = 0);
 
     /// @brief Destructor.
     virtual ~TrianglesTableItemDelegate();
@@ -52,3 +50,4 @@ public:
 };
 
 #endif  // RRA_MODELS_TRIANGLES_TABLE_ITEM_DELEGATE_H_
+

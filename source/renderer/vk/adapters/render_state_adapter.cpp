@@ -5,18 +5,18 @@
 /// @brief  Implementation for the Render State Adapter type.
 //=============================================================================
 
-#include "public/render_state_adapter.h"
-#include "public/shared.h"
-#include "public/renderer_types.h"
-
-#include "../renderer_vulkan.h"
-#include "../render_modules/mesh_render_module.h"
-#include "../render_modules/bounding_volume.h"
-#include "../render_modules/traversal.h"
-#include "../render_modules/selection_module.h"
-#include "../render_modules/ray_inspector_overlay.h"
-
 #include <algorithm>
+
+#include "public/render_state_adapter.h"
+#include "public/renderer_types.h"
+#include "public/shared.h"
+
+#include "vk/render_modules/bounding_volume.h"
+#include "vk/render_modules/mesh_render_module.h"
+#include "vk/render_modules/ray_inspector_overlay.h"
+#include "vk/render_modules/selection_module.h"
+#include "vk/render_modules/traversal.h"
+#include "vk/renderer_vulkan.h"
 
 namespace rra
 {
@@ -517,7 +517,7 @@ namespace rra
             UpdateRayParameters();
         }
 
-        bool RenderStateAdapter::IsUsingNavi3()
+        bool RenderStateAdapter::IsUsingNavi3() const
         {
             return using_navi_3_;
         }
@@ -581,3 +581,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

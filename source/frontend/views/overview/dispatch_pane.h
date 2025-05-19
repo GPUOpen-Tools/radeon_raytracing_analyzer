@@ -8,15 +8,17 @@
 #ifndef RRA_VIEWS_OVERVIEW_DISPATCH_PANE_H_
 #define RRA_VIEWS_OVERVIEW_DISPATCH_PANE_H_
 
-#include "ui_dispatch_pane.h"
-
 #include <unordered_map>
-#include <QWidget>
-#include <QTimer>
 
-#include "qt_common/custom_widgets/colored_legend_scene.h"
+#include <QTimer>
+#include <QWidget>
+
 #include "qt_common/custom_widgets/colored_legend_graphics_view.h"
-#include <public/rra_ray_history.h>
+#include "qt_common/custom_widgets/colored_legend_scene.h"
+
+#include "public/rra_ray_history.h"
+
+#include "ui_dispatch_pane.h"
 
 class SummaryPane;
 
@@ -97,7 +99,7 @@ private slots:
     /// @brief Switch to the ray history pane.
     ///
     /// This is called when the user clicks on a dispatch from the overview pane.
-    void NavigateToRayHistory();
+    void NavigateToRayHistory() const;
 
 private:
     /// @brief Configure the dispatch pane for ray tracing pipeline.
@@ -131,3 +133,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_DISPATCH_PANE_H_
+

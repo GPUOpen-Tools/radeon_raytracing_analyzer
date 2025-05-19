@@ -8,10 +8,10 @@
 #ifndef RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_ITEM_DELEGATE_H_
 #define RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_ITEM_DELEGATE_H_
 
-#include <QStyledItemDelegate>
 #include <QString>
+#include <QStyledItemDelegate>
 
-#include "scene.h"
+#include "models/scene.h"
 
 namespace rra
 {
@@ -64,3 +64,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

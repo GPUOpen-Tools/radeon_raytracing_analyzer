@@ -5,9 +5,11 @@
 /// @brief  Implementation of the math utilities.
 //=============================================================================
 
-#include "bvh/dxr_definitions.h"
-#include "glm/glm/glm.hpp"
 #include "math_util.h"
+
+#include "glm/glm/glm.hpp"
+
+#include "bvh/dxr_definitions.h"
 #include "rra_bvh_impl.h"
 
 namespace rra
@@ -74,3 +76,4 @@ namespace rra
         }
     }  // namespace math_util
 }  // namespace rra
+

@@ -14,8 +14,8 @@
 #include <QObject>
 #include <QVector>
 
-#include "public/rra_error.h"
 #include "public/renderer_types.h"
+#include "public/rra_error.h"
 
 Q_DECLARE_METATYPE(RraErrorCode);
 
@@ -158,3 +158,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_TRACE_MANAGER_H_
+

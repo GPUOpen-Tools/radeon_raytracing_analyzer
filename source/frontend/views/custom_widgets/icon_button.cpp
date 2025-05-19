@@ -5,15 +5,14 @@
 /// \brief  Implementation of a QPushButton with vector based icons for various states.
 //=============================================================================
 
-#include "icon_button.h"
+#include "views/custom_widgets/icon_button.h"
 
-#include <QPaintEvent>
-#include <QMouseEvent>
-#include <QPushButton>
 #include <QIcon>
-#include <QStylePainter>
-#include <QStylePainter>
+#include <QMouseEvent>
+#include <QPaintEvent>
+#include <QPushButton>
 #include <QStyleOptionButton>
+#include <QStylePainter>
 
 RraIconButton::RraIconButton(QWidget* parent)
     : QPushButton(parent)
@@ -85,3 +84,4 @@ void RraIconButton::leaveEvent(QEvent* event)
     QPushButton::leaveEvent(event);
     setAttribute(Qt::WA_UnderMouse, false);
 }
+

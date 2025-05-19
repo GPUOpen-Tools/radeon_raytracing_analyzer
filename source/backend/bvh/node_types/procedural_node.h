@@ -81,3 +81,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_NODE_TYPES_PROCEDURAL_NODE_H_
+

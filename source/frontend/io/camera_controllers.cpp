@@ -5,11 +5,11 @@
 /// @brief  Definitions to list camera controllers.
 //=============================================================================
 
-#include "camera_controllers.h"
+#include "io/camera_controllers.h"
 
-#include "cad_camera_controller.h"
-#include "fps_camera_controller.h"
-#include "axis_free_camera_controller.h"
+#include "io/axis_free_camera_controller.h"
+#include "io/cad_camera_controller.h"
+#include "io/fps_camera_controller.h"
 
 namespace rra
 {
@@ -53,3 +53,4 @@ namespace rra
         return controllers_[controller_name];
     }
 }  // namespace rra
+

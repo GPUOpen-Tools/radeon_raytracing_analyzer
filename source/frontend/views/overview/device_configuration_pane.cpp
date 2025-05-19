@@ -115,3 +115,4 @@ void DeviceConfigurationPane::Reset()
 {
     model_->ResetModelValues();
 }
+

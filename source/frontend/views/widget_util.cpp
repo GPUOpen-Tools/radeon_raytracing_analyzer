@@ -14,8 +14,8 @@
 #include "qt_common/utils/qt_util.h"
 
 #include "constants.h"
-#include "views/widget_util.h"
 #include "settings/settings.h"
+#include "views/widget_util.h"
 
 namespace rra
 {
@@ -120,3 +120,4 @@ namespace rra
     }
 
 }  // namespace rra
+

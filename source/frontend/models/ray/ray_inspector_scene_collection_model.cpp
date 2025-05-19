@@ -9,15 +9,14 @@
 
 #include "qt_common/utils/qt_util.h"
 
-#include "public/rra_assert.h"
-#include "public/rra_error.h"
-
-#include "public/rra_tlas.h"
-#include "public/rra_blas.h"
-#include "public/renderer_interface.h"
-#include "public/intersect.h"
-
 #include "glm/glm/gtx/intersect.hpp"
+
+#include "public/intersect.h"
+#include "public/renderer_interface.h"
+#include "public/rra_assert.h"
+#include "public/rra_blas.h"
+#include "public/rra_error.h"
+#include "public/rra_tlas.h"
 
 namespace rra
 {
@@ -127,7 +126,8 @@ namespace rra
 
             // Get the blas index for this transform;
             uint64_t blas_index;
-            RraTlasGetBlasIndexFromInstanceNode(bvh_index, hit_instances[i], &blas_index);
+            RraErrorCode error_code = RraTlasGetBlasIndexFromInstanceNode(bvh_index, hit_instances[i], &blas_index);
+            RRA_ASSERT(error_code == kRraOk);
 
             // Transform the ray into the blas space.
             glm::vec3 transformed_origin    = glm::transpose(transform) * glm::vec4(origin, 1.0f);
@@ -153,8 +153,10 @@ namespace rra
     bool RayInspectorSceneCollectionModel::GetFusedInstancesEnabled(uint64_t bvh_index) const
     {
         bool is_enabled = false;
-        RraTlasGetFusedInstancesEnabled(bvh_index, &is_enabled);
+        RraErrorCode error_code = RraTlasGetFusedInstancesEnabled(bvh_index, &is_enabled);
+        RRA_ASSERT(error_code == kRraOk);
         return is_enabled;
     }
 
 }  // namespace rra
+

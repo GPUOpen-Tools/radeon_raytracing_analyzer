@@ -10,8 +10,6 @@
 
 #include "models/table_item_delegate.h"
 
-class ScaledTableView;
-
 class GeometriesTableItemDelegate : public TableItemDelegate
 {
     Q_OBJECT
@@ -25,7 +23,7 @@ public:
     ///
     /// @param [in] parent The parent object.
     /// @param [in] table_view The table view that contains this widget.
-    GeometriesTableItemDelegate(ScaledTableView* table_view, QObject* parent = 0);
+    GeometriesTableItemDelegate(QTableView* table_view, QObject* parent = 0);
 
     /// @brief Destructor.
     virtual ~GeometriesTableItemDelegate();
@@ -44,3 +42,4 @@ public:
 };
 
 #endif  // RRA_MODELS_GEOMETRIES_TABLE_ITEM_DELEGATE_H_
+

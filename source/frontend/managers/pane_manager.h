@@ -9,6 +9,7 @@
 #define RRA_MANAGERS_PANE_MANAGER_H_
 
 #include <vector>
+
 #include <QObject>
 
 #include "views/base_pane.h"
@@ -270,3 +271,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_PANE_MANAGER_H_
+

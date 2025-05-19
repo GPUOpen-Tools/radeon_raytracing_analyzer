@@ -8,12 +8,15 @@
 #ifndef RRA_RENDERER_VK_GRAPHICS_CONTEXT_H_
 #define RRA_RENDERER_VK_GRAPHICS_CONTEXT_H_
 
-#include "framework/device.h"
-#include "public/renderer_interface.h"
-#include "public/renderer_types.h"
 #include <map>
 #include <memory>
+
 #include <QImage>
+
+#include "public/renderer_interface.h"
+#include "public/renderer_types.h"
+
+#include "vk/framework/device.h"
 
 namespace rra
 {
@@ -81,12 +84,12 @@ namespace rra
             /// @brief Check if the error window has been primed.
             ///
             /// @returns True if the error window has been primed.
-            bool IsErrorWindowPrimed();
+            bool IsErrorWindowPrimed() const;
 
             /// @brief Check if the context is healthy.
             ///
             /// @returns True if the context is healthy.
-            bool IsHealthy();
+            bool IsHealthy() const;
 
             /// @brief Get the initialization error message in the event of startup failure.
             ///
@@ -178,3 +181,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_GRAPHICS_CONTEXT_H_
+

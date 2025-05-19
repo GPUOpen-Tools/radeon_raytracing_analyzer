@@ -9,13 +9,15 @@
 
 #include "qt_common/utils/qt_util.h"
 
+#include "public/rra_rtip_info.h"
+
+#include "ui_triangle_group.h"
+
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
 #include "settings/settings.h"
 #include "views/widget_util.h"
-#include "ui_triangle_group.h"
-#include "public/rra_rtip_info.h"
 
 #undef min
 
@@ -165,6 +167,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
 BlasViewerPane::~BlasViewerPane()
 {
     delete flag_table_delegate_;
+    delete ui_;
 }
 
 void BlasViewerPane::OnTraceClose()
@@ -296,13 +299,22 @@ void BlasViewerPane::SelectLeafNode(const bool navigate_to_triangles_pane)
     rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
     if (scene)
     {
-        uint32_t node_id = scene->GetMostRecentSelectedNodeId();
+        uint32_t        node_id = scene->GetMostRecentSelectedNodeId();
+        rra::SceneNode* node    = scene->GetNodeById(node_id);
+
+        // If the node isn't visible or enabled (it's grayed out), then don't select anything.
+        if (node && !(node->IsEnabled() && node->IsVisible()))
+        {
+            return;
+        }
 
         // Select the selected triangle in the Triangles pane.
         emit rra::MessageManager::Get().TriangleViewerSelected(node_id);
 
-        rra::SceneNode* node = scene->GetNodeById(node_id);
-        UpdateTriangleSplitUI(scene, last_selected_as_id_, node->GetGeometryIndex(), node->GetPrimitiveIndex(), node_id);
+        if (node != nullptr)
+        {
+            UpdateTriangleSplitUI(scene, last_selected_as_id_, node->GetGeometryIndex(), node->GetPrimitiveIndex(), node_id);
+        }
 
         if (navigate_to_triangles_pane)
         {
@@ -386,7 +398,10 @@ void BlasViewerPane::SelectTriangle(uint32_t triangle_node_id)
         }
 
         rra::SceneNode* node = scene->GetNodeById(triangle_node_id);
-        UpdateTriangleSplitUI(scene, last_selected_as_id_, node->GetGeometryIndex(), node->GetPrimitiveIndex(), triangle_node_id);
+        if (node != nullptr)
+        {
+            UpdateTriangleSplitUI(scene, last_selected_as_id_, node->GetGeometryIndex(), node->GetPrimitiveIndex(), triangle_node_id);
+        }
     }
 }
 
@@ -431,3 +446,4 @@ void BlasViewerPane::OnColorThemeUpdated()
         ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
+

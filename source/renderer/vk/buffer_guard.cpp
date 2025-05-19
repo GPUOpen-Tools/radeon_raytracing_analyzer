@@ -5,7 +5,7 @@
 /// @brief  Implementation for the buffer safety helper.
 //=============================================================================
 
-#include "buffer_guard.h"
+#include "vk/buffer_guard.h"
 
 #include <algorithm>
 
@@ -71,3 +71,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

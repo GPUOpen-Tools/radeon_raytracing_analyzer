@@ -5,13 +5,14 @@
 /// @brief  Implementation for the traversal module.
 //=============================================================================
 
-#include "traversal.h"
-
-#include "vk/vk_graphics_context.h"
-#include "../framework/ext_debug_utils.h"
+#include "vk/render_modules/traversal.h"
 
 #include <algorithm>
+
 #include "public/rra_rtip_info.h"
+
+#include "vk/framework/ext_debug_utils.h"
+#include "vk/vk_graphics_context.h"
 
 namespace rra
 {
@@ -864,8 +865,14 @@ namespace rra
                                      0,
                                      nullptr);
 
-                top_level_volumes_guard_.SetCurrentBuffer(volume_buffer, volume_allocation);
-                top_level_volumes_staging_guard_.SetCurrentBuffer(volume_staging_buffer, volume_staging_allocation);
+                if (volume_allocation)
+                {
+                    top_level_volumes_guard_.SetCurrentBuffer(volume_buffer, volume_allocation);
+                }
+                if (volume_staging_allocation)
+                {
+                    top_level_volumes_staging_guard_.SetCurrentBuffer(volume_staging_buffer, volume_staging_allocation);
+                }
             }
 
             if (!traversal_tree.vertices.empty())
@@ -920,8 +927,14 @@ namespace rra
                                      0,
                                      nullptr);
 
-                top_level_vertices_guard_.SetCurrentBuffer(vertex_buffer, vertex_allocation);
-                top_level_vertices_staging_guard_.SetCurrentBuffer(triangle_staging_buffer, triangle_staging_allocation);
+                if (vertex_allocation)
+                {
+                    top_level_vertices_guard_.SetCurrentBuffer(vertex_buffer, vertex_allocation);
+                }
+                if (triangle_staging_allocation)
+                {
+                    top_level_vertices_staging_guard_.SetCurrentBuffer(triangle_staging_buffer, triangle_staging_allocation);
+                }
             }
 
             if (!traversal_tree.instances.empty())
@@ -981,8 +994,14 @@ namespace rra
                                      0,
                                      nullptr);
 
-                top_level_instances_guard_.SetCurrentBuffer(instance_buffer, instance_allocation);
-                top_level_instances_staging_guard_.SetCurrentBuffer(instance_staging_buffer, instance_staging_allocation);
+                if (instance_allocation)
+                {
+                    top_level_instances_guard_.SetCurrentBuffer(instance_buffer, instance_allocation);
+                }
+                if (instance_staging_allocation)
+                {
+                    top_level_instances_staging_guard_.SetCurrentBuffer(instance_staging_buffer, instance_staging_allocation);
+                }
             }
 
             traversal_descriptor_set_update_flags_.clear();
@@ -1007,10 +1026,11 @@ namespace rra
             max_traversal_count_setting_     = max_traversal_setting;
         }
 
-        bool TraversalRenderModule::IsTraversalCounterContinuousUpdateFunctionSet()
+        bool TraversalRenderModule::IsTraversalCounterContinuousUpdateFunctionSet() const
         {
             return traversal_counter_range_continuous_update_function_ != nullptr;
         }
 
     }  // namespace renderer
 }  // namespace rra
+

@@ -17,3 +17,4 @@ namespace rra
 #include "shaders/shared_impl.hlsl"
     }  // namespace renderer
 }  // namespace rra
+

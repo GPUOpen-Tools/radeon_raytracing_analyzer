@@ -8,16 +8,16 @@
 
 #include <math.h>
 
-#include "ray_inspector_ray_tree_item.h"
-
 #include "vulkan/include/vulkan/vulkan_core.h"
 
 #include "qt_common/utils/qt_util.h"
 
-#include "constants.h"
-#include "util/string_util.h"
-#include "settings/settings.h"
 #include "public/rra_api_info.h"
+
+#include "constants.h"
+#include "ray_inspector_ray_tree_item.h"
+#include "settings/settings.h"
+#include "util/string_util.h"
 
 namespace rra
 {
@@ -120,3 +120,4 @@ namespace rra
     }
 
 }  // namespace rra
+

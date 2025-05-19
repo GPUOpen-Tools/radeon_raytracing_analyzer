@@ -14,7 +14,7 @@ TrianglesTableItemDelegate::TrianglesTableItemDelegate(QObject* parent)
 {
 }
 
-TrianglesTableItemDelegate::TrianglesTableItemDelegate(ScaledTableView* table_view, QObject* parent)
+TrianglesTableItemDelegate::TrianglesTableItemDelegate(QTableView* table_view, QObject* parent)
     : TableItemDelegate(table_view, parent)
 {
 }
@@ -52,3 +52,4 @@ bool TrianglesTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
+

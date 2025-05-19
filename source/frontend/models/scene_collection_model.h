@@ -9,7 +9,8 @@
 #define RRA_MODELS_SCENE_MODEL_H_
 
 #include "public/renderer_interface.h"
-#include "scene.h"
+
+#include "models/scene.h"
 
 namespace rra
 {
@@ -114,3 +115,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_SCENE_MODEL_H_
+

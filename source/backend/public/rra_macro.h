@@ -12,10 +12,10 @@
 #define RRA_UNUSED(x) ((void)(x))
 
 /// Helper macro to align an integer to the specified power of 2 boundary
-#define RRA_ALIGN_UP(x, y) (((x) + ((y)-1)) & ~((y)-1))
+#define RRA_ALIGN_UP(x, y) (((x) + ((y) - 1)) & ~((y) - 1))
 
 /// Helper macro to check if a value is aligned.
-#define RRA_IS_ALIGNED(x) (((x) != 0) && ((x) & ((x)-1)))
+#define RRA_IS_ALIGNED(x) (((x) != 0) && ((x) & ((x) - 1)))
 
 /// Helper macro to stringify a value.
 #define RRA_STR(s) RRA_XSTR(s)
@@ -42,3 +42,4 @@
 #define RRA_ARRAY_ELEMENTS(x) (int32_t)((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_MACRO_H_
+

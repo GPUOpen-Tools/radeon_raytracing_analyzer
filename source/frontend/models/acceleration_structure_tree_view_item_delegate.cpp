@@ -6,15 +6,17 @@
 //=============================================================================
 
 #include "models/acceleration_structure_tree_view_item_delegate.h"
-#include "models/acceleration_structure_tree_view_item.h"
+
+#include <QApplication>
+#include <QFontMetrics>
+#include <QMouseEvent>
+#include <QPainter>
 
 #include "qt_common/utils/qt_util.h"
 
-#include <QPainter>
-#include <QMouseEvent>
-#include <QApplication>
-#include <QFontMetrics>
 #include "public/rra_blas.h"
+
+#include "models/acceleration_structure_tree_view_item.h"
 
 namespace rra
 {
@@ -67,8 +69,17 @@ namespace rra
         auto text = item_data.display_name;
 
         // Make instance nodes with empty BLASes empty.
-        renderer::Instance* instance = node->GetInstance();
-        if (node && instance && RraBlasIsEmpty(instance->blas_index))
+        bool empty = false;
+        if (node)
+        {
+            renderer::Instance* instance = node->GetInstance();
+            if (instance && RraBlasIsEmpty(instance->blas_index))
+            {
+                empty = true;
+            }
+        }
+
+        if (empty)
         {
             painter->setPen(Qt::red);
         }
@@ -187,3 +198,4 @@ namespace rra
     }
 
 }  // namespace rra
+

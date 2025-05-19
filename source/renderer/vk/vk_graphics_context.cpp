@@ -6,9 +6,11 @@
 //=============================================================================
 
 #include "vk_graphics_context.h"
-#include "public/rra_error.h"
+
 #include "public/rra_blas.h"
-#include "framework/ext_debug_utils.h"
+#include "public/rra_error.h"
+
+#include "vk/framework/ext_debug_utils.h"
 #include "vk/ray_history_offscreen_renderer.h"
 
 /// Helper macro to bubble vulkan errors before the rendering starts. Used during uploads.
@@ -122,15 +124,17 @@ namespace rra
                 device_.OnDestroy();
 
                 geometry_instructions_.clear();
+                delete rh_renderer_;
+                rh_renderer_ = nullptr;
             }
         }
 
-        bool VkGraphicsContext::IsErrorWindowPrimed()
+        bool VkGraphicsContext::IsErrorWindowPrimed() const
         {
             return error_window_primed_;
         }
 
-        bool VkGraphicsContext::IsHealthy()
+        bool VkGraphicsContext::IsHealthy() const
         {
             return initialization_error_message_ == "";
         }
@@ -447,3 +451,4 @@ namespace rra
     }  // namespace renderer
 
 }  // namespace rra
+

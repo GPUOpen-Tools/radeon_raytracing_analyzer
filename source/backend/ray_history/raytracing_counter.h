@@ -328,3 +328,4 @@ namespace GpuRt
 }  // namespace GpuRt
 #endif  // __cplusplus
 #endif  // RRA_BACKEND_RAY_HISTORY_GPURT_COUNTER_H_
+

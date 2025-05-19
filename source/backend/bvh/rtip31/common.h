@@ -9,8 +9,10 @@
 #define RRA_BACKEND_COMMON_H_
 
 #include <cmath>
+
 #include "glm/glm/glm.hpp"
-#include "primitive_node.h"
+
+#include "bvh/rtip31/primitive_node.h"
 
 #ifndef _WIN32
 #pragma GCC diagnostic push
@@ -69,3 +71,4 @@ static uint32_t ComputeInstanceSidebandOffset(uint32_t instanceNodeOffset, uint3
 #endif
 
 #endif  // RRA_BACKEND_COMMON_H_
+

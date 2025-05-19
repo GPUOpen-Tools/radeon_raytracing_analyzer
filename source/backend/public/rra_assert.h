@@ -8,9 +8,9 @@
 #ifndef RRA_BACKEND_PUBLIC_RRA_ASSERT_H_
 #define RRA_BACKEND_PUBLIC_RRA_ASSERT_H_
 
-#include <stdio.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #include "public/rra_macro.h"
 
@@ -121,3 +121,4 @@ void RraAssertSetPrintingCallback(RraAssertCallback callback);
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_ASSERT_H_
+

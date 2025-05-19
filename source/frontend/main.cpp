@@ -5,25 +5,26 @@
 /// @brief  Main entry point.
 //=============================================================================
 
-#include <QApplication>
-#include <QFileInfo>
-#include <QDir>
-#include <QStyleFactory>
 #include <stdarg.h>
+
+#include <QApplication>
+#include <QDir>
+#include <QFileInfo>
+#include <QStyleFactory>
 
 #include "qt_common/custom_widgets/driver_overrides_model.h"
 #include "qt_common/utils/qt_util.h"
 #include "qt_common/utils/scaling_manager.h"
 
-#include "public/rra_print.h"
 #include "public/graphics_context.h"
+#include "public/rra_print.h"
 
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "managers/trace_manager.h"
+#include "models/acceleration_structure_viewer_model.h"
 #include "util/rra_util.h"
 #include "views/main_window.h"
-#include "models/acceleration_structure_viewer_model.h"
 
 /// @brief Handle printing from RRA backend.
 ///
@@ -110,3 +111,4 @@ int main(int argc, char* argv[])
 
     return result;
 }
+

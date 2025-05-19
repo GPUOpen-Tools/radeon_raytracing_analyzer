@@ -8,7 +8,7 @@
 #ifndef RRA_RENDERER_VK_BOUNDING_VOLUME_MESH_H_
 #define RRA_RENDERER_VK_BOUNDING_VOLUME_MESH_H_
 
-#include "mesh.h"
+#include "vk/mesh.h"
 
 namespace rra
 {
@@ -53,3 +53,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_BOUNDING_VOLUME_MESH_H_
+

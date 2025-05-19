@@ -8,9 +8,10 @@
 #ifndef RRA_RENDERER_VK_RENDER_MODULES_RAY_INSPECTOR_OVERLAY_H_
 #define RRA_RENDERER_VK_RENDER_MODULES_RAY_INSPECTOR_OVERLAY_H_
 
-#include "../render_module.h"
 #include "glm/glm/glm.hpp"
-#include "../buffer_guard.h"
+
+#include "vk/buffer_guard.h"
+#include "vk/render_module.h"
 
 namespace rra::renderer
 {
@@ -136,3 +137,4 @@ namespace rra::renderer
     };
 }  // namespace rra::renderer
 #endif
+

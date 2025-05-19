@@ -697,7 +697,7 @@
                    <string>-</string>
                   </property>
                   <property name="toolTip">
-                   <string>Click to select the parent node.</string>
+                   <string>Select the parent node.</string>
                   </property>
                  </widget>
                 </item>
@@ -806,7 +806,7 @@
                      </property>
                      <property name="icon">
                       <iconset resource="../../resources.qrc">
-                       <normaloff>:/Resources/assets/third_party/ionicons/information-circle-outline.svg</normaloff>:/Resources/assets/third
+                       <normaloff>:/Resources/assets/third_party/ionicons/information-circle-outline.svg</normaloff>
                       </iconset>
                      </property>
                      <property name="iconSize">
@@ -1237,3 +1237,4 @@
  </resources>
  <connections/>
 </ui>
+

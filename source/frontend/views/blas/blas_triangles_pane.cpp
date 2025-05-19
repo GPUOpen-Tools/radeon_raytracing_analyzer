@@ -54,6 +54,7 @@ BlasTrianglesPane::~BlasTrianglesPane()
 {
     delete model_;
     delete table_delegate_;
+    delete ui_;
 }
 
 void BlasTrianglesPane::keyPressEvent(QKeyEvent* event)
@@ -218,3 +219,4 @@ void BlasTrianglesPane::ScrollToSelectedTriangle()
     }
     ui_->triangles_table_->scrollToTop();
 }
+

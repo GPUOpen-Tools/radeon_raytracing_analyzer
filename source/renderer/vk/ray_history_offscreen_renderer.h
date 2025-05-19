@@ -9,14 +9,17 @@
 #define RRA_RAY_HISTORY_OFFSCREEN_RENDERER_H_
 
 #include <vector>
+
 #include <QImage>
-#include <volk/volk.h>
+
+#include "volk/volk.h"
 
 #include "public/include_vma.h"
-#include "public/rra_ray_history.h"
-#include "public/renderer_types.h"
 #include "public/renderer_interface.h"
-#include "public/heatmap.h"
+#include "public/renderer_types.h"
+#include "public/rra_ray_history.h"
+
+#include "vk/framework/device.h"
 
 namespace rra
 {
@@ -155,3 +158,4 @@ namespace rra
     }  // namespace renderer
 }  // namespace rra
 #endif  // RRA_RAY_HISTORY_OFFSCREEN_RENDERER_H_
+

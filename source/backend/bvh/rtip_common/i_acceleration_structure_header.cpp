@@ -5,13 +5,13 @@
 /// @brief  Implementation of the RT IP 1.1 acceleration structure header class.
 //=============================================================================
 
-#include "bvh/rtip_common/i_acceleration_structure_header.h"
-#include "bvh/rt_binary_file_defs.h"
-#include "bvh/dxr_type_conversion.h"
-#include "bvh/utils.h"
-#include "bvh/rtip_common/gpurt_accel_struct.h"
-
 #include <string.h>  // for memcpy()
+
+#include "bvh/dxr_type_conversion.h"
+#include "bvh/rt_binary_file_defs.h"
+#include "bvh/rtip_common/gpurt_accel_struct.h"
+#include "bvh/rtip_common/i_acceleration_structure_header.h"
+#include "bvh/utils.h"
 
 namespace rta
 {
@@ -173,3 +173,4 @@ namespace rta
     static_assert(sizeof(VulkanUniversalIdentifier) == 8, "VulkanUniversalIdentifier size does not match 8 Bytes.");
 
 }  // namespace rta
+

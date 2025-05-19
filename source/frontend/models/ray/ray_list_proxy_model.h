@@ -10,8 +10,8 @@
 
 #include <QTableView>
 
-#include "models/table_proxy_model.h"
 #include "models/ray/ray_list_item_model.h"
+#include "models/table_proxy_model.h"
 
 #undef max
 
@@ -94,3 +94,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_LIST_PROXY_MODEL_H_
+

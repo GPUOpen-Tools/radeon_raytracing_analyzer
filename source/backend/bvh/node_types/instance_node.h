@@ -9,7 +9,7 @@
 #define RRA_BACKEND_BVH_NODE_TYPES_INSTANCE_NODE_H_
 
 #include "bvh/node_pointer.h"
-#include "float32_box_node.h"
+#include "bvh/node_types/float32_box_node.h"
 
 namespace dxr
 {
@@ -242,3 +242,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_NODE_TYPES_INSTANCE_NODE_H_
+

@@ -11,7 +11,7 @@
 #include <map>
 
 #include "models/scene.h"
-#include "../scene_collection_model.h"
+#include "models/scene_collection_model.h"
 
 namespace rra
 {
@@ -100,3 +100,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_SCENE_MODEL_H_
+

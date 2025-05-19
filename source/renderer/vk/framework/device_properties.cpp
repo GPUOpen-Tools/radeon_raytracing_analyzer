@@ -5,14 +5,14 @@
 /// @brief  Implementation for the Vulkan device properties type.
 //=============================================================================
 
-#include <algorithm>
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 
 #include "public/rra_print.h"
 
-#include "device_properties.h"
-#include "../util_vulkan.h"
+#include "vk/framework/device_properties.h"
+#include "vk/util_vulkan.h"
 
 namespace rra
 {
@@ -70,3 +70,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

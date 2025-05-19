@@ -10,15 +10,14 @@
 
 #include <string>
 
-#include <volk/volk.h>
+#include "volk/volk.h"
 
-#include "device_properties.h"
-#include "instance_properties.h"
+#include "public/include_vma.h"
+#include "public/renderer_types.h"
 
-#include "../../public/renderer_types.h"
-#include "../util_vulkan.h"
-
-#include "../../public/include_vma.h"
+#include "vk/framework/device_properties.h"
+#include "vk/framework/instance_properties.h"
+#include "vk/util_vulkan.h"
 
 namespace rra
 {
@@ -139,7 +138,7 @@ namespace rra
             VmaAllocator GetAllocator() const;
 
             /// @brief Wait for all in-flight work in the GPU queues to complete.
-            void GPUFlush();
+            void GPUFlush() const;
 
             /// @brief Flush the given command buffer, including executing all commands and waiting for completion.
             ///
@@ -147,7 +146,7 @@ namespace rra
             /// @param [in] queue The queue used to submit command buffer operations.
             /// @param [in] pool The pool that the command buffer is part of.
             /// @param [in] free An optional bool which, when set to true, will free the flushed command buffer back to the pool.
-            void FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, VkCommandPool pool, bool free = true);
+            void FlushCommandBuffer(VkCommandBuffer command_buffer, VkQueue queue, VkCommandPool pool, bool free = true) const;
 
             /// @brief Create a buffer with the device using the given buffer configuration.
             ///
@@ -186,20 +185,20 @@ namespace rra
             /// @param [out] allocation The allocation for the buffer.
             /// @param [in] data A pointer to the data to populate the buffer with. If the value is nullptr mapping will be skipped.
             /// @param [in] size The total size of the data to write.
-            void WriteToBuffer(const VmaAllocation& allocation, const void* data, VkDeviceSize size);
+            void WriteToBuffer(const VmaAllocation& allocation, const void* data, VkDeviceSize size) const;
 
             /// @brief Fill a buffer with all zeroes.
             ///
             /// @param [out] allocation The allocation for the buffer.
             /// @param [in] size The total size of the data to write.
-            void ZeroOutBuffer(const VmaAllocation& allocation, VkDeviceSize size);
+            void ZeroOutBuffer(const VmaAllocation& allocation, VkDeviceSize size) const;
 
             /// @brief Read from a buffer allocation.
             ///
             /// @param [out] allocation The allocation for the buffer.
             /// @param [in] data An pointer to the data to copy buffer information.
             /// @param [in] size The total size of the data to read.
-            void ReadFromBuffer(const VmaAllocation& allocation, void* data, VkDeviceSize size);
+            void ReadFromBuffer(const VmaAllocation& allocation, void* data, VkDeviceSize size) const;
 
             /// @brief Destroy a buffer in this device.
             ///
@@ -216,7 +215,7 @@ namespace rra
             /// @brief Get the possible msaa sample settings in descending order.
             ///
             /// @returns A list of possible msaa sample settings.
-            std::vector<VkSampleCountFlagBits> GetPossibleMSAASampleSettings();
+            std::vector<VkSampleCountFlagBits> GetPossibleMSAASampleSettings() const;
 
         private:
             VkInstance                         instance_            = VK_NULL_HANDLE;  ///< The instance handle.
@@ -242,3 +241,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_DEVICE_H_
+

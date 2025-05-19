@@ -10,9 +10,10 @@
 #ifndef RRA_BACKEND_RRA_BLAS_IMPL_H_
 #define RRA_BACKEND_RRA_BLAS_IMPL_H_
 
+#include "public/rra_blas.h"
+
 #include "bvh/dxr_definitions.h"
 #include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
-#include "public/rra_blas.h"
 #include "bvh/rtip31/primitive_node.h"
 
 /// @brief Get a pointer to the BLAS from the blas index passed in.
@@ -40,3 +41,4 @@ float RraBlasGetTriangleSurfaceArea(const dxr::amd::TriangleNode& triangle_node,
 RraErrorCode RraBlasGetSurfaceAreaImpl(const rta::EncodedBottomLevelBvh* blas, const dxr::amd::NodePointer* node_ptr, float* out_surface_area);
 
 #endif  // RRA_BACKEND_RRA_BLAS_IMPL_H_
+

@@ -5,7 +5,7 @@
 /// \brief  Implementation of a double slider with heatmap widget.
 //=============================================================================
 
-#include "double_slider_heatmap_widget.h"
+#include "views/custom_widgets/double_slider_heatmap_widget.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -744,3 +744,4 @@ void DoubleSliderHeatmapWidget::paintEvent(QPaintEvent* event)
         break;
     }
 }
+

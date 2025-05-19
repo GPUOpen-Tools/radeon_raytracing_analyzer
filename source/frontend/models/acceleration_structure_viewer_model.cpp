@@ -10,27 +10,26 @@
 #undef emit
 #include <execution>
 #define emit
+
 #include <QTreeView>
 
+#include "qt_common/custom_widgets/scaled_check_box.h"
 #include "qt_common/custom_widgets/scaled_tree_view.h"
 #include "qt_common/utils/qt_util.h"
 
+#include "public/camera.h"
+#include "public/intersect.h"
+#include "public/rra_assert.h"
+#include "public/rra_blas.h"
+#include "public/rra_print.h"
+
+#include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_model.h"
 #include "models/tree_view_proxy_model.h"
-
-#include "public/rra_assert.h"
-#include "public/camera.h"
-#include "public/rra_blas.h"
-#include "public/rra_print.h"
-#include "public/intersect.h"
 #include "ray/ray_inspector_model.h"
-
-#include "constants.h"
-#include "qt_common/custom_widgets/scaled_check_box.h"
-#include "views/widget_util.h"
-
 #include "settings/settings.h"
+#include "views/widget_util.h"
 
 namespace rra
 {
@@ -90,7 +89,7 @@ namespace rra
     void AccelerationStructureViewerModel::InitializeRotationTableModel(ScaledTableView* table_view)
     {
         bottom_table_model_ = new QStandardItemModel(3, 3);
-        table_view->GetHeaderView()->setVisible(false);
+        table_view->horizontalHeader()->setVisible(false);
         table_view->setModel(bottom_table_model_);
     }
 
@@ -152,10 +151,10 @@ namespace rra
             uint64_t address = 0;
             if (AccelerationStructureGetBaseAddress(blas_index, &address) == kRraOk)
             {
-                QListWidgetItem* item = new QListWidgetItem();
                 if (!AccelerationStructureGetIsEmpty(blas_index))
                 {
-                    QString address_string = "0x" + QString("%1").arg(address, 0, 16);
+                    QListWidgetItem* item           = new QListWidgetItem();
+                    QString          address_string = "0x" + QString("%1").arg(address, 0, 16);
                     item->setText(address_string);
                     item->setData(Qt::UserRole, QVariant::fromValue<qulonglong>(blas_index));
                     combo_box->AddItem(item);
@@ -320,7 +319,8 @@ namespace rra
     std::shared_ptr<renderer::GraphicsContextSceneInfo> GetGraphicsContextSceneInfo()
     {
         uint64_t blas_count = 0;
-        RRA_ASSERT(RraBvhGetTotalBlasCount(&blas_count) == kRraOk);
+        RraErrorCode error_code = RraBvhGetTotalBlasCount(&blas_count);
+        RRA_ASSERT(error_code == kRraOk);
 
         auto info = std::make_shared<renderer::GraphicsContextSceneInfo>();
         info->acceleration_structures.resize(blas_count);
@@ -331,15 +331,18 @@ namespace rra
             renderer::TraversalTree& traversal_tree{info->acceleration_structures[blas_index]};
 
             uint32_t total_tri_count{};
-            RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
+            error_code = RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
+            RRA_ASSERT(error_code == kRraOk);
             traversal_tree.vertices.resize((size_t)total_tri_count * 3);
 
             uint64_t total_node_count{};
-            RraBlasGetTotalNodeCount(blas_index, &total_node_count);
+            error_code = RraBlasGetTotalNodeCount(blas_index, &total_node_count);
+            RRA_ASSERT(error_code == kRraOk);
             traversal_tree.child_nodes_buffer = new std::byte[(total_node_count + 1) * sizeof(SceneNode)];
 
             uint64_t box_node_count{};
-            RraBlasGetTotalNodeCount(blas_index, &box_node_count);
+            error_code = RraBlasGetTotalNodeCount(blas_index, &box_node_count);
+            RRA_ASSERT(error_code == kRraOk);
             traversal_tree.volumes.reserve(box_node_count);
         }
 
@@ -393,7 +396,10 @@ namespace rra
         {
             uint32_t   node_id = GetNodeIdFromModelIndex(selected_node_index_, tlas_index, is_tlas_);
             SceneNode* node    = last_clicked_node_scene_->GetNodeById(node_id);
-            return last_clicked_node_scene_->IsInstanceRebraided(node->GetInstance()->instance_index);
+            if (node)
+            {
+                return last_clicked_node_scene_->IsInstanceRebraided(node->GetInstance()->instance_index);
+            }
         }
         return false;
     }
@@ -404,7 +410,10 @@ namespace rra
         {
             uint32_t   node_id = GetNodeIdFromModelIndex(selected_node_index_, blas_index, is_tlas_);
             SceneNode* node    = last_clicked_node_scene_->GetNodeById(node_id);
-            return last_clicked_node_scene_->IsTriangleSplit(node->GetGeometryIndex(), node->GetPrimitiveIndex());
+            if (node)
+            {
+                return last_clicked_node_scene_->IsTriangleSplit(node->GetGeometryIndex(), node->GetPrimitiveIndex());
+            }
         }
         return false;
     }
@@ -675,3 +684,4 @@ namespace rra
     }
 
 }  // namespace rra
+

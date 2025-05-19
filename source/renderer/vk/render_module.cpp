@@ -5,7 +5,7 @@
 /// @brief  Implementation for the Vulkan render module.
 //=============================================================================
 
-#include "render_module.h"
+#include "vk/render_module.h"
 
 namespace rra
 {
@@ -68,3 +68,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

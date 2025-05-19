@@ -13,8 +13,8 @@
 #ifndef RRA_MANAGERS_LOAD_ANIMATION_MANAGER_H_
 #define RRA_MANAGERS_LOAD_ANIMATION_MANAGER_H_
 
-#include <QObject>
 #include <QMenu>
+#include <QObject>
 
 #include "qt_common/custom_widgets/file_loading_widget.h"
 #include "qt_common/custom_widgets/tab_widget.h"
@@ -86,3 +86,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_LOAD_ANIMATION_MANAGER_H_
+

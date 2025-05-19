@@ -5,15 +5,14 @@
 /// @brief  Implementation for the Vulkan instance properties object.
 //=============================================================================
 
+#include <string.h>
 #include <algorithm>
 #include <cassert>
-#include <string.h>
-
-#include "instance_properties.h"
-
-#include "../util_vulkan.h"
 
 #include "public/rra_print.h"
+
+#include "vk/framework/instance_properties.h"
+#include "vk/util_vulkan.h"
 
 namespace rra
 {
@@ -117,3 +116,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

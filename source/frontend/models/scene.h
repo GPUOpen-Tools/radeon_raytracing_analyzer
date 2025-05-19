@@ -8,13 +8,14 @@
 #ifndef RRA_RENDERER_SCENE_H_
 #define RRA_RENDERER_SCENE_H_
 
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
-#include <functional>
 
 #include "public/renderer_types.h"
 #include "public/rra_ray_history.h"
-#include "scene_node.h"
+
+#include "models/scene_node.h"
 
 namespace rra
 {
@@ -428,3 +429,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_SCENE_H_
+

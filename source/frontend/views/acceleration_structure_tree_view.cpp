@@ -7,11 +7,11 @@
 /// Based on a scaled treeview, it adds a right-click context menu.
 //=============================================================================
 
-#include "acceleration_structure_tree_view.h"
+#include "views/acceleration_structure_tree_view.h"
 
-#include <QMenu>
-#include <QContextMenuEvent>
 #include <QApplication>
+#include <QContextMenuEvent>
+#include <QMenu>
 
 #include "io/viewer_io.h"
 
@@ -55,10 +55,16 @@ void AccelerationStructureTreeView::contextMenuEvent(QContextMenuEvent* event)
 
     context_options["Focus on selection"] = [=]() { camera_controller->FocusOnSelection(); };
 
+    // Keep track of the actions so they can be deleted later.
+    auto                  num_actions = context_options.size();
+    std::vector<QAction*> actions;
+    actions.reserve(num_actions);
+
     for (const auto& option_action : context_options)
     {
         auto action = new QAction(QString::fromStdString(option_action.first));
         menu.addAction(action);
+        actions.push_back(action);
     }
 
     const QPoint pos    = event->globalPos();
@@ -67,6 +73,12 @@ void AccelerationStructureTreeView::contextMenuEvent(QContextMenuEvent* event)
     if (action != nullptr)
     {
         context_options[action->text().toStdString()]();
+    }
+
+    // Delete the actions.
+    for (auto action_iter : actions)
+    {
+        delete action_iter;
     }
 }
 
@@ -93,3 +105,4 @@ bool AccelerationStructureTreeView::event(QEvent* event)
 
     return ScaledTreeView::event(event);
 }
+

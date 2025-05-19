@@ -12,8 +12,8 @@
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_tlas.h"
-#include "bvh/node_pointer.h"
 
+#include "bvh/node_pointer.h"
 #include "settings/settings.h"
 
 namespace rra
@@ -115,11 +115,13 @@ namespace rra
 
                     if (is_tlas)
                     {
-                        RraTlasGetNodeName(node_data_, &node_name);
+                        error_code = RraTlasGetNodeName(node_data_, &node_name);
+                        RRA_ASSERT(error_code == kRraOk);
                     }
                     else
                     {
-                        RraBlasGetNodeName(as_index, node_data_, &node_name);
+                        error_code = RraBlasGetNodeName(as_index, node_data_, &node_name);
+                        RRA_ASSERT(error_code == kRraOk);
                     }
 
                     item_data.display_name = node_name + QString(" - 0x") + QString("%1").arg(node_address, 0, 16);
@@ -129,7 +131,8 @@ namespace rra
                     if (node->IsInstanceNode())
                     {
                         uint64_t blas_index{};
-                        RraTlasGetBlasIndexFromInstanceNode(as_index, node_data_, &blas_index);
+                        error_code = RraTlasGetBlasIndexFromInstanceNode(as_index, node_data_, &blas_index);
+                        RRA_ASSERT(error_code == kRraOk);
                         if (RraBlasIsEmpty(blas_index))
                         {
                             item_data.display_name += " (missing BLAS)";
@@ -148,11 +151,13 @@ namespace rra
 
                 if (is_tlas)
                 {
-                    RraTlasGetNodeNameToolTip(node_data_, &node_tooltip);
+                    RraErrorCode error_code = RraTlasGetNodeNameToolTip(node_data_, &node_tooltip);
+                    RRA_ASSERT(error_code == kRraOk);
                 }
                 else
                 {
-                    RraBlasGetNodeNameToolTip(as_index, node_data_, &node_tooltip);
+                    RraErrorCode error_code = RraBlasGetNodeNameToolTip(as_index, node_data_, &node_tooltip);
+                    RRA_ASSERT(error_code == kRraOk);
                 }
                 return node_tooltip;
             }
@@ -190,3 +195,4 @@ namespace rra
     }
 
 }  // namespace rra
+

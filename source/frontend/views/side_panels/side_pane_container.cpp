@@ -7,13 +7,13 @@
 
 #include "views/side_panels/side_pane_container.h"
 
+#include "public/renderer_adapter.h"
+
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
 #include "models/blas/blas_viewer_model.h"
 #include "views/side_panels/view_pane.h"
 #include "views/widget_util.h"
-
-#include "public/renderer_adapter.h"
 
 /// @brief Enum of the side panel ID's.
 enum PaneIndex
@@ -44,14 +44,13 @@ SidePaneContainer::SidePaneContainer(QWidget* parent)
 
 SidePaneContainer::~SidePaneContainer()
 {
+    delete ui_;
 }
 
 void SidePaneContainer::SetRendererAdapters(const rra::renderer::RendererAdapterMap& adapters)
 {
     using namespace rra::renderer;
-
-    rra::ViewModel* view_pane_model = view_pane_->GetModel();
-    view_pane_model->SetRendererAdapters(adapters);
+    view_pane_->GetModel()->SetRendererAdapters(adapters);
 }
 
 void SidePaneContainer::UpdateSidePane(int pane_index)
@@ -93,3 +92,4 @@ void SidePaneContainer::MarkProceduralGeometry(bool is_procedural)
 {
     view_pane_->NonProceduralWidgetsHidden(is_procedural);
 }
+

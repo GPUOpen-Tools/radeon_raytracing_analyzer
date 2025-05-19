@@ -7,10 +7,11 @@
 
 #include "managers/trace_manager.h"
 
-#include <QtCore>
-#include <QMessageBox>
-#include <QByteArray>
 #include <vector>
+
+#include <QByteArray>
+#include <QMessageBox>
+#include <QtCore>
 
 #include "qt_common/utils/qt_util.h"
 
@@ -355,3 +356,4 @@ namespace rra
     }
 
 }  // namespace rra
+

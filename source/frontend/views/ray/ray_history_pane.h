@@ -8,15 +8,16 @@
 #ifndef RRA_VIEWS_RAY_RAY_HISTORY_PANE_H_
 #define RRA_VIEWS_RAY_RAY_HISTORY_PANE_H_
 
-#include "ui_ray_history_pane.h"
-
 #include <QTimer>
 
 #include "qt_common/utils/zoom_icon_group_manager.h"
+
+#include "ui_ray_history_pane.h"
+
 #include "models/ray/ray_history_model.h"
 #include "models/ray/ray_list_table_item_delegate.h"
-#include "views/base_pane.h"
 #include "ui_ray_history_viewer_widget.h"
+#include "views/base_pane.h"
 
 /// @brief Class declaration.
 class RayHistoryPane : public BasePane
@@ -63,7 +64,7 @@ public:
 
 private slots:
     /// @brief Set the heatmap mode.
-    void SetHeatmapSpectrum();
+    void SetHeatmapMode();
 
     /// @brief Set the color mode.
     void SetColorMode();
@@ -118,7 +119,7 @@ private:
     /// @brief Get the maximum heatmap value of the current coloring mode.
     ///
     /// @return The maximum value.
-    uint32_t GetCurrentColorModeMaxStatistic();
+    uint32_t GetCurrentColorModeMaxStatistic() const;
 
     /// @brief Create and render the heatmap image.
     void CreateAndRenderImage();
@@ -154,6 +155,12 @@ private:
     /// @param dispatch_id The dispatch ID.
     void UpdateReshapedDimensions(uint64_t dispatch_id);
 
+    /// @brief Create the grayscale image that gets displayed when a region is selected in the heatmap.
+    ///
+    /// The grayscale image is generated from the temperature heatmap so it doesn't collide with the
+    /// 'grayscale' heatmap.
+    void CreateGrayscaleImage();
+
 private:
     Ui::RayHistoryPane*                          ui_{};                          ///< Pointer to the Qt UI design.
     rra::RayHistoryModel*                        model_{};                       ///< The ray history model.
@@ -179,3 +186,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_RAY_RAY_HISTORY_PANE_H_
+

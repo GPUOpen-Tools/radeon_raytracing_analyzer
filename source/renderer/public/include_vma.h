@@ -17,9 +17,10 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
-#include <vma/include/vk_mem_alloc.h>
+#include "vma/include/vk_mem_alloc.h"
 #ifdef _WIN32
 #pragma warning(pop)
 #else
 #pragma GCC diagnostic pop
 #endif
+

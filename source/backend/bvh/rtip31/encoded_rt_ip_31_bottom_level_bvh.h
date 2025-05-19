@@ -10,11 +10,12 @@
 #define RRA_BACKEND_BVH_ENCODED_RT_IP_31_BOTTOM_LEVEL_BVH_H_
 
 #include <array>
-#include <utility>
 #include <unordered_map>
+#include <utility>
+
 #include "bvh/geometry_info.h"
-#include "bvh/node_types/triangle_node.h"
 #include "bvh/node_types/procedural_node.h"
+#include "bvh/node_types/triangle_node.h"
 #include "bvh/rtip31/primitive_node.h"
 #include "bvh/rtip_common/encoded_bottom_level_bvh.h"
 
@@ -160,3 +161,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_RT_IP_31_BOTTOM_LEVEL_BVH_H_
+

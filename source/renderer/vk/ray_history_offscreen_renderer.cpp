@@ -8,12 +8,12 @@
 #include "ray_history_offscreen_renderer.h"
 
 #undef emit
-#include <execution>
 #include <algorithm>
+#include <execution>
 #define emit
 
-#include "framework/device.h"
-#include "vk_graphics_context.h"
+#include "vk/framework/device.h"
+#include "vk/vk_graphics_context.h"
 
 namespace rra
 {
@@ -553,3 +553,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

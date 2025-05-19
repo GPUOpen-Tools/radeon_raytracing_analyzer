@@ -5,15 +5,15 @@
 /// @brief  Implementation for the Vulkan renderer.
 //=============================================================================
 
-#include "renderer_vulkan.h"
-#include "util_vulkan.h"
-#include "string.h"
-#include "float.h"
-#include "vk_graphics_context.h"
-
+#include <float.h>
+#include <string.h>
 #include <cstring>
 
 #include "qt_common/utils/qt_util.h"
+
+#include "vk/renderer_vulkan.h"
+#include "vk/util_vulkan.h"
+#include "vk/vk_graphics_context.h"
 
 #define FRUSTUM_CULLING_ENABLE 0  ///< A flag to determine if frustum culling is used or not.
 #define PROFILE_READY 0           ///< A flag to force the flags below to the optimal settings for profiling.
@@ -567,3 +567,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

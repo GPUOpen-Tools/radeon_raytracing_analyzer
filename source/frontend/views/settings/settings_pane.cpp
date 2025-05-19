@@ -7,13 +7,13 @@
 
 #include "views/settings/settings_pane.h"
 
+#include "qt_common/custom_widgets/driver_overrides_model.h"
+
 #include "managers/message_manager.h"
 #include "settings/settings.h"
 #include "views/custom_widgets/colored_checkbox.h"
-#include "views/widget_util.h"
 #include "views/custom_widgets/slider_style.h"
-
-#include "qt_common/custom_widgets/driver_overrides_model.h"
+#include "views/widget_util.h"
 
 using namespace driver_overrides;
 
@@ -29,11 +29,15 @@ int FrustumCullRatioToSlider(float ratio)
     return ratio * (100.0f / kMaxCullRatio);
 }
 
+static AbsoluteSliderPositionStyle small_object_culling_style;
+
 SettingsPane::SettingsPane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::SettingsPane)
 {
     ui_->setupUi(this);
+    small_object_culling_style.setBaseStyle(ui_->small_object_culling_content_->style());
+    ui_->small_object_culling_content_->setStyle(&small_object_culling_style);
 
     rra::widget_util::ApplyStandardPaneStyle(ui_->main_scroll_area_);
 
@@ -79,8 +83,6 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->content_decimal_precision_->setValue(rra::Settings::Get().GetDecimalPrecision());
     connect(ui_->content_decimal_precision_, SIGNAL(valueChanged(int)), this, SLOT(DecimalPrecisionChanged(int)));
 
-    ui_->small_object_culling_content_->setStyle(new AbsoluteSliderPositionStyle(ui_->small_object_culling_content_->style()));
-
     // Set up the Driver Overrides notification configuration widget.
     ui_->driver_overrides_notification_config_widget_->Init(rra::Settings::Get().GetDriverOverridesAllowNotifications(), false);
     connect(ui_->driver_overrides_notification_config_widget_,
@@ -91,6 +93,7 @@ SettingsPane::SettingsPane(QWidget* parent)
 
 SettingsPane::~SettingsPane()
 {
+    delete ui_;
 }
 
 void SettingsPane::TraversalCounterMaximumChanged(int new_max)
@@ -167,3 +170,4 @@ void SettingsPane::DriverOverridesAllowNotificationsChanged(const bool checked)
     rra::Settings::Get().SetDriverOverridesAllowNotifications(checked);
     rra::Settings::Get().SaveSettings();
 }
+

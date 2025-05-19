@@ -32,3 +32,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_READ_ONLY_CHECKBOX_H_
+

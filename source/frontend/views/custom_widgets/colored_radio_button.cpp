@@ -8,6 +8,7 @@
 #include "views/custom_widgets/colored_radio_button.h"
 
 #include <cmath>
+
 #include <QApplication>
 #include <QPainter>
 #include <QStylePainter>
@@ -170,3 +171,4 @@ qreal ColoredRadioButton::GetSwitchHeight(const QFontMetricsF& font_metrics) con
 {
     return font_metrics.height() * button_text_ratio_;
 }
+

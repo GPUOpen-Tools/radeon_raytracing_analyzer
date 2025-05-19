@@ -9,6 +9,7 @@
 #define RRA_RENDERER_VK_BUFFER_GUARD_H_
 
 #include <vector>
+
 #include "vk/framework/device.h"
 
 namespace rra
@@ -68,3 +69,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_BUFFER_SAFETY_H_
+

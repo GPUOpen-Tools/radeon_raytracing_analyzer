@@ -8,6 +8,7 @@
 #include "views/custom_widgets/binary_checkbox.h"
 
 #include <cmath>
+
 #include <QApplication>
 #include <QPainter>
 #include <QStylePainter>
@@ -221,3 +222,4 @@ qreal BinaryCheckbox::GetSwitchHeight(const QFontMetricsF& font_metrics) const
 {
     return font_metrics.height() * button_text_ratio_;
 }
+

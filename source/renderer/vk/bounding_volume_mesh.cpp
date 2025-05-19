@@ -5,7 +5,7 @@
 /// @brief  Implementation for the static bounding volume mesh types.
 //=============================================================================
 
-#include "bounding_volume_mesh.h"
+#include "vk/bounding_volume_mesh.h"
 
 namespace rra
 {
@@ -101,3 +101,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

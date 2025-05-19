@@ -5,13 +5,15 @@
 /// @brief  Definition for the axis-free style camera controller.
 //=============================================================================
 
-#include "axis_free_camera_controller.h"
-#include "public/rra_macro.h"
-#include "constants.h"
+#include "io/axis_free_camera_controller.h"
 
 #include <QMouseEvent>
-#include <glm/glm/gtx/euler_angles.hpp>
 
+#include "glm/glm/gtx/euler_angles.hpp"
+
+#include "public/rra_macro.h"
+
+#include "constants.h"
 #include "models/side_panels/view_model.h"
 #include "settings/settings.h"
 
@@ -209,6 +211,7 @@ namespace rra
 
             camera->SetArcRadius(arc_radius_);
             camera->SetArcCenterPosition(position + forward * camera->GetArcRadius());
+            rotation_ = glm::transpose(glm::lookAt(position, position + forward, up));
         }
 
         updated_ = true;
@@ -458,3 +461,4 @@ namespace rra
         pitch_yaw_roll_                   = {};
     }
 }  // namespace rra
+

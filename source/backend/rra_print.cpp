@@ -11,13 +11,13 @@
 #include <stdio.h>   // for sprintf
 #include <string.h>  // for strcat
 
-#include "rra_configuration.h"
-
 #ifndef _WIN32
 #include "public/linux/safe_crt.h"
 #else
 #include <Windows.h>
 #endif
+
+#include "rra_configuration.h"
 
 // The printing callback function.
 static RraPrintingCallback printing_func       = nullptr;
@@ -61,3 +61,4 @@ void RraPrint(const char* format, ...)
 
     va_end(args);
 }
+

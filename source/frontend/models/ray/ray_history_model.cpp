@@ -7,23 +7,22 @@
 
 #include "models/ray/ray_history_model.h"
 
-#include <thread>
 #include <algorithm>
-#include <QTableView>
-#include <QScrollBar>
+#include <thread>
+
 #include <QHeaderView>
+#include <QScrollBar>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
+#include <QTableView>
 
-#include "models/ray/ray_list_item_model.h"
-#include "util/string_util.h"
-#include "public/rra_ray_history.h"
-#include "public/renderer_types.h"
-#include "views/widget_util.h"
+#include "public/graphics_context.h"
+
 #include "constants.h"
+#include "models/ray/ray_list_item_model.h"
 #include "settings/settings.h"
-
-#include "ray_history_image_generator.h"
+#include "util/string_util.h"
+#include "views/widget_util.h"
 
 #undef min
 
@@ -40,6 +39,8 @@ namespace rra
     {
         delete table_model_;
         delete proxy_model_;
+        delete shader_binding_table_model_;
+        delete stats_table_model_;
     }
 
     void RayHistoryModel::ResetModelValues()
@@ -207,7 +208,7 @@ namespace rra
                                                   uint32_t ray_index,
                                                   uint32_t reshaped_x,
                                                   uint32_t reshaped_y,
-                                                  uint32_t reshaped_z)
+                                                  uint32_t reshaped_z) const
     {
         return GraphicsContextRenderRayHistoryImage(
             heatmap_min, heatmap_max, ray_index, reshaped_x, reshaped_y, reshaped_z, color_mode_, slice_index_, slice_plane_);
@@ -359,3 +360,4 @@ namespace rra
     }
 
 }  // namespace rra
+

@@ -8,9 +8,9 @@
 #ifndef RRA_RENDERER_VK_FRAMEWORK_EXT_DEBUG_UTILS_H_
 #define RRA_RENDERER_VK_FRAMEWORK_EXT_DEBUG_UTILS_H_
 
-#include <volk/volk.h>
+#include "volk/volk.h"
 
-#include "instance_properties.h"
+#include "vk/framework/instance_properties.h"
 
 namespace rra
 {
@@ -50,3 +50,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_EXT_DEBUG_UTILS_H_
+

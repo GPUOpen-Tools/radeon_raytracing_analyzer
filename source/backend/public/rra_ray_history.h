@@ -8,9 +8,9 @@
 #ifndef RRA_BACKEND_PUBLIC_RRA_RAY_HISTORY_H_
 #define RRA_BACKEND_PUBLIC_RRA_RAY_HISTORY_H_
 
-#include "rra_error.h"
-
 #include <vector>
+
+#include "public/rra_error.h"
 
 #define RRA_RAY_HISTORY_TOKENS_METADATA_IDENTIFIER "HistoryMetadata"
 #define RRA_RAY_HISTORY_RAW_TOKENS_IDENTIFIER "HistoryTokensRaw"
@@ -159,7 +159,7 @@ struct RayDispatchData
     /// @param y The y coord.
     /// @param z The z coord.
     /// @return True if the coordinate is valid.
-    bool CoordinateIsValid(uint32_t x, uint32_t y, uint32_t z);
+    bool CoordinateIsValid(uint32_t x, uint32_t y, uint32_t z) const;
 };
 
 #ifdef __cplusplus
@@ -281,3 +281,4 @@ RraErrorCode RraRayGetDispatchUserMarkerString(uint32_t dispatch_id, char* buffe
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_RAY_HISTORY_H_
+

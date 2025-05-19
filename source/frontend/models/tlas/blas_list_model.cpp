@@ -7,16 +7,16 @@
 
 #include "models/tlas/blas_list_model.h"
 
-#include <QTableView>
-#include <QScrollBar>
 #include <QHeaderView>
+#include <QScrollBar>
 #include <QSortFilterProxyModel>
+#include <QTableView>
+
+#include "public/rra_blas.h"
+#include "public/rra_bvh.h"
+#include "public/rra_tlas.h"
 
 #include "models/tlas/blas_list_item_model.h"
-
-#include "public/rra_bvh.h"
-#include "public/rra_blas.h"
-#include "public/rra_tlas.h"
 
 namespace rra
 {
@@ -53,7 +53,8 @@ namespace rra
         for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
         {
             uint64_t instance_count = 0;
-            RraTlasGetInstanceCount(tlas_index, blas_index, &instance_count);
+            RraErrorCode error_code = RraTlasGetInstanceCount(tlas_index, blas_index, &instance_count);
+            RRA_ASSERT(error_code == kRraOk);
             if (!RraBlasIsEmpty(blas_index) && instance_count > 0)
             {
                 row_count++;
@@ -149,7 +150,7 @@ namespace rra
         proxy_model_->invalidate();
     }
 
-    void BlasListModel::InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns)
+    void BlasListModel::InitializeTableModel(QTableView* table_view, uint num_rows, uint num_columns)
     {
         if (proxy_model_ != nullptr)
         {
@@ -203,3 +204,4 @@ namespace rra
     }
 
 }  // namespace rra
+

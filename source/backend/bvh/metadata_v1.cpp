@@ -5,7 +5,7 @@
 /// @brief  Implementation of the V1 MetaData class.
 //=============================================================================
 
-#include "metadata_v1.h"
+#include "bvh/metadata_v1.h"
 
 namespace dxr
 {
@@ -46,3 +46,4 @@ namespace dxr
 
     }  // namespace amd
 }  // namespace dxr
+

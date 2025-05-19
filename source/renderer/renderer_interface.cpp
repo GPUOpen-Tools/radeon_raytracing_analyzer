@@ -6,18 +6,18 @@
 //=============================================================================
 
 #include "public/renderer_interface.h"
+
 #include "public/render_state_adapter.h"
 #include "public/view_state_adapter.h"
 
-#include "vk/renderer_vulkan.h"
-
 #include "vk/render_modules/bounding_volume.h"
-#include "vk/render_modules/mesh_render_module.h"
 #include "vk/render_modules/checker_clear.h"
-#include "vk/render_modules/traversal.h"
+#include "vk/render_modules/mesh_render_module.h"
 #include "vk/render_modules/orientation_gizmo_module.h"
 #include "vk/render_modules/ray_inspector_overlay.h"
 #include "vk/render_modules/selection_module.h"
+#include "vk/render_modules/traversal.h"
+#include "vk/renderer_vulkan.h"
 
 namespace rra
 {
@@ -125,3 +125,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

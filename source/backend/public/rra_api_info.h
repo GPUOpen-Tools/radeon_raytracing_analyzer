@@ -28,3 +28,4 @@ bool RraApiInfoIsVulkan();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_API_INFO_H_
+

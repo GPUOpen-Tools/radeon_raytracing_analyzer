@@ -53,3 +53,4 @@ namespace rta
     };
 }  // namespace rta
 #endif  // RRA_BACKEND_BVH_ACCELERATION_STRUCTURE_HEADER_H_
+

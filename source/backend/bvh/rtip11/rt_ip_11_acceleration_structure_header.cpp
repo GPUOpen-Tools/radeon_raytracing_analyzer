@@ -6,9 +6,10 @@
 /// implementation.
 //=============================================================================
 
-#include "rt_ip_11_acceleration_structure_header.h"
+#include "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
 
 #include <cstring>  // --> Linux, memcpy
+
 #include "bvh/dxr_type_conversion.h"
 #include "bvh/utils.h"
 
@@ -76,3 +77,4 @@ namespace rta
     }
 
 }  // namespace rta
+

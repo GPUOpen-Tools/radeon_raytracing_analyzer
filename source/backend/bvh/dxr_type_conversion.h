@@ -11,8 +11,7 @@
 #include <array>
 #include <cstdint>
 
-#include "gpu_def.h"
-
+#include "bvh/gpu_def.h"
 #include "bvh/node_types/instance_node.h"
 
 namespace rta
@@ -90,3 +89,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_TYPE_CONVERSION_H_
+

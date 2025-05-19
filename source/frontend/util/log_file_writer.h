@@ -8,8 +8,8 @@
 #ifndef RRA_UTIL_LOG_FILE_WRITER_H_
 #define RRA_UTIL_LOG_FILE_WRITER_H_
 
-#include <QString>
 #include <QMutex>
+#include <QString>
 
 namespace rra
 {
@@ -61,3 +61,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_UTIL_LOG_FILE_WRITER_H_
+

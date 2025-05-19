@@ -9,24 +9,25 @@
 
 #include <float.h>
 #include <math.h>
-#include <numeric>
-#include <execution>
 #include <algorithm>
+#include <execution>
+#include <numeric>
 
-#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
-#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
-#include "bvh/dxr_definitions.h"
 #include "public/rra_assert.h"
 #include "public/rra_error.h"
 #include "public/rra_rtip_info.h"
-#include "rra_bvh_impl.h"
-#include "rra_blas_impl.h"
-#include "rra_data_set.h"
-#include "rra_tlas_impl.h"
-#include "bvh/rtip31/internal_node.h"
+
+#include "bvh/dxr_definitions.h"
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
 #include "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
 #include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
+#include "bvh/rtip31/internal_node.h"
 #include "bvh/rtip31/primitive_node.h"
+#include "rra_blas_impl.h"
+#include "rra_bvh_impl.h"
+#include "rra_data_set.h"
+#include "rra_tlas_impl.h"
 
 // External reference to the global dataset.
 extern RraDataSet data_set_;
@@ -695,3 +696,4 @@ namespace rra
     }
 
 }  // namespace rra
+

@@ -24,3 +24,4 @@ public:
 };
 
 #endif  // RRA_MODELS_RAY_LIST_TABLE_ITEM_DELEGATE_H_
+

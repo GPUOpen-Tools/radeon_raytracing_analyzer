@@ -11,9 +11,9 @@
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/scaled_tree_view.h"
 
+#include "models/acceleration_structure_flags_table_item_model.h"
 #include "models/acceleration_structure_tree_view_model.h"
 #include "models/acceleration_structure_viewer_model.h"
-#include "models/acceleration_structure_flags_table_item_model.h"
 
 namespace rra
 {
@@ -175,3 +175,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_VIEWER_MODEL_H_
+

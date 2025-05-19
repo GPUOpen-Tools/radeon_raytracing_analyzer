@@ -8,8 +8,8 @@
 #ifndef RRA_RENDERER_VK_FRAMEWORK_EXT_GPU_VALIDATION_H_
 #define RRA_RENDERER_VK_FRAMEWORK_EXT_GPU_VALIDATION_H_
 
-#include "device_properties.h"
-#include "instance_properties.h"
+#include "vk/framework/device_properties.h"
+#include "vk/framework/instance_properties.h"
 
 namespace rra
 {
@@ -25,3 +25,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_EXT_GPU_VALIDATION_H_
+

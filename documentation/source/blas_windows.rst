@@ -103,6 +103,8 @@ Above the table is the base address of the BLAS used by all the instances.
 
 The following fields are displayed:
 
+* Row Id - The row index. This is an incrementing value starting at 0.
+
 * Instance index - The API index for the instance.
 
 * Instance address – The virtual GPU address for the instance node within the TLAS.
@@ -130,7 +132,7 @@ The following fields are displayed:
 * Transform[x][y] - The instance transform, comprising of the rotation and scaling components.
 
 The columns can be sorted by clicking on them. The arrow in the heading shows if
-sorting is in ascending or descending order.
+sorting is in ascending or descending order. The Row Id cannot be sorted.
 
 Typically, instances are created with their own local co-ordinate system. When
 placed in the scene, each instance requires a transformation from its local
@@ -149,6 +151,8 @@ Above the table is the base address of the BLAS used by all the triangles, and t
 address of the TLAS containing the BLAS. 
 
 The following fields are displayed:
+
+* Row Id - The row index. This is an incrementing value starting at 0.
 
 * Geometry index - The index of the geometry that the triangle belongs to.
 
@@ -176,7 +180,7 @@ The following fields are displayed:
 
 The columns can be sorted by clicking on the column header, apart from the vertex
 columns; sorting is disabled for these columns. The arrow in the heading shows if
-sorting is in ascending or descending order.
+sorting is in ascending or descending order. The Row Id cannot be sorted.
 
 The Geometries Tab
 ------------------
@@ -191,6 +195,8 @@ address of the TLAS containing the BLAS.
 
 The following fields are displayed:
 
+* Row Id - The row index. This is an incrementing value starting at 0.
+
 * Geometry index - The index of the geometry in the BLAS. This refers to the first column in the triangles table.
 
 * Opaque - Presence of the opaque geometry flag.
@@ -200,7 +206,7 @@ The following fields are displayed:
 * Primitive count - The number of primitives contained in the geometry.
 
 The columns can be sorted by clicking on the column header. The arrow in the heading shows if
-sorting is in ascending or descending order.
+sorting is in ascending or descending order. The Row Id cannot be sorted.
 
 The BLAS Properties Tab
 -----------------------

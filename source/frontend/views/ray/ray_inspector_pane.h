@@ -8,15 +8,16 @@
 #ifndef RRA_VIEWS_RAY_RAY_INSPECTOR_PANE_H_
 #define RRA_VIEWS_RAY_RAY_INSPECTOR_PANE_H_
 
+#include "public/orientation_gizmo.h"
+
 #include "ui_ray_inspector_pane.h"
 
+#include "models/acceleration_structure_flags_table_item_delegate.h"
 #include "models/ray/ray_inspector_model.h"
-#include "models/ray/ray_list_table_item_delegate.h"
-#include "views/base_pane.h"
-#include <public/orientation_gizmo.h>
-#include <models/acceleration_structure_flags_table_item_delegate.h>
-#include "ray_inspector_tree_view.h"
 #include "models/ray/ray_inspector_ray_tree_item_delegate.h"
+#include "models/ray/ray_list_table_item_delegate.h"
+#include "ray_inspector_tree_view.h"
+#include "views/base_pane.h"
 
 /// @brief Class declaration.
 class RayInspectorPane : public BasePane
@@ -177,9 +178,11 @@ private:
     QCursor         hand_cursor_{};                                          ///< The cursor instance used for changing the cursor shape.
     QPoint          mouse_start_dragging_pos_{};                             ///< The position of the cursor when the mouse starts being dragged.
     bool            cursor_overridden_{false};                               ///< True if the cursor has been overridden by the hand cursor.
+    bool            ctrl_key_down_{false};                                   ///< Is the control key pressed?
     rra::renderer::OrientationGizmoHitType last_gizmo_hit_{
         rra::renderer::OrientationGizmoHitType::kNone,
     };  ///< The orientation gizmo hit type that occured at the last mouse movement.
 };
 
 #endif  // RRA_VIEWS_RAY_RAY_INSPECTOR_PANE_H_
+

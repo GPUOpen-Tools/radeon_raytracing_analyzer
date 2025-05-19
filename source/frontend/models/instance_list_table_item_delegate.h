@@ -36,3 +36,4 @@ public:
 };
 
 #endif  // RRA_MODELS_INSTANCE_LIST_TABLE_ITEM_DELEGATE_H_
+

@@ -7,15 +7,14 @@
 
 #include "models/blas/blas_scene_collection_model.h"
 
+#include "glm/glm/gtx/intersect.hpp"
+
 #include "qt_common/utils/qt_util.h"
 
-#include "public/rra_assert.h"
-#include "public/rra_error.h"
-
-#include "public/rra_blas.h"
 #include "public/renderer_interface.h"
-
-#include "glm/glm/gtx/intersect.hpp"
+#include "public/rra_assert.h"
+#include "public/rra_blas.h"
+#include "public/rra_error.h"
 
 namespace rra
 {
@@ -70,7 +69,11 @@ namespace rra
     {
         Scene*     scene = GetSceneByIndex(blas_index);
         SceneNode* node  = scene->GetNodeById(node_id);
-        return !(node->IsEnabled() && node->IsVisible());
+        if (node)
+        {
+            return !(node->IsEnabled() && node->IsVisible());
+        }
+        return true;
     }
 
     Scene* BlasSceneCollectionModel::GetSceneByIndex(uint64_t bvh_index) const
@@ -135,3 +138,4 @@ namespace rra
     }
 
 }  // namespace rra
+

@@ -12,6 +12,7 @@
 
 #include "managers/pane_manager.h"
 #include "models/side_panels/view_model.h"
+#include "views/custom_widgets/slider_style.h"
 
 /// Signal handler for the view pane. Signals emitted from here will be picked
 /// up by all instances of the View pane; if the signals were emitted from the ViewPane,
@@ -246,11 +247,14 @@ private:
     /// @brief Update the pane based on the color theme.
     void OnColorThemeUpdated();
 
-    Ui::ViewPane*   ui_             = nullptr;              ///< Pointer to the Qt UI design.
-    rra::ViewModel* model_          = nullptr;              ///< The model for this pane.
-    rra::RRAPaneId  parent_pane_id_ = rra::kPaneIdInvalid;  ///< The parent pane id.
+    Ui::ViewPane*                ui_             = nullptr;              ///< Pointer to the Qt UI design.
+    rra::ViewModel*              model_          = nullptr;              ///< The model for this pane.
+    rra::RRAPaneId               parent_pane_id_ = rra::kPaneIdInvalid;  ///< The parent pane id.
+    AbsoluteSliderPositionStyle* field_of_view_style_;                   ///< Keep track of FOV slider style.
+    AbsoluteSliderPositionStyle* movement_speed_style_;                  ///< Keep track of movement speed slider style.
 
     static ViewPaneSignalHandler signal_handler;  ///< The singal handler for camera events.
 };
 
 #endif  // RRA_VIEWS_SIDE_PANELS_VIEW_PANE_H_
+

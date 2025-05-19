@@ -6,11 +6,12 @@
 /// the themes and colors pane.
 //=============================================================================
 
-#include <QPen>
+#include "views/custom_widgets/themes_and_colors_item_button.h"
+
 #include <QPainter>
+#include <QPen>
 
 #include "util/rra_util.h"
-#include "views/custom_widgets/themes_and_colors_item_button.h"
 
 ThemesAndColorsItemButton::ThemesAndColorsItemButton(QWidget* parent)
     : ScaledPushButton(parent)
@@ -62,3 +63,4 @@ void ThemesAndColorsItemButton::paintEvent(QPaintEvent* event)
     painter.setPen(QPen(font_color_, 1));
     painter.drawText(r1, Qt::AlignHCenter | Qt::AlignVCenter, this->text());
 }
+

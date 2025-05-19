@@ -10,9 +10,9 @@
 
 #include <QButtonGroup>
 
-#include "ui_themes_and_colors_pane.h"
-
 #include "qt_common/custom_widgets/scaled_push_button.h"
+
+#include "ui_themes_and_colors_pane.h"
 
 #include "views/base_pane.h"
 #include "views/custom_widgets/themes_and_colors_item_button.h"
@@ -108,3 +108,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_SETTINGS_THEMES_AND_COLORS_PANE_H_
+

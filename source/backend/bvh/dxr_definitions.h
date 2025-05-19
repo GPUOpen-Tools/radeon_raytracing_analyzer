@@ -8,10 +8,10 @@
 #ifndef RRA_BACKEND_BVH_DXR_DEFINITIONS_H_
 #define RRA_BACKEND_BVH_DXR_DEFINITIONS_H_
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 
-#include "gpu_def.h"
+#include "bvh/gpu_def.h"
 
 // Enable this if built with C++11
 #if 0  // #ifdef _LINUX
@@ -222,3 +222,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_DXR_DEFINITIONS_H_
+

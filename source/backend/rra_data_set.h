@@ -11,17 +11,17 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "system_info_utils/source/system_info_reader.h"
+
+#include "public/rra_async_ray_history_loader.h"
 #include "public/rra_error.h"
 
-#include "rra_configuration.h"
-
-#include "bvh/bvh_bundle.h"
-#include "ray_history/ray_history.h"
-#include "public/rra_async_ray_history_loader.h"
 #include "api_info.h"
 #include "asic_info.h"
+#include "bvh/bvh_bundle.h"
 #include "bvh/gpu_def.h"
-#include "system_info_utils/source/system_info_reader.h"
+#include "ray_history/ray_history.h"
+#include "rra_configuration.h"
 #include "string_table.h"
 #include "user_marker_history.h"
 
@@ -42,8 +42,8 @@ typedef struct RraDataSet
     std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> async_ray_histories;             ///< The ray histories made available per asnyc work.
     rra::ApiInfo                                           api_info                  = {};  ///< The API info.
     rra::AsicInfo                                          asic_info                 = {};  ///< The ASIC info.
-    rta::RayTracingIpLevel                                 rtip_level                = rta::RayTracingIpLevel::_None;  // The ray tracing IP level
-    system_info_utils::SystemInfo*                         system_info               = nullptr;                        ///< The System Info.
+    rta::RayTracingIpLevel                                 rtip_level                = rta::RayTracingIpLevel::RtIpNone;  ///< The ray tracing IP level.
+    system_info_utils::SystemInfo*                         system_info               = nullptr;                           ///< The System Info.
     rra::StringTables*                                     user_marker_string_tables = nullptr;
     rra::UserMarkerHistory*                                user_marker_histories     = nullptr;
 } RraDataSet;
@@ -72,3 +72,4 @@ RraErrorCode RraDataSetDestroy(RraDataSet* data_set);
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_RRA_DATA_SET_H_
+

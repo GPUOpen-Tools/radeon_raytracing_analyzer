@@ -20,4 +20,6 @@ KeyboardShortcutsPane::KeyboardShortcutsPane(QWidget* parent)
 
 KeyboardShortcutsPane::~KeyboardShortcutsPane()
 {
+    delete ui_;
 }
+

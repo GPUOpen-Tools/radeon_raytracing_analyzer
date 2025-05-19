@@ -41,3 +41,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_SETTINGS_GEOMETRY_SETTINGS_H_
+

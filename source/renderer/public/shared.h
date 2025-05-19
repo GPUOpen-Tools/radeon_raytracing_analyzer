@@ -11,7 +11,7 @@
 #ifndef RRA_SHADERS_SHARED_
 #define RRA_SHADERS_SHARED_
 
-#include <glm/glm/glm.hpp>
+#include "glm/glm/glm.hpp"
 
 namespace rra
 {
@@ -28,3 +28,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

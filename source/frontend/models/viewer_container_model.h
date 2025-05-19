@@ -11,9 +11,10 @@
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/utils/model_view_mapper.h"
 
-#include "public/renderer_interface.h"
 #include "public/render_state_adapter.h"
-#include "scene.h"
+#include "public/renderer_interface.h"
+
+#include "models/scene.h"
 
 namespace rra
 {
@@ -88,3 +89,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_VIEWER_CONTAINER_MODEL_H_
+

@@ -5,7 +5,8 @@
 /// @brief  Implementation for the selection rendering module.
 //=============================================================================
 
-#include "ray_inspector_overlay.h"
+#include "vk/render_modules/ray_inspector_overlay.h"
+
 #include <math.h>
 
 #define RAY_FLAGS_TERMINATE_ON_FIRST_HIT 4U
@@ -849,3 +850,4 @@ namespace rra::renderer
     }
 
 }  // namespace rra::renderer
+

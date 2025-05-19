@@ -9,8 +9,7 @@
 #define RRA_MODELS_TABLE_ITEM_DELEGATE_H_
 
 #include <QAbstractItemDelegate>
-
-class ScaledTableView;
+#include <QTableView>
 
 /// @brief table item delegate - determines table cells are painted. Intended
 /// to provide base-class functionality.
@@ -27,7 +26,7 @@ public:
     ///
     /// @param [in] parent The parent object.
     /// @param [in] table_view The table view that contains this widget.
-    TableItemDelegate(ScaledTableView* table_view, QObject* parent = 0);
+    TableItemDelegate(QTableView* table_view, QObject* parent = 0);
 
     /// @brief Destructor.
     virtual ~TableItemDelegate();
@@ -68,7 +67,8 @@ public:
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const Q_DECL_OVERRIDE;
 
 private:
-    ScaledTableView* table_view_{};  ///< The ScaledTableView that contains this delegate.
+    QTableView* table_view_{};  ///< The TableView that contains this delegate.
 };
 
 #endif  // RRA_MODELS_TABLE_ITEM_DELEGATE_H_
+

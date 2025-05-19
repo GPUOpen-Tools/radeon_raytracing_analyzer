@@ -8,9 +8,10 @@
 #include "string_util.h"
 
 #include <cctype>
-#include <QtMath>
-#include <QTextStream>
+
 #include <QLocale>
+#include <QTextStream>
+#include <QtMath>
 
 QString rra::string_util::ToUpperCase(const QString& string)
 {
@@ -150,3 +151,4 @@ QString rra::string_util::GetBuildTypeString(VkBuildAccelerationStructureFlagBit
 
     return QString("Default");
 }
+

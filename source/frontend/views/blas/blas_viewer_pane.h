@@ -10,9 +10,9 @@
 
 #include "ui_blas_viewer_pane.h"
 
+#include "models/acceleration_structure_flags_table_item_delegate.h"
 #include "models/blas/blas_viewer_model.h"
 #include "views/acceleration_structure_viewer_pane.h"
-#include "models/acceleration_structure_flags_table_item_delegate.h"
 
 /// @brief Class declaration.
 class BlasViewerPane : public AccelerationStructureViewerPane
@@ -113,3 +113,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_BLAS_BLAS_VIEWER_PANE_H_
+

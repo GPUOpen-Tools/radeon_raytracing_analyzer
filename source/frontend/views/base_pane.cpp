@@ -5,7 +5,7 @@
 /// @brief  Implementation for a base pane class.
 //=============================================================================
 
-#include "base_pane.h"
+#include "views/base_pane.h"
 
 BasePane::BasePane(QWidget* parent)
     : QWidget(parent)
@@ -27,3 +27,4 @@ void BasePane::OnTraceOpen()
 void BasePane::Reset()
 {
 }
+

@@ -7,18 +7,19 @@
 //=============================================================================
 
 #include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
-#include "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
 
-#include <iostream>
-#include <vector>
 #include <cassert>
 #include <deque>
+#include <iostream>
 #include <unordered_set>
-#include "bvh/dxr_type_conversion.h"
+#include <vector>
 
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_error.h"
+
+#include "bvh/dxr_type_conversion.h"
+#include "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
 #include "bvh/rtip11/rt_ip_11_header.h"
 
 namespace rta
@@ -444,3 +445,4 @@ namespace rta
     }
 
 }  // namespace rta
+

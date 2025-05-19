@@ -8,9 +8,9 @@
 #ifndef RRA_RENDERER_VK_RENDER_MODULES_TRAVERSAL_H_
 #define RRA_RENDERER_VK_RENDER_MODULES_TRAVERSAL_H_
 
-#include "../render_module.h"
-#include "../buffer_guard.h"
-#include "../image_guard.h"
+#include "vk/buffer_guard.h"
+#include "vk/image_guard.h"
+#include "vk/render_module.h"
 
 namespace rra
 {
@@ -83,7 +83,7 @@ namespace rra
             /// @brief Checks if the traversal counter continuous update function is set.
             ///
             /// @returns True if the traversal counter continuous update function is set.
-            bool IsTraversalCounterContinuousUpdateFunctionSet();
+            bool IsTraversalCounterContinuousUpdateFunctionSet() const;
 
         private:
             const RenderModuleContext* context_ = nullptr;  ///< The renderer context for the module.
@@ -153,3 +153,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULES_CHECKER_CLEAR_H_
+

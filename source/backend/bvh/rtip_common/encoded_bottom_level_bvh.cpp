@@ -8,13 +8,15 @@
 
 #include "bvh/rtip_common/encoded_bottom_level_bvh.h"
 
-#include <iostream>
-#include <vector>
 #include <cassert>
 #include <deque>
+#include <iostream>
 #include <limits>
-#include "bvh/rtip11/rt_ip_11_header.h"
+#include <vector>
+
 #include "public/rra_blas.h"
+
+#include "bvh/rtip11/rt_ip_11_header.h"
 
 namespace rta
 {
@@ -83,3 +85,4 @@ namespace rta
     }
 
 }  // namespace rta
+

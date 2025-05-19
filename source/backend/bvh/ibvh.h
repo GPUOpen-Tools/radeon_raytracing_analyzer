@@ -11,20 +11,19 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "rdf/rdf/inc/amdrdf.h"
+
+#include "bvh/gpu_def.h"
+#include "bvh/metadata_v1.h"
 #include "bvh/node_types/float16_box_node.h"
 #include "bvh/node_types/float32_box_node.h"
 #include "bvh/node_types/instance_node.h"
 #include "bvh/node_types/procedural_node.h"
 #include "bvh/node_types/triangle_node.h"
-#include "bvh/metadata_v1.h"
 #include "bvh/parent_block.h"
-
-#include "bvh/gpu_def.h"
-#include "rdf/rdf/inc/amdrdf.h"
-#include "bvh/rtip_common/i_acceleration_structure_header.h"
-
-#include "bvh/rtip31/internal_node.h"
 #include "bvh/rtip31/child_info.h"
+#include "bvh/rtip31/internal_node.h"
+#include "bvh/rtip_common/i_acceleration_structure_header.h"
 
 // RawAccelStruct currently supported version numbers.
 #define GPURT_ACCEL_STRUCT_MAJOR_VERSION 16
@@ -324,7 +323,7 @@ namespace rta
 
         /// @brief Get the header offset.
         /// Or equivalently the rest of the chunk after all the metadata.
-        uint64_t GetHeaderOffset();
+        uint64_t GetHeaderOffset() const;
 
         /// @brief Get the parent node of the node passed in.
         ///
@@ -378,3 +377,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_IBVH_H_
+

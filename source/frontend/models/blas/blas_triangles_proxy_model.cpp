@@ -75,6 +75,18 @@ namespace rra
         }
     }
 
+    QVariant BlasTrianglesProxyModel::data(const QModelIndex& index, int role) const
+    {
+        if (index.column() == kBlasTrianglesColumnIndex)
+        {
+            return index.row();
+        }
+        else
+        {
+            return TableProxyModel::data(index, role);
+        }
+    }
+
     bool BlasTrianglesProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
     {
         int left_column  = left.column();
@@ -121,3 +133,4 @@ namespace rra
         return QSortFilterProxyModel::lessThan(left, right);
     }
 }  // namespace rra
+

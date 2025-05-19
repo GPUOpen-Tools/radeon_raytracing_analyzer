@@ -5,7 +5,8 @@
 /// @brief  Implementation for the selection rendering module.
 //=============================================================================
 
-#include "selection_module.h"
+#include "vk/render_modules/selection_module.h"
+
 #include "glm/glm/gtc/matrix_transform.hpp"
 
 namespace rra
@@ -290,7 +291,7 @@ namespace rra
             render_state_ = render_state_ & (~kRenderOutlineEnabled);
         }
 
-        bool SelectionRenderModule::IsTransformRenderingEnabled()
+        bool SelectionRenderModule::IsTransformRenderingEnabled() const
         {
             return render_state_ & kRenderTransformEnabled;
         }
@@ -452,3 +453,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

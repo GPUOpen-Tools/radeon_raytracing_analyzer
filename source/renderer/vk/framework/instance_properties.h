@@ -10,7 +10,7 @@
 
 #include <vector>
 
-#include <volk/volk.h>
+#include "volk/volk.h"
 
 namespace rra
 {
@@ -82,3 +82,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_INSTANCE_PROPERTIES_H_
+

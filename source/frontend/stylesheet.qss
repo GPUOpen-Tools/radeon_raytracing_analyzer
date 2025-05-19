@@ -72,12 +72,12 @@ ScaledCycleButton
     text-align: center;
 }
 
-ScaledTableView, ScaledTreeView
+ScaledTableView, ScaledTreeView, QTableView
 {
     font-size: 9pt;
 }
 
-ScaledHeaderView
+ScaledHeaderView, QHeaderView
 {
     font: bold 9pt;
 }
@@ -289,7 +289,7 @@ MainWindow QTabWidget#tlas_sub_tab_
 MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab
 {
     border: 1px solid #C4C4C3;
-    padding: 1em 2em 1em 2em;
+    padding: 0.5em 2em 0.5em 2em;
 }
 
 MainWindow QTabWidget#tlas_sub_tab_ > QTabBar::tab:selected
@@ -322,7 +322,7 @@ MainWindow QTabWidget#blas_sub_tab_
 MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab
 {
     border: 1px solid #C4C4C3;
-    padding: 1em 2em 1em 2em;
+    padding: 0.5em 2em 0.5em 2em;
 }
 
 MainWindow QTabWidget#blas_sub_tab_ > QTabBar::tab:selected
@@ -355,7 +355,7 @@ MainWindow QTabWidget#ray_sub_tab_
 MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab
 {
     border: 1px solid #C4C4C3;
-    padding: 1em 2em 1em 2em;
+    padding: 0.5em 2em 0.5em 2em;
 }
 
 MainWindow QTabWidget#ray_sub_tab_ > QTabBar::tab:selected

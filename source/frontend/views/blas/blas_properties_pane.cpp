@@ -7,10 +7,11 @@
 
 #include "views/blas/blas_properties_pane.h"
 
+#include "public/rra_rtip_info.h"
+
 #include "managers/message_manager.h"
 #include "models/blas/blas_properties_model.h"
 #include "views/widget_util.h"
-#include "public/rra_rtip_info.h"
 
 BlasPropertiesPane::BlasPropertiesPane(QWidget* parent)
     : BasePane(parent)
@@ -52,6 +53,7 @@ BlasPropertiesPane::BlasPropertiesPane(QWidget* parent)
 BlasPropertiesPane::~BlasPropertiesPane()
 {
     delete model_;
+    delete ui_;
 }
 
 void BlasPropertiesPane::SetBlasIndex(uint64_t blas_index)
@@ -71,3 +73,4 @@ void BlasPropertiesPane::SetTlasIndex(uint64_t tlas_index)
         tlas_index_ = tlas_index;
     }
 }
+

@@ -8,3 +8,4 @@
 #include "version.h"
 
 const char* version_string = "RraVersion=" PRODUCT_VERSION_STRING;
+

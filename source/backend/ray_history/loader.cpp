@@ -5,14 +5,16 @@
 /// @brief  Definition for RTA ray history loader.
 //=============================================================================
 
-#include "loader.h"
-#include "counter.h"
-#include <rdf/rdf/inc/amdrdf.h>
+#include "ray_history/loader.h"
 
 #include <cassert>
 
+#include <rdf/rdf/inc/amdrdf.h>
+
 #include "public/rra_assert.h"
+
 #include "bvh/flags_util.h"
+#include "ray_history/counter.h"
 
 namespace GpuRt
 {
@@ -272,3 +274,4 @@ namespace rta
         return result;
     }
 }  // namespace rta
+

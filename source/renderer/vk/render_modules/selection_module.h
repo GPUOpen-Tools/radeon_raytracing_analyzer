@@ -8,12 +8,12 @@
 #ifndef RRA_RENDERER_VK_RENDER_MODULES_SELECTION_MODULE_H_
 #define RRA_RENDERER_VK_RENDER_MODULES_SELECTION_MODULE_H_
 
-#include "../render_module.h"
 #include "glm/glm/glm.hpp"
 
-#include "../bounding_volume_mesh.h"
-#include "../vk_graphics_context.h"
-#include "../buffer_guard.h"
+#include "vk/bounding_volume_mesh.h"
+#include "vk/buffer_guard.h"
+#include "vk/render_module.h"
+#include "vk/vk_graphics_context.h"
 
 namespace rra
 {
@@ -53,7 +53,7 @@ namespace rra
             /// @brief Whether or not instance transform is being rendered.
             ///
             /// @returns True if transform is being rendered, false if not.
-            bool IsTransformRenderingEnabled();
+            bool IsTransformRenderingEnabled() const;
 
             /// @brief Enables substrate rendering.
             void EnableTransformRendering();
@@ -112,3 +112,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

@@ -5,20 +5,21 @@
 /// @brief  Implementation for the Scene class.
 //=============================================================================
 
-#include "scene.h"
-#include "public/rra_blas.h"
-#include "public/rra_tlas.h"
-#include "util/stack_vector.h"
+#include "models/scene.h"
 
 // We can't use std::max or glm::max since the windows macro ends up overriding the max keyword.
 // So we underfine max for this file only.
 #undef max
 
 #include <algorithm>
-#include <string>
 #include <sstream>
+#include <string>
 
 #include "public/intersect.h"
+#include "public/rra_blas.h"
+#include "public/rra_tlas.h"
+
+#include "util/stack_vector.h"
 
 namespace rra
 {
@@ -193,7 +194,8 @@ namespace rra
     renderer::RraVertex* Scene::AllocateVertexBuffer(uint32_t blas_index)
     {
         uint32_t total_tri_count{};
-        RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
+        RraErrorCode error_code = RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
+        RRA_ASSERT(error_code);
         vertices_.resize((size_t)total_tri_count * 3);
         return vertices_.data();
     }
@@ -201,7 +203,8 @@ namespace rra
     std::byte* Scene::AllocateChildBuffer(uint32_t blas_index)
     {
         uint64_t total_node_count{};
-        RraBlasGetTotalNodeCount(blas_index, &total_node_count);
+        RraErrorCode error_code = RraBlasGetTotalNodeCount(blas_index, &total_node_count);
+        RRA_ASSERT(error_code);
         child_nodes_buffer_.resize(total_node_count * sizeof(SceneNode));
         return child_nodes_buffer_.data();
     }
@@ -222,7 +225,10 @@ namespace rra
             if (it.second && it.second->GetInstance())
             {
                 renderer::Instance* instance = it.second->GetInstance();
-                instance->rebraided          = IsInstanceRebraided(instance->instance_index);
+                if (instance)
+                {
+                    instance->rebraided = IsInstanceRebraided(instance->instance_index);
+                }
             }
         }
 
@@ -285,7 +291,8 @@ namespace rra
         for (auto& iter : instance_map)
         {
             uint32_t triangle_count = 0;
-            RraBlasGetTriangleNodeCount(iter.first, &triangle_count);
+            RraErrorCode error_code = RraBlasGetTriangleNodeCount(iter.first, &triangle_count);
+            RRA_ASSERT(error_code);
             current_max = std::max(triangle_count, current_max);
         }
 
@@ -315,7 +322,8 @@ namespace rra
         for (auto& iter : instance_map)
         {
             uint32_t depth = 0;
-            RraBlasGetMaxTreeDepth(iter.first, &depth);
+            RraErrorCode error_code = RraBlasGetMaxTreeDepth(iter.first, &depth);
+            RRA_ASSERT(error_code);
             current_max_tree_depth = std::max(depth, current_max_tree_depth);
         }
 
@@ -339,7 +347,8 @@ namespace rra
         std::vector<renderer::SelectedVolumeInstance> substrate_instances;
 
         uint32_t root_node;
-        RraBvhGetRootNodePtr(&root_node);
+        RraErrorCode error_code = RraBvhGetRootNodePtr(&root_node);
+        RRA_ASSERT(error_code);
 
         for (uint32_t node_id : selected_node_ids_)
         {
@@ -347,7 +356,8 @@ namespace rra
             if (instance)
             {
                 renderer::SelectedVolumeInstance selected_volume = {};
-                RraBlasGetBoundingVolumeExtents(instance->blas_index, root_node, &selection_extents);
+                error_code = RraBlasGetBoundingVolumeExtents(instance->blas_index, root_node, &selection_extents);
+                RRA_ASSERT(error_code);
 
                 selected_volume.min          = {selection_extents.min_x, selection_extents.min_y, selection_extents.min_z};
                 selected_volume.max          = {selection_extents.max_x, selection_extents.max_y, selection_extents.max_z};
@@ -462,26 +472,28 @@ namespace rra
         for (uint32_t node_id : old_selection)
         {
             auto node = GetNodeById(node_id);
-
-            // We only draw the first of the split triangles, so deselect that one.
-            node = node->GetTriangles().Size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
-
-            if (!node->IsEnabled())
+            if (node)
             {
-                continue;
-            }
+                // We only draw the first of the split triangles, so deselect that one.
+                node = node->GetTriangles().Size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
 
-            uint32_t num_triangles{(uint32_t)node->GetTriangles().Size()};
-            uint32_t custom_tri_idx = custom_triangle_map_[node->GetId()];
+                if (!node->IsEnabled())
+                {
+                    continue;
+                }
 
-            for (uint32_t i = 0; i < num_triangles; ++i)
-            {
-                auto& a = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 0].triangle_sah_and_selected;
-                auto& b = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 1].triangle_sah_and_selected;
-                auto& c = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 2].triangle_sah_and_selected;
-                a       = -std::abs(a);
-                b       = -std::abs(b);
-                c       = -std::abs(c);
+                uint32_t num_triangles{(uint32_t)node->GetTriangles().Size()};
+                uint32_t custom_tri_idx = custom_triangle_map_[node->GetId()];
+
+                for (uint32_t i = 0; i < num_triangles; ++i)
+                {
+                    auto& a = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 0].triangle_sah_and_selected;
+                    auto& b = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 1].triangle_sah_and_selected;
+                    auto& c = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 2].triangle_sah_and_selected;
+                    a       = -std::abs(a);
+                    b       = -std::abs(b);
+                    c       = -std::abs(c);
+                }
             }
         }
 
@@ -489,31 +501,33 @@ namespace rra
         for (uint32_t node_id : selected_node_ids_)
         {
             auto node = GetNodeById(node_id);
-
-            // We only draw the first of the split triangles, so select that one.
-            node = node->GetTriangles().Size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
-
-            if (!node->IsEnabled())
+            if (node)
             {
-                continue;
-            }
+                // We only draw the first of the split triangles, so select that one.
+                node = node->GetTriangles().Size() == 0 ? node : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex())[0];
 
-            uint32_t num_triangles{(uint32_t)node->GetTriangles().Size()};
+                if (!node->IsEnabled())
+                {
+                    continue;
+                }
 
-            if (!num_triangles)
-            {
-                continue;
-            }
+                uint32_t num_triangles{(uint32_t)node->GetTriangles().Size()};
 
-            uint32_t custom_tri_idx = custom_triangle_map_[node->GetId()];
-            for (uint32_t i = 0; i < num_triangles; ++i)
-            {
-                auto& a = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 0].triangle_sah_and_selected;
-                auto& b = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 1].triangle_sah_and_selected;
-                auto& c = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 2].triangle_sah_and_selected;
-                a       = std::abs(a);
-                b       = std::abs(b);
-                c       = std::abs(c);
+                if (!num_triangles)
+                {
+                    continue;
+                }
+
+                uint32_t custom_tri_idx = custom_triangle_map_[node->GetId()];
+                for (uint32_t i = 0; i < num_triangles; ++i)
+                {
+                    auto& a = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 0].triangle_sah_and_selected;
+                    auto& b = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 1].triangle_sah_and_selected;
+                    auto& c = custom_triangles_[custom_tri_idx + (size_t)i * 3 + 2].triangle_sah_and_selected;
+                    a       = std::abs(a);
+                    b       = std::abs(b);
+                    c       = std::abs(c);
+                }
             }
         }
     }
@@ -885,11 +899,13 @@ namespace rra
                     const char* node_name{};
                     if (is_tlas_)
                     {
-                        RraTlasGetNodeName(scene_closest_hit.node->GetId(), &node_name);
+                        RraErrorCode error_code = RraTlasGetNodeName(scene_closest_hit.node->GetId(), &node_name);
+                        RRA_ASSERT(error_code == kRraOk);
                     }
                     else
                     {
-                        RraBlasGetNodeName(bvh_index_, scene_closest_hit.node->GetId(), &node_name);
+                        RraErrorCode error_code = RraBlasGetNodeName(bvh_index_, scene_closest_hit.node->GetId(), &node_name);
+                        RRA_ASSERT(error_code == kRraOk);
                     }
                     std::string node_display_name = std::to_string(scene_closest_hit.node->GetId());
 
@@ -959,11 +975,11 @@ namespace rra
     {
         for (uint32_t id : selected_node_ids_)
         {
-            auto node     = GetNodeById(id);
-            auto instance = node->GetInstance();
-
+            auto node = GetNodeById(id);
             if (node)
             {
+                auto instance = node->GetInstance();
+
                 // If instance is rebraided, hide all rebraided siblings.
                 if (instance)
                 {
@@ -1009,28 +1025,31 @@ namespace rra
 
         for (uint32_t id : selected_node_ids_)
         {
-            auto node     = GetNodeById(id);
-            auto instance = node->GetInstance();
+            auto node = GetNodeById(id);
+            if (node)
+            {
+                auto instance = node->GetInstance();
 
-            // Show all rebraiding siblings if we're showing at least one.
-            if (instance)
-            {
-                for (auto sibling : GetRebraidedInstances(instance->instance_index))
+                // Show all rebraiding siblings if we're showing at least one.
+                if (instance)
                 {
-                    sibling->ShowParentChain();
+                    for (auto sibling : GetRebraidedInstances(instance->instance_index))
+                    {
+                        sibling->ShowParentChain();
+                    }
                 }
-            }
-            // Show all split triangle siblings if we're showing at least one.
-            else if (!node->GetTriangles().Empty())
-            {
-                for (auto sibling : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex()))
+                // Show all split triangle siblings if we're showing at least one.
+                else if (!node->GetTriangles().Empty())
                 {
-                    sibling->ShowParentChain();
+                    for (auto sibling : GetSplitTriangles(node->GetGeometryIndex(), node->GetPrimitiveIndex()))
+                    {
+                        sibling->ShowParentChain();
+                    }
                 }
-            }
-            else
-            {
-                node->ShowParentChain();
+                else
+                {
+                    node->ShowParentChain();
+                }
             }
         }
         IncrementSceneIteration();
@@ -1055,3 +1074,4 @@ namespace rra
     }
 
 }  // namespace rra
+

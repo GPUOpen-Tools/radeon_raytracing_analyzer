@@ -8,10 +8,10 @@
 #ifndef RRA_RENDERER_RENDERER_WIDGET_H_
 #define RRA_RENDERER_RENDERER_WIDGET_H_
 
-#include <QWidget>
 #include <QTimer>
+#include <QWidget>
 
-#include "renderer_interface.h"
+#include "public/renderer_interface.h"
 
 /// @brief The Renderer Widget class declaration.
 ///
@@ -49,7 +49,7 @@ public:
     /// @brief Query whether the 3D renderer is currently in focus.
     ///
     /// @return True if the 3D renderer is in focus.
-    bool GetRendererIsFocused();
+    bool GetRendererIsFocused() const;
 
     /// @brief Update swapchain size based on widget size.
     void UpdateSwapchainSize();
@@ -189,7 +189,7 @@ private:
     void ResizeSwapChain(int width, int height);
 
     /// @brief Set the focus to this widget's window.
-    void SetFocus();
+    void SetFocus() const;
 
     /// @brief Does the given widget have the application focus?
     ///
@@ -207,3 +207,4 @@ private:
 };
 
 #endif  // RRA_RENDERER_RENDERER_WIDGET_H_
+

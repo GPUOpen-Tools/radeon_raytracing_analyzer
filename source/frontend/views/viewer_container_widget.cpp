@@ -11,12 +11,12 @@
 
 #include "views/viewer_container_widget.h"
 
-#include "views/widget_util.h"
-#include "managers/pane_manager.h"
-
 #include "public/heatmap.h"
 #include "public/renderer_types.h"
+
+#include "managers/pane_manager.h"
 #include "settings/settings.h"
+#include "views/widget_util.h"
 
 ViewerContainerWidget::ViewerContainerWidget(QWidget* parent)
     : QWidget(parent)
@@ -371,3 +371,4 @@ void ViewerContainerWidget::EvaluateInstanceMaskWarning(int mask)
     ui_->content_instance_mask_bit_1_->repaint();
     ui_->content_instance_mask_bit_0_->repaint();
 }
+

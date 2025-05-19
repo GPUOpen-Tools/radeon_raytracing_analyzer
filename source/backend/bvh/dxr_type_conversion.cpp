@@ -5,10 +5,10 @@
 /// @brief  Definition of the DXR type conversion helper functions.
 //=============================================================================
 
-#include "dxr_type_conversion.h"
+#include "bvh/dxr_type_conversion.h"
 
-#include "flags_util.h"
-#include "dxr_definitions.h"
+#include "bvh/dxr_definitions.h"
+#include "bvh/flags_util.h"
 
 namespace rta
 {
@@ -196,3 +196,4 @@ namespace rta
     }
 
 }  // namespace rta
+

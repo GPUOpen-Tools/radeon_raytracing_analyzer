@@ -7,16 +7,16 @@
 
 #include <cassert>
 
-#include "instance.h"
-#include "instance_properties.h"
-#include "device_properties.h"
-#include "ext_validation.h"
-#include "../util_vulkan.h"
+#include "volk/volk.h"
 
 #include "public/rra_macro.h"
 #include "public/rra_print.h"
 
-#include <volk/volk.h>
+#include "vk/framework/device_properties.h"
+#include "vk/framework/ext_validation.h"
+#include "vk/framework/instance.h"
+#include "vk/framework/instance_properties.h"
+#include "vk/util_vulkan.h"
 
 namespace rra
 {
@@ -112,3 +112,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

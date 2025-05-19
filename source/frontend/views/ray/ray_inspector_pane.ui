@@ -77,26 +77,110 @@
                 <number>0</number>
                </property>
                <item>
-                <widget class="ScaledLabel" name="dispatch_indices_label_">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+                <layout class="QHBoxLayout" name="dispatch_layout_">
+                 <property name="leftMargin">
+                  <number>0</number>
                  </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>60</height>
-                  </size>
+                 <property name="topMargin">
+                  <number>0</number>
                  </property>
-                 <property name="text">
-                  <string>Consecutive rays at [-, -, -]</string>
+                 <property name="rightMargin">
+                  <number>0</number>
                  </property>
-                 <property name="rightMargin" stdset="0">
-                  <number>10</number>
+                 <property name="bottomMargin">
+                  <number>0</number>
                  </property>
-                </widget>
+                 <item>
+                  <widget class="ScaledLabel" name="dispatch_indices_label_">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>60</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>Consecutive rays at [-, -, -]</string>
+                   </property>
+                   <property name="rightMargin" stdset="0">
+                    <number>10</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>5</width>
+                     <height>5</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="ScaledPushButton" name="decrement_ray_">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string>Select the previous ray from the dispatch coordinates table. Pressing "Ctrl"+"P" offers the same functionality.</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../../resources.qrc">
+                     <normaloff>:/Resources/assets/third_party/ionicons/chevron-back-outline.svg</normaloff>
+                    </iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="ScaledPushButton" name="increment_ray_">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string>Select the next ray from the dispatch coordinates table. Pressing "Ctrl"+"N" offers the same functionality.</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../../resources.qrc">
+                     <normaloff>:/Resources/assets/third_party/ionicons/chevron-forward-outline.svg</normaloff>
+                    </iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Fixed</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>5</width>
+                     <height>5</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
                </item>
                <item>
                 <widget class="ScaledPushButton" name="content_token_dump_">
@@ -107,7 +191,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>Click to dump tokens to curent working directory, token_dump.txt</string>
+                  <string>Dump tokens to curent working directory, token_dump.txt</string>
                  </property>
                  <property name="text">
                   <string>Dump tokens to $cwd/token_dump.txt</string>
@@ -323,7 +407,7 @@
                          </sizepolicy>
                         </property>
                         <property name="toolTip">
-                         <string>Click to open the acceleration structure.</string>
+                         <string>Open the acceleration structure.</string>
                         </property>
                         <property name="text">
                          <string>-</string>
@@ -532,7 +616,7 @@
                          </sizepolicy>
                         </property>
                         <property name="toolTip">
-                         <string>Click to focus the camera on the ray origin.</string>
+                         <string>Focus the camera on the ray origin.</string>
                         </property>
                         <property name="text">
                          <string>-</string>
@@ -1597,3 +1681,4 @@
  </resources>
  <connections/>
 </ui>
+

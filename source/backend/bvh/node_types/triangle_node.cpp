@@ -11,11 +11,11 @@
 #include <cmath>    // --> isnan, isinf
 #include <cstring>  // --> Linux, memcpy
 
-#include "bvh/flags_util.h"
-#include "bvh/node_pointer.h"
-
 #include "public/rra_assert.h"
 #include "public/rra_macro.h"
+
+#include "bvh/flags_util.h"
+#include "bvh/node_pointer.h"
 
 namespace dxr
 {
@@ -237,3 +237,4 @@ namespace dxr
     }  // namespace amd
 
 }  // namespace dxr
+

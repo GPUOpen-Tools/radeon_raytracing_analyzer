@@ -19,13 +19,15 @@ and if there are any acceleration structures that are empty or missing.
 * **Empty BLASes** is the number of BLASes which have no geometry data.
 
 * **Missing BLASes** is the number of instances which contain a reference to a BLAS that isn't
-  present in the scene file.
+  present in the scene file. This row is not shown if fused instances was enabled by the driver
+  when the scene was captured.
 
 * **Inactive instances** is the number of instances which either have a null handle in place of their
   BLAS reference or have an instance mask of 0x0. This does not exactly match the DirectX 12 and Vulkan
   specification definitions of inactive instances in which an instance mask of 0x0 is not considered
   inactive. The reason for this is that the driver internally converts inactive instances to have an
-  instance mask of 0x0 so they are indistinguishable in the scene file.
+  instance mask of 0x0 so they are indistinguishable in the scene file. This row is not shown if
+  rebraiding was enabled by the driver when the scene was captured.
 
 The **Total memory** is the memory used for all the acceleration structures.
 

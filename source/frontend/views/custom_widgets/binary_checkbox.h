@@ -100,3 +100,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_BINARY_CHECKBOX_H_
+

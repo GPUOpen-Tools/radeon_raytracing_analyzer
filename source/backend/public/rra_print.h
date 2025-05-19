@@ -10,7 +10,7 @@
 
 #include <stdbool.h>
 
-#include "rra_error.h"
+#include "public/rra_error.h"
 
 /// Callback function for printing.
 typedef void (*RraPrintingCallback)(const char* msg);
@@ -38,3 +38,4 @@ void RraPrint(const char* format, ...);
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_PRINT_H_
+

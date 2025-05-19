@@ -49,6 +49,7 @@ BlasGeometriesPane::~BlasGeometriesPane()
 {
     delete model_;
     delete table_delegate_;
+    delete ui_;
 }
 
 void BlasGeometriesPane::keyPressEvent(QKeyEvent* event)
@@ -181,3 +182,4 @@ void BlasGeometriesPane::ScrollToSelectedGeometry()
     }
     ui_->geometries_table_->scrollToTop();
 }
+

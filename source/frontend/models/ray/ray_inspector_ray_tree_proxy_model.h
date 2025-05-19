@@ -10,8 +10,8 @@
 
 #include <QTableView>
 
-#include "models/tree_view_proxy_model.h"
 #include "models/ray/ray_inspector_ray_tree_model.h"
+#include "models/tree_view_proxy_model.h"
 
 namespace rra
 {
@@ -60,3 +60,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_RAY_LIST_PROXY_MODEL_H_
+

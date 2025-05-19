@@ -7,37 +7,37 @@
 
 #include "rra_data_set.h"
 
-#include <string.h>  // for memcpy()
 #include <stdlib.h>  // for malloc() / free()
+#include <string.h>  // for memcpy()
 #include <time.h>
-#include <iterator>
+#include <chrono>
 #include <fstream>
+#include <iterator>
+#include <thread>
+
+#ifndef _WIN32
+#include <stddef.h>  // for offsetof macro.
+#include "public/linux/safe_crt.h"
+#else
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+#include <algorithm>
+#include <map>
+
+#include "rdf/rdf/inc/amdrdf.h"
+
+#include "system_info_utils/source/driver_overrides_reader.h"
 
 #include "public/rra_assert.h"
 #include "public/rra_print.h"
 #include "public/rra_ray_history.h"
 #include "public/rra_trace_loader.h"
 
-#include "string_table.h"
-#include "user_marker_history.h"
-
-#include "system_info_utils/source/driver_overrides_reader.h"
-
-#include "rdf/rdf/inc/amdrdf.h"
-
 #include "ray_history/raytracing_counter.h"
-
+#include "string_table.h"
 #include "surface_area_heuristic.h"
-
-#ifndef _WIN32
-#include "public/linux/safe_crt.h"
-#include <stddef.h>  // for offsetof macro.
-#else
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
-#include <map>
-#include <algorithm>
+#include "user_marker_history.h"
 
 static bool ContainsChunk(const char* identifier, const rdf::ChunkFile& chunk_file)
 {
@@ -65,6 +65,27 @@ static std::vector<std::shared_ptr<RraAsyncRayHistoryLoader>> LaunchAsyncRayHist
     }
 
     return loaders;
+}
+
+// Wait for async threads to finish.
+static void WaitForAsyncRayHistoryLoadersToFinish(RraDataSet* data_set)
+{
+    bool done;
+    do
+    {
+        done = true;  // Assume we're done.
+        for (auto loader : data_set->async_ray_histories)
+        {
+            if (!loader.get()->IsDone())
+            {
+                // Sleep for a few ms to reduce spin-lock.
+                using namespace std::chrono_literals;
+                std::this_thread::sleep_for(10ms);
+                done = false;
+                break;
+            }
+        }
+    } while (done == false);
 }
 
 RraErrorCode CheckMajorVersions(int as_major, int dispatch_major)
@@ -155,6 +176,10 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     bool system_info_result = system_info_utils::SystemInfoReader::Parse(chunk_file, *data_set->system_info);
     RRA_UNUSED(system_info_result);
 
+    // Launch ray history loaders.
+    data_set->async_ray_histories.clear();
+    data_set->async_ray_histories = LaunchAsyncRayHistoryLoaders(chunk_file, path);
+
     data_set->rtip_level = rta::DecodeRtIpLevel(chunk_file, &error_code);
     if (error_code != kRraOk)
     {
@@ -174,11 +199,6 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     {
         return error_code;
     }
-
-    // Launch ray history loaders after the dataset has loaded.
-    // If an error is returned before here, the dataset will be cleared, meaning the ray history loaders will be dangling.
-    data_set->async_ray_histories.clear();
-    data_set->async_ray_histories = LaunchAsyncRayHistoryLoaders(chunk_file, path);
 
     return error_code;
 }
@@ -213,7 +233,11 @@ RraErrorCode RraDataSetInitialize(const char* path, RraDataSet* data_set)
     RraErrorCode error_code = ParseRdf(path, data_set);
 
     RRA_ASSERT(error_code == kRraOk);
-    RRA_RETURN_ON_ERROR(error_code == kRraOk, error_code);
+    if (error_code != kRraOk)
+    {
+        WaitForAsyncRayHistoryLoadersToFinish(data_set);
+        return error_code;
+    }
 
     data_set->file_loaded = true;
 
@@ -241,3 +265,4 @@ RraErrorCode RraDataSetDestroy(RraDataSet* data_set)
 
     return kRraOk;
 }
+

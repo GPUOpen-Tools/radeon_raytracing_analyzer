@@ -9,6 +9,9 @@
 
 #include "qt_common/utils/qt_util.h"
 
+#include "public/rra_api_info.h"
+#include "public/rra_rtip_info.h"
+
 #include "constants.h"
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
@@ -16,8 +19,6 @@
 #include "models/tlas/tlas_viewer_model.h"
 #include "settings/settings.h"
 #include "views/widget_util.h"
-#include "public/rra_api_info.h"
-#include "public/rra_rtip_info.h"
 
 static const int kSplitterWidth = 300;
 
@@ -157,6 +158,7 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
 TlasViewerPane::~TlasViewerPane()
 {
     delete flag_table_delegate_;
+    delete ui_;
 }
 
 void TlasViewerPane::showEvent(QShowEvent* event)
@@ -225,7 +227,7 @@ void TlasViewerPane::SelectBlasFromTree(const QModelIndex& index, const bool nav
     if (model != nullptr)
     {
         uint64_t acceleration_structure_index = model_->FindAccelerationStructureIndex(acceleration_structure_combo_box_);
-        if (acceleration_structure_index != UINT64_MAX)
+        if (acceleration_structure_index != UINT64_MAX && model->IsNodeSelectable(acceleration_structure_index, index))
         {
             uint64_t blas_index = model->GetBlasIndex(acceleration_structure_index, index);
             SelectLeafNode(blas_index, navigate_to_blas_pane);
@@ -535,3 +537,4 @@ void TlasViewerPane::OnColorThemeUpdated()
         ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
+

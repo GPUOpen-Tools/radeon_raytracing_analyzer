@@ -6,10 +6,10 @@
 /// boolean values in tables.
 //=============================================================================
 
-#include <QPen>
-#include <QPainter>
-
 #include "views/custom_widgets/read_only_checkbox.h"
+
+#include <QPainter>
+#include <QPen>
 
 #include "views/widget_util.h"
 
@@ -35,3 +35,4 @@ void ReadOnlyCheckBox::paintEvent(QPaintEvent* event)
     bool checked = (checkState() == Qt::CheckState::Checked) ? true : false;
     rra::widget_util::DrawCheckboxCell(&painter, rect, checked, false);
 }
+

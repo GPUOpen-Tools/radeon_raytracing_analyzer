@@ -110,6 +110,16 @@ namespace rra
         return kRraOk;
     }
 
+    RraErrorCode AsicInfo::GetPciID(uint32_t* pci_id) const
+    {
+        if (!chunk_data_valid_)
+        {
+            return kRraErrorMalformedData;
+        }
+        *pci_id = chunk_data_.pci_id;
+        return kRraOk;
+    }
+
     RraErrorCode AsicInfo::GetShaderCoreClockFrequency(uint64_t* out_clk_frequency) const
     {
         if (!chunk_data_valid_)
@@ -240,3 +250,4 @@ namespace rra
     }
 
 }  // namespace rra
+

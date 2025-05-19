@@ -5,18 +5,17 @@
 /// @brief  Implementation of the LogFileWriter.
 ///
 /// The LogFileWriter facilitates writing of log messages to a log file.
-///
 //=============================================================================
 
 #include "util/log_file_writer.h"
 
 #ifdef _WIN32
-#include <Windows.h>
 #include <Shlobj.h>
+#include <Windows.h>
 #else
-#include <unistd.h>
-#include <sys/stat.h>
 #include <pwd.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #include <QFile>
@@ -25,9 +24,6 @@
 
 namespace rra
 {
-    // LogFileWriter instance.
-    LogFileWriter* LogFileWriter::instance_ = nullptr;
-
     LogFileWriter::LogFileWriter()
 #ifdef _DEBUG
         : log_level_(kDebug)
@@ -45,12 +41,8 @@ namespace rra
 
     LogFileWriter& LogFileWriter::Get()
     {
-        if (instance_ == nullptr)
-        {
-            instance_ = new LogFileWriter();
-        }
-
-        return *instance_;
+        static LogFileWriter instance;
+        return instance;
     }
 
     void LogFileWriter::WriteLogMessage(const char* log_message)
@@ -104,3 +96,4 @@ namespace rra
         return log_file;
     }
 }  // namespace rra
+

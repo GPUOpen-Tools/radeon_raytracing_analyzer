@@ -7,9 +7,9 @@
 #ifndef QTCOMMON_CUSTOM_WIDGETS_DEPTH_SLIDER_WIDGET_H_
 #define QTCOMMON_CUSTOM_WIDGETS_DEPTH_SLIDER_WIDGET_H_
 
-#include <QWidget>
 #include <QObject>
 #include <QPainter>
+#include <QWidget>
 
 /// Class definition for the depth slider widget, which allows the user to select
 /// a range of values. This is used for the tree-depth slider in the TLAS pane.
@@ -81,3 +81,4 @@ private:
 };
 
 #endif  // QTCOMMON_CUSTOM_WIDGETS_DEPTH_SLIDER_WIDGET_H_
+

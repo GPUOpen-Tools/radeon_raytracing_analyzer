@@ -21,13 +21,13 @@
 #endif
 
 #include <cstdint>
-#include "math.h"
+
 #include "glm/glm/glm.hpp"
+
 #include "public/rra_assert.h"
 
-#ifdef RRA_INTERNAL_COMMENTS
-// The following instance node structs are copied from GPURT's gpurtAccelStruct.h.
-#endif
+#include "bvh/rtip_common/math.h"
+
 //=====================================================================================================================
 // RTIP3.x hardware instance transform node
 struct HwInstanceTransformNode
@@ -50,10 +50,6 @@ struct InstanceSidebandData
 };
 
 //=====================================================================================================================
-#ifdef RRA_INTERNAL_COMMENTS
-// The following structs with suffix RRA only exist for convenience in RRA, and are not present in GPURT.
-// The HwInstanceNode struct from GPURT is not included because it's only for RtIp3.0, and is deprecated in RtIp3.1.
-#endif
 struct ChildInfoRRA
 {
     union
@@ -1074,3 +1070,4 @@ static uint32_t GetPairIndex(uint32_t nodePointer)
 #endif
 
 #endif  // _GFX12_PRIMITIVE_NODE_H
+

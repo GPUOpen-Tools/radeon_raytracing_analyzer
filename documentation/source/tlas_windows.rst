@@ -577,6 +577,8 @@ all instances in the selected TLAS.
 
 The following fields are displayed:
 
+* Row Id - The row index. This is an incrementing value starting at 0.
+
 * Instance index - The API index for the instance.
 
 * Instance address – The virtual GPU address for the instance node within the TLAS.
@@ -606,6 +608,9 @@ The following fields are displayed:
 The columns can be sorted by clicking on them. The arrow in the heading shows if
 sorting is in ascending or descending order.
 
+The Row Id or row index column cannot be sorted and will always be fixed. This allows for easy counting
+of particular attributes.
+
 Typically, instances are created with their own local co-ordinate system. When
 placed in the scene, each instance requires a transformation from its local
 co-ordinate system to the world co-ordinate system. This is shown by the
@@ -619,6 +624,8 @@ The BLAS List tab displays a read-only table of BLAS properties and statistics.
 .. image:: media/tlas/blas_list_1.png
 
 The following fields are displayed:
+
+* Row Id - The row index. This is an incrementing value starting at 0.
 
 * Address – The virtual address for the BLAS structure in application memory.
 
@@ -657,7 +664,8 @@ The following fields are displayed:
 * Avg. depth – The average depth of the BLAS.
 
 The columns can be sorted by clicking on them. The arrow in the heading shows if
-sorting is in ascending or descending order.
+sorting is in ascending or descending order. As with the Instances table, the Row Id
+cannot be sorted.
 
 Double-clicking an item in the table will jump to the BLAS Viewer pane and show
 the selected BLAS.

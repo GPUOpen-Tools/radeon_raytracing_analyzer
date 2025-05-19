@@ -5,7 +5,7 @@
 /// @brief  Implementation of the geometry info class.
 //=============================================================================
 
-#include "geometry_info.h"
+#include "bvh/geometry_info.h"
 
 namespace dxr
 {
@@ -33,3 +33,4 @@ namespace dxr
         }
     }  // namespace amd
 }  // namespace dxr
+

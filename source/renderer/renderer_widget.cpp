@@ -5,16 +5,17 @@
 /// @brief  Implementation for the Renderer Widget.
 //=============================================================================
 
+#include "public/renderer_widget.h"
+
+#include <QApplication>
 #include <QDebug>
 #include <QEvent>
-#include <QWheelEvent>
 #include <QScreen>
+#include <QWheelEvent>
 #include <QtMath>
-#include <QApplication>
 
-#include "public/renderer_widget.h"
-#include "public/renderer_types.h"
 #include "public/orientation_gizmo.h"
+#include "public/renderer_types.h"
 
 const char* kFocusInBorderStyle  = "border-style: solid; border-width: 3px; border-color: rgb(0, 122, 217);";
 const char* kFocusOutBorderStyle = "border-style: solid; border-width: 3px; border-color: rgb(200,200,200);";
@@ -115,7 +116,7 @@ void RendererWidget::SetRendererInterface(rra::renderer::RendererInterface* rend
     }
 }
 
-bool RendererWidget::GetRendererIsFocused()
+bool RendererWidget::GetRendererIsFocused() const
 {
     return renderer_is_focused_;
 }
@@ -247,7 +248,7 @@ bool RendererWidget::IsFocused(QWidget* widget)
 #endif
 }
 
-void RendererWidget::SetFocus()
+void RendererWidget::SetFocus() const
 {
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     ::SetFocus(window_info_.window_handle);
@@ -335,3 +336,4 @@ bool RendererWidget::nativeEvent(const QByteArray& event_type, void* message, lo
 }
 
 #endif
+

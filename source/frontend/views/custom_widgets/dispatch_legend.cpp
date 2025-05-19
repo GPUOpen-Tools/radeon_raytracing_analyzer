@@ -5,7 +5,7 @@
 /// \brief Widget for a colored legend.
 //=============================================================================
 
-#include "dispatch_legend.h"
+#include "views/custom_widgets/dispatch_legend.h"
 
 #include "qt_common/utils/common_definitions.h"
 #include "qt_common/utils/qt_util.h"
@@ -43,3 +43,4 @@ void DispatchLegend::paintEvent(QPaintEvent* event)
     painter.fillRect(x, y, w, w, color_);
     painter.end();
 }
+

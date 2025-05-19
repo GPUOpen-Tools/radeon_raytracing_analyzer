@@ -5,7 +5,7 @@
 /// @brief  Implementation for a tlas pane.
 //=============================================================================
 
-#include "tlas_pane.h"
+#include "views/overview/tlas_pane.h"
 
 #include "qt_common/utils/qt_util.h"
 
@@ -21,6 +21,7 @@ TlasPane::TlasPane(QWidget* parent)
 
 TlasPane::~TlasPane()
 {
+    delete ui_;
 }
 
 void TlasPane::SetTlasStats(SummaryPane* summary_pane, const rra::TlasListStatistics& tlas, bool empty, bool rebraiding_enabled)
@@ -79,3 +80,4 @@ void TlasPane::paintEvent(QPaintEvent* event)
     painter.fillRect(rect(), background_color);
     QWidget::paintEvent(event);
 }
+

@@ -233,7 +233,7 @@
             <widget class="TextSearchWidget" name="search_box_"/>
            </item>
            <item>
-            <widget class="ScaledTableView" name="instances_table_" native="true">
+            <widget class="QTableView" name="instances_table_" native="true">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                <horstretch>0</horstretch>
@@ -263,14 +263,10 @@
    <extends>QLineEdit</extends>
    <header>qt_common/custom_widgets/text_search_widget.h</header>
   </customwidget>
-  <customwidget>
-   <class>ScaledTableView</class>
-   <extends>QTreeView</extends>
-   <header>qt_common/custom_widgets/scaled_table_view.h</header>
-  </customwidget>
  </customwidgets>
  <resources>
   <include location="../../resources.qrc"/>
  </resources>
  <connections/>
 </ui>
+

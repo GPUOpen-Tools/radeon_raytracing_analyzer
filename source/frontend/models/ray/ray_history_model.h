@@ -13,9 +13,10 @@
 
 #include "public/renderer_interface.h"
 #include "public/renderer_types.h"
+
+#include "models/ray/ray_counters_item_model.h"
 #include "models/ray/ray_list_item_model.h"
 #include "models/ray/ray_list_proxy_model.h"
-#include "models/ray/ray_counters_item_model.h"
 
 namespace rra
 {
@@ -114,7 +115,7 @@ namespace rra
                                      uint32_t ray_index,
                                      uint32_t reshaped_x,
                                      uint32_t reshaped_y,
-                                     uint32_t reshaped_z);
+                                     uint32_t reshaped_z) const;
 
         /// @brief Set the heatmap data.
         ///
@@ -181,8 +182,8 @@ namespace rra
         void UpdateShaderBindingTable();
 
     private:
-        RayListItemModel*                          table_model_;                           ///< Holds the shader binding table data.
-        RayListProxyModel*                         proxy_model_;                           ///< Proxy model for the BLAS list table.
+        RayListItemModel*                          table_model_;                           ///< Holds the dispatch coordinates table data.
+        RayListProxyModel*                         proxy_model_;                           ///< Proxy model for the dispatch coordinates table.
         RayCountersItemModel*                      stats_table_model_          = nullptr;  ///< Model associated with the stats table.
         QStandardItemModel*                        shader_binding_table_model_ = nullptr;  ///< Model associated with the shader binding table.
         std::function<void(renderer::HeatmapData)> heatmap_update_callback_    = nullptr;  ///< The heatmap update callback.
@@ -194,3 +195,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_HISTORY_MODEL_H_
+

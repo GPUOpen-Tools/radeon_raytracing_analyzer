@@ -6,7 +6,6 @@
 //=============================================================================
 
 #include "models/tlas/tlas_viewer_model.h"
-#include "models/tlas/tlas_scene_collection_model.h"
 
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/scaled_tree_view.h"
@@ -14,15 +13,15 @@
 
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
-#include "public/rra_tlas.h"
 #include "public/rra_rtip_info.h"
+#include "public/rra_tlas.h"
 
 #include "constants.h"
 #include "models/acceleration_structure_tree_view_model.h"
 #include "models/acceleration_structure_viewer_model.h"
+#include "models/tlas/tlas_scene_collection_model.h"
 #include "settings/settings.h"
 #include "views/widget_util.h"
-#include <vulkan/vulkan.h>
 
 namespace rra
 {
@@ -39,6 +38,7 @@ namespace rra
     {
         delete position_table_model_;
         delete transform_table_model_;
+        delete flags_table_model_;
     }
 
     void TlasViewerModel::InitializeTransformTableModel(ScaledTableView* table_view)
@@ -46,7 +46,7 @@ namespace rra
         transform_table_model_ = new QStandardItemModel(3, 3);
 
         table_view->setModel(transform_table_model_);
-        table_view->GetHeaderView()->setVisible(false);
+        table_view->horizontalHeader()->setVisible(false);
     }
 
     void TlasViewerModel::InitializePositionTableModel(ScaledTableView* table_view)
@@ -54,7 +54,7 @@ namespace rra
         position_table_model_ = new QStandardItemModel(3, 1);
 
         table_view->setModel(position_table_model_);
-        table_view->GetHeaderView()->setVisible(false);
+        table_view->horizontalHeader()->setVisible(false);
     }
 
     RraErrorCode TlasViewerModel::AccelerationStructureGetCount(uint64_t* out_count) const
@@ -80,6 +80,18 @@ namespace rra
     GetChildNodeFunction TlasViewerModel::AccelerationStructureGetChildNodeFunction() const
     {
         return RraTlasGetChildNodePtr;
+    }
+
+    bool TlasViewerModel::IsNodeSelectable(int tlas_index, const QModelIndex& model_index) const
+    {
+        uint32_t node_id = GetNodeIdFromModelIndex(model_index, tlas_index, kIsTlasModel);
+
+        SceneNode* node = last_clicked_node_scene_->GetNodeById(node_id);
+        if (node && (node->IsEnabled() && node->IsVisible()))
+        {
+            return true;
+        }
+        return false;
     }
 
     uint64_t TlasViewerModel::GetBlasIndex(int tlas_index, const QModelIndex& model_index) const
@@ -124,7 +136,7 @@ namespace rra
         return instance_index;
     }
 
-    uint64_t TlasViewerModel::BlasValid(uint64_t blas_index) const
+    bool TlasViewerModel::BlasValid(uint64_t blas_index) const
     {
         if (blas_index != ULLONG_MAX && !RraBlasIsEmpty(blas_index))
         {
@@ -169,7 +181,8 @@ namespace rra
         bool     is_empty       = false;
         if (SelectedNodeIsLeaf())
         {
-            RraTlasGetInstanceNodeInfo(tlas_index, node_id, &blas_address, &instance_count, &is_empty);
+            RraErrorCode error_code = RraTlasGetInstanceNodeInfo(tlas_index, node_id, &blas_address, &instance_count, &is_empty);
+            RRA_ASSERT(error_code == kRraOk);
             if (is_empty)
             {
                 return;
@@ -179,24 +192,29 @@ namespace rra
             SetModelData(kTlasStatsBlasAddress, address_string);
 
             uint32_t instance_index{};
-            RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_id, &instance_index);
+            error_code = RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_id, &instance_index);
+            RRA_ASSERT(error_code == kRraOk);
             SetModelData(kTlasStatsInstanceIndex, QString::number(instance_index));
 
             uint32_t instance_id{};
-            RraTlasGetInstanceNodeID(tlas_index, node_id, &instance_id);
+            error_code = RraTlasGetInstanceNodeID(tlas_index, node_id, &instance_id);
+            RRA_ASSERT(error_code == kRraOk);
             SetModelData(kTlasStatsInstanceId, QString::number(instance_id));
 
             uint32_t instance_mask{};
-            RraTlasGetInstanceNodeMask(tlas_index, node_id, &instance_mask);
+            error_code = RraTlasGetInstanceNodeMask(tlas_index, node_id, &instance_mask);
+            RRA_ASSERT(error_code == kRraOk);
             SetModelData(kTlasStatsInstanceMask, QString("0x%1%2").arg((instance_mask & 0xF0) >> 4, 0, 16).arg(instance_mask & 0x0F, 0, 16));
 
             uint32_t instance_hit_group{};
-            RraTlasGetInstanceNodeHitGroup(tlas_index, node_id, &instance_hit_group);
+            error_code = RraTlasGetInstanceNodeHitGroup(tlas_index, node_id, &instance_hit_group);
+            RRA_ASSERT(error_code == kRraOk);
             SetModelData(kTlasStatsInstanceHitGroupIndex, QString::number(instance_hit_group));
 
             // Row major 3x4 matrix.
             float instance_transform[12] = {};
-            RraTlasGetOriginalInstanceNodeTransform(tlas_index, node_id, instance_transform);
+            error_code = RraTlasGetOriginalInstanceNodeTransform(tlas_index, node_id, instance_transform);
+            RRA_ASSERT(error_code == kRraOk);
 
             widget_util::SetTableModelDecimalData(transform_table_model_, instance_transform[0], 0, 0, Qt::AlignRight);
             widget_util::SetTableModelDecimalData(transform_table_model_, instance_transform[1], 0, 1, Qt::AlignRight);
@@ -263,7 +281,7 @@ namespace rra
 
         flags_table_model_->Initialize(table_view);
 
-        table_view->GetHeaderView()->setVisible(false);
+        table_view->horizontalHeader()->setVisible(false);
     }
 
     void TlasViewerModel::PopulateFlagsTable(uint32_t flags)
@@ -345,3 +363,4 @@ namespace rra
     }
 
 }  // namespace rra
+

@@ -7,19 +7,19 @@
 
 #include "views/start/welcome_pane.h"
 
-#include <QPalette>
-#include <QUrl>
 #include <QDesktopServices>
 #include <QDialogButtonBox>
 #include <QFileInfo>
+#include <QPalette>
+#include <QUrl>
 
 #include "qt_common/utils/qt_util.h"
 
 #include "constants.h"
-#include "version.h"
 #include "managers/message_manager.h"
 #include "managers/trace_manager.h"
 #include "settings/settings.h"
+#include "version.h"
 #include "views/widget_util.h"
 
 static const int kMaxRecentFilesToShow = 8;
@@ -27,6 +27,7 @@ static const int kMaxRecentFilesToShow = 8;
 WelcomePane::WelcomePane(QWidget* parent)
     : BasePane(parent)
     , ui_(new Ui::WelcomePane)
+    , check_for_updates_thread_(nullptr)
 {
     ui_->setupUi(this);
 
@@ -96,19 +97,20 @@ WelcomePane::WelcomePane(QWidget* parent)
 
     if (rra::Settings::Get().GetCheckForUpdatesOnStartup())
     {
-        UpdateCheck::ThreadController* background_thread =
-            new UpdateCheck::ThreadController(this, PRODUCT_MAJOR_VERSION, PRODUCT_MINOR_VERSION, PRODUCT_BUILD_NUMBER, PRODUCT_BUGFIX_NUMBER);
+        check_for_updates_thread_ = std::unique_ptr<UpdateCheck::ThreadController>(
+            new UpdateCheck::ThreadController(this, PRODUCT_MAJOR_VERSION, PRODUCT_MINOR_VERSION, PRODUCT_BUILD_NUMBER, PRODUCT_BUGFIX_NUMBER));
 
         // Get notified when the check for updates has completed.
         // There is not a way in the UI to cancel this thread, so no reason to connect to its CheckForUpdatesCancelled callback.
-        connect(background_thread, &UpdateCheck::ThreadController::CheckForUpdatesComplete, this, &WelcomePane::NotifyOfNewVersion);
+        connect(check_for_updates_thread_.get(), &UpdateCheck::ThreadController::CheckForUpdatesComplete, this, &WelcomePane::NotifyOfNewVersion);
 
-        background_thread->StartCheckForUpdates(rra::kUpdateCheckUrl, rra::kUpdateCheckAssetName);
+        check_for_updates_thread_->StartCheckForUpdates(rra::kUpdateCheckUrl, rra::kUpdateCheckAssetName);
     }
 }
 
 WelcomePane::~WelcomePane()
 {
+    delete ui_;
 }
 
 void WelcomePane::showEvent(QShowEvent* event)
@@ -257,6 +259,7 @@ void WelcomePane::OpenRDNAPerformanceURL()
 
 void WelcomePane::NotifyOfNewVersion(UpdateCheck::ThreadController* thread, const UpdateCheck::Results& update_check_results)
 {
+    RRA_UNUSED(thread);
     if (update_check_results.was_check_successful && update_check_results.update_info.is_update_available && !update_check_results.update_info.releases.empty())
     {
         ui_->notifications_label_->setVisible(true);
@@ -286,10 +289,5 @@ void WelcomePane::NotifyOfNewVersion(UpdateCheck::ThreadController* thread, cons
         // This is why the dialog should not be deleted earlier - it could get opened any time.
         connect(ui_->notify_update_available_button_, &QPushButton::clicked, results_dialog, &QDialog::show);
     }
-
-    // Delete the thread so that it no longer exists in the background.
-    if (thread != nullptr)
-    {
-        delete thread;
-    }
 }
+

@@ -11,17 +11,16 @@
 
 #include <QCoreApplication>
 #include <QFileInfo>
-#include "qt_common/utils/qt_util.h"
 
-#include "util_vulkan.h"
+#include "qt_common/utils/qt_util.h"
 
 #include "public/rra_assert.h"
 #include "public/rra_print.h"
 
-#include "framework/device.h"
-
-#include "vk/vk_graphics_context.h"
+#include "vk/framework/device.h"
 #include "vk/framework/ext_debug_utils.h"
+#include "vk/util_vulkan.h"
+#include "vk/vk_graphics_context.h"
 
 namespace rra
 {
@@ -117,3 +116,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

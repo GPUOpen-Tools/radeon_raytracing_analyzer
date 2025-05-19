@@ -7,10 +7,10 @@
 #ifndef RRA_VIEWS_CUSTOM_WIDGETS_DOUBLE_SLIDER_HEATMAP_WIDGET_H_
 #define RRA_VIEWS_CUSTOM_WIDGETS_DOUBLE_SLIDER_HEATMAP_WIDGET_H_
 
+#include <QObject>
 #include <QSlider>
 #include <QStyle>
 #include <QStylePainter>
-#include <QObject>
 
 class DoubleSliderHeatmapWidget : public QSlider
 {
@@ -218,3 +218,4 @@ private:
 };
 
 #endif  // QTCOMMON_CUSTOM_WIDGETS_DOUBLE_SLIDER_WIDGET_H_
+

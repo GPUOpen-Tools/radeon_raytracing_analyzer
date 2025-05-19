@@ -11,7 +11,6 @@
 #include <QTableView>
 
 #include "models/table_proxy_model.h"
-#include "models/ray/ray_inspector_ray_table_proxy_model.h"
 
 namespace rra
 {
@@ -68,3 +67,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_RAY_TABLE_PROXY_MODEL_H_
+

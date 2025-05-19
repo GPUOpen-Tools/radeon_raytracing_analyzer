@@ -8,7 +8,7 @@
 #ifndef RRA_RENDERER_VK_RENDER_MODULES_CHECKER_CLEAR_H_
 #define RRA_RENDERER_VK_RENDER_MODULES_CHECKER_CLEAR_H_
 
-#include "../render_module.h"
+#include "vk/render_module.h"
 
 namespace rra
 {
@@ -54,3 +54,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULES_CHECKER_CLEAR_H_
+

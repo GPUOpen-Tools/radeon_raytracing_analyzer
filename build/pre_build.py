@@ -272,6 +272,7 @@ def generate_config(config):
                 elif args.toolchain == "2017":
                     cmake_args.extend(["-Tv141"])
 
+
     if sys.platform.startswith('linux'):
         if args.qt_system:
             cmake_args.extend(["-DQT_SYSTEM:BOOL=TRUE"])
@@ -375,7 +376,7 @@ if (args.build):
 
             cmake_args = ["cmake", "--build", build_dir, "--parallel", args.build_jobs]
 
-            cmake_args_docs = ["cmake", "--build", build_dir, "--target", "Documentation", "--parallel", args.build_jobs]
+            cmake_args_docs = ["cmake", "--build", build_dir, "--target", "RRADocumentation", "--parallel", args.build_jobs]
         elif sys.platform == "win32":
             build_dir = cmake_output_dir
 
@@ -385,7 +386,7 @@ if (args.build):
                 cmake_args.append("/p:CodeAnalysisRuleSet=NativeMinimumRules.ruleset")
                 cmake_args.append("/p:RunCodeAnalysis=true")
 
-            cmake_args_docs = ["cmake", "--build", build_dir, "--config", config, "--target", "Documentation", "--", "/m:" + args.build_jobs]
+            cmake_args_docs = ["cmake", "--build", build_dir, "--config", config, "--target", "RRADocumentation", "--", "/m:" + args.build_jobs]
 
         p = subprocess.Popen(cmake_args, cwd=cmake_output_dir, stderr=subprocess.STDOUT)
         p.wait()

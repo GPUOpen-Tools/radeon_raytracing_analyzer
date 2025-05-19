@@ -9,11 +9,13 @@
 
 #include "qt_common/utils/qt_util.h"
 
-#include "public/rra_assert.h"
 #include "public/rra_api_info.h"
+#include "public/rra_assert.h"
 
 #include "constants.h"
 #include "settings/settings.h"
+#include "util/rra_util.h"
+#include "views/custom_widgets/index_header_view.h"
 
 namespace rra
 {
@@ -39,20 +41,16 @@ namespace rra
         num_columns_ = columns;
     }
 
-    void BlasGeometriesItemModel::Initialize(ScaledTableView* acceleration_structure_table)
+    void BlasGeometriesItemModel::Initialize(QTableView* acceleration_structure_table)
     {
-        acceleration_structure_table->horizontalHeader()->setSectionsClickable(true);
+        acceleration_structure_table->setHorizontalHeader(new IndexHeaderView(kBlasGeometriesColumnIndex, Qt::Horizontal, acceleration_structure_table));
+        rra_util::InitializeTableView(acceleration_structure_table);
+        acceleration_structure_table->sortByColumn(kBlasGeometriesColumnGeometryIndex, Qt::AscendingOrder);
 
-        // Set default column widths wide enough to show table contents.
-        acceleration_structure_table->SetColumnPadding(0);
-
-        acceleration_structure_table->SetColumnWidthEms(kBlasGeometriesColumnGeometryIndex, 13);
-        acceleration_structure_table->SetColumnWidthEms(kBlasGeometriesColumnGeometryFlagOpaque, 10);
-        acceleration_structure_table->SetColumnWidthEms(kBlasGeometriesColumnGeometryFlagNoDuplicateAnyHit, 20);
-        acceleration_structure_table->SetColumnWidthEms(kBlasGeometriesColumnPrimitiveCount, 13);
-
-        // Allow users to resize columns if desired.
-        acceleration_structure_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+        acceleration_structure_table->setColumnWidth(kBlasGeometriesColumnGeometryIndex, 130);
+        acceleration_structure_table->setColumnWidth(kBlasGeometriesColumnGeometryFlagOpaque, 100);
+        acceleration_structure_table->setColumnWidth(kBlasGeometriesColumnGeometryFlagNoDuplicateAnyHit, 200);
+        acceleration_structure_table->setColumnWidth(kBlasGeometriesColumnPrimitiveCount, 130);
     }
 
     void BlasGeometriesItemModel::AddGeometryStructure(const BlasGeometriesStatistics& stats)
@@ -128,6 +126,8 @@ namespace rra
             {
                 switch (section)
                 {
+                case kBlasGeometriesColumnIndex:
+                    return "Row Id";
                 case kBlasGeometriesColumnGeometryIndex:
                     return "Geometry index";
                 case kBlasGeometriesColumnGeometryFlagOpaque:
@@ -146,6 +146,8 @@ namespace rra
             {
                 switch (section)
                 {
+                case kBlasGeometriesColumnIndex:
+                    return "The index of the row in the table";
                 case kBlasGeometriesColumnGeometryIndex:
                     return "The API index of this geometry";
                 case kBlasGeometriesColumnGeometryFlagOpaque:
@@ -209,3 +211,4 @@ namespace rra
         return num_columns_;
     }
 }  // namespace rra
+

@@ -2,11 +2,11 @@ BasedOnStyle: Google
 IndentWidth: 4
 UseTab: Never
 ColumnLimit: 160
+
 Language: Cpp
 AccessModifierOffset: -4
 BreakBeforeBraces: Custom
 BraceWrapping:
-
   AfterCaseLabel: true
   AfterClass: true
   AfterControlStatement: true
@@ -23,7 +23,7 @@ BraceWrapping:
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
-ConstructorInitializerAllOnOneLineOrOnePerLine : false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
 BreakConstructorInitializers: BeforeComma
 DerivePointerAlignment: false
 IndentCaseLabels: false
@@ -33,12 +33,13 @@ AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: Left
 AlignTrailingComments: true
 AlignOperands: true
-AllowShortFunctionsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
-AllowShortBlocksOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
 ReflowComments: false
-SortIncludes: false
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
 SortUsingDeclarations: false
 BinPackArguments: false
 BinPackParameters: false

@@ -8,12 +8,12 @@
 #ifndef RRA_RENDERER_VK_MESH_H_
 #define RRA_RENDERER_VK_MESH_H_
 
-#include "util_vulkan.h"
-#include "../public/renderer_types.h"
+#include "public/renderer_types.h"
 
-#include "framework/device.h"
-#include "framework/command_buffer_ring.h"
-#include "framework/ext_debug_utils.h"
+#include "util_vulkan.h"
+#include "vk/framework/command_buffer_ring.h"
+#include "vk/framework/device.h"
+#include "vk/framework/ext_debug_utils.h"
 
 namespace rra
 {
@@ -251,3 +251,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_MESH_H_
+

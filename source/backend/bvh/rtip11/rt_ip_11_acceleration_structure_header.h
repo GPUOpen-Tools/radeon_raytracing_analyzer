@@ -22,3 +22,4 @@ namespace rta
     };
 }  // namespace rta
 #endif  // RRA_BACKEND_BVH_RT_IP_11_ACCELERATION_STRUCTURE_HEADER_H_
+

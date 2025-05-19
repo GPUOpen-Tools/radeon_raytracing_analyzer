@@ -128,3 +128,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_MODEL_H_
+

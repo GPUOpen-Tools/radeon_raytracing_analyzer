@@ -5,10 +5,11 @@
 /// @brief  Definition for the CAD style camera controller.
 //=============================================================================
 
-#include "cad_camera_controller.h"
-#include "public/rra_macro.h"
+#include "io/cad_camera_controller.h"
 
 #include <QMouseEvent>
+
+#include "public/rra_macro.h"
 
 #include "models/side_panels/view_model.h"
 #include "settings/settings.h"
@@ -201,12 +202,12 @@ namespace rra
         delta_time            = glm::min(delta_time, 0.1F);
         elapsed_time_start_   = std::chrono::steady_clock::now();
 
-        last_camera_movement_speed_ = camera->GetMovementSpeed();
-
         if (camera == nullptr)
         {
             return;
         }
+
+        last_camera_movement_speed_ = camera->GetMovementSpeed();
 
         glm::vec3 translate_offset = pan_distance_;
         float     speed_modifier   = 1.0f;
@@ -369,3 +370,4 @@ namespace rra
         pan_distance_ = {};
     }
 }  // namespace rra
+

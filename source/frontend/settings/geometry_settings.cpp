@@ -12,11 +12,11 @@
 
 #include "settings/geometry_settings.h"
 
-#include <QWindow>
-#include <QScreen>
 #include <QApplication>
-#include <QtCore>
+#include <QScreen>
 #include <QStyle>
+#include <QWindow>
+#include <QtCore>
 
 #include "public/rra_assert.h"
 
@@ -114,3 +114,4 @@ namespace rra
         }
     }
 }  // namespace rra
+

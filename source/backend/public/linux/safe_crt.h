@@ -86,3 +86,4 @@ errno_t strcat_s(char* destination, size_t size, const char* source);
 #endif  // !_WIN32
 
 #endif  // BACKEND_PUBLIC_LINUX_SAFE_CRT_H_
+

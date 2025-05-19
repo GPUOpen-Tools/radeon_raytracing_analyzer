@@ -5,7 +5,7 @@
 /// @brief  Implementation of the dispatch loading bar.
 //=============================================================================
 
-#include "dispatch_loading_bar.h"
+#include "views/custom_widgets/dispatch_loading_bar.h"
 
 #include <QPainter>
 
@@ -79,3 +79,4 @@ void DispatchLoadingBar::paintEvent(QPaintEvent* paint_event)
     painter.setPen(palette().windowText().color());
     painter.drawText(rect, Qt::AlignHCenter | Qt::AlignVCenter, text);
 }
+

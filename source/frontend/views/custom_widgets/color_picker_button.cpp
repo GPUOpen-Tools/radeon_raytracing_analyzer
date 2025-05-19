@@ -7,9 +7,9 @@
 
 #include "views/custom_widgets/color_picker_button.h"
 
-#include <QPushButton>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPushButton>
 
 static const int kDefaultButtonDimension = 60;
 
@@ -99,3 +99,4 @@ void ColorPickerButton::paintEvent(QPaintEvent* event)
         painter.fillRect(r1, button_color_);
     }
 }
+

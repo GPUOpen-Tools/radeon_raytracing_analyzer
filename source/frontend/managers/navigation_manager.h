@@ -8,9 +8,9 @@
 #ifndef RRA_MANAGERS_NAVIGATION_MANAGER_H_
 #define RRA_MANAGERS_NAVIGATION_MANAGER_H_
 
-#include <QWidget>
 #include <QList>
 #include <QModelIndex>
+#include <QWidget>
 
 #include "managers/pane_manager.h"
 
@@ -132,3 +132,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_NAVIGATION_MANAGER_H_
+

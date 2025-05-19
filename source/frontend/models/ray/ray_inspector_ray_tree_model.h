@@ -9,11 +9,14 @@
 #ifndef RRA_MODELS_RAY_INSPECTOR_RAY_TREE_MODEL_H_
 #define RRA_MODELS_RAY_INSPECTOR_RAY_TREE_MODEL_H_
 
-#include <QAbstractItemModel>
 #include <optional>
 
+#include <QAbstractItemModel>
+
 #include "qt_common/custom_widgets/scaled_tree_view.h"
+
 #include "public/rra_ray_history.h"
+
 #include "ray_inspector_ray_tree_item.h"
 
 namespace rra
@@ -59,3 +62,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_RAY_TREE_MODEL_H_
+

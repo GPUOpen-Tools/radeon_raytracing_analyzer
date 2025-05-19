@@ -5,9 +5,10 @@
 /// @brief Implementation of RRA's instance flags table item delegate.
 //=============================================================================
 
+#include <QPainter>
+
 #include "models/acceleration_structure_flags_table_item_delegate.h"
 #include "models/acceleration_structure_flags_table_item_model.h"
-#include "qpainter.h"
 
 FlagTableItemDelegate::FlagTableItemDelegate(QObject* parent)
     : TableItemDelegate(parent)
@@ -48,3 +49,4 @@ bool FlagTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
+

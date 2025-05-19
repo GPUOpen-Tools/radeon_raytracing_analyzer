@@ -13,8 +13,6 @@
 
 #include <QAbstractItemModel>
 
-#include "vulkan/include/vulkan/vulkan_core.h"
-
 #include "qt_common/custom_widgets/scaled_table_view.h"
 
 #include "public/rra_bvh.h"
@@ -87,3 +85,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TLAS_FLAGS_TABLE_ITEM_MODEL_H_
+

@@ -2,10 +2,10 @@
 // Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
-/// @brief Source for the RGP histogram graphics view.
+/// @brief Source for the histogram graphics view.
 //=============================================================================
 
-#include "views/custom_widgets/rgp_histogram_widget.h"
+#include "views/custom_widgets/histogram_widget.h"
 
 static const float    kSelectionRangeAlpha     = 0.125f;
 static const QColor   kSelectionRangeColor     = QColor(128, 32, 32, 128);
@@ -26,7 +26,7 @@ static const uint32_t kSelectionLinesZValue    = 2;
 static const uint32_t kSelectionRangeZValue    = 1;
 static const uint32_t kHistogramItemZValue     = 0;
 
-RgpHistogramWidget::RgpHistogramWidget(QWidget* parent)
+HistogramWidget::HistogramWidget(QWidget* parent)
     : QGraphicsView(parent)
     , bounding_data_({UINT32_MAX, 0, 0})
     , selection_min_value_(0)
@@ -36,20 +36,20 @@ RgpHistogramWidget::RgpHistogramWidget(QWidget* parent)
     , selection_range_indicator_range_(nullptr)
     , active_selection_mode_(kHistogramSelectionModeRange)
 {
-    QGraphicsScene* graphics_scene = new QGraphicsScene(this);
-    setScene(graphics_scene);
+    graphics_scene_ = new QGraphicsScene(this);
+    setScene(graphics_scene_);
 
     selection_range_indicator_left_ = new QGraphicsLineItem();
     selection_range_indicator_left_->setPen(kSelectionLinePenDefault);
     selection_range_indicator_left_->setZValue(kSelectionLinesZValue);
     selection_range_indicator_left_->setFlag(QGraphicsItem::ItemIsSelectable, false);
-    graphics_scene->addItem(selection_range_indicator_left_);
+    graphics_scene_->addItem(selection_range_indicator_left_);
 
     selection_range_indicator_right_ = new QGraphicsLineItem();
     selection_range_indicator_right_->setPen(kSelectionLinePenDefault);
     selection_range_indicator_right_->setZValue(kSelectionLinesZValue);
     selection_range_indicator_right_->setFlag(QGraphicsItem::ItemIsSelectable, false);
-    graphics_scene->addItem(selection_range_indicator_right_);
+    graphics_scene_->addItem(selection_range_indicator_right_);
 
     selection_range_indicator_range_ = new QGraphicsRectItem();
     selection_range_indicator_range_->setBrush(kSelectionRangeBrush);
@@ -57,16 +57,17 @@ RgpHistogramWidget::RgpHistogramWidget(QWidget* parent)
     selection_range_indicator_range_->setZValue(kSelectionRangeZValue);
     selection_range_indicator_range_->setOpacity(kSelectionRangeAlpha);
     selection_range_indicator_range_->setFlag(QGraphicsItem::ItemIsSelectable, false);
-    graphics_scene->addItem(selection_range_indicator_range_);
+    graphics_scene_->addItem(selection_range_indicator_range_);
 
     setFixedSize(kHistogramBaseSize);
 }
 
-RgpHistogramWidget::~RgpHistogramWidget()
+HistogramWidget::~HistogramWidget()
 {
+    delete graphics_scene_;
 }
 
-void RgpHistogramWidget::Clear()
+void HistogramWidget::Clear()
 {
     histogram_elements_.clear();
 
@@ -83,7 +84,7 @@ void RgpHistogramWidget::Clear()
     }
 }
 
-void RgpHistogramWidget::SetData(const RgpHistogramData* histogram_data, uint32_t num_data)
+void HistogramWidget::SetData(const HistogramData* histogram_data, uint32_t num_data)
 {
     Clear();
 
@@ -93,7 +94,7 @@ void RgpHistogramWidget::SetData(const RgpHistogramData* histogram_data, uint32_
 
     for (uint32_t i = 0; i < num_data; ++i)
     {
-        RgpHistogramData hist_data = histogram_data[i];
+        HistogramData hist_data = histogram_data[i];
 
         bounding_data_.min_value = std::min(bounding_data_.min_value, hist_data.min_value);
         bounding_data_.max_value = std::max(bounding_data_.max_value, hist_data.max_value);
@@ -115,7 +116,7 @@ void RgpHistogramWidget::SetData(const RgpHistogramData* histogram_data, uint32_
 
     for (uint32_t i = 0; i < num_data; ++i)
     {
-        RgpHistogramData hist_data = histogram_data[i];
+        HistogramData hist_data = histogram_data[i];
         if (hist_data.count > 0)
         {
             const uint32_t height = hist_data.count * height_normalize;
@@ -140,7 +141,7 @@ void RgpHistogramWidget::SetData(const RgpHistogramData* histogram_data, uint32_
     fitInView(scene_rect);
 }
 
-void RgpHistogramWidget::SetSelectionMode(HistogramSelectionMode mode)
+void HistogramWidget::SetSelectionMode(HistogramSelectionMode mode)
 {
     active_selection_mode_ = mode;
 
@@ -172,7 +173,7 @@ void RgpHistogramWidget::SetSelectionMode(HistogramSelectionMode mode)
     scene()->update();
 }
 
-void RgpHistogramWidget::SetSelectionAttributes(int32_t min_value, int32_t max_value)
+void HistogramWidget::SetSelectionAttributes(int32_t min_value, int32_t max_value)
 {
     selection_min_value_ = min_value;
     selection_max_value_ = max_value;
@@ -204,10 +205,11 @@ void RgpHistogramWidget::SetSelectionAttributes(int32_t min_value, int32_t max_v
     scene()->update();
 }
 
-void RgpHistogramWidget::resizeEvent(QResizeEvent* event)
+void HistogramWidget::resizeEvent(QResizeEvent* event)
 {
     SetSelectionAttributes(selection_min_value_, selection_max_value_);
     fitInView(QRect(0, 0, kHistogramSceneWidth, kHistogramSceneHeight));
 
     QGraphicsView::resizeEvent(event);
 }
+

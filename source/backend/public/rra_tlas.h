@@ -12,10 +12,10 @@
 
 #include <stdbool.h>
 
-#include "rra_bvh.h"
-#include "rra_error.h"
-
 #include "vulkan/include/vulkan/vulkan_core.h"
+
+#include "public/rra_bvh.h"
+#include "public/rra_error.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -410,3 +410,4 @@ RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_TLAS_H_
+

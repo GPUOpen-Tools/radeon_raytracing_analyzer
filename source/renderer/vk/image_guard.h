@@ -9,6 +9,7 @@
 #define RRA_RENDERER_VK_IMAGE_GUARD_H_
 
 #include <vector>
+
 #include "vk/framework/device.h"
 
 namespace rra
@@ -60,3 +61,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

@@ -8,11 +8,11 @@
 #ifndef RRA_VIEWS_CUSTOM_WIDGETS_COLOR_PICKER_WIDGET_H_
 #define RRA_VIEWS_CUSTOM_WIDGETS_COLOR_PICKER_WIDGET_H_
 
-#include <QWidget>
+#include <QButtonGroup>
 #include <QColor>
 #include <QGridLayout>
-#include <QButtonGroup>
 #include <QPushButton>
+#include <QWidget>
 
 #include "qt_common/utils/color_palette.h"
 
@@ -94,3 +94,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_COLOR_PICKER_WIDGET_H_
+

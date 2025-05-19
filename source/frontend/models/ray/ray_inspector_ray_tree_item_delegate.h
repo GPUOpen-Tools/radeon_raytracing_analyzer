@@ -8,9 +8,11 @@
 #ifndef RRA_MODELS_RAY_INSPECTOR_TABLE_ITEM_DELEGATE_H_
 #define RRA_MODELS_RAY_INSPECTOR_TABLE_ITEM_DELEGATE_H_
 
-#include "models/table_item_delegate.h"
 #include <QStyledItemDelegate>
+
 #include "qt_common/custom_widgets/scaled_tree_view.h"
+
+#include "models/table_item_delegate.h"
 
 class RayInspectorRayTreeItemDelegate : public QStyledItemDelegate
 {
@@ -58,3 +60,4 @@ public:
 };
 
 #endif  // RRA_MODELS_RAY_LIST_TABLE_ITEM_DELEGATE_H_
+

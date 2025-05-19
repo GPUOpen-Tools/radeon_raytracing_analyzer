@@ -156,3 +156,4 @@ namespace rra
         settings_->AddRecentFile(recent_file);
     }
 }  // namespace rra
+

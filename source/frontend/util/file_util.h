@@ -22,3 +22,4 @@ namespace file_util
 };  // namespace file_util
 
 #endif  // RRA_UTIL_FILE_UTIL_H_
+

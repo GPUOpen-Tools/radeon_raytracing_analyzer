@@ -5,20 +5,22 @@
 /// @brief  Definition of qt based user input controller interface.
 //=============================================================================
 
-#include "viewer_io.h"
-#include "models/side_panels/view_model.h"
+#include "io/viewer_io.h"
 
+#include <algorithm>
 #include <sstream>
 
+#include <QApplication>
 #include <QHBoxLayout>
 #include <QMenu>
 #include <QMouseEvent>
-#include <QApplication>
-#include <algorithm>
-#include "util/string_util.h"
-#include "constants.h"
+
 #include "qt_common/custom_widgets/scaled_label.h"
+
+#include "constants.h"
+#include "models/side_panels/view_model.h"
 #include "settings/settings.h"
+#include "util/string_util.h"
 
 namespace rra
 {
@@ -491,10 +493,16 @@ namespace rra
             context_options[kFocusOnSelectionName] = [&]() { should_focus_on_selection_ = true; };
         }
 
+        // Keep track of the actions so they can be deleted later.
+        auto                  num_actions = context_options.size();
+        std::vector<QAction*> actions;
+        actions.reserve(num_actions);
+
         for (const auto& option_action : context_options)
         {
             auto action = new QAction(QString::fromStdString(option_action.first));
             menu.addAction(action);
+            actions.push_back(action);
         }
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         QAction* action = menu.exec(mouse_event->globalPos());
@@ -505,6 +513,12 @@ namespace rra
         if (action != nullptr)
         {
             context_options[action->text().toStdString()]();
+        }
+
+        // Delete the actions.
+        for (auto action_iter : actions)
+        {
+            delete action_iter;
         }
     }
 
@@ -694,3 +708,4 @@ namespace rra
     }
 
 }  // namespace rra
+

@@ -12,7 +12,7 @@
 
 #include <stdbool.h>
 
-#include "rra_error.h"
+#include "public/rra_error.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -186,3 +186,4 @@ RraErrorCode RraBvhGetTotalTraceSizeInBytes(uint64_t* out_size_in_bytes);
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_BVH_H_
+

@@ -89,3 +89,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_COLORED_CHECKBOX_H_
+

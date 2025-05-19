@@ -11,11 +11,12 @@
 
 #include <limits.h>
 
-#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
-#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
-#include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
-#include "public/rra_rtip_info.h"
 #include "public/rra_assert.h"
+#include "public/rra_rtip_info.h"
+
+#include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
+#include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
 #include "math_util.h"
 #include "rra_blas_impl.h"
 #include "rra_bvh_impl.h"
@@ -822,9 +823,6 @@ RraErrorCode RraTlasGetInstanceNodeMask(uint64_t tlas_index, uint32_t node_ptr, 
             return result;
         }
 
-#ifdef RRA_INTERNAL_COMMENT
-        // Test that this is correct. The instance mask might be stored in the rightmost bits of the uint32_t.
-#endif
         *out_mask = instance_node.hw_instance_node.data.userDataAndInstanceMask >> 24;
     }
     else
@@ -1123,3 +1121,4 @@ RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32
     std::memcpy(out_rotation, &rotation, sizeof(glm::mat3));
     return kRraOk;
 }
+

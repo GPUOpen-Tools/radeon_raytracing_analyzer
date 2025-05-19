@@ -21,3 +21,4 @@ namespace rra
         return message_manager;
     }
 }  // namespace rra
+

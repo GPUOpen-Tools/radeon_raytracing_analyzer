@@ -18,8 +18,9 @@
 
 #include <QObject>
 
-#include "managers/pane_manager.h"
 #include "glm/glm/glm.hpp"
+
+#include "managers/pane_manager.h"
 
 namespace rra
 {
@@ -123,6 +124,13 @@ namespace rra
         /// @param [in] z           The z-component of the dispatch coordinate.
         void RayCoordinateSelected(uint32_t dispatch_id, uint32_t x, uint32_t y, uint32_t z);
 
+        /// @brief Signal to indicate that the next/previous ray in the dispatch coordinates table is requested.
+        ///
+        /// Uses a step size to determine whether to increment (+1) or decrement (-1).
+        ///
+        /// @param [in] step_size  The number of table rows to move (negative is backwards).
+        void RayStepSelected(int32_t step_size);
+
         /// @brief Signal to reset the UI to its default state.
         ///
         /// @param [in] pane The pane whose UI state is to be reset.
@@ -131,3 +139,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_MESSAGE_MANAGER_H_
+

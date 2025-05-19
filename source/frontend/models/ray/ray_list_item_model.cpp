@@ -8,18 +8,17 @@
 ///
 //=============================================================================
 
-#include <math.h>
-
 #include "models/ray/ray_list_item_model.h"
 
-#include "vulkan/include/vulkan/vulkan_core.h"
+#include <math.h>
 
 #include "qt_common/utils/qt_util.h"
 
-#include "constants.h"
-#include "util/string_util.h"
-#include "settings/settings.h"
 #include "public/rra_api_info.h"
+
+#include "constants.h"
+#include "settings/settings.h"
+#include "util/string_util.h"
 
 namespace rra
 {
@@ -252,3 +251,4 @@ namespace rra
         return num_columns_;
     }
 }  // namespace rra
+

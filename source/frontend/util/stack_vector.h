@@ -8,10 +8,10 @@
 #ifndef RRA_UTIL_STACK_VECTOR_H_
 #define RRA_UTIL_STACK_VECTOR_H_
 
-#include <array>
-#include <vector>
 #include <assert.h>
+#include <array>
 #include <cstdint>
+#include <vector>
 
 namespace rra
 {
@@ -219,3 +219,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_UTIL_STACK_VECTOR_H_
+

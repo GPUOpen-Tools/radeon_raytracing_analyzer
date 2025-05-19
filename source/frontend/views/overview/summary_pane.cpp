@@ -10,17 +10,16 @@
 #include "qt_common/utils/qt_util.h"
 
 #include "public/rra_assert.h"
+#include "public/rra_ray_history.h"
 #include "public/rra_tlas.h"
 
 #include "constants.h"
+#include "dispatch_pane.h"
 #include "managers/message_manager.h"
 #include "settings/settings.h"
-#include "views/widget_util.h"
-
 #include "tlas_pane.h"
-#include "dispatch_pane.h"
 #include "util/string_util.h"
-#include <public/rra_ray_history.h>
+#include "views/widget_util.h"
 
 SummaryPane::SummaryPane(QWidget* parent)
     : BasePane(parent)
@@ -59,12 +58,14 @@ void SummaryPane::UpdateTlasMap()
     tlas_address_to_index_.clear();
 
     uint64_t tlas_count = 0;
-    RraBvhGetTlasCount(&tlas_count);
+    RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
+    RRA_ASSERT(error_code);
 
     for (uint64_t i = 0; i < tlas_count; i++)
     {
         uint64_t address;
-        RraTlasGetBaseAddress(i, &address);
+        error_code = RraTlasGetBaseAddress(i, &address);
+        RRA_ASSERT(error_code == kRraOk);
         tlas_address_to_index_[address] = i;
     }
 }
@@ -168,3 +169,4 @@ void SummaryPane::SetTlasIndex(uint64_t tlas_index)
         tlas_index_ = tlas_index;
     }
 }
+

@@ -11,10 +11,11 @@
 #define RRA_RENDERER_RENDERER_INTERFACE_H_
 
 #include <functional>
+
+#include "public/camera.h"
 #include "public/heatmap.h"
+#include "public/renderer_adapter.h"
 #include "public/renderer_types.h"
-#include "camera.h"
-#include "renderer_adapter.h"
 
 namespace rra
 {
@@ -202,3 +203,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_RENDERER_INTERFACE_H_
+

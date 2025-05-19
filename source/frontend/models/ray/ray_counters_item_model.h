@@ -90,3 +90,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_COUNTERS_ITEM_MODEL_H_
+

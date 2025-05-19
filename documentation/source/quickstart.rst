@@ -10,10 +10,10 @@ provided with this distribution for information on how to create a BVH scene.
 This can be obtained from within the Radeon Developer Panel or from the link
 on the Radeon Raytracing Analyzer "Welcome" view. The documentation is also
 available online at:
-http://radeon-developer-panel.readthedocs.io/en/latest/
+https://gpuopen.com/manuals/rdp_manual/rdp_manual-index/
 
 This documentation can also be found online at:
-http://radeon-raytracing-analyzer.readthedocs.io/en/latest/
+https://gpuopen.com/manuals/rra_manual/rra_manual-index/
 
 
 Starting the Radeon Raytracing Analyzer

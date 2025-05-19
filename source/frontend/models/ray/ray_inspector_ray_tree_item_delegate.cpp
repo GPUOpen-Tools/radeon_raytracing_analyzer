@@ -7,12 +7,13 @@
 
 #include "models/ray/ray_inspector_ray_tree_item_delegate.h"
 
+#include <QPainter>
+
 #include "qt_common/utils/qt_util.h"
 
+#include "constants.h"
 #include "models/ray/ray_inspector_model.h"
-#include "qpainter.h"
-#include <views/widget_util.h>
-#include <constants.h>
+#include "views/widget_util.h"
 
 RayInspectorRayTreeItemDelegate::RayInspectorRayTreeItemDelegate(QObject* parent)
 {
@@ -77,3 +78,4 @@ void RayInspectorRayTreeItemDelegate::paint(QPainter* painter, const QStyleOptio
         painter->drawText(option.rect, Qt::AlignRight | Qt::AlignVCenter, index.data().toString());
     }
 }
+

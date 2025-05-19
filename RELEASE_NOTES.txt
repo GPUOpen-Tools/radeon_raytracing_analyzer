@@ -1,11 +1,12 @@
-Radeon Raytracing Analyzer V1.8 03/11/2025
+Radeon Raytracing Analyzer V1.9 06/17/2025
 ------------------------------------------
 
-V1.8 Changes
+V1.9 Changes
 ------------------------------------
-1) Support for AMD Radeon RX 9000 series GPUs
-2) Support for the Wayland display manager on Ubuntu.
-3) Bug/stability fixes.
+1) Addition of an index column to the BLAS/TLAS tables.
+2) Change the heatmap grayscaling on the Ray Dispatches pane so it doesn't clash with the grayed out image when selecting a region.
+3) Allow selecting the previous and next rays from the Dispatch coordinates table directly from the Ray Inspector pane.
+4) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -24,6 +25,12 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.8 Changes
+------------------------------------
+1) Support for AMD Radeon RX 9000 series GPUs.
+2) Support for the Wayland display manager on Ubuntu.
+3) Bug/stability fixes.
 
 V1.7 Changes
 ------------------------------------

@@ -43,3 +43,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_SURFACE_AREA_HEURISTIC_H_
+

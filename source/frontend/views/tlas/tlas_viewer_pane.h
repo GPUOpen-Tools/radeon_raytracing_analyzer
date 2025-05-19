@@ -8,12 +8,13 @@
 #ifndef RRA_VIEWS_TLAS_TLAS_VIEWER_PANE_H_
 #define RRA_VIEWS_TLAS_TLAS_VIEWER_PANE_H_
 
-#include "ui_tlas_viewer_pane.h"
 #include <vector>
 
+#include "ui_tlas_viewer_pane.h"
+
+#include "models/acceleration_structure_flags_table_item_delegate.h"
 #include "models/tlas/tlas_viewer_model.h"
 #include "views/acceleration_structure_viewer_pane.h"
-#include "models/acceleration_structure_flags_table_item_delegate.h"
 
 /// @brief Class declaration.
 class TlasViewerPane : public AccelerationStructureViewerPane
@@ -138,3 +139,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_TLAS_TLAS_VIEWER_PANE_H_
+

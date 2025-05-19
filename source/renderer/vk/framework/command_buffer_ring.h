@@ -8,6 +8,8 @@
 #ifndef RRA_RENDERER_VK_FRAMEWORK_COMMAND_BUFFER_RING_H_
 #define RRA_RENDERER_VK_FRAMEWORK_COMMAND_BUFFER_RING_H_
 
+#include "vk/framework/device.h"
+
 namespace rra
 {
     namespace renderer
@@ -69,3 +71,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_COMMAND_BUFFER_RING_H_
+

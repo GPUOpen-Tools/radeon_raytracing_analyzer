@@ -6,10 +6,12 @@
 //=============================================================================
 
 #include "public/rra_async_ray_history_loader.h"
-#include <rdf/rdf/inc/amdrdf.h>
+
 #include <algorithm>
 #include <execution>
 #include <future>
+
+#include <rdf/rdf/inc/amdrdf.h>
 
 // How frequently (every n loops) to update the loading progress bar.
 // Higher values reduce amount of locking, and increase performance.
@@ -262,7 +264,7 @@ rta::RayHistoryTrace* RraAsyncRayHistoryLoader::GetRayHistoryTrace()
     return ray_history_trace_.get();
 }
 
-GpuRt::CounterInfo RraAsyncRayHistoryLoader::GetCounterInfo()
+GpuRt::CounterInfo RraAsyncRayHistoryLoader::GetCounterInfo() const
 {
     return counter_info_;
 }
@@ -318,9 +320,9 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
 
     struct RayStateAsyncLoader
     {
-        size_t   token_byte_start;
-        size_t   token_byte_current_idx;
-        uint32_t current_index;
+        size_t   token_byte_start       = 0;
+        size_t   token_byte_current_idx = 0;
+        uint32_t current_index          = 0;
 
         bool beginToken = false;
         bool endToken   = false;
@@ -355,6 +357,15 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
         // Tokens
         const auto id = static_cast<const RayHistoryTokenId*>(readPointer);
 
+        // Make sure ray id is in bounds. If not, ignore this dispatch.
+        if (id->id >= rayData.size())
+        {
+            {
+                std::scoped_lock<std::mutex> plock(process_mutex_);
+                error_state_ = true;
+            }
+            break;
+        }
         auto& rayState = rayData[id->id];
 
         ++totalTokenCount;
@@ -501,6 +512,15 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
         // Tokens
         const auto id = static_cast<const RayHistoryTokenId*>(readPointer);
 
+        // Make sure ray id is in bounds. If not, ignore this dispatch.
+        if (id->id >= rayData.size())
+        {
+            {
+                std::scoped_lock<std::mutex> plock(process_mutex_);
+                error_state_ = true;
+            }
+            break;
+        }
         auto& rayState = rayData[id->id];
 
         readPointer = buffer_data + offset + sizeof(RayHistoryTokenId);
@@ -780,3 +800,4 @@ void RraAsyncRayHistoryLoader::UpdateInvocationCountsUi(const RraRayHistoryStats
     invocation_counts_.loop_iteration_count        = stats.loop_iteration_count;
     invocation_counts_.instance_intersection_count = stats.instance_intersection_count;
 }
+

@@ -7,18 +7,20 @@
 //=============================================================================
 
 #include "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
-#include "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
 
-#include <iostream>
-#include <vector>
 #include <cassert>
 #include <cmath>  // --> isnan, isinf, ceil
 #include <deque>
+#include <iostream>
 #include <limits>
-#include "bvh/dxr_definitions.h"
-#include "surface_area_heuristic.h"
+#include <vector>
+
 #include "public/rra_blas.h"
+
+#include "bvh/dxr_definitions.h"
+#include "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
 #include "rra_blas_impl.h"
+#include "surface_area_heuristic.h"
 
 namespace rta
 {
@@ -128,10 +130,6 @@ namespace rta
 
         // Set the root node offset.
         header_offset_ = static_cast<uint64_t>(chunk_header.header_offset);
-
-#ifdef RRA_INTERNAL_COMMENTS
-        //        return Validate();
-#endif
 
         CountNodes();
 
@@ -498,3 +496,4 @@ namespace rta
     }
 
 }  // namespace rta
+

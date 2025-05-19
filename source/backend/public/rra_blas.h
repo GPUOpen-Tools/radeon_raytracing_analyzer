@@ -380,3 +380,4 @@ RraErrorCode RraBlasGetNodeBoundingVolumeOrientation(uint64_t blas_index, uint32
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_BLAS_H_
+

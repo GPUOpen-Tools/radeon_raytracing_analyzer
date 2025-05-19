@@ -25,7 +25,7 @@ git_mapping = {
     github_tools + "qt_common"                                      : ["../external/qt_common",          "v4.2.0",                                   True],
     github_tools + "update_check_api"                               : ["../external/update_check_api",   "v2.1.1",                                   True],
     github_tools + "system_info_utils"                              : ["../external/system_info_utils",  "v2.1",                                     True],
-    github_root  + "g-truc/glm"                                     : ["../external/third_party/glm",    "0.9.9.8",                                  True],
+    github_root  + "g-truc/glm"                                     : ["../external/third_party/glm",    "1.0.0",                                    True],
     github_root  + "KhronosGroup/Vulkan-Headers"                    : ["../external/third_party/vulkan", "sdk-1.3.211",                              True],
     github_root  + "zeux/volk"                                      : ["../external/third_party/volk",   "1.2.190",                                  True],
     github_root  + "GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator" : ["../external/vma",                "d2f0313d20c803f83cc3637ac1facf8e4d6899e4", False],

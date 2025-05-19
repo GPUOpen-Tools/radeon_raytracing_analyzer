@@ -5,22 +5,22 @@
 /// @brief  Implementation for the mesh render module.
 //=============================================================================
 
-#include <vector>
+#include "vk/render_modules/mesh_render_module.h"
+
+#include <type_traits>
 #include <unordered_map>
+#include <vector>
 
 #include <QCoreApplication>
-#include <type_traits>
 
 #include "public/rra_assert.h"
-#include "mesh_render_module.h"
+
+#include "vk/framework/ext_debug_utils.h"
 #include "vk/vk_graphics_context.h"
-#include "../framework/ext_debug_utils.h"
 
 // We can't use std::max or glm::max since the windows macro ends up overriding the max keyword.
 // So we underfine max for this file only.
 #undef max
-
-#include "vk/vk_graphics_context.h"
 
 #define VERTEX_ATTRIBUTE(loc, attr)                                                                                                     \
     VkVertexInputAttributeDescription                                                                                                   \
@@ -47,11 +47,10 @@
                                           kInstanceBufferBindId,                                                    \
                                           GetVulkanFormat<decltype(rra::renderer::MeshInstanceData::attr)>(),       \
                                           offsetof(rra::renderer::MeshInstanceData, attr) + sizeof(glm::vec4) * 2}, \
-        VkVertexInputAttributeDescription                                                                           \
-    {                                                                                                               \
-        loc + 3, kInstanceBufferBindId, GetVulkanFormat<decltype(rra::renderer::MeshInstanceData::attr)>(),         \
-            offsetof(rra::renderer::MeshInstanceData, attr) + sizeof(glm::vec4) * 3                                 \
-    }
+        VkVertexInputAttributeDescription{loc + 3,                                                                  \
+                                          kInstanceBufferBindId,                                                    \
+                                          GetVulkanFormat<decltype(rra::renderer::MeshInstanceData::attr)>(),       \
+                                          offsetof(rra::renderer::MeshInstanceData, attr) + sizeof(glm::vec4) * 3}
 
 template <typename T>
 VkFormat GetVulkanFormat()
@@ -935,7 +934,7 @@ namespace rra
             }
         }
 
-        uint32_t GetTotalInstanceCountForBlas(uint64_t blas_index, const std::map<uint64_t, uint32_t>* instance_counts)
+        static uint32_t GetTotalInstanceCountForBlas(uint64_t blas_index, const std::map<uint64_t, uint32_t>* instance_counts)
         {
             auto result = instance_counts->find(blas_index);
             if (result != instance_counts->end())
@@ -945,7 +944,7 @@ namespace rra
             return 0;
         }
 
-        glm::vec4 GetWireframeColor(bool render_wireframe, bool selected, const rra::renderer::RendererSceneInfo* info)
+        static glm::vec4 GetWireframeColor(bool render_wireframe, bool selected, const rra::renderer::RendererSceneInfo* info)
         {
             const glm::vec4 wireframe_normal   = info->wireframe_normal_color;
             const glm::vec4 wireframe_selected = info->wireframe_selected_color;
@@ -978,8 +977,8 @@ namespace rra
             for (auto& instance_iter : current_scene_info_->instance_map)
             {
                 //auto instance_count_for_blas = current_scene_info_->GetTotalInstanceCountForBlas(instance_iter.first);
-                auto instance_count_for_blas = GetTotalInstanceCountForBlas(instance_iter.first, current_scene_info_->instance_counts);
-                auto instance_transforms     = instance_iter.second;
+                auto        instance_count_for_blas = GetTotalInstanceCountForBlas(instance_iter.first, current_scene_info_->instance_counts);
+                const auto& instance_transforms     = instance_iter.second;
 
                 auto mesh = GetVkGraphicsContext()->GetBlasDrawInstruction(instance_iter.first);
 
@@ -1110,3 +1109,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

@@ -6,6 +6,7 @@
 //=============================================================================
 
 #include "views/custom_widgets/color_picker_widget.h"
+
 #include "views/custom_widgets/color_picker_button.h"
 
 const static QString kDefaultPaletteString("#000,#111,#222,#333,#444,#555,#666,#777,#888,#999,#AAA,#BBB,#CCC,#DDD,#EEE,#FFF");
@@ -138,3 +139,4 @@ void ColorPickerWidget::ButtonClicked(int button_id)
 {
     emit ColorSelected(button_id, palette_.GetColor(button_id));
 }
+

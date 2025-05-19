@@ -8,13 +8,13 @@
 #include <array>
 #include <cassert>
 
-#include <volk/volk.h>
-
-#include "swap_chain.h"
-#include "../util_vulkan.h"
-#include "../framework/ext_debug_utils.h"
+#include "volk/volk.h"
 
 #include "public/rra_print.h"
+
+#include "vk/framework/ext_debug_utils.h"
+#include "vk/framework/swap_chain.h"
+#include "vk/util_vulkan.h"
 
 namespace rra
 {
@@ -180,7 +180,7 @@ namespace rra
             return swapchain_format_.format;
         }
 
-        VkRenderPass SwapChain::GetRenderPass(RenderPassHint render_pass_hint)
+        VkRenderPass SwapChain::GetRenderPass(RenderPassHint render_pass_hint) const
         {
             switch (render_pass_hint)
             {
@@ -995,3 +995,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

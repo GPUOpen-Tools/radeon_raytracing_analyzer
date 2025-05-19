@@ -10,9 +10,9 @@
 #ifndef RRA_VIEWS_RAY_INSPECTOR_TREE_VIEW_H_
 #define RRA_VIEWS_RAY_INSPECTOR_TREE_VIEW_H_
 
-#include "qt_common/custom_widgets/scaled_tree_view.h"
-
 #include <QTreeView>
+
+#include "qt_common/custom_widgets/scaled_tree_view.h"
 
 #include "models/ray/ray_inspector_model.h"
 
@@ -62,3 +62,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_ACCELERATION_STRUCTURE_TREE_VIEW_H_
+

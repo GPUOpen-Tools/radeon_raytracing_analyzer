@@ -5,10 +5,11 @@
 /// @brief  Definition for the fps style camera controller.
 //=============================================================================
 
-#include "fps_camera_controller.h"
-#include "public/rra_macro.h"
+#include "io/fps_camera_controller.h"
 
 #include <QMouseEvent>
+
+#include "public/rra_macro.h"
 
 #include "models/side_panels/view_model.h"
 #include "settings/settings.h"
@@ -362,3 +363,4 @@ namespace rra
         movement_speed_scroll_multiplier_ = 1.0f;
     }
 }  // namespace rra
+

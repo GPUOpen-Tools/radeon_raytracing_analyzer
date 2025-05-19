@@ -5,20 +5,21 @@
 /// @brief  Implementation for the SceneNode class.
 //=============================================================================
 
-#include <deque>
+#include "models/scene_node.h"
+
 #include <algorithm>
 #include <array>
-
-#include "public/rra_blas.h"
-#include "public/rra_tlas.h"
-#include "public/rra_bvh.h"
-#include "public/rra_rtip_info.h"
-#include "scene_node.h"
-#include "scene.h"
-#include "public/shared.h"
-#include "util/stack_vector.h"
+#include <deque>
 
 #include "public/intersect.h"
+#include "public/rra_blas.h"
+#include "public/rra_bvh.h"
+#include "public/rra_rtip_info.h"
+#include "public/rra_tlas.h"
+#include "public/shared.h"
+
+#include "models/scene.h"
+#include "util/stack_vector.h"
 
 // We can't use std::max or glm::max since the windows macro ends up overriding the max keyword.
 // So we underfine max for this file only.
@@ -263,18 +264,21 @@ namespace rra
 
         uint32_t vertex_buffer_idx{0};
 
+        RraErrorCode error_code = kRraOk;
         while (!traversal_stack.empty())
         {
             SceneNode* node{traversal_stack.back()};
             traversal_stack.pop_back();
 
-            RraBlasGetBoundingVolumeExtents(blas_index, node->node_id_, &node->bounding_volume_);
+            error_code = RraBlasGetBoundingVolumeExtents(blas_index, node->node_id_, &node->bounding_volume_);
+            RRA_ASSERT(error_code == kRraOk);
 
             if (RraBlasIsTriangleNode(blas_index, node->node_id_))
             {
                 // Get the triangle nodes. If this is not a triangle the triangle count is 0.
                 uint32_t triangle_count;
-                RraBlasGetNodeTriangleCount(blas_index, node->node_id_, &triangle_count);
+                error_code = RraBlasGetNodeTriangleCount(blas_index, node->node_id_, &triangle_count);
+                RRA_ASSERT(error_code == kRraOk);
 
                 // Make vertices_ a subset of the BLAS's vertex buffer.
                 node->vertices_ = vertex_buffer + vertex_buffer_idx;
@@ -285,18 +289,22 @@ namespace rra
                 {
                     // Populate a vector of triangle vertex data.
                     std::array<TriangleVertices, 8> triangles{};
-                    RraBlasGetNodeTriangles(blas_index, node->node_id_, triangles.data());
+                    error_code = RraBlasGetNodeTriangles(blas_index, node->node_id_, triangles.data());
+                    RRA_ASSERT(error_code == kRraOk);
 
                     // Retrieve the geometry index associated with the current triangle node.
-                    RraBlasGetGeometryIndex(blas_index, node->node_id_, &node->geometry_index_);
+                    error_code = RraBlasGetGeometryIndex(blas_index, node->node_id_, &node->geometry_index_);
+                    RRA_ASSERT(error_code == kRraOk);
 
                     uint32_t geometry_flags = 0;
-                    RraBlasGetGeometryFlags(blas_index, node->geometry_index_, &geometry_flags);
+                    error_code              = RraBlasGetGeometryFlags(blas_index, node->geometry_index_, &geometry_flags);
+                    RRA_ASSERT(error_code == kRraOk);
 
                     // Extract the opacity flag.
                     bool is_opaque = (geometry_flags & GeometryFlags::kOpaque) == GeometryFlags::kOpaque;
 
-                    RraBlasGetPrimitiveIndex(blas_index, node->node_id_, 0, &node->primitive_index_);
+                    error_code = RraBlasGetPrimitiveIndex(blas_index, node->node_id_, 0, &node->primitive_index_);
+                    RRA_ASSERT(error_code == kRraOk);
 
                     // Step over each triangle and extract data used to populate the vertex buffer.
                     for (size_t triangle_index = 0; triangle_index < triangle_count; triangle_index++)
@@ -320,7 +328,8 @@ namespace rra
                         compact_normal.x         = (normal.z < 0.0f) ? compact_normal.x : compact_normal.x + kNormalSignIndicatorOffset;
 
                         float triangle_sah = 0.0f;
-                        RraBlasGetTriangleSurfaceAreaHeuristic(blas_index, node->node_id_, &triangle_sah);
+                        error_code         = RraBlasGetTriangleSurfaceAreaHeuristic(blas_index, node->node_id_, &triangle_sah);
+                        RRA_ASSERT(error_code == kRraOk);
 
                         float average_epo = 0.0f;
                         float max_epo     = 0.0f;
@@ -357,10 +366,12 @@ namespace rra
             }
 
             uint32_t child_node_count;
-            RraBlasGetChildNodeCount(blas_index, node->node_id_, &child_node_count);
+            error_code = RraBlasGetChildNodeCount(blas_index, node->node_id_, &child_node_count);
+            RRA_ASSERT(error_code == kRraOk);
 
             std::array<uint32_t, 8> child_nodes{};
-            RraBlasGetChildNodes(blas_index, node->node_id_, child_nodes.data());
+            error_code = RraBlasGetChildNodes(blas_index, node->node_id_, child_nodes.data());
+            RRA_ASSERT(error_code == kRraOk);
 
             for (uint32_t i{0}; i < child_node_count; ++i)
             {
@@ -383,8 +394,10 @@ namespace rra
 
             if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() >= rta::RayTracingIpLevel::RtIp3_0)
             {
-                RraBlasGetNodeObbIndex(blas_index, node->node_id_, &node->obb_index_);
-                RraBlasGetNodeBoundingVolumeOrientation(blas_index, node->node_id_, &node->rotation_[0][0]);
+                error_code = RraBlasGetNodeObbIndex(blas_index, node->node_id_, &node->obb_index_);
+                RRA_ASSERT(error_code == kRraOk);
+                error_code = RraBlasGetNodeBoundingVolumeOrientation(blas_index, node->node_id_, &node->rotation_[0][0]);
+                RRA_ASSERT(error_code == kRraOk);
             }
         }
 
@@ -406,12 +419,14 @@ namespace rra
 
     SceneNode* SceneNode::ConstructFromBlas(uint32_t blas_index, renderer::RraVertex* vertex_buffer, std::byte* child_buffer)
     {
-        uint32_t root_node_index = UINT32_MAX;
-        RraBvhGetRootNodePtr(&root_node_index);
+        uint32_t     root_node_index = UINT32_MAX;
+        RraErrorCode error_code      = RraBvhGetRootNodePtr(&root_node_index);
+        RRA_ASSERT(error_code == kRraOk);
         auto node = ConstructFromBlasNode(blas_index, root_node_index, vertex_buffer, child_buffer);
 
         uint32_t geometry_count{};
-        RraBlasGetGeometryCount(blas_index, &geometry_count);
+        error_code = RraBlasGetGeometryCount(blas_index, &geometry_count);
+        RRA_ASSERT(error_code == kRraOk);
         std::vector<uint32_t> geometry_offsets{};
         geometry_offsets.resize(geometry_count);
         uint32_t current_geo_offset{0};
@@ -421,7 +436,8 @@ namespace rra
             geometry_offsets[geo_idx] = current_geo_offset;
 
             uint32_t primitive_count{};
-            RraBlasGetGeometryPrimitiveCount(blas_index, geo_idx, &primitive_count);
+            error_code = RraBlasGetGeometryPrimitiveCount(blas_index, geo_idx, &primitive_count);
+            RRA_ASSERT(error_code == kRraOk);
             current_geo_offset += primitive_count;
         }
         PopulateSplitVertexAttribute(node, geometry_offsets, current_geo_offset);
@@ -441,7 +457,9 @@ namespace rra
         node->depth_     = depth;
         node->bvh_index_ = tlas_index;
 
-        RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &node->bounding_volume_);
+        RraErrorCode error_code = kRraOk;
+        error_code              = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &node->bounding_volume_);
+        RRA_ASSERT(error_code == kRraOk);
 
         if (RraBvhIsInstanceNode(node_id))
         {
@@ -452,33 +470,49 @@ namespace rra
 
             instance.transform = glm::mat4(0.0f);  // Reset the transform to prevent misalignment.
 
-            RraTlasGetInstanceNodeTransform(tlas_index, node_id, reinterpret_cast<float*>(&instance.transform));
+            error_code = RraTlasGetInstanceNodeTransform(tlas_index, node_id, reinterpret_cast<float*>(&instance.transform));
+            RRA_ASSERT(error_code == kRraOk);
             instance.transform[3][3] = 1.0f;
 
             // Navi IP 1.1 encoding specifies that the transform is inverse, so we inverse it again to get the correct transform.
             instance.transform = glm::inverse(instance.transform);
 
-            RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &instance.bounding_volume);
+            error_code = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &instance.bounding_volume);
+            RRA_ASSERT(error_code == kRraOk);
 
-            RraTlasGetBlasIndexFromInstanceNode(tlas_index, node_id, &instance.blas_index);
-            RraBlasGetMaxTreeDepth(instance.blas_index, &instance.max_depth);
-            RraBlasGetAvgTreeDepth(instance.blas_index, &instance.average_depth);
+            error_code = RraTlasGetBlasIndexFromInstanceNode(tlas_index, node_id, &instance.blas_index);
+            if (error_code != kRraOk)
+            {
+                return node;
+            }
+            error_code = RraBlasGetMaxTreeDepth(instance.blas_index, &instance.max_depth);
+            RRA_ASSERT(error_code == kRraOk);
+            error_code = RraBlasGetAvgTreeDepth(instance.blas_index, &instance.average_depth);
+            RRA_ASSERT(error_code == kRraOk);
 
             uint32_t root_node = UINT32_MAX;
-            RraBvhGetRootNodePtr(&root_node);
+            error_code         = RraBvhGetRootNodePtr(&root_node);
+            RRA_ASSERT(error_code == kRraOk);
 
-            RraBlasGetAverageSurfaceAreaHeuristic(instance.blas_index, root_node, true, &instance.average_triangle_sah);
-            RraBlasGetMinimumSurfaceAreaHeuristic(instance.blas_index, root_node, true, &instance.min_triangle_sah);
+            error_code = RraBlasGetAverageSurfaceAreaHeuristic(instance.blas_index, root_node, true, &instance.average_triangle_sah);
+            RRA_ASSERT(error_code == kRraOk);
+            error_code = RraBlasGetMinimumSurfaceAreaHeuristic(instance.blas_index, root_node, true, &instance.min_triangle_sah);
+            RRA_ASSERT(error_code == kRraOk);
 
-            RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_id, &instance.instance_unique_index);
+            error_code = RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_id, &instance.instance_unique_index);
+            RRA_ASSERT(error_code == kRraOk);
 
-            RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_id, &instance.instance_index);
+            error_code = RraTlasGetInstanceIndexFromInstanceNode(tlas_index, node_id, &instance.instance_index);
+            RRA_ASSERT(error_code == kRraOk);
 
-            RraBlasGetBuildFlags(instance.blas_index, reinterpret_cast<VkBuildAccelerationStructureFlagBitsKHR*>(&instance.build_flags));
+            error_code = RraBlasGetBuildFlags(instance.blas_index, reinterpret_cast<VkBuildAccelerationStructureFlagBitsKHR*>(&instance.build_flags));
+            RRA_ASSERT(error_code == kRraOk);
 
-            RraTlasGetInstanceNodeMask(tlas_index, node_id, &instance.mask);
+            error_code = RraTlasGetInstanceNodeMask(tlas_index, node_id, &instance.mask);
+            RRA_ASSERT(error_code == kRraOk);
 
-            RraTlasGetInstanceFlags(tlas_index, node_id, &instance.flags);
+            error_code = RraTlasGetInstanceFlags(tlas_index, node_id, &instance.flags);
+            RRA_ASSERT(error_code == kRraOk);
 
             node->instance_ = instance;
 
@@ -487,14 +521,18 @@ namespace rra
             return node;
         }
 
-        RraTlasGetNodeObbIndex(tlas_index, node_id, &node->obb_index_);
-        RraTlasGetNodeBoundingVolumeOrientation(tlas_index, node_id, &node->rotation_[0][0]);
+        error_code = RraTlasGetNodeObbIndex(tlas_index, node_id, &node->obb_index_);
+        RRA_ASSERT(error_code == kRraOk);
+        error_code = RraTlasGetNodeBoundingVolumeOrientation(tlas_index, node_id, &node->rotation_[0][0]);
+        RRA_ASSERT(error_code == kRraOk);
 
         uint32_t child_node_count{};
-        RraTlasGetChildNodeCount(tlas_index, node_id, &child_node_count);
+        error_code = RraTlasGetChildNodeCount(tlas_index, node_id, &child_node_count);
+        RRA_ASSERT(error_code == kRraOk);
 
         std::vector<uint32_t> child_nodes(child_node_count);
-        RraTlasGetChildNodes(tlas_index, node_id, child_nodes.data());
+        error_code = RraTlasGetChildNodes(tlas_index, node_id, child_nodes.data());
+        RRA_ASSERT(error_code == kRraOk);
 
         for (auto child_node : child_nodes)
         {
@@ -508,8 +546,9 @@ namespace rra
 
     SceneNode* SceneNode::ConstructFromTlas(uint64_t tlas_index)
     {
-        uint32_t root_node_index = UINT32_MAX;
-        RraBvhGetRootNodePtr(&root_node_index);
+        uint32_t     root_node_index = UINT32_MAX;
+        RraErrorCode error_code      = RraBvhGetRootNodePtr(&root_node_index);
+        RRA_ASSERT(error_code == kRraOk);
         return ConstructFromTlasBoxNode(tlas_index, root_node_index, 0);
     }
 
@@ -553,7 +592,7 @@ namespace rra
 
     void SceneNode::ApplyNodeSelection(std::unordered_set<uint32_t>& selected_node_ids)
     {
-        if (!visible_ || filtered_)
+        if (!(visible_ && enabled_) || filtered_)
         {
             return;
         }
@@ -1039,3 +1078,4 @@ namespace rra
     }
 
 }  // namespace rra
+

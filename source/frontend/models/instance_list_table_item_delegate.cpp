@@ -33,3 +33,4 @@ bool InstanceListTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
+

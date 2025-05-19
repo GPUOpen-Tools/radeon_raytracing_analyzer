@@ -6,7 +6,6 @@
 //=============================================================================
 
 #include "models/blas/blas_viewer_model.h"
-#include "models/blas/blas_scene_collection_model.h"
 
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/scaled_tree_view.h"
@@ -14,13 +13,14 @@
 
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
+#include "public/rra_rtip_info.h"
 
 #include "constants.h"
 #include "models/acceleration_structure_tree_view_model.h"
 #include "models/acceleration_structure_viewer_model.h"
+#include "models/blas/blas_scene_collection_model.h"
 #include "settings/settings.h"
 #include "views/widget_util.h"
-#include "public/rra_rtip_info.h"
 
 namespace rra
 {
@@ -82,7 +82,7 @@ namespace rra
 
         geometry_flags_table_model_->Initialize(table_view);
 
-        table_view->GetHeaderView()->setVisible(false);
+        table_view->horizontalHeader()->setVisible(false);
     }
 
     void BlasViewerModel::PopulateFlagsTable(FlagsTableItemModel* flags_table, uint32_t flags)
@@ -145,7 +145,8 @@ namespace rra
     {
         // Show node name and base address.
         const char* node_str{};
-        RraBlasGetNodeName(blas_index, node_id, &node_str);
+        RraErrorCode error_code = RraBlasGetNodeName(blas_index, node_id, &node_str);
+        RRA_ASSERT(error_code == kRraOk);
         std::string node_name{node_str};
 
         if (IsTriangleSplit(blas_index))
@@ -180,10 +181,12 @@ namespace rra
         if (SelectedNodeIsLeaf())
         {
             uint32_t tri_count{};
-            RraBlasGetNodeTriangleCount(blas_index, node_id, &tri_count);
+            error_code = RraBlasGetNodeTriangleCount(blas_index, node_id, &tri_count);
+            RRA_ASSERT(error_code == kRraOk);
             std::vector<TriangleVertices> tri_verts{};
             tri_verts.resize(tri_count);
-            RraBlasGetNodeTriangles(blas_index, node_id, tri_verts.data());
+            error_code = RraBlasGetNodeTriangles(blas_index, node_id, tri_verts.data());
+            RRA_ASSERT(error_code == kRraOk);
 
             last_selected_node_tri_count_ = tri_count;
 
@@ -314,15 +317,18 @@ namespace rra
     {
         TreeviewNodeIDType node_type    = rra::Settings::Get().GetTreeviewNodeIdType();
         uint64_t           node_address = 0;
+        RraErrorCode       error_code   = kRraOk;
 
         switch (node_type)
         {
         case kTreeviewNodeIDTypeVirtualAddress:
-            RraBlasGetNodeBaseAddress(bvh_index, node_id, &node_address);
+            error_code = RraBlasGetNodeBaseAddress(bvh_index, node_id, &node_address);
+            RRA_ASSERT(error_code == kRraOk);
             break;
 
         case kTreeviewNodeIDTypeOffset:
-            RraBvhGetNodeOffset(node_id, &node_address);
+            error_code = RraBvhGetNodeOffset(node_id, &node_address);
+            RRA_ASSERT(error_code == kRraOk);
             break;
 
         default:
@@ -335,7 +341,8 @@ namespace rra
     uint32_t BlasViewerModel::GetProceduralNodeCount(uint64_t blas_index) const
     {
         uint32_t node_count{};
-        RraBlasGetProceduralNodeCount(blas_index, &node_count);
+        RraErrorCode error_code = RraBlasGetProceduralNodeCount(blas_index, &node_count);
+        RRA_ASSERT(error_code == kRraOk);
         return node_count;
     }
 
@@ -357,3 +364,4 @@ namespace rra
     }
 
 }  // namespace rra
+

@@ -9,8 +9,8 @@
 #ifndef RRA_CUSTOM_WIDGETS_ICON_BUTTON_H_
 #define RRA_CUSTOM_WIDGETS_ICON_BUTTON_H_
 
-#include <QPushButton>
 #include <QIcon>
+#include <QPushButton>
 #include <QString>
 
 class QPaintEvent;
@@ -76,3 +76,4 @@ private:
 };
 
 #endif  // RRA_CUSTOM_WIDGETS_ICON_BUTTON_H_
+

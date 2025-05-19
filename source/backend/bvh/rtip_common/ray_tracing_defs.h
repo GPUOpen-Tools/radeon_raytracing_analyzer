@@ -20,13 +20,9 @@
 
 #include <cstdint>
 #include <cstring>
+
 #include "glm/glm/glm.hpp"
 
-//#include "../../gpurt/gpurtAccelStruct.h"
-//#include "../../gpurt/gpurtBuildSettings.h"
-//#include "../../gpurt/gpurtDispatch.h"
-//#include "accelStruct.h"
-//#include "gpurtBuildConstants.h"
 
 //=====================================================================================================================
 ///@note Enum is a reserved keyword in glslang. To workaround this limitation, define static constants to replace the
@@ -1582,9 +1578,7 @@ struct RayQueryInternal
     uint32_t             clocks;
     uint32_t             numCandidateHits;
     uint32_t             instanceIntersections;
-#ifdef AMD_VULKAN
     uint32_t             rayQueryObjId;
-#endif
 };
 */
 
@@ -1619,3 +1613,4 @@ static bool IsQuantizedBVH8BoxNode(uint32_t pointer)
 #endif
 
 #endif  // RRA_BACKEND_RAYTRACING_DEF_H_
+

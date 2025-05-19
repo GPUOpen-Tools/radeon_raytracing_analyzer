@@ -11,8 +11,8 @@
 #include <stdint.h>
 
 #ifndef _WIN32
-#include <stdlib.h>
 #include <errno.h>
+#include <stdlib.h>
 #endif
 
 #include "public/rra_assert.h"
@@ -64,3 +64,4 @@ extern "C" {
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_ERROR_H_
+

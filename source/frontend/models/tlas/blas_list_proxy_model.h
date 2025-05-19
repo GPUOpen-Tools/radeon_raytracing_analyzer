@@ -38,6 +38,14 @@ namespace rra
         /// @return the model for the BLAS table model.
         BlasListItemModel* InitializeAccelerationStructureTableModels(QTableView* view, int num_rows, int num_columns);
 
+        /// @brief Get data from the model.
+        ///
+        /// @param [in] index  The model index.
+        /// @param [in] role   The role.
+        ///
+        /// @return The data.
+        virtual QVariant data(const QModelIndex& index, int role) const override;
+
         /// @brief Set whether BLASes in the list should be hidden based on their allow update flag.
         ///
         /// @param filter If true, BLASes are only shown if they contain the allow update flag.
@@ -90,3 +98,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TLAS_BLAS_LIST_PROXY_MODEL_H_
+

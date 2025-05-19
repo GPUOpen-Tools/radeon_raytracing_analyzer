@@ -9,9 +9,9 @@
 #define RRA_BACKEND_BVH_ENCODED_BOTTOM_LEVEL_BVH_H_
 
 #include "bvh/geometry_info.h"
-#include "bvh/node_types/triangle_node.h"
-#include "bvh/node_types/procedural_node.h"
 #include "bvh/ibvh.h"
+#include "bvh/node_types/procedural_node.h"
+#include "bvh/node_types/triangle_node.h"
 #include "bvh/rtip31/primitive_node.h"
 
 namespace rta
@@ -87,3 +87,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_BOTTOM_LEVEL_BVH_H_
+

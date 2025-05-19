@@ -5,25 +5,24 @@
 /// @brief  Implementation for the dispatch pane.
 //=============================================================================
 
-#include "dispatch_pane.h"
+#include "views/overview/dispatch_pane.h"
+
+#include <sstream>
+#include <string>
 
 #include "qt_common/custom_widgets/scaled_label.h"
 #include "qt_common/custom_widgets/scaled_push_button.h"
 #include "qt_common/utils/qt_util.h"
 
-#include "managers/message_manager.h"
-
-#include <string>
-#include "settings/settings.h"
-#include "util/string_util.h"
-#include "views/widget_util.h"
-#include "views/overview/summary_pane.h"
-#include "constants.h"
-
 #include "public/rra_api_info.h"
 #include "public/rra_ray_history.h"
 
-#include <sstream>
+#include "constants.h"
+#include "managers/message_manager.h"
+#include "settings/settings.h"
+#include "util/string_util.h"
+#include "views/overview/summary_pane.h"
+#include "views/widget_util.h"
 
 static const int kValueFontSize = 14;
 static const int kTextFontSize  = 10;
@@ -53,6 +52,7 @@ DispatchPane::DispatchPane(QWidget* parent)
 DispatchPane::~DispatchPane()
 {
     disconnect(ui_->dispatch_title_, &ScaledPushButton::released, this, &DispatchPane::NavigateToRayHistory);
+    delete ui_;
 }
 
 void DispatchPane::showEvent(QShowEvent* event)
@@ -363,7 +363,7 @@ void DispatchPane::Update()
     ui_->dispatch_title_->setStyleSheet(ui_->dispatch_title_->styleSheet().append("ScaledPushButton#dispatch_title_ {font: 20pt;}"));
 }
 
-void DispatchPane::NavigateToRayHistory()
+void DispatchPane::NavigateToRayHistory() const
 {
     // Select the dispatch in the Ray history pane.
     emit rra::MessageManager::Get().DispatchSelected(dispatch_id_);
@@ -371,3 +371,4 @@ void DispatchPane::NavigateToRayHistory()
     // Switch to the Ray history pane.
     emit rra::MessageManager::Get().PaneSwitchRequested(rra::kPaneIdRayHistory);
 }
+

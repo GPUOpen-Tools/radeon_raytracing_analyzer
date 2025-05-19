@@ -10,8 +10,8 @@
 
 #include <QTableView>
 
-#include "models/table_proxy_model.h"
 #include "models/instances_item_model.h"
+#include "models/table_proxy_model.h"
 
 namespace rra
 {
@@ -38,6 +38,14 @@ namespace rra
         /// @return the model for the TLAS table model.
         InstancesItemModel* InitializeAccelerationStructureTableModels(QTableView* view, int num_rows, int num_columns);
 
+        /// @brief Get data from the model.
+        ///
+        /// @param [in] index  The model index.
+        /// @param [in] role   The role.
+        ///
+        /// @return The data.
+        virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+
     protected:
         /// @brief Make the filter run across multiple columns.
         ///
@@ -58,3 +66,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_INSTANCES_PROXY_MODEL_H_
+

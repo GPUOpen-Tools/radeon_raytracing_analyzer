@@ -8,10 +8,11 @@
 #ifndef RRA_VIEWS_OVERVIEW_SUMMARY_PANE_H_
 #define RRA_VIEWS_OVERVIEW_SUMMARY_PANE_H_
 
-#include "ui_summary_pane.h"
-
 #include <vector>
+
 #include <QWidget>
+
+#include "ui_summary_pane.h"
 
 #include "models/overview/summary_model.h"
 #include "views/base_pane.h"
@@ -77,3 +78,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_SUMMARY_PANE_H_
+

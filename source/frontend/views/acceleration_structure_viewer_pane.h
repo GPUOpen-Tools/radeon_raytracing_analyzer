@@ -10,13 +10,13 @@
 
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 
+#include "public/orientation_gizmo.h"
+#include "public/renderer_widget.h"
+
 #include "models/acceleration_structure_viewer_model.h"
+#include "side_panels/side_pane_container.h"
 #include "views/base_pane.h"
 #include "views/viewer_container_widget.h"
-#include "side_panels/side_pane_container.h"
-
-#include "public/renderer_widget.h"
-#include "public/orientation_gizmo.h"
 
 /// @brief Class declaration.
 class AccelerationStructureViewerPane : public BasePane
@@ -223,3 +223,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_ACCELERATION_STRUCTURE_VIEWER_PANE_H_
+

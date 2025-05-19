@@ -7,7 +7,8 @@ cmake_minimum_required(VERSION 3.11)
 
 set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(dev_tools)
 
 ## Specify the top level name of the project - this will define the solution name for Visual Studio
@@ -15,7 +16,7 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 8)
+set(RRA_MINOR_VERSION 9)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()
@@ -26,8 +27,8 @@ string(TIMESTAMP DATE "\"%m/%d/%Y\"")
 string(TIMESTAMP YEAR "%Y")
 string(TIMESTAMP YEAR_STRING "\"%Y\"")
 
-configure_file("${CMAKE_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_SOURCE_DIR}/Buildinfo.properties")
-configure_file("${CMAKE_SOURCE_DIR}/source/frontend/version.h.in" "${CMAKE_SOURCE_DIR}/source/frontend/version.h")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/version.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/version.h")
 
 # Add cmake utilities
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -49,19 +50,23 @@ ENDIF()
 
 # As default for RRA, include the debug status in filename - but not the platform bitness
 set (CMAKE_DEBUG_POSTFIX -d)
-set (CMAKE_RELEASE_POSTFIX)
+set (CMAKE_RELEASE_POSTFIX )
+
 
 # Add definitions for supported hardware
 add_definitions(-DGPURT_BUILD_RTIP3)
 add_definitions(-DGPURT_BUILD_RTIP3_1)
 
+# Add definitions needed by GLM
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
+
 # Add for CentOS compiler warning
 add_definitions(-DJSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
-include_directories("${PROJECT_SOURCE_DIR}/external/")
-include_directories("${PROJECT_SOURCE_DIR}/external/qt_common/")
-include_directories("${PROJECT_SOURCE_DIR}/external/third_party/")
-include_directories("${PROJECT_SOURCE_DIR}/external/third_party/vulkan/include/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/qt_common/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/third_party/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/third_party/vulkan/include/")
 
 # Global compiler options
 IF(WIN32)
@@ -102,10 +107,19 @@ MACRO(SOURCE_GROUP_BY_FOLDER target)
     ENDIF (files)
 ENDMACRO(SOURCE_GROUP_BY_FOLDER)
 
-add_subdirectory(external/qt_common qt_common)
-add_subdirectory(external/rdf/imported/zstd)
-add_subdirectory(external/rdf/rdf)
-add_subdirectory(external/system_info_utils)
+if (NOT TARGET QtUtils)
+    add_subdirectory(external/qt_common qt_common)
+endif()
+
+if (NOT TARGET amdrdf)
+    add_subdirectory(external/rdf/imported/zstd)
+    add_subdirectory(external/rdf/rdf)
+endif()
+
+if (NOT TARGET system_info)
+    add_subdirectory(external/system_info_utils)
+endif()
+
 add_subdirectory(source/backend backend)
 add_subdirectory(source/frontend frontend)
 add_subdirectory(source/renderer renderer)
@@ -126,25 +140,20 @@ ENDIF(WIN32)
 
 ## Copy Documentation and Samples to output directory. Note - this target is intentionally not included in
 ## the default project build. It needs to be explicitly built as a separate project
-
-# Determine where the build process will be placing the binary files
-# This is evaluated at project build time - not at CMake generation time
-set(BUILD_ROOT $<$<CONFIG:debug>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}>$<$<CONFIG:release>:${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}>)
-
-set(DOCS_OUTPUT_DIR ${BUILD_ROOT})
+set(DOCS_OUTPUT_DIR ${CMAKE_BINARY_DIR})
 
 # group sphinx source files into a sphinx folder
-file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_SOURCE_DIR}/documentation/source/*.rst)
-set (SPHINX_DOC_MAIN ${CMAKE_SOURCE_DIR}/documentation/source/conf.py)
+file(GLOB SPHINX_DOC_FILES ${SPHINX_DOC_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/documentation/source/*.rst)
+set (SPHINX_DOC_MAIN ${CMAKE_CURRENT_SOURCE_DIR}/documentation/source/conf.py)
 set (ALL_SPHINX_FILES ${SPHINX_DOC_FILES} ${SPHINX_DOC_MAIN})
 source_group("sphinx" FILES ${ALL_SPHINX_FILES})
 
 # group release documents into a release_docs folder
 set (RELEASE_DOCS_IN_ROOT
-     ${CMAKE_SOURCE_DIR}/README.md
-     ${CMAKE_SOURCE_DIR}/RELEASE_NOTES.txt
-     ${CMAKE_SOURCE_DIR}/NOTICES.txt
-     ${CMAKE_SOURCE_DIR}/LICENSE.txt
+     ${CMAKE_CURRENT_SOURCE_DIR}/README.md
+     ${CMAKE_CURRENT_SOURCE_DIR}/RELEASE_NOTES.txt
+     ${CMAKE_CURRENT_SOURCE_DIR}/NOTICES.txt
+     ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
 )
 set (RELEASE_DOCS ${RELEASE_DOCS_IN_ROOT})
 source_group("release_docs" FILES ${RELEASE_DOCS})
@@ -160,25 +169,25 @@ if(SPHINX_EXECUTABLE)
     # this ensures the sphinx docs are built everytime you ask to build the Documentation target
     # Sphinx has proper dependency checking, so this works as expected.
     # Once built, clean up any unneeded files.
-    add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
+    add_custom_target(RRADocumentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS} DEPENDS sphinx_output)
     add_custom_command(MAIN_DEPENDENCY ${SPHINX_DOC_MAIN} OUTPUT sphinx_output
         COMMAND ${CMAKE_COMMAND} -E echo "building Sphinx documentation"
-        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rra/. -t ${SPHINX_OPTION}
+        COMMAND ${SPHINX_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/documentation/source ${DOCS_OUTPUT_DIR}/help/rra/. -t ${SPHINX_OPTION}
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOCS_OUTPUT_DIR}/help/rra/.doctrees
     )
     install(DIRECTORY ${DOCS_OUTPUT_DIR}/help DESTINATION . COMPONENT apps)
 else()
     message(WARNING "SPHINX_EXECUTABLE (sphinx-build) is not found! Documentation will not be built!")
     # If the sphinx binary isn't found, then just create the Documentation project with only the release docs in it.
-    add_custom_target(Documentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS})
+    add_custom_target(RRADocumentation ALL SOURCES ${ALL_SPHINX_FILES} ${RELEASE_DOCS})
 endif()
 
-add_custom_command(TARGET Documentation POST_BUILD
+add_custom_command(TARGET RRADocumentation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "copying Documentation to output directory"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RELEASE_DOCS_IN_ROOT}           ${DOCS_OUTPUT_DIR}/.
     COMMAND ${CMAKE_COMMAND} -E echo "copying Samples to output directory"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DOCS_OUTPUT_DIR}/samples
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/samples/landscape.rra  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rra
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/samples/landscape.rra  ${DOCS_OUTPUT_DIR}/samples/sample_trace.rra
 )
 
 install(FILES
@@ -212,6 +221,4 @@ cpack_add_component(apps
 cpack_add_component(debug
         DISPLAY_NAME "Debug Symbols"
         DESCRIPTION "Debug Symbols")
-
-
 

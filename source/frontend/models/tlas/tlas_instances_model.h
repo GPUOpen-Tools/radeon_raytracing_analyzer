@@ -50,7 +50,7 @@ namespace rra
         /// @param [in] table_view  The view to the table.
         /// @param [in] num_rows    Total rows of the table.
         /// @param [in] num_columns Total columns of the table.
-        void InitializeTableModel(ScaledTableView* table_view, uint num_rows, uint num_columns);
+        void InitializeTableModel(QTableView* table_view, uint num_rows, uint num_columns);
 
         /// @brief Update the acceleration structure table.
         ///
@@ -109,3 +109,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TLAS_TLAS_INSTANCES_MODEL_H_
+

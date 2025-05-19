@@ -8,7 +8,7 @@
 #ifndef RRA_BACKEND_BVH_RT_BINARY_FILE_DEFS_H_
 #define RRA_BACKEND_BVH_RT_BINARY_FILE_DEFS_H_
 
-#include "gpu_def.h"
+#include "bvh/gpu_def.h"
 
 #include <cstdint>
 
@@ -121,3 +121,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_RT_BINARY_FILE_DEFS_H_
+

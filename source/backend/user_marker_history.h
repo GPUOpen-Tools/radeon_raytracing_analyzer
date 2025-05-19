@@ -8,12 +8,13 @@
 #ifndef RRA_BACKEND_USER_MARKER_HISTORY_H_
 #define RRA_BACKEND_USER_MARKER_HISTORY_H_
 
-#include "public/rra_error.h"
+#include <stack>
+#include <unordered_map>
+#include <vector>
 
 #include "rdf/rdf/inc/amdrdf.h"
-#include <vector>
-#include <unordered_map>
-#include <stack>
+
+#include "public/rra_error.h"
 
 namespace rra
 {
@@ -71,3 +72,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_USER_MARKER_HISTORY_H_
+

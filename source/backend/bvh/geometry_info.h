@@ -59,3 +59,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_GEOMETRY_INFO_H_
+

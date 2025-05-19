@@ -8,9 +8,9 @@
 #ifndef RRA_VIEWS_LICENSE_DIALOG_H_
 #define RRA_VIEWS_LICENSE_DIALOG_H_
 
-#include "ui_license_dialog.h"
-
 #include <QDialog>
+
+#include "ui_license_dialog.h"
 
 /// @brief Support for the agreement window.
 class LicenseDialog : public QDialog
@@ -55,3 +55,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_LICENSE_DIALOG_H_
+

@@ -9,6 +9,7 @@
 #define RRA_UTIL_RRA_UTIL_H_
 
 #include <QColor>
+#include <QTableView>
 
 namespace rra_util
 {
@@ -32,6 +33,12 @@ namespace rra_util
     /// @return true if we may attempt an actual trace load, false otherwise.
     bool TraceValidToLoad(const QString& trace_path);
 
+    /// @brief Initialize a tableview with parameters so that all tables have the same look and feel.
+    ///
+    /// @param [in] table  The table to be initialized.
+    void InitializeTableView(QTableView* table);
+
 };  // namespace rra_util
 
 #endif  // RRA_UTIL_RRA_UTIL_H_
+

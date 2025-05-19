@@ -56,6 +56,7 @@ BlasListPane::~BlasListPane()
 {
     delete model_;
     delete table_delegate_;
+    delete ui_;
 }
 
 void BlasListPane::keyPressEvent(QKeyEvent* event)
@@ -257,3 +258,4 @@ void BlasListPane::ScrollToSelectedBlas()
     }
     ui_->blas_table_->scrollToTop();
 }
+

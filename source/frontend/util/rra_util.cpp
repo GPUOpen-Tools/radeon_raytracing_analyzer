@@ -7,8 +7,10 @@
 
 #include "util/rra_util.h"
 
-#include <QDir>
 #include <cmath>
+
+#include <QDir>
+#include <QHeaderView>
 
 #include "public/rra_assert.h"
 
@@ -67,3 +69,25 @@ bool rra_util::TraceValidToLoad(const QString& trace_path)
 
     return may_load;
 }
+
+void rra_util::InitializeTableView(QTableView* table)
+{
+    // Set the table style.
+    table->setFrameStyle(QFrame::NoFrame);
+    table->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    table->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    table->setSelectionMode(QAbstractItemView::SingleSelection);
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table->setShowGrid(false);
+    table->setWordWrap(false);
+    table->setAlternatingRowColors(true);
+
+    // Set the horizontal header style.
+    table->horizontalHeader()->setSectionsClickable(true);
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+
+    // Set the vertical header style.
+    table->verticalHeader()->setVisible(false);
+}
+

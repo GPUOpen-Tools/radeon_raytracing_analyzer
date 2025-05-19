@@ -10,8 +10,8 @@
 
 #include "ui_tlas_instances_pane.h"
 
-#include "models/tlas/tlas_instances_model.h"
 #include "models/table_item_delegate.h"
+#include "models/tlas/tlas_instances_model.h"
 #include "views/base_pane.h"
 
 /// @brief Class declaration.
@@ -85,3 +85,4 @@ private:
 };
 
 #endif  // #define RRA_VIEWS_TLAS_TLAS_INSTANCES_PANE_H_
+

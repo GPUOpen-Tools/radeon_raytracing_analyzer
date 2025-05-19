@@ -14,7 +14,7 @@ GeometriesTableItemDelegate::GeometriesTableItemDelegate(QObject* parent)
 {
 }
 
-GeometriesTableItemDelegate::GeometriesTableItemDelegate(ScaledTableView* table_view, QObject* parent)
+GeometriesTableItemDelegate::GeometriesTableItemDelegate(QTableView* table_view, QObject* parent)
     : TableItemDelegate(table_view, parent)
 {
 }
@@ -36,3 +36,4 @@ bool GeometriesTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
+

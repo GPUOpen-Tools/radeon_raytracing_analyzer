@@ -10,8 +10,10 @@
 
 #include <cstdint>
 #include <cstring>
+
 #include "glm/glm/glm.hpp"
-#include "math.h"
+
+#include "bvh/rtip_common/math.h"
 
 #ifndef _WIN32
 // Switch off Linux warnings-as-errors for now.
@@ -268,3 +270,4 @@ inline BoundingBox ChildInfo::DecodeBounds(glm::vec3 origin, glm::uvec3 exponent
 #endif
 
 #endif  // RRA_BACKEND_CHILD_INFO_H_
+

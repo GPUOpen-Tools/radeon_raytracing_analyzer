@@ -9,13 +9,13 @@
 
 #include "qt_common/utils/qt_util.h"
 
-#include "views/widget_util.h"
-#include <settings/settings.h>
-#include "util/string_util.h"
-#include "managers/message_manager.h"
 #include "constants.h"
+#include "managers/message_manager.h"
 #include "models/ray/ray_inspector_ray_tree_item.h"
 #include "models/ray/ray_inspector_ray_tree_model.h"
+#include "settings/settings.h"
+#include "util/string_util.h"
+#include "views/widget_util.h"
 
 RayInspectorPane::RayInspectorPane(QWidget* parent)
     : BasePane(parent)
@@ -81,6 +81,9 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
     connect(ui_->content_ray_result_hit_distance_, &ScaledPushButton::clicked, this, &RayInspectorPane::FocusOnHitLocation);
     connect(ui_->selected_ray_focus_, &ScaledPushButton::clicked, this, &RayInspectorPane::FocusOnSelectedRay);
     ui_->selected_ray_focus_->setCursor(QCursor(Qt::PointingHandCursor));
+
+    connect(ui_->increment_ray_, &ScaledPushButton::clicked, this, [=]() { emit rra::MessageManager::Get().RayStepSelected(1); });
+    connect(ui_->decrement_ray_, &ScaledPushButton::clicked, this, [=]() { emit rra::MessageManager::Get().RayStepSelected(-1); });
 
     ui_->content_ray_acceleration_structure_address_->SetLinkStyleSheet();
     ui_->content_origin_->SetLinkStyleSheet();
@@ -156,6 +159,9 @@ RayInspectorPane::~RayInspectorPane()
         renderer_interface_->Shutdown();
         delete renderer_interface_;
     }
+
+    delete model_;
+    delete ui_;
 }
 
 void RayInspectorPane::SelectRay()
@@ -356,7 +362,7 @@ void RayInspectorPane::showEvent(QShowEvent* event)
         ui_->ray_valid_switch_->setCurrentIndex(1);
     }
 
-    auto proxy_model = model_->GetProxyModel();
+    rra::RayInspectorRayTreeProxyModel* proxy_model = model_->GetProxyModel();
     if (proxy_model)
     {
         proxy_model->invalidate();
@@ -556,7 +562,7 @@ void RayInspectorPane::UpdateCameraController()
     }
 }
 
-QColor InspectorGetQColorFromGLM(glm::vec4 color)
+static QColor InspectorGetQColorFromGLM(glm::vec4 color)
 {
     QColor q_color;
     q_color.setRed(color.r * 255.0f);
@@ -636,7 +642,7 @@ void RayInspectorPane::MouseDoubleClicked(QMouseEvent* mouse_event)
 /// @param origin_b Origin of ray b
 /// @param dir_b    Direction of ray b
 /// @return distances from the origins of each rays.
-std::pair<float, float> FindClosestDistanceOnRays(glm::vec3 origin_a, glm::vec3 dir_a, glm::vec3 origin_b, glm::vec3 dir_b)
+static std::pair<float, float> FindClosestDistanceOnRays(glm::vec3 origin_a, glm::vec3 dir_a, glm::vec3 origin_b, glm::vec3 dir_b)
 {
     dir_a = glm::normalize(dir_a);
     dir_b = glm::normalize(dir_b);
@@ -724,7 +730,7 @@ std::optional<uint32_t> RayInspectorPane::CheckRayClick(rra::renderer::Camera& c
 }
 
 // Helps iterate over tree model.
-void Iterate(const QModelIndex& index, const QAbstractItemModel* model, const std::function<void(const QModelIndex&)>& step_function)
+static void Iterate(const QModelIndex& index, const QAbstractItemModel* model, const std::function<void(const QModelIndex&)>& step_function)
 {
     if (index.isValid())
     {
@@ -842,7 +848,7 @@ bool RayInspectorPane::WrapMouseMovement(QPoint pos)
 /// @param p2 Second point.
 /// @param dist Distance to compare against.
 /// @returns True if the distance is greater than dist.
-bool DistanceGreaterThanRayInspector(const QPoint& p1, const QPoint& p2, float dist)
+static bool DistanceGreaterThanRayInspector(const QPoint& p1, const QPoint& p2, float dist)
 {
     int diff_x   = p2.x() - p1.x();
     int diff_y   = p2.y() - p1.y();
@@ -917,7 +923,14 @@ void RayInspectorPane::KeyPressed(QKeyEvent* key_event)
     // Can assume the controller is going to be a ViewerIO.
     auto camera_controller = static_cast<rra::ViewerIO*>(camera.GetCameraController());
 
-    switch (key_event->key())
+    Qt::KeyboardModifiers modifiers = key_event->modifiers();
+    if (modifiers & Qt::CTRL)
+    {
+        ctrl_key_down_ = true;
+    }
+
+    int key = key_event->key();
+    switch (key)
     {
     case Qt::Key_C:
         model_->AdaptTraversalCounterRangeToView();
@@ -932,7 +945,21 @@ void RayInspectorPane::KeyPressed(QKeyEvent* key_event)
         break;
 
     case Qt::Key_N:
-        model_->ToggleRenderGeometry();
+        if (ctrl_key_down_)
+        {
+            emit rra::MessageManager::Get().RayStepSelected(1);
+        }
+        else
+        {
+            model_->ToggleRenderGeometry();
+        }
+        break;
+
+    case Qt::Key_P:
+        if (ctrl_key_down_)
+        {
+            emit rra::MessageManager::Get().RayStepSelected(-1);
+        }
         break;
 
     case Qt::Key_M:
@@ -947,7 +974,7 @@ void RayInspectorPane::KeyPressed(QKeyEvent* key_event)
         // We don't care about whatever key was pressed.
         if (camera_controller)
         {
-            camera_controller->KeyPressed(static_cast<Qt::Key>(key_event->key()));
+            camera_controller->KeyPressed(static_cast<Qt::Key>(key));
         }
         break;
     }
@@ -964,7 +991,14 @@ void RayInspectorPane::KeyReleased(QKeyEvent* key_event)
 
     auto viewer_callbacks = model_->GetViewerCallbacks();
 
-    switch (key_event->key())
+    Qt::KeyboardModifiers modifiers = key_event->modifiers();
+    if (modifiers & Qt::CTRL)
+    {
+        ctrl_key_down_ = false;
+    }
+
+    int key = key_event->key();
+    switch (key)
     {
     case Qt::Key_F:
         FocusOnSelectedRay();
@@ -973,7 +1007,7 @@ void RayInspectorPane::KeyReleased(QKeyEvent* key_event)
         // We don't care about whatever key was pressed.
         if (last_camera_controller_)
         {
-            last_camera_controller_->KeyReleased(static_cast<Qt::Key>(key_event->key()));
+            last_camera_controller_->KeyReleased(static_cast<Qt::Key>(key));
         }
         break;
     }
@@ -1038,7 +1072,7 @@ void RayInspectorPane::GotoTlasPaneFromSelectedRay()
     }
 
     emit rra::MessageManager::Get().TlasAssumeCamera(
-        camera->GetPosition(), camera->GetForward(), camera->GetUp(), camera->GetFieldOfView(), camera->GetMovementSpeed());
+        camera -> GetPosition(), camera->GetForward(), camera->GetUp(), camera->GetFieldOfView(), camera->GetMovementSpeed());
 }
 
 void RayInspectorPane::GotoTlasPaneFromSelectedRayWithInstance()
@@ -1079,7 +1113,7 @@ void RayInspectorPane::GotoTlasPaneFromSelectedRayWithInstance()
     }
 
     emit rra::MessageManager::Get().TlasAssumeCamera(
-        camera->GetPosition(), camera->GetForward(), camera->GetUp(), camera->GetFieldOfView(), camera->GetMovementSpeed());
+        camera -> GetPosition(), camera->GetForward(), camera->GetUp(), camera->GetFieldOfView(), camera->GetMovementSpeed());
 }
 
 void RayInspectorPane::FocusOnHitLocation()
@@ -1156,6 +1190,10 @@ bool RayInspectorPane::event(QEvent* event)
 
     switch (event->type())
     {
+    case QEvent::KeyPress:
+        KeyPressed(key_event);
+        break;
+
     case QEvent::KeyRelease:
         KeyReleased(key_event);
         break;
@@ -1177,4 +1215,5 @@ void RayInspectorPane::OnColorThemeUpdated()
         ui_->selected_ray_focus_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
+
 

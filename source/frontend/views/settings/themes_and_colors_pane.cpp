@@ -18,9 +18,9 @@
 #include "managers/trace_manager.h"
 #include "settings/settings.h"
 #include "util/rra_util.h"
-#include "views/widget_util.h"
 #include "util/string_util.h"
 #include "views/debug_window.h"
+#include "views/widget_util.h"
 
 const static int kPickerRows    = 4;
 const static int kPickerColumns = 8;
@@ -140,6 +140,7 @@ ThemesAndColorsPane::ThemesAndColorsPane(QWidget* parent)
 
 ThemesAndColorsPane::~ThemesAndColorsPane()
 {
+    delete ui_;
 }
 
 void ThemesAndColorsPane::PickerColorSelected(int palette_id, const QColor& color)
@@ -513,3 +514,4 @@ int ThemesAndColorsPane::GetSettingsPaletteId(int button_id) const
         return -1;
     }
 }
+

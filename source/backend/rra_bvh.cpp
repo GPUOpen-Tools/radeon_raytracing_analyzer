@@ -11,16 +11,17 @@
 
 #include <float.h>
 
-#include "bvh/ibvh.h"
-#include "bvh/rtip_common/encoded_bottom_level_bvh.h"
-#include "bvh/dxr_definitions.h"
 #include "public/rra_assert.h"
-#include "rra_data_set.h"
-#include "bvh/gpu_def.h"
 #include "public/rra_rtip_info.h"
-#include "bvh/rtip31/internal_node.h"
+
+#include "bvh/dxr_definitions.h"
+#include "bvh/gpu_def.h"
+#include "bvh/ibvh.h"
 #include "bvh/rtip31/child_info.h"
+#include "bvh/rtip31/internal_node.h"
 #include "bvh/rtip31/primitive_node.h"
+#include "bvh/rtip_common/encoded_bottom_level_bvh.h"
+#include "rra_data_set.h"
 
 // External reference to the global dataset.
 extern RraDataSet data_set_;
@@ -598,3 +599,4 @@ RraErrorCode RraBvhGetTotalTraceSizeInBytes(uint64_t* out_size_in_bytes)
     *out_size_in_bytes = tlas_size + blas_size;
     return kRraOk;
 }
+

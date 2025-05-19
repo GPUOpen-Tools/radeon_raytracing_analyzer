@@ -5,21 +5,20 @@
 /// @brief  Implementation for RTA ray history.
 //=============================================================================
 
-#include "ray_history.h"
-#include "loader.h"
-#include "../bvh/flags_util.h"
+#include "ray_history/ray_history.h"
 
-#include "public/rra_assert.h"
-
+#include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <cstring>
-
 #include <limits>
-#include <algorithm>
+#include <map>
 #include <stack>
 
-#include <map>
+#include "public/rra_assert.h"
+
+#include "bvh/flags_util.h"
+#include "ray_history/loader.h"
 
 namespace
 {
@@ -1110,3 +1109,4 @@ namespace rta
     }
 
 }  // namespace rta
+

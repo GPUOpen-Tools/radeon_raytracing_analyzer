@@ -20,16 +20,18 @@ IF (UNIX AND NOT APPLE)
 ENDIF ()
 
 # Locate the Vulkan headers from the external dependencies directory.
-include_directories(${CMAKE_SOURCE_DIR}/external/third_party/vulkan/include/)
-include_directories(${CMAKE_SOURCE_DIR}/external/qt_common/source)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../external/third_party/vulkan/include/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../external/qt_common/source)
 
-# volk
-if (WIN32)
-    set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
-elseif (LINUX)
-    set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_XCB_KHR)
-endif ()
-add_subdirectory(${CMAKE_SOURCE_DIR}/external/third_party/volk volk)
+if (NOT TARGET volk)
+    # volk
+    if (WIN32)
+        set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
+    elseif (LINUX)
+        set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_XCB_KHR)
+    endif ()
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/third_party/volk volk)
+endif()
 
 IF (UNIX)
     find_package(Threads REQUIRED)
@@ -39,10 +41,72 @@ IF (UNIX)
 ENDIF (UNIX)
 
 set(EXTERNAL_SOURCES
-        "${CMAKE_SOURCE_DIR}/external/vma/include/vk_mem_alloc.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../external/vma/include/vk_mem_alloc.h"
 )
 
+
 set(SOURCES
+        "camera.cpp"
+        "graphics_context.cpp"
+        "heatmap.cpp"
+        "intersect.cpp"
+        "orientation_gizmo.cpp"
+        "renderer_interface.cpp"
+        "renderer_widget.cpp"
+        "shared.cpp"
+        "vk/bounding_volume_mesh.cpp"
+        "vk/bounding_volume_mesh.h"
+        "vk/buffer_guard.cpp"
+        "vk/buffer_guard.h"
+        "vk/image_guard.cpp"
+        "vk/image_guard.h"
+        "vk/mesh.h"
+        "vk/orientation_gizmo_mesh.cpp"
+        "vk/orientation_gizmo_mesh.h"
+        "vk/ray_history_offscreen_renderer.h"
+        "vk/ray_history_offscreen_renderer.cpp"
+        "vk/renderer_vulkan.cpp"
+        "vk/renderer_vulkan.h"
+        "vk/render_module.h"
+        "vk/render_module.cpp"
+        "vk/util_vulkan.cpp"
+        "vk/util_vulkan.h"
+        "vk/vk_graphics_context.h"
+        "vk/vk_graphics_context.cpp"
+        "vk/adapters/render_state_adapter.cpp"
+        "vk/adapters/view_state_adapter.cpp"
+        "vk/framework/command_buffer_ring.cpp"
+        "vk/framework/command_buffer_ring.h"
+        "vk/framework/device.cpp"
+        "vk/framework/device.h"
+        "vk/framework/device_properties.h"
+        "vk/framework/device_properties.cpp"
+        "vk/framework/ext_debug_utils.h"
+        "vk/framework/ext_debug_utils.cpp"
+        "vk/framework/ext_gpu_validation.h"
+        "vk/framework/ext_gpu_validation.cpp"
+        "vk/framework/ext_validation.h"
+        "vk/framework/ext_validation.cpp"
+        "vk/framework/instance.h"
+        "vk/framework/instance.cpp"
+        "vk/framework/instance_properties.h"
+        "vk/framework/instance_properties.cpp"
+        "vk/framework/swap_chain.cpp"
+        "vk/framework/swap_chain.h"
+        "vk/render_modules/checker_clear.h"
+        "vk/render_modules/checker_clear.cpp"
+        "vk/render_modules/bounding_volume.h"
+        "vk/render_modules/bounding_volume.cpp"
+        "vk/render_modules/mesh_render_module.h"
+        "vk/render_modules/mesh_render_module.cpp"
+        "vk/render_modules/orientation_gizmo_module.h"
+        "vk/render_modules/orientation_gizmo_module.cpp"
+        "vk/render_modules/ray_inspector_overlay.h"
+        "vk/render_modules/ray_inspector_overlay.cpp"
+        "vk/render_modules/selection_module.h"
+        "vk/render_modules/selection_module.cpp"
+        "vk/render_modules/traversal.h"
+        "vk/render_modules/traversal.cpp"
         "public/camera.h"
         "public/include_vma.h"
         "public/shared.h"
@@ -57,81 +121,21 @@ set(SOURCES
         "public/intersect.h"
         "public/orientation_gizmo.h"
         "shaders/shared_definitions.hlsl"
-        "shared.cpp"
-        "camera.cpp"
-        "heatmap.cpp"
-        "renderer_widget.cpp"
-        "renderer_interface.cpp"
-        "graphics_context.cpp"
-        "intersect.cpp"
-        "orientation_gizmo.cpp"
-        "vk/adapters/render_state_adapter.cpp"
-        "vk/adapters/view_state_adapter.cpp"
-        "vk/mesh.h"
-        "vk/buffer_guard.cpp"
-        "vk/buffer_guard.h"
-        "vk/image_guard.cpp"
-        "vk/image_guard.h"
-        "vk/bounding_volume_mesh.cpp"
-        "vk/bounding_volume_mesh.h"
-        "vk/orientation_gizmo_mesh.cpp"
-        "vk/orientation_gizmo_mesh.h"
-        "vk/renderer_vulkan.cpp"
-        "vk/renderer_vulkan.h"
-        "vk/util_vulkan.cpp"
-        "vk/util_vulkan.h"
-        "vk/vk_graphics_context.h"
-        "vk/vk_graphics_context.cpp"
-        "vk/framework/device.cpp"
-        "vk/framework/device.h"
-        "vk/framework/command_buffer_ring.cpp"
-        "vk/framework/command_buffer_ring.h"
-        "vk/framework/swap_chain.cpp"
-        "vk/framework/swap_chain.h"
-        "vk/framework/device_properties.h"
-        "vk/framework/device_properties.cpp"
-        "vk/framework/ext_debug_utils.h"
-        "vk/framework/ext_debug_utils.cpp"
-        "vk/framework/ext_gpu_validation.h"
-        "vk/framework/ext_gpu_validation.cpp"
-        "vk/framework/ext_validation.h"
-        "vk/framework/ext_validation.cpp"
-        "vk/framework/instance.h"
-        "vk/framework/instance.cpp"
-        "vk/framework/instance_properties.h"
-        "vk/framework/instance_properties.cpp"
-        "vk/render_module.h"
-        "vk/render_module.cpp"
-        "vk/render_modules/mesh_render_module.h"
-        "vk/render_modules/mesh_render_module.cpp"
-        "vk/render_modules/checker_clear.h"
-        "vk/render_modules/checker_clear.cpp"
-        "vk/render_modules/bounding_volume.h"
-        "vk/render_modules/bounding_volume.cpp"
-        "vk/render_modules/traversal.h"
-        "vk/render_modules/traversal.cpp"
-        "vk/render_modules/orientation_gizmo_module.h"
-        "vk/render_modules/orientation_gizmo_module.cpp"
-        "vk/render_modules/selection_module.h"
-        "vk/render_modules/selection_module.cpp"
-        "vk/render_modules/ray_inspector_overlay.h"
-        "vk/render_modules/ray_inspector_overlay.cpp"
-        "vk/ray_history_offscreen_renderer.h"
-        "vk/ray_history_offscreen_renderer.cpp"
 )
 
 set(LINUX_SOURCES
 )
+
 
 set(SOURCES ${SOURCES} ${EXTERNAL_SOURCES})
 
 # Specify output library name
 IF (WIN32)
     add_library(${PROJECT_NAME} ${SOURCES})
-    target_link_libraries(${PROJECT_NAME} Qt::Widgets Backend volk)
+    target_link_libraries(${PROJECT_NAME} Qt::Widgets RraBackend volk)
 ELSEIF (UNIX)
     add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
-    target_link_libraries(${PROJECT_NAME} Qt::Widgets Qt::GuiPrivate Backend volk ${CMAKE_DL_LIBS})
+    target_link_libraries(${PROJECT_NAME} Qt::Widgets Qt::GuiPrivate RraBackend volk ${CMAKE_DL_LIBS})
 ENDIF (WIN32)
 
 # Apply common developer tools target options and definitions
@@ -141,13 +145,13 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Set DXC path
 IF (WIN32)
-    set(DXC ${CMAKE_SOURCE_DIR}/external/third_party/dxc/bin/x64/dxc.exe)
+    set(DXC ${CMAKE_CURRENT_SOURCE_DIR}/../../external/third_party/dxc/bin/x64/dxc.exe)
 ELSEIF (UNIX)
-    set(DXC ${CMAKE_SOURCE_DIR}/external/third_party/dxc/bin/dxc)
+    set(DXC ${CMAKE_CURRENT_SOURCE_DIR}/../../external/third_party/dxc/bin/dxc)
 ENDIF (WIN32)
 
 # Set shader input and output directories
-set(SHADERS_INPUT_DIR ${CMAKE_SOURCE_DIR}/source/renderer/shaders/)
+set(SHADERS_INPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../renderer/shaders/)
 IF (WIN32)
     set(SHADERS_OUTPUT_DIR ${RRA_BINARY_DIR}/shaders/)
 ELSEIF (UNIX)

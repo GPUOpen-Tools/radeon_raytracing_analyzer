@@ -56,6 +56,16 @@ namespace rra
         /// @return kRraOk if successful or error code if not.
         RraErrorCode GetDeviceRevisionID(int32_t* device_revision_id) const;
 
+        /// @brief Get the PCI ID.
+        ///
+        /// This is used to identify which GPU was used for capture in a multi-GPU
+        /// system.
+        ///
+        /// @param [out] A variable to receive the PCI ID.
+        ///
+        /// @return kRraOk if successful or error code if not.
+        RraErrorCode GetPciID(uint32_t* pci_id) const;
+
         /// @brief Get the shader core clock frequency, in Hz.
         ///
         /// @param [out] A variable to receive the shader clock frequency.
@@ -298,3 +308,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_ASIC_INFO_H_
+

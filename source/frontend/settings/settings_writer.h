@@ -58,3 +58,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_SETTINGS_SETTINGS_WRITER_H_
+

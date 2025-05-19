@@ -8,7 +8,9 @@
 #include "public/orientation_gizmo.h"
 
 #include <algorithm>
+
 #include "glm/glm/gtx/transform.hpp"
+
 #include "vk/render_modules/orientation_gizmo_module.h"
 
 namespace rra
@@ -161,3 +163,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

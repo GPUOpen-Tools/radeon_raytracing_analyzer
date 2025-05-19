@@ -8,9 +8,10 @@
 #ifndef RRA_UTIL_STRING_UTIL_H_
 #define RRA_UTIL_STRING_UTIL_H_
 
-#include <QString>
-#include <vector>
 #include <string>
+#include <vector>
+
+#include <QString>
 
 #include "vulkan/include/vulkan/vulkan_core.h"
 
@@ -79,3 +80,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_UTIL_STRING_UTIL_H_
+

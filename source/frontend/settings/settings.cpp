@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <ctime>
+
 #include <QFile>
 
 #include "qt_common/utils/qt_util.h"
@@ -16,11 +17,10 @@
 #include "public/rra_assert.h"
 
 #include "constants.h"
+#include "models/scene.h"
 #include "settings/settings_reader.h"
 #include "settings/settings_writer.h"
 #include "util/file_util.h"
-
-#include "models/scene.h"
 
 namespace rra
 {
@@ -1078,3 +1078,4 @@ namespace rra
         return GetBoolValue(kSettingGeneralDriverOverridesAllowNotifications);
     }
 }  // namespace rra
+

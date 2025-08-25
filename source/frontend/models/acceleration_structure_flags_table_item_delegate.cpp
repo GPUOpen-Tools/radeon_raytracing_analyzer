@@ -49,4 +49,3 @@ bool FlagTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
-

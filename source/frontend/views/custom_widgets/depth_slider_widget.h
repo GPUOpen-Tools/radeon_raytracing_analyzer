@@ -81,4 +81,3 @@ private:
 };
 
 #endif  // QTCOMMON_CUSTOM_WIDGETS_DEPTH_SLIDER_WIDGET_H_
-

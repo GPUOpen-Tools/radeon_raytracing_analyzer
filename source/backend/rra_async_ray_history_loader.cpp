@@ -800,4 +800,3 @@ void RraAsyncRayHistoryLoader::UpdateInvocationCountsUi(const RraRayHistoryStats
     invocation_counts_.loop_iteration_count        = stats.loop_iteration_count;
     invocation_counts_.instance_intersection_count = stats.instance_intersection_count;
 }
-

@@ -84,4 +84,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_API_INFO_H_
-

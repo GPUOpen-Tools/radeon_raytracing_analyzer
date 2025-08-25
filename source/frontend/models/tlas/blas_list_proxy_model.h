@@ -98,4 +98,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TLAS_BLAS_LIST_PROXY_MODEL_H_
-

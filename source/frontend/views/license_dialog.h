@@ -55,4 +55,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_LICENSE_DIALOG_H_
-

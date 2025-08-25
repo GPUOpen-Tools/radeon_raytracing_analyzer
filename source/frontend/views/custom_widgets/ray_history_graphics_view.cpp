@@ -436,4 +436,3 @@ void RayHistoryGraphicsView::HideSelectedPixelIcon()
     pixel_selected_info_.selected = false;
     UpdateSelectedPixelIcon();
 }
-

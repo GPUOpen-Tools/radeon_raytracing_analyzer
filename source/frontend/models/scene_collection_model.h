@@ -17,11 +17,11 @@ namespace rra
     /// @brief Info on a raycast's closest intersection.
     struct SceneCollectionModelClosestHit
     {
-        float    distance       = -1.0f;
-        uint64_t blas_index     = ULLONG_MAX;
-        uint32_t instance_node  = UINT32_MAX;
-        uint32_t triangle_node  = UINT32_MAX;
-        uint32_t triangle_index = UINT32_MAX;
+        float    distance            = -1.0f;
+        uint64_t blas_index          = ULLONG_MAX;
+        uint32_t instance_node       = UINT32_MAX;
+        uint32_t triangle_child_node = UINT32_MAX;
+        uint32_t triangle_index      = UINT32_MAX;
     };
 
     /// @brief The SceneCollectionModel base class declaration.
@@ -107,12 +107,11 @@ namespace rra
         /// @brief During ray cast traversal, get whether this node should be skipped.
         ///
         /// @param blas_index The index of the BLAS containing the node.
-        /// @param node_id The node to query.
+        /// @param node_child_id The node to query.
         ///
         /// @return true if node should be skipped, false otherwise.
-        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const = 0;
+        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const = 0;
     };
 }  // namespace rra
 
 #endif  // RRA_MODELS_SCENE_MODEL_H_
-

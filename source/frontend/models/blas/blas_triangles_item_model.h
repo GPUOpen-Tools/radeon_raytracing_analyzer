@@ -106,4 +106,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_TRIANGLES_ITEM_MODEL_H_
-

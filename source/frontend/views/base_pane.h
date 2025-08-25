@@ -35,4 +35,3 @@ public:
 };
 
 #endif  // RRA_VIEWS_BASE_PANE_H_
-

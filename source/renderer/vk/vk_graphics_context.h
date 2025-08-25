@@ -181,4 +181,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_GRAPHICS_CONTEXT_H_
-

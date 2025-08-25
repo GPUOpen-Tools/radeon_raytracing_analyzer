@@ -140,4 +140,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_FLAGS_UTIL_H_
-

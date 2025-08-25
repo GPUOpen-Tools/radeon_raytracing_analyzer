@@ -341,4 +341,3 @@ RayDispatchBeginIdentifier::RayDispatchBeginIdentifier(uint32_t coord_index, uin
     , begin_token_index{begin_index}
 {
 }
-

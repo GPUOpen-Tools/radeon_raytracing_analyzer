@@ -73,4 +73,3 @@ bool RayInspectorTreeView::event(QEvent* event)
 
     return ScaledTreeView::event(event);
 }
-

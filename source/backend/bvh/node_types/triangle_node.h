@@ -146,10 +146,9 @@ namespace dxr
                                                      const std::uint32_t      rotation = 0);
 
             std::array<Float3, 5> vertices_ = {};  ///< 5 Vertices to store quads (as triangle fans)
-            std::uint32_t triangle_id_;  ///< ID of the triangle (defines rotation for compression mode)
+            std::uint32_t         triangle_id_;    ///< ID of the triangle (defines rotation for compression mode)
         };
     }  // namespace amd
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_NODE_TYPES_TRIANGLE_NODE_H_
-

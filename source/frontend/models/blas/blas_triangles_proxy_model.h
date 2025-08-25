@@ -72,4 +72,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_TRIANGLES_PROXY_MODEL_H_
-

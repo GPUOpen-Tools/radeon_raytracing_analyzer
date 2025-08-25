@@ -88,15 +88,14 @@ namespace rra
     protected:
         /// @brief During ray cast traversal, get whether this node should be skipped.
         ///
-        /// @param blas_index The index of the BLAS containing the node.
-        /// @param node_id The node to query.
+        /// @param blas_index    The index of the BLAS containing the node.
+        /// @param node_child_id The node to query.
         ///
         /// @return true if node should be skipped, false otherwise.
-        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const override;
+        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const override;
 
         std::map<uint64_t, Scene*> tlas_scenes_;  ///< A map of all loaded TLAS scenes.
     };
 }  // namespace rra
 
 #endif
-

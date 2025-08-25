@@ -537,4 +537,3 @@ void TlasViewerPane::OnColorThemeUpdated()
         ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
-

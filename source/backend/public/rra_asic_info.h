@@ -109,4 +109,3 @@ RraErrorCode RraAsicInfoGetRaytracingVersion(uint16_t* out_version_major, uint16
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_ASIC_INFO_H_
-

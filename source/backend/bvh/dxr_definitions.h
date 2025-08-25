@@ -222,4 +222,3 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_DXR_DEFINITIONS_H_
-

@@ -42,25 +42,33 @@ namespace rra
         QStyleOptionButton checkbox;
         checkbox.rect = GetCheckboxRect(option);
         checkbox.rect.moveRight(checkbox.rect.right() + horizontal_margin);
-        auto node = scene_->GetNodeById(item_data.node_id);
 
-        if (node && node->IsVisible())
+        auto node = scene_->GetNodeById(item_data.node_child_id);
+
+        if (node)
         {
-            checkbox.state |= QStyle::State_On;
-            if (node->IsSelected())
+            if (!node->IsVisible() || !node->IsEnabled())
             {
-                painter->fillRect(option.rect, option.palette.highlight());
+                checkbox.state |= QStyle::State_Off;
+            }
+            else
+            {
+                if (node->IsVisible())
+                {
+                    checkbox.state |= QStyle::State_On;
+                    if (node->IsSelected())
+                    {
+                        painter->fillRect(option.rect, option.palette.highlight());
+                    }
+                }
+
+                if (node->IsEnabled())
+                {
+                    checkbox.state |= QStyle::State_Enabled;
+                }
             }
         }
-        else
-        {
-            checkbox.state |= QStyle::State_Off;
-        }
 
-        if (node && node->IsEnabled())
-        {
-            checkbox.state |= QStyle::State_Enabled;
-        }
         QApplication::style()->drawControl(QStyle::CE_CheckBox, &checkbox, painter);
 
         /// Draw the text associated with the node.
@@ -145,7 +153,7 @@ namespace rra
 #endif
             if (checkbox_rect.left() <= x_pos && x_pos <= checkbox_rect.right())
             {
-                auto node = scene_->GetNodeById(item_data.node_id);
+                auto node = scene_->GetNodeById(item_data.node_child_id);
                 if (node && node->IsEnabled())
                 {
                     auto instance = node->GetInstance();
@@ -198,4 +206,3 @@ namespace rra
     }
 
 }  // namespace rra
-

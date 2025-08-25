@@ -72,4 +72,3 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_METADATA_V1_H_
-

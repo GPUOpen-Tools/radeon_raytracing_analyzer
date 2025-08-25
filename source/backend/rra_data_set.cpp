@@ -265,4 +265,3 @@ RraErrorCode RraDataSetDestroy(RraDataSet* data_set)
 
     return kRraOk;
 }
-

@@ -52,4 +52,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_BLAS_BLAS_PROPERTIES_PANE_H_
-

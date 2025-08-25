@@ -60,4 +60,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_RENDERER_ADAPTER_H_
-

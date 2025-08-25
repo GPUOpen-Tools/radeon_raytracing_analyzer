@@ -29,10 +29,10 @@ namespace rta
 
         /// @brief Get the index of an instance node from an instance node pointer.
         ///
-        /// @param [in] node_ptr  The instance node pointer.
+        /// @param [in] node_addr  The instance node pointer.
         ///
         /// @return The instance index, or -1 if the index is invalid.
-        virtual int32_t GetInstanceIndex(const dxr::amd::NodePointer* node_ptr) const = 0;
+        virtual int32_t GetInstanceIndex(uint32_t node_addr) const = 0;
 
         /// @brief Does this BVH have references.
         ///
@@ -84,7 +84,7 @@ namespace rta
         /// @param [in] instance_index The index of the instance.
         ///
         /// @return The instance node.
-        dxr::amd::NodePointer GetInstanceNode(uint64_t blas_index, uint64_t instance_index) const;
+        uint32_t GetInstanceNode(uint64_t blas_index, uint64_t instance_index) const;
 
         /// @brief Get the total procedural node count.
         ///
@@ -93,20 +93,20 @@ namespace rta
 
         /// @brief Get the surface area heuristic for a given leaf node.
         ///
-        /// @param [in] node_ptr The leaf node whose SAH is to be found.
+        /// @param [in] node_id The leaf node whose SAH is to be found.
         ///
         /// @return The surface area heuristic.
-        float GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const override;
+        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const override;
 
         /// @brief Set the surface area heuristic for a given leaf node.
         ///
-        /// @param [in] node_ptr               The interior node whose SAH is to be set.
+        /// @param [in] node_id                The interior node whose SAH is to be set.
         /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
-        void SetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic);
+        void SetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, float surface_area_heuristic);
 
     protected:
-        std::unordered_map<uint64_t, std::vector<dxr::amd::NodePointer>> instance_list_ = {};  ///< A map of BLAS index to list of instances of that BLAS.
-        std::vector<float> instance_surface_area_heuristic_                             = {};  ///< Surface area heuristic values for the instances.
+        std::unordered_map<uint64_t, std::vector<uint32_t>> instance_list_ = {};  ///< A map of BLAS index to list of node_ids of instances of that BLAS.
+        std::vector<float>                                  instance_surface_area_heuristic_ = {};  ///< Surface area heuristic values for the instances.
 
         /// @brief Build the list for the number of instances of each BLAS.
         ///
@@ -124,4 +124,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_TOP_LEVEL_BVH_H_
-

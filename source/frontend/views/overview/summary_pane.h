@@ -78,4 +78,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_SUMMARY_PANE_H_
-

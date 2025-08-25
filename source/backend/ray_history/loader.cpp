@@ -274,4 +274,3 @@ namespace rta
         return result;
     }
 }  // namespace rta
-

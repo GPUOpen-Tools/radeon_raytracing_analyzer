@@ -41,7 +41,7 @@ namespace rra
             {
                 fallback_vector_ = new std::vector<T>{};
                 fallback_vector_->resize(size_);
-                std::memcpy(fallback_vector_->data(), buffer_.data(), size_ * sizeof(T));
+                std::memcpy((void*)fallback_vector_->data(), (void*)buffer_.data(), size_ * sizeof(T));
                 fallback_vector_->push_back(t);
             }
             else
@@ -60,7 +60,7 @@ namespace rra
             {
                 fallback_vector_ = new std::vector<T>{};
                 fallback_vector_->resize(size_);
-                std::memcpy(fallback_vector_->data(), buffer_.data(), size_ * sizeof(T));
+                std::memcpy((void*)fallback_vector_->data(), (void*)buffer_.data(), size_ * sizeof(T));
                 fallback_vector_->push_back(std::move(t));
             }
             else
@@ -219,4 +219,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_UTIL_STACK_VECTOR_H_
-

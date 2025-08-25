@@ -155,8 +155,8 @@ namespace rra
 
         /// @brief Set the scene selection.
         ///
-        /// @param [in] node_id The node id to select.
-        void SetSceneSelection(uint32_t node_id);
+        /// @param [in] node_child_id The node ID.
+        void SetSceneSelection(uint32_t node_child_id);
 
         /// @brief Reset the scene selection.
         ///
@@ -246,10 +246,10 @@ namespace rra
 
         /// @brief Get node by id.
         ///
-        /// @param [in] node_id The node id to get.
+        /// @param [in] node_child_id The node ID.
         ///
         /// @returns A scene node.
-        SceneNode* GetNodeById(uint32_t node_id);
+        SceneNode* GetNodeById(uint32_t node_child_id);
 
         /// @brief Set the depth range for the scene.
         ///
@@ -396,15 +396,16 @@ namespace rra
         /// @brief Populates the instance nodes for a quick lookup by instance index.
         void PopulateInstanceNodes();
 
-        SceneNode*                                    root_node_ = nullptr;               ///< The root node of the scene.
-        renderer::BoundingVolumeList                  bounding_volume_list_;              ///< A list of all the bounding volumes to display.
-        std::vector<renderer::SelectedVolumeInstance> selected_volume_instances_;         ///< A list of all the selected volume instances to be rendered.
-        SceneStatistics                               scene_stats_ = {};                  ///< A structure containing computed scene info.
-        std::map<uint64_t, uint32_t>                  blas_instance_counts_;              ///< A map to contain instance counts for a given blas.
-        std::map<uint32_t, SceneNode*>                nodes_;                             ///< A map of all the nodes connected to root node (inclusive).
-        VertexList                                    custom_triangles_;                  ///< A list of custom triangles in the scene.
-        uint32_t                                      most_recent_selected_node_id_ = 0;  ///< The most recent selected node id.
-        static bool                                   multi_select_;                      ///< Allows multiple nodes to be selected if true.
+        SceneNode*                                    root_node_ = nullptr;        ///< The root node of the scene.
+        renderer::BoundingVolumeList                  bounding_volume_list_;       ///< A list of all the bounding volumes to display.
+        std::vector<renderer::SelectedVolumeInstance> selected_volume_instances_;  ///< A list of all the selected volume instances to be rendered.
+        SceneStatistics                               scene_stats_ = {};           ///< A structure containing computed scene info.
+        std::map<uint64_t, uint32_t>                  blas_instance_counts_;       ///< A map to contain instance counts for a given blas.
+        std::map<uint32_t, SceneNode*>
+                    nodes_;             ///< A map of all the nodes connected to root node (inclusive). Pairs of ((child_index << 32) | node_id, scene_node).
+        VertexList  custom_triangles_;  ///< A list of custom triangles in the scene.
+        uint32_t    most_recent_selected_node_id_ = 0;             ///< The most recent selected node id.
+        static bool multi_select_;                                 ///< Allows multiple nodes to be selected if true.
         std::vector<std::vector<SceneNode*>> rebraid_siblings_{};  ///< The ith index contains all instances with index i, indicating they're rebraid siblings.
         std::unordered_map<uint64_t, std::vector<SceneNode*>>
             split_triangle_siblings_{};  ///< The key is a combination of geometry index and triangle index, and the value is all the siblings.
@@ -429,4 +430,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_SCENE_H_
-

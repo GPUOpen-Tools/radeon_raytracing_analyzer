@@ -281,4 +281,3 @@ RraErrorCode RraRayGetDispatchUserMarkerString(uint32_t dispatch_id, char* buffe
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_RAY_HISTORY_H_
-

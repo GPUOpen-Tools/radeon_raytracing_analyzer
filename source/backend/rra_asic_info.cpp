@@ -116,4 +116,3 @@ RraErrorCode RraAsicInfoGetRaytracingVersion(uint16_t* out_version_major, uint16
 
     return kRraOk;
 }
-

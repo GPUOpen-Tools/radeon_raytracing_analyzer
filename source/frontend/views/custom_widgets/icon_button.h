@@ -76,4 +76,3 @@ private:
 };
 
 #endif  // RRA_CUSTOM_WIDGETS_ICON_BUTTON_H_
-

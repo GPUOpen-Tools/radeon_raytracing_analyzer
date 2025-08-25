@@ -121,4 +121,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_RT_BINARY_FILE_DEFS_H_
-

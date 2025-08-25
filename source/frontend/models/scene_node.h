@@ -179,7 +179,7 @@ namespace rra
         /// @brief Get triangles of this node.
         ///
         /// @returns A list of triangles.
-        StackVector<SceneTriangle, 8> GetTriangles() const;
+        StackVector<SceneTriangle, MAX_CHILD_NODES> GetTriangles() const;
 
         /// @brief Get the primitive index of this node.
         ///
@@ -223,8 +223,9 @@ namespace rra
         /// Caller must reserve a sufficient capacity in TraversalTree::volumes before calling this function.
         ///
         /// @param [in] populate_vertex_buffer Whether or not TraversalTree::vertices should be written to.
+        /// @param [in] is_tlas                True if this bvh is a TLAS.
         /// @param [out] traversal_tree The traversal tree to add onto.
-        void AddToTraversalTree(bool populate_vertex_buffer, renderer::TraversalTree& traversal_tree);
+        void AddToTraversalTree(bool populate_vertex_buffer, bool is_tlas, renderer::TraversalTree& traversal_tree);
 
         /// @brief For each triangle vertex, write to a bit specifying if it's split or not.
         ///
@@ -247,12 +248,12 @@ namespace rra
     private:
         /// @brief Construct the tree structure from TLAS.
         ///
-        /// @param [in] tlas_index The tlas index.
-        /// @param [in] box_index The box index under this tlas.
-        /// @param [in] depth The current depth for this node.
+        /// @param [in] tlas_index  The tlas index.
+        /// @param [in] node_id     The ID of this node.
+        /// @param [in] depth       The current depth for this node.
         ///
         /// @returns A scene node.
-        static SceneNode* ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t box_index, uint32_t depth);
+        static SceneNode* ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t node_id, uint32_t depth);
 
         /// @brief Construct the tree structure from BLAS.
         ///
@@ -273,26 +274,26 @@ namespace rra
         /// @param [in] scene The scene to collect rebraid siblings from.
         void AppendMergedInstanceToInstanceMap(renderer::Instance instance, renderer::InstanceMap& instance_map, const Scene* scene) const;
 
-        SceneNode*                        parent_ = nullptr;                   ///< The parent node.
-        uint32_t                          node_id_;                            ///< The node id for this node.
-        uint64_t                          bvh_index_;                          ///< The BVH index of the scene.
-        uint32_t                          depth_           = 0;                ///< The depth of this node.
-        bool                              enabled_         = true;             ///< A flag to represent enablement of this node.
-        bool                              filtered_        = false;            ///< A flag to represent whether this node is disabled by being filtered.
-        bool                              visible_         = true;             ///< A flag to represent the visibility of this node.
-        bool                              selected_        = false;            ///< A flag to represent if this node is selected.
-        BoundingVolumeExtents             bounding_volume_ = {};               ///< The bounding volume of this node.
-        StackVector<SceneNode*, 8>        child_nodes_     = {};               ///< The child nodes of this node.
-        std::optional<renderer::Instance> instance_;                           ///< The optional instance that this node contains.
-        uint32_t                          vertex_count_    = 0;                ///< The number of vertices.
-        renderer::RraVertex*              vertices_        = nullptr;          ///< The vertices that this node contains. Aligned by 3.
-        uint32_t                          primitive_index_ = 0;                ///< The primitive index of this node.
-        uint32_t                          geometry_index_  = 0;                ///< The geometry index of this node.
-        uint32_t                          obb_index_       = {};               ///< The oriented bounding box matrix index.
-        glm::mat3                         rotation_        = glm::mat3(1.0f);  ///< The rotation of a box node.
+        SceneNode*                               parent_ = nullptr;                   ///< The parent node.
+        uint32_t                                 node_id_;                            ///< The node id for this node.
+        uint64_t                                 bvh_index_;                          ///< The BVH index of the scene.
+        uint32_t                                 depth_           = 0;                ///< The depth of this node.
+        bool                                     enabled_         = true;             ///< A flag to represent enablement of this node.
+        bool                                     filtered_        = false;            ///< A flag to represent whether this node is disabled by being filtered.
+        bool                                     visible_         = true;             ///< A flag to represent the visibility of this node.
+        bool                                     selected_        = false;            ///< A flag to represent if this node is selected.
+        bool                                     is_tlas_         = false;            ///< A flag to represent if this node is in a TLAS scene.
+        BoundingVolumeExtents                    bounding_volume_ = {};               ///< The bounding volume of this node.
+        StackVector<SceneNode*, MAX_CHILD_NODES> child_nodes_     = {};               ///< The child nodes of this node.
+        std::optional<renderer::Instance>        instance_;                           ///< The optional instance that this node contains.
+        uint32_t                                 vertex_count_    = 0;                ///< The number of vertices.
+        renderer::RraVertex*                     vertices_        = nullptr;          ///< The vertices that this node contains. Aligned by 3.
+        uint32_t                                 primitive_index_ = 0;                ///< The primitive index of this node.
+        uint32_t                                 geometry_index_  = 0;                ///< The geometry index of this node.
+        uint32_t                                 obb_index_       = {};               ///< The oriented bounding box matrix index.
+        glm::mat3                                rotation_        = glm::mat3(1.0f);  ///< The rotation of a box node.
     };
 
 }  // namespace rra
 
 #endif  // RRA_RENDERER_SCENE_NODE_H_
-

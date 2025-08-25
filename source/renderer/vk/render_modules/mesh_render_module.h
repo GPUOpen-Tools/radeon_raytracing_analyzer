@@ -209,4 +209,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULES_BLAS_MESH_RENDER_MODULE_H_
-

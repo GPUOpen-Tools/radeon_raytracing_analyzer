@@ -108,4 +108,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_SETTINGS_THEMES_AND_COLORS_PANE_H_
-

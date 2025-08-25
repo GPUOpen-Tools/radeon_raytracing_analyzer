@@ -199,4 +199,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_MODEL_H_
-

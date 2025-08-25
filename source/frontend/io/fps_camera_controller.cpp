@@ -363,4 +363,3 @@ namespace rra
         movement_speed_scroll_multiplier_ = 1.0f;
     }
 }  // namespace rra
-

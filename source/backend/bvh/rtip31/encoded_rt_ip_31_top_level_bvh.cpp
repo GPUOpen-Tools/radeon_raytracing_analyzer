@@ -55,24 +55,25 @@ namespace rta
         return blas_map_.at(address);
     }
 
-    dxr::amd::NodePointer EncodedRtIp31TopLevelBvh::GetParentNode(const dxr::amd::NodePointer* node_ptr) const
+    uint32_t EncodedRtIp31TopLevelBvh::GetParentNode(uint32_t node_id) const
     {
-        if (node_ptr->IsLeafNode())
+        dxr::amd::NodePointer node_ptr(node_id);
+        if (node_ptr.IsLeafNode())
         {
-            std::optional<InstanceNodeDataRRA> hw_instance_node = GetHwInstanceNode(node_ptr);
+            std::optional<InstanceNodeDataRRA> hw_instance_node = GetHwInstanceNode(&node_ptr);
 
             if (hw_instance_node.has_value())
             {
-                return dxr::amd::NodePointer(hw_instance_node.value().hw_instance_node.data.childRootNodeOrParentPtr);
+                return hw_instance_node.value().hw_instance_node.data.childRootNodeOrParentPtr;
             }
         }
         else
         {
             const auto& interior_nodes = GetInteriorNodesData();
             const auto& header_offsets = GetHeader().GetBufferOffsets();
-            uint32_t    byte_offset    = node_ptr->GetByteOffset() - header_offsets.interior_nodes;
+            uint32_t    byte_offset    = node_ptr.GetByteOffset() - header_offsets.interior_nodes;
             const auto  node           = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[byte_offset]);
-            return dxr::amd::NodePointer(node->parentPointer);
+            return node->parentPointer;
         }
 
         assert(false);
@@ -117,10 +118,11 @@ namespace rta
         return InstanceNodeDataRRA{hw_instance_node, sideband};
     }
 
-    int32_t EncodedRtIp31TopLevelBvh::GetInstanceIndex(const dxr::amd::NodePointer* node_ptr) const
+    int32_t EncodedRtIp31TopLevelBvh::GetInstanceIndex(uint32_t node_id) const
     {
-        const auto& header_offsets = GetHeader().GetBufferOffsets();
-        uint32_t    byte_offset    = node_ptr->GetByteOffset();
+        dxr::amd::NodePointer node_ptr(node_id);
+        const auto&           header_offsets = GetHeader().GetBufferOffsets();
+        uint32_t              byte_offset    = node_ptr.GetByteOffset();
         byte_offset -= header_offsets.interior_nodes;
 
         if (byte_offset >= interior_nodes_.size())
@@ -156,7 +158,8 @@ namespace rta
     {
         const auto identifier     = chunk_identifier;
         const auto data_size      = chunk_file.GetChunkDataSize(identifier, static_cast<uint32_t>(chunk_index));
-        const bool skip_meta_data = static_cast<std::uint8_t>(import_option) & static_cast<std::uint8_t>(BvhBundleReadOption::kNoMetaData);
+        uint8_t    no_meta_data   = (uint8_t)BvhBundleReadOption::kNoMetaData;
+        const bool skip_meta_data = static_cast<std::uint8_t>(import_option) & no_meta_data;
 
         std::vector<std::uint8_t> buffer(data_size);
         if (data_size > 0)
@@ -286,12 +289,12 @@ namespace rta
 
                     if (instance_list_.find(blas_address) == instance_list_.end())
                     {
-                        std::vector<dxr::amd::NodePointer> node_list = {new_node};
+                        std::vector<uint32_t> node_list = {new_node.GetRawPointer()};
                         instance_list_.insert(std::make_pair(blas_address, node_list));
                     }
                     else
                     {
-                        instance_list_[blas_address].push_back(new_node);
+                        instance_list_[blas_address].push_back(new_node.GetRawPointer());
                     }
                     num_traversal_node_count++;
                 }
@@ -465,21 +468,20 @@ namespace rta
         return dxr::amd::kInvalidNode;
     }
 
-    float EncodedRtIp31TopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const
+    float EncodedRtIp31TopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const
     {
-        const int32_t index = GetInstanceIndex(&node_ptr);
+        const int32_t index = GetInstanceIndex(node_id);
         assert(index != -1);
         assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
         return instance_surface_area_heuristic_[index];
     }
 
-    void EncodedRtIp31TopLevelBvh::SetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic)
+    void EncodedRtIp31TopLevelBvh::SetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, float surface_area_heuristic)
     {
-        const int32_t index = GetInstanceIndex(&node_ptr);
+        const int32_t index = GetInstanceIndex(node_id);
         assert(index != -1);
         assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
         instance_surface_area_heuristic_[index] = surface_area_heuristic;
     }
 
 }  // namespace rta
-

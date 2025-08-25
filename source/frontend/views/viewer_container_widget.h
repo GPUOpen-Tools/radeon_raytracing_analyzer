@@ -134,4 +134,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_VIEWER_CONTAINER_WIDGET_H_
-

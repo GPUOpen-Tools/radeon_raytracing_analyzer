@@ -62,4 +62,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_RAY_TREE_MODEL_H_
-

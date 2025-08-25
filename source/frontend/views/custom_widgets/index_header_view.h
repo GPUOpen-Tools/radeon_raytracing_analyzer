@@ -46,4 +46,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_INDEX_HEADER_VIEW_H_
-

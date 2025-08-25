@@ -219,4 +219,3 @@ void BlasTrianglesPane::ScrollToSelectedTriangle()
     }
     ui_->triangles_table_->scrollToTop();
 }
-

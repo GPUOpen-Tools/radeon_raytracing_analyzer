@@ -18,6 +18,8 @@
 extern "C" {
 #endif  // #ifdef __cplusplus
 
+#define MAX_CHILD_NODES (8)
+
 /// @brief Structure describing the statistics for a bounding volume.
 struct BoundingVolumeExtents
 {
@@ -73,11 +75,11 @@ RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const struct BoundingVolumeExten
 ///
 /// This is encoded in the node data passed in.
 ///
-/// @param [in]  node_ptr     The encoded node pointer.
+/// @param [in]  node_id      The node of interest.
 /// @param [out] out_offset   A pointer to receive the node offset.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBvhGetNodeOffset(uint32_t node_ptr, uint64_t* out_offset);
+RraErrorCode RraBvhGetNodeOffset(uint32_t node_id, uint64_t* out_offset);
 
 /// @brief Check if the given node is a box node.
 ///
@@ -182,8 +184,12 @@ RraErrorCode RraBvhGetTotalBlasSizeInBytes(uint64_t* out_size_in_bytes);
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBvhGetTotalTraceSizeInBytes(uint64_t* out_size_in_bytes);
 
+/// @brief Get the maximum number of child nodes. Dependent on the RTIP level.
+///
+/// @returns The maximum number of child nodes.
+uint32_t RraBvhGetMaxChildCount();
+
 #ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_BVH_H_
-

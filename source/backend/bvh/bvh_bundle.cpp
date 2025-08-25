@@ -403,7 +403,20 @@ namespace rta
                     *io_error_code = kRraErrorMalformedData;
                     return RayTracingIpLevel::RtIpNone;
                 }
-                uint32_t current_rtip_level = *reinterpret_cast<uint32_t*>((char*)buffer.data() + offset);
+
+                // Only consider RTIP level after 16.0 of the AS version. Prior to this, assume RTIP 1.1.
+                size_t                       as_version_offset  = offsetof(AccelStructHeader, accelStructVersion);
+                rta::RayTracingBinaryVersion rt_version         = *reinterpret_cast<uint32_t*>((char*)buffer.data() + header.header_offset + as_version_offset);
+                uint32_t                     current_rtip_level = (uint32_t)RayTracingIpLevel::RtIpNone;
+                if (rt_version > RayTracingBinaryVersion(16, 0))
+                {
+                    current_rtip_level = *reinterpret_cast<uint32_t*>((char*)buffer.data() + offset);
+                }
+                else
+                {
+                    current_rtip_level = (uint32_t)RayTracingIpLevel::RtIp1_1;
+                }
+
                 if (current_rtip_level > highest_rtip_level && current_rtip_level < (uint32_t)RayTracingIpLevel::RtIpCount)
                 {
                     highest_rtip_level = current_rtip_level;
@@ -411,9 +424,10 @@ namespace rta
             }
         }
 
+        // Assume RTIP1_1 if no version found.
         if (highest_rtip_level == (uint32_t)RayTracingIpLevel::RtIpNone)
         {
-            *io_error_code = kRraErrorNoASChunks;
+            highest_rtip_level = (uint32_t)RayTracingIpLevel::RtIp1_1;
         }
         return (RayTracingIpLevel)highest_rtip_level;
     }
@@ -479,4 +493,3 @@ namespace rta
     }
 
 }  // namespace rta
-

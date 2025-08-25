@@ -57,9 +57,9 @@ void SummaryPane::UpdateTlasMap()
 {
     tlas_address_to_index_.clear();
 
-    uint64_t tlas_count = 0;
+    uint64_t     tlas_count = 0;
     RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
-    RRA_ASSERT(error_code);
+    RRA_ASSERT(error_code == kRraOk);
 
     for (uint64_t i = 0; i < tlas_count; i++)
     {
@@ -169,4 +169,3 @@ void SummaryPane::SetTlasIndex(uint64_t tlas_index)
         tlas_index_ = tlas_index;
     }
 }
-

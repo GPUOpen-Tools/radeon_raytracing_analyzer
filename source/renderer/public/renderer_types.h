@@ -370,4 +370,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_TYPES_H_
-

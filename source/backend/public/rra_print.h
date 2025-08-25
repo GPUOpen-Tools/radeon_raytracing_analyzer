@@ -38,4 +38,3 @@ void RraPrint(const char* format, ...);
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_PRINT_H_
-

@@ -43,4 +43,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_TLAS_TLAS_PROPERTIES_PANE_H_
-

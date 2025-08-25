@@ -139,4 +139,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_MESSAGE_MANAGER_H_
-

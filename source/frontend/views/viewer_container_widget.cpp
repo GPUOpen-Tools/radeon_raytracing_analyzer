@@ -371,4 +371,3 @@ void ViewerContainerWidget::EvaluateInstanceMaskWarning(int mask)
     ui_->content_instance_mask_bit_1_->repaint();
     ui_->content_instance_mask_bit_0_->repaint();
 }
-

@@ -121,4 +121,3 @@ void RraAssertSetPrintingCallback(RraAssertCallback callback);
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_ASSERT_H_
-

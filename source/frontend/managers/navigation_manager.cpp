@@ -287,4 +287,3 @@ namespace rra
         return out;
     }
 }  // namespace rra
-

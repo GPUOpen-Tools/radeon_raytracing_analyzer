@@ -58,4 +58,3 @@ char* RraTraceLoaderGetDriverOverridesString();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_TRACE_LOADER_H_
-

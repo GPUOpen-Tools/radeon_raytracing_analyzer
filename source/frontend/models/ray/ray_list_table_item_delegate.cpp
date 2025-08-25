@@ -17,4 +17,3 @@ RayListTableItemDelegate::RayListTableItemDelegate(QObject* parent)
 RayListTableItemDelegate::~RayListTableItemDelegate()
 {
 }
-

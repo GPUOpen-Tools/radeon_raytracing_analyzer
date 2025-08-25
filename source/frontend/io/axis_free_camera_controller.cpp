@@ -461,4 +461,3 @@ namespace rra
         pitch_yaw_roll_                   = {};
     }
 }  // namespace rra
-

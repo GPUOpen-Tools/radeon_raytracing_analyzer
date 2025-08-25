@@ -577,29 +577,27 @@ void MainWindow::OpenTrace()
     ui_->main_tab_widget_->setTabEnabled(rra::kMainPaneRay, true);
 
     // Determine if ray history is present.
-    uint32_t              dispatch_count         = 0;
-    RraErrorCode          status                 = RraRayGetDispatchCount(&dispatch_count);
-    DriverOverridesModel* driver_overrides_model = DriverOverridesModel::GetInstance();
+    uint32_t     dispatch_count = 0;
+    RraErrorCode status         = RraRayGetDispatchCount(&dispatch_count);
     if (status == kRraOk && dispatch_count > 0)
     {
         ui_->ray_history_valid_switch_->setCurrentIndex(1);
+    }
+    else
+    {
+        ui_->ray_history_valid_switch_->setCurrentIndex(0);
+    }
 
-        if (RraTraceLoaderValid())
-        {
-            driver_overrides_model->ImportFromJsonText(RraTraceLoaderGetDriverOverridesString());
-        }
-        else
-        {
-            // Remove any old settings from the Driver Overrides model.
-            driver_overrides_model->Reset();
-        }
+    // Apply driver overrides if applicable.
+    DriverOverridesModel* driver_overrides_model = DriverOverridesModel::GetInstance();
+    if (RraTraceLoaderValid())
+    {
+        driver_overrides_model->ImportFromJsonText(RraTraceLoaderGetDriverOverridesString());
     }
     else
     {
         // Remove any old settings from the Driver Overrides model.
         driver_overrides_model->Reset();
-
-        ui_->ray_history_valid_switch_->setCurrentIndex(0);
     }
 
     pane_manager_.OnTraceOpen();
@@ -863,4 +861,3 @@ void MainWindow::DontShowDriverOverridesNotification()
 {
     rra::Settings::Get().SetDriverOverridesAllowNotifications(false);
 }
-

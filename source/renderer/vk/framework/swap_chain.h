@@ -221,4 +221,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_SWAP_CHAIN_H_
-

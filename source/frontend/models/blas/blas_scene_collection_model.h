@@ -93,11 +93,10 @@ namespace rra
         /// @param node_id The node to query.
         ///
         /// @return true if node should be skipped, false otherwise.
-        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const override;
+        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const override;
 
         std::map<uint64_t, Scene*> blas_scenes_;  ///< A map of all loaded BLAS scenes.
     };
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_SCENE_MODEL_H_
-

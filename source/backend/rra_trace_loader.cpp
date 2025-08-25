@@ -77,4 +77,3 @@ char* RraTraceLoaderGetDriverOverridesString()
 {
     return data_set_.driver_overrides_json_text;
 }
-

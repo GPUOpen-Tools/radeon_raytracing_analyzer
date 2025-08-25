@@ -90,4 +90,3 @@ void rra_util::InitializeTableView(QTableView* table)
     // Set the vertical header style.
     table->verticalHeader()->setVisible(false);
 }
-

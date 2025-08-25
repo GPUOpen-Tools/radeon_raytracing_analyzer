@@ -114,4 +114,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_INSTANCES_ITEM_MODEL_H_
-

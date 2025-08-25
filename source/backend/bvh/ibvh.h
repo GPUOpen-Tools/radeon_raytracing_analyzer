@@ -25,11 +25,6 @@
 #include "bvh/rtip31/internal_node.h"
 #include "bvh/rtip_common/i_acceleration_structure_header.h"
 
-// RawAccelStruct currently supported version numbers.
-#define GPURT_ACCEL_STRUCT_MAJOR_VERSION 16
-#define GPURT_ACCEL_STRUCT_MINOR_VERSION 3
-#define GPURT_ACCEL_STRUCT_VERSION ((GPURT_ACCEL_STRUCT_MAJOR_VERSION << 16) | GPURT_ACCEL_STRUCT_MINOR_VERSION)
-
 namespace rta
 {
     /// @brief Definition for minimum file size.
@@ -206,7 +201,7 @@ namespace rta
         /// @param [in] node_ptr The leaf node whose SAH is to be found.
         ///
         /// @return The surface area heuristic.
-        virtual float GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const = 0;
+        virtual float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_ptr) const = 0;
 
         /// @brief Load the common BVH data from the file.
         ///
@@ -236,10 +231,10 @@ namespace rta
 
         /// @brief Get the surface area heuristic for a given interior node.
         ///
-        /// @param [in] node_ptr The interior node whose SAH is to be found.
+        /// @param [in] node_id The interior node whose SAH is to be found.
         ///
         /// @return The surface area heuristic.
-        float GetInteriorNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const;
+        float GetInteriorNodeSurfaceAreaHeuristic(uint32_t node_id) const;
 
         /// @brief Compute the bounding box for a root node.
         ///
@@ -261,17 +256,17 @@ namespace rta
 
         /// @brief Get the node's oriented bounding box index.
         ///
-        /// @param [in] node_ptr The node to get the orientation of.
+        /// @param [in] node_id The node to get the orientation of.
         ///
         /// @return The bounding box.
-        uint32_t GetNodeObbIndex(const dxr::amd::NodePointer node_ptr) const;
+        uint32_t GetNodeObbIndex(uint32_t node_id) const;
 
         /// @brief Get the orientation of node's OBB.
         ///
-        /// @param [in] node_ptr The node to get the orientation of.
+        /// @param [in] node_id The node to get the orientation of.
         ///
         /// @return The bounding box.
-        glm::mat3 GetNodeBoundingVolumeOrientation(const dxr::amd::NodePointer node_ptr) const;
+        glm::mat3 GetNodeBoundingVolumeOrientation(uint32_t node_id) const;
 
         /// @brief Checks whether the BVH has been compacted.
         ///
@@ -303,9 +298,9 @@ namespace rta
 
         /// @brief Set the surface area heuristic for a given interior node.
         ///
-        /// @param [in] node_ptr               The interior node whose SAH is to be set.
+        /// @param [in] node_id                The interior node whose SAH is to be set.
         /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
-        void SetInteriorNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic);
+        void SetInteriorNodeSurfaceAreaHeuristic(uint32_t node_id, float surface_area_heuristic);
 
         /// @brief Get the meta data for this acceleration structure.
         ///
@@ -327,11 +322,11 @@ namespace rta
 
         /// @brief Get the parent node of the node passed in.
         ///
-        /// @param [in] node_ptr The node whose parent is to be found.
+        /// @param [in] node_id The node whose parent is to be found.
         ///
         /// @return The parent node. If the node passed in is the root node, the
         /// parent node will be an invalid node.
-        virtual dxr::amd::NodePointer GetParentNode(const dxr::amd::NodePointer* node_ptr) const = 0;
+        virtual uint32_t GetParentNode(uint32_t node_id) const = 0;
 
         /// @brief Traverse nodes to associate children with parents where necessary.
         virtual void PreprocessParents();
@@ -377,4 +372,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_IBVH_H_
-

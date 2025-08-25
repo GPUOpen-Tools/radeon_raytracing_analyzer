@@ -74,7 +74,8 @@ namespace rta
     {
         const auto identifier     = chunk_identifier;
         const auto data_size      = chunk_file.GetChunkDataSize(identifier, static_cast<uint32_t>(chunk_index));
-        const bool skip_meta_data = static_cast<std::uint8_t>(import_option) & static_cast<std::uint8_t>(BvhBundleReadOption::kNoMetaData);
+        uint8_t    no_meta_data   = (uint8_t)BvhBundleReadOption::kNoMetaData;
+        const bool skip_meta_data = static_cast<std::uint8_t>(import_option) & no_meta_data;
 
         std::vector<std::uint8_t> buffer(data_size);
         if (data_size > 0)
@@ -341,7 +342,7 @@ namespace rta
                     {
                         traversal_stack.push_back(child_ptrs[i]);
 
-                        if (RraBlasGetSurfaceAreaImpl(this, &child_ptrs[i], &out_surface_area) == kRraOk)
+                        if (RraBlasGetSurfaceAreaImpl(this, child_ptrs[i].GetRawPointer(), &out_surface_area) == kRraOk)
                         {
                             total_child_area += out_surface_area;
                         }
@@ -351,7 +352,7 @@ namespace rta
                 // Take that as ratio of the current node.
                 float sah{};
                 out_surface_area = 0.0;
-                if (RraBlasGetSurfaceAreaImpl(this, &node_ptr, &out_surface_area) == kRraOk)
+                if (RraBlasGetSurfaceAreaImpl(this, node_ptr.GetRawPointer(), &out_surface_area) == kRraOk)
                 {
                     sah = 0.25f * (total_child_area / out_surface_area);
                 }
@@ -361,7 +362,7 @@ namespace rta
                     sah = 0.0f;
                 }
 
-                SetInteriorNodeSurfaceAreaHeuristic(node_ptr, sah);
+                SetInteriorNodeSurfaceAreaHeuristic(node_ptr.GetRawPointer(), sah);
             }
             else if (node_ptr.IsTriangleNode())
             {
@@ -400,20 +401,21 @@ namespace rta
         }
     }
 
-    dxr::amd::NodePointer EncodedRtIp31BottomLevelBvh::GetParentNode(const dxr::amd::NodePointer* node_ptr) const
+    uint32_t EncodedRtIp31BottomLevelBvh::GetParentNode(uint32_t node_id) const
     {
-        if (node_ptr->IsLeafNode())
+        dxr::amd::NodePointer node_ptr(node_id);
+        if (node_ptr.IsLeafNode())
         {
             // With RtIp3.1, triangle node parents are not stored explicitly so we store them in this map during traversal.
-            return dxr::amd::NodePointer(triangle_node_parents_.at(node_ptr->GetRawPointer()));
+            return triangle_node_parents_.at(node_ptr.GetRawPointer());
         }
         else
         {
             const auto& interior_nodes = GetInteriorNodesData();
             const auto& header_offsets = GetHeader().GetBufferOffsets();
-            uint32_t    byte_offset    = node_ptr->GetByteOffset() - header_offsets.interior_nodes;
+            uint32_t    byte_offset    = node_ptr.GetByteOffset() - header_offsets.interior_nodes;
             const auto  node           = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[byte_offset]);
-            return dxr::amd::NodePointer(node->parentPointer);
+            return node->parentPointer;
         }
     }
 
@@ -466,9 +468,11 @@ namespace rta
         }
     }
 
-    float EncodedRtIp31BottomLevelBvh::GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const
+    float EncodedRtIp31BottomLevelBvh::GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const
     {
-        const uint32_t byte_offset = node_ptr.GetByteOffset();
+        dxr::amd::NodePointer* node_ptr = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+
+        const uint32_t byte_offset = node_ptr->GetByteOffset();
         const uint32_t leaf_nodes  = GetHeader().GetBufferOffsets().interior_nodes;
         if (byte_offset < leaf_nodes)
         {
@@ -496,4 +500,3 @@ namespace rta
     }
 
 }  // namespace rta
-

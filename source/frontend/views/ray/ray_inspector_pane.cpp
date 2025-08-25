@@ -1215,5 +1215,3 @@ void RayInspectorPane::OnColorThemeUpdated()
         ui_->selected_ray_focus_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
-
-

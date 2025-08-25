@@ -78,4 +78,3 @@ void RayInspectorRayTreeItemDelegate::paint(QPainter* painter, const QStyleOptio
         painter->drawText(option.rect, Qt::AlignRight | Qt::AlignVCenter, index.data().toString());
     }
 }
-

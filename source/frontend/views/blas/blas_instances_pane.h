@@ -93,4 +93,3 @@ private:
 };
 
 #endif  // #define RRA_VIEWS_BLAS_BLAS_INSTANCES_PANE_H_
-

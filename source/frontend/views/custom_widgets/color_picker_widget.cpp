@@ -139,4 +139,3 @@ void ColorPickerWidget::ButtonClicked(int button_id)
 {
     emit ColorSelected(button_id, palette_.GetColor(button_id));
 }
-

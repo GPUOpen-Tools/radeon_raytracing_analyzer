@@ -744,4 +744,3 @@ void DoubleSliderHeatmapWidget::paintEvent(QPaintEvent* event)
         break;
     }
 }
-

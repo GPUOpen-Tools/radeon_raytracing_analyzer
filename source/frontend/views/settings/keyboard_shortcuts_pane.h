@@ -31,4 +31,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_SETTINGS_KEYBOARD_SHORTCUTS_PANE_H_
-

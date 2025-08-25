@@ -258,4 +258,3 @@ void BlasListPane::ScrollToSelectedBlas()
     }
     ui_->blas_table_->scrollToTop();
 }
-

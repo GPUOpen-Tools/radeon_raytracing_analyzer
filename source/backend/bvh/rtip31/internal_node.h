@@ -718,4 +718,3 @@ inline void QuantizedBVH8BoxNode::EncodeObbOnly(Float32BoxNode f32BoxNode0, Floa
 #endif
 
 #endif  // RRA_BACKEND_INTERNAL_NODE_H_
-

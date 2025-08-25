@@ -40,4 +40,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_EXT_VALIDATION_H_
-

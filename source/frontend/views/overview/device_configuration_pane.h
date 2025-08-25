@@ -49,4 +49,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_DEVICE_CONFIGURATION_PANE_H_
-

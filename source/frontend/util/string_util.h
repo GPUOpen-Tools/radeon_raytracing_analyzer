@@ -80,4 +80,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_UTIL_STRING_UTIL_H_
-

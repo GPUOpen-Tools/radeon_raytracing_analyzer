@@ -64,4 +64,3 @@ extern "C" {
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_ERROR_H_
-

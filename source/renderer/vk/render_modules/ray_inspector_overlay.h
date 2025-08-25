@@ -137,4 +137,3 @@ namespace rra::renderer
     };
 }  // namespace rra::renderer
 #endif
-

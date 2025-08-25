@@ -62,4 +62,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_DEVICE_PROPERTIES_H_
-

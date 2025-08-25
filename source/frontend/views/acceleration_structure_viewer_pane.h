@@ -223,4 +223,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_ACCELERATION_STRUCTURE_VIEWER_PANE_H_
-

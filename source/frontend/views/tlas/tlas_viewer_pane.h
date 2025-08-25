@@ -139,4 +139,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_TLAS_TLAS_VIEWER_PANE_H_
-

@@ -47,4 +47,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TREE_VIEW_PROXY_MODEL_H_
-

@@ -108,18 +108,18 @@ namespace rta
 
         /// @brief Get the parent node of the node passed in.
         ///
-        /// @param [in] node_ptr The node whose parent is to be found.
+        /// @param [in] node_id The node whose parent is to be found.
         ///
         /// @return The parent node. If the node passed in is the root node, the
         /// parent node will be an invalid node.
-        virtual dxr::amd::NodePointer GetParentNode(const dxr::amd::NodePointer* node_ptr) const;
+        virtual uint32_t GetParentNode(uint32_t node_id) const override;
 
         /// @brief Get the surface area heuristic for a given leaf node.
         ///
-        /// @param [in] node_ptr The leaf node whose SAH is to be found.
+        /// @param [in] node_id The leaf node whose SAH is to be found.
         ///
         /// @return The surface area heuristic.
-        float GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const override;
+        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const override;
 
         /// @brief Set the surface area heuristic for a given leaf node.
         ///
@@ -146,4 +146,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_RT_IP_11_BOTTOM_LEVEL_BVH_H_
-

@@ -40,4 +40,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // #define RRA_MODELS_SIDE_PANELS_SIDE_PANEL_MODEL_H_
-

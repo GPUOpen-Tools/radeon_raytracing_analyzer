@@ -222,4 +222,3 @@ qreal BinaryCheckbox::GetSwitchHeight(const QFontMetricsF& font_metrics) const
 {
     return font_metrics.height() * button_text_ratio_;
 }
-

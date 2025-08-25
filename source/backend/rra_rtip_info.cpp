@@ -25,4 +25,3 @@ bool RraRtipInfoGetOBBSupported()
     }
     return false;
 }
-

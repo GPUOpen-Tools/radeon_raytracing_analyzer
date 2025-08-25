@@ -23,7 +23,6 @@
 
 #include "glm/glm/glm.hpp"
 
-
 //=====================================================================================================================
 ///@note Enum is a reserved keyword in glslang. To workaround this limitation, define static constants to replace the
 ///      HLSL enums that follow for compatibility.
@@ -677,7 +676,6 @@ static uint32_t ClearNodeType(uint32_t nodePointer)
 }
 
 //=====================================================================================================================
-// TODO: The highest 3 bits are not handled since they currently aren't written when building the QBVH.
 static uint32_t ExtractNodePointerOffset(uint32_t nodePointer)
 {
     // From the HW raytracing spec:
@@ -1613,4 +1611,3 @@ static bool IsQuantizedBVH8BoxNode(uint32_t pointer)
 #endif
 
 #endif  // RRA_BACKEND_RAYTRACING_DEF_H_
-

@@ -954,4 +954,3 @@ void RayHistoryPane::UpdateZoomButtons(bool zoom_in, bool zoom_out, bool zoom_se
 {
     zoom_icon_manager_->SetButtonStates(zoom_in, zoom_out, zoom_selection, reset);
 }
-

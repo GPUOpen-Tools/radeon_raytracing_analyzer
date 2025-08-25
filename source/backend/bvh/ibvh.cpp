@@ -189,6 +189,9 @@ namespace rta
 
     uint32_t IBvh::ScanTreeDepth()
     {
+        uint64_t depth_sum  = 0;
+        uint32_t leaf_count = 0;
+
         size_t num_box_nodes = header_->GetInteriorNodeCount();
         if (num_box_nodes == 0)
         {
@@ -208,8 +211,6 @@ namespace rta
         traversal_stack.push_back(std::make_pair(root_ptr, 0));
 
         const auto& header_offsets = header_->GetBufferOffsets();
-        uint64_t    depth_sum      = 0;
-        uint32_t    leaf_count     = 0;
         while (!traversal_stack.empty())
         {
             const auto& index_to_level = traversal_stack.front();
@@ -271,6 +272,7 @@ namespace rta
                 }
             }
         }
+
         if (leaf_count > 0)
         {
             depth_sum /= leaf_count;
@@ -289,9 +291,10 @@ namespace rta
         return interior_nodes_;
     }
 
-    float IBvh::GetInteriorNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const
+    float IBvh::GetInteriorNodeSurfaceAreaHeuristic(uint32_t node_id) const
     {
-        const uint32_t index = (node_ptr.GetByteOffset() - GetHeader().GetBufferOffsets().interior_nodes) / sizeof(dxr::amd::Float32BoxNode);
+        dxr::amd::NodePointer* node  = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+        const uint32_t         index = (node->GetByteOffset() - GetHeader().GetBufferOffsets().interior_nodes) / sizeof(dxr::amd::Float32BoxNode);
         RRA_ASSERT(index < box_surface_area_heuristic_.size());
         return box_surface_area_heuristic_[index];
     }
@@ -362,19 +365,21 @@ namespace rta
         return box;
     }
 
-    uint32_t IBvh::GetNodeObbIndex(const dxr::amd::NodePointer node_ptr) const
+    uint32_t IBvh::GetNodeObbIndex(uint32_t node_id) const
     {
-        assert(node_ptr.IsFp32BoxNode());
+        dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+
+        assert(node->IsFp32BoxNode());
 
         if (interior_nodes_.empty() || !RraRtipInfoGetOBBSupported())
         {
             return ObbDisabled;
         }
 
-        auto                 byte_offset = node_ptr.GetByteOffset() - header_->GetBufferOffsets().interior_nodes;
-        QuantizedBVH8BoxNode node        = *reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes_[byte_offset]);
+        auto                 byte_offset = node->GetByteOffset() - header_->GetBufferOffsets().interior_nodes;
+        QuantizedBVH8BoxNode box_node    = *reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes_[byte_offset]);
 
-        return node.OBBMatrixIndex();
+        return box_node.OBBMatrixIndex();
     }
 
     static glm::mat3 DecodeRotationMatrix(uint32_t id)
@@ -448,20 +453,9 @@ namespace rta
         return out;
     }
 
-    glm::mat3 IBvh::GetNodeBoundingVolumeOrientation(const dxr::amd::NodePointer node_ptr) const
+    glm::mat3 IBvh::GetNodeBoundingVolumeOrientation(uint32_t node_id) const
     {
-        assert(node_ptr.IsFp32BoxNode());
-
-        // Empty BLAS will be given identity rotation.
-        if (interior_nodes_.empty() || !RraRtipInfoGetOBBSupported())
-        {
-            return glm::mat3(1.0f);
-        }
-
-        auto                 byte_offset = node_ptr.GetByteOffset() - header_->GetBufferOffsets().interior_nodes;
-        QuantizedBVH8BoxNode node        = *reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes_[byte_offset]);
-
-        uint32_t obb_index = node.OBBMatrixIndex();
+        uint32_t obb_index = GetNodeObbIndex(node_id);
         return obb_index >= ObbDisabled ? glm::mat3(1.0f) : DecodeRotationMatrix(obb_index);
     }
 
@@ -490,11 +484,12 @@ namespace rta
         return avg_tree_depth_;
     }
 
-    void IBvh::SetInteriorNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic)
+    void IBvh::SetInteriorNodeSurfaceAreaHeuristic(uint32_t node_id, float surface_area_heuristic)
     {
-        const uint32_t byte_offset   = node_ptr.GetByteOffset();
-        const uint32_t header_offset = GetHeader().GetBufferOffsets().interior_nodes;
-        const uint32_t index         = (byte_offset - header_offset) / sizeof(dxr::amd::Float32BoxNode);
+        dxr::amd::NodePointer* node          = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+        const uint32_t         byte_offset   = node->GetByteOffset();
+        const uint32_t         header_offset = GetHeader().GetBufferOffsets().interior_nodes;
+        const uint32_t         index         = (byte_offset - header_offset) / sizeof(dxr::amd::Float32BoxNode);
         RRA_ASSERT(index < box_surface_area_heuristic_.size());
         box_surface_area_heuristic_[index] = surface_area_heuristic;
     }
@@ -535,4 +530,3 @@ namespace rta
     }
 
 }  // namespace rta
-

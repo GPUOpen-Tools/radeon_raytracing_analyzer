@@ -31,4 +31,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_MATH_UTIL_H_
-

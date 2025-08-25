@@ -115,7 +115,8 @@ namespace rta
     {
         const auto identifier     = chunk_identifier;
         const auto data_size      = chunk_file.GetChunkDataSize(identifier, static_cast<uint32_t>(chunk_index));
-        const bool skip_meta_data = static_cast<std::uint8_t>(import_option) & static_cast<std::uint8_t>(BvhBundleReadOption::kNoMetaData);
+        uint8_t    no_meta_data   = (uint8_t)BvhBundleReadOption::kNoMetaData;
+        const bool skip_meta_data = static_cast<std::uint8_t>(import_option) & no_meta_data;
 
         std::vector<std::uint8_t> buffer(data_size);
         if (data_size > 0)
@@ -247,8 +248,9 @@ namespace rta
         }
     }
 
-    dxr::amd::NodePointer EncodedRtIp11BottomLevelBvh::GetParentNode(const dxr::amd::NodePointer* node_ptr) const
+    uint32_t EncodedRtIp11BottomLevelBvh::GetParentNode(uint32_t node_id) const
     {
+        dxr::amd::NodePointer* node_ptr = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
         assert(!node_ptr->IsInvalid());
 
         const auto& parent_data       = parent_data_;
@@ -263,13 +265,14 @@ namespace rta
 
         dxr::amd::NodePointer parent_node = parent_links[parent_link_index];
 
-        return parent_node;
+        return parent_node.GetRawPointer();
     }
 
-    float EncodedRtIp11BottomLevelBvh::GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const
+    float EncodedRtIp11BottomLevelBvh::GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const
     {
-        const uint32_t byte_offset = node_ptr.GetByteOffset();
-        const uint32_t leaf_nodes  = GetHeader().GetBufferOffsets().leaf_nodes;
+        dxr::amd::NodePointer node_ptr    = dxr::amd::NodePointer(node_id);
+        const uint32_t        byte_offset = node_ptr.GetByteOffset();
+        const uint32_t        leaf_nodes  = GetHeader().GetBufferOffsets().leaf_nodes;
         if (byte_offset < leaf_nodes)
         {
             // Bad address for a triangle.
@@ -296,4 +299,3 @@ namespace rta
     }
 
 }  // namespace rta
-

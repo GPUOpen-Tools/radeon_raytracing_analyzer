@@ -70,4 +70,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_PROPERTIES_MODEL_H_
-

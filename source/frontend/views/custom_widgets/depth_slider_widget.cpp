@@ -137,4 +137,3 @@ void DepthSliderWidget::paintEvent(QPaintEvent* event)
         x_offset += segment_width;
     }
 }
-

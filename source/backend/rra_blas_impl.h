@@ -34,11 +34,10 @@ float RraBlasGetTriangleSurfaceArea(const dxr::amd::TriangleNode& triangle_node,
 /// @brief Get the surface area for a given BLAS node.
 ///
 /// @param [in]  blas             The bottom level acceleration structure.
-/// @param [in]  node_ptr         The node pointer whose surface area is to be calculated.
+/// @param [in]  node_id          The node whose surface area is to be calculated.
 /// @param [out] out_surface_area The calculated surface area.
 ///
 /// @return RraOk if successful, an error code if not.
-RraErrorCode RraBlasGetSurfaceAreaImpl(const rta::EncodedBottomLevelBvh* blas, const dxr::amd::NodePointer* node_ptr, float* out_surface_area);
+RraErrorCode RraBlasGetSurfaceAreaImpl(const rta::EncodedBottomLevelBvh* blas, uint32_t node_id, float* out_surface_area);
 
 #endif  // RRA_BACKEND_RRA_BLAS_IMPL_H_
-

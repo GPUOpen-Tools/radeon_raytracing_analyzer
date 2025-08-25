@@ -514,4 +514,3 @@ int ThemesAndColorsPane::GetSettingsPaletteId(int button_id) const
         return -1;
     }
 }
-

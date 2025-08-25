@@ -142,4 +142,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_IRT_IP_11_ACCELERATION_STRUCTURE_POST_BUILD_INFO_H_
-

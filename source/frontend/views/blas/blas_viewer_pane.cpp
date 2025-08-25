@@ -59,7 +59,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     Ui_TriangleGroup triangle_group{};
     ui_->triangle_list_->setSpacing(0);
     ui_->triangle_scroll_area_->setWidgetResizable(true);
-    uint32_t max_tri_count{8};
+    uint32_t max_tri_count{MAX_CHILD_NODES};
     for (uint32_t i{0}; i < max_tri_count; ++i)
     {
         QWidget* triangle_widget = new QWidget();
@@ -68,6 +68,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
 
         // Set triangle_group data here.
         SetTableParams(triangle_group.vertex_table_);
+        model_->InitializeModel(triangle_group.label_primitive_index_, rra::kBlasStatsPrimitiveIndexLabel1 + i, "text");
         model_->InitializeModel(triangle_group.content_primitive_index_, rra::kBlasStatsPrimitiveIndexTriangle1 + i, "text");
         derived_model_->InitializeVertexTableModels(triangle_group.vertex_table_);
 
@@ -446,4 +447,3 @@ void BlasViewerPane::OnColorThemeUpdated()
         ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
-

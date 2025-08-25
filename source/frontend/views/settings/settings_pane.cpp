@@ -170,4 +170,3 @@ void SettingsPane::DriverOverridesAllowNotificationsChanged(const bool checked)
     rra::Settings::Get().SetDriverOverridesAllowNotifications(checked);
     rra::Settings::Get().SaveSettings();
 }
-

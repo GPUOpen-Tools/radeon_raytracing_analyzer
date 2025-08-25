@@ -96,4 +96,3 @@ namespace rra
         return log_file;
     }
 }  // namespace rra
-

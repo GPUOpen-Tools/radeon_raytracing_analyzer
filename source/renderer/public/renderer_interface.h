@@ -203,4 +203,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_RENDERER_INTERFACE_H_
-

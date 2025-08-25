@@ -72,4 +72,3 @@ RraErrorCode RraDataSetDestroy(RraDataSet* data_set);
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_RRA_DATA_SET_H_
-

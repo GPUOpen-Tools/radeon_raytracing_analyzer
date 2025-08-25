@@ -60,4 +60,3 @@ QString file_util::GetFileLocation()
 
     return file_location;
 }
-

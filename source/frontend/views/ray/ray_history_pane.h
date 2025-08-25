@@ -186,4 +186,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_RAY_RAY_HISTORY_PANE_H_
-

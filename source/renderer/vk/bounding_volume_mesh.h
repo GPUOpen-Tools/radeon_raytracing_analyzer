@@ -53,4 +53,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_BOUNDING_VOLUME_MESH_H_
-

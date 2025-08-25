@@ -171,4 +171,3 @@ qreal ColoredRadioButton::GetSwitchHeight(const QFontMetricsF& font_metrics) con
 {
     return font_metrics.height() * button_text_ratio_;
 }
-

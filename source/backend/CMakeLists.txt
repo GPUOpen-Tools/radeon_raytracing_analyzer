@@ -20,6 +20,7 @@ set( SOURCES
     "public/rra_assert.h"
     "public/rra_async_ray_history_loader.h"
     "public/rra_blas.h"
+    "public/rra_blas_header.h"
     "public/rra_bvh.h"
     "public/rra_error.h"
     "public/rra_macro.h"
@@ -28,6 +29,7 @@ set( SOURCES
     "public/rra_rtip_info.h"
     "public/rra_system_info.h"
     "public/rra_tlas.h"
+    "public/rra_tlas_header.h"
     "public/rra_trace_loader.h"
 
     # private backend files
@@ -42,6 +44,7 @@ set( SOURCES
     "rra_assert.cpp"
     "rra_async_ray_history_loader.cpp"
     "rra_blas.cpp"
+    "rra_blas_header.cpp"
     "rra_blas_impl.h"
     "rra_bvh.cpp"
     "rra_bvh_impl.h"
@@ -53,6 +56,7 @@ set( SOURCES
     "rra_rtip_info.cpp"
     "rra_system_info.cpp"
     "rra_tlas.cpp"
+    "rra_tlas_header.cpp"
     "rra_tlas_impl.h"
     "rra_trace_loader.cpp"
     "string_table.cpp"

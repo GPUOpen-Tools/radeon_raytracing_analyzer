@@ -55,4 +55,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_ACCELERATION_STRUCTURE_TREE_VIEW_H_
-

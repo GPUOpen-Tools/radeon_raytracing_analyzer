@@ -89,4 +89,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_COLORED_RADIO_BUTTON_H_
-

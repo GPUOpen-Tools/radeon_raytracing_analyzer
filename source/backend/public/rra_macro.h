@@ -42,4 +42,3 @@
 #define RRA_ARRAY_ELEMENTS(x) (int32_t)((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_MACRO_H_
-

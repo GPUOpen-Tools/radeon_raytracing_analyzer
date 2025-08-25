@@ -89,50 +89,50 @@ RraErrorCode RraTlasGetChildNodePtr(uint64_t tlas_index, uint32_t parent_node, u
 ///
 /// This is encoded in the node data passed in.
 ///
-/// @param [in]  node_ptr    The encoded node pointer.
+/// @param [in]  node_id     The encoded node pointer.
 /// @param [in]  out_name    The text string of the node name.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeName(uint32_t node_ptr, const char** out_name);
+RraErrorCode RraTlasGetNodeName(uint32_t node_id, const char** out_name);
 
 /// @brief Get tooltip of the node provided.
 ///
 /// This is encoded in the node data passed in.
 ///
-/// @param [in]  node_ptr    The encoded node pointer.
+/// @param [in]  node_id     The encoded node pointer.
 /// @param [in]  out_tooltip The tooltip text string of the node name. Can be empty string if no tooltip required.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeNameToolTip(uint32_t node_ptr, const char** out_tooltip);
+RraErrorCode RraTlasGetNodeNameToolTip(uint32_t node_id, const char** out_tooltip);
 
 /// @brief Get the base address for a given node.
 ///
 /// @param [in]  tlas_index     The index of the TLAS to use.
-/// @param [in]  node_ptr       The node whose base address is to be found.
+/// @param [in]  node_id        The node whose base address is to be found.
 /// @param [out] out_address    The base address of the node.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeBaseAddress(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_address);
+RraErrorCode RraTlasGetNodeBaseAddress(uint64_t tlas_index, uint32_t node_id, uint64_t* out_address);
 
 /// @brief Get the node_ptr to a given node's parent.
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
-/// @param [in]  node_ptr            The node whose parent base address is to be found.
+/// @param [in]  node_id             The node whose parent base address is to be found.
 /// @param [out] out_parent_node_ptr The node pointer to the parent.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeParent(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_parent_node_ptr);
+RraErrorCode RraTlasGetNodeParent(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_parent_node_id);
 
 /// @brief Get the instance information for an instance node.
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
-/// @param [in]  node_ptr            The instance node pointer.
+/// @param [in]  node_id             The instance node pointer.
 /// @param [out] out_blas_address    A pointer to receive the blas address.
 /// @param [out] out_instance_count  A pointer to receive the instance count.
 /// @param [out] out_is_empty        A pointer to receive whether the instance is empty.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetInstanceNodeInfo(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_blas_address, uint64_t* out_instance_count, bool* out_is_empty);
+RraErrorCode RraTlasGetInstanceNodeInfo(uint64_t tlas_index, uint32_t node_id, uint64_t* out_blas_address, uint64_t* out_instance_count, bool* out_is_empty);
 
 /// @brief Get the instance count for a given BLAS in a TLAS.
 ///
@@ -190,59 +190,59 @@ RraErrorCode RraTlasGetBlasCount(uint64_t tlas_index, uint64_t* out_blas_count);
 /// @param [in]  tlas_index          The index of the TLAS to use.
 /// @param [in]  blas_index          The index of the BLAS to use.
 /// @param [in]  instance_index      The index of the instance in the TLAS.
-/// @param [out] out_node_ptr        The node pointer of the instance.
+/// @param [out] out_node_id         The node pointer of the instance.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetInstanceNode(uint64_t tlas_index, uint64_t blas_index, uint64_t instance_index, uint32_t* out_node_ptr);
+RraErrorCode RraTlasGetInstanceNode(uint64_t tlas_index, uint64_t blas_index, uint64_t instance_index, uint32_t* out_node_id);
 
 /// @brief Get the instance transformation for an instance node.
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
-/// @param [in]  node_ptr            The instance node pointer.
+/// @param [in]  node_id             The instance node pointer.
 /// @param [out] transform           A pointer to receive the transform data, 12 floating points of allocation is needed.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetInstanceNodeTransform(uint64_t tlas_index, uint32_t node_ptr, float* transform);
+RraErrorCode RraTlasGetInstanceNodeTransform(uint64_t tlas_index, uint32_t node_id, float* transform);
 
 /// @brief Get the original (not inverse) instance transformation for an instance node.
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
-/// @param [in]  node_ptr            The instance node pointer.
+/// @param [in]  node_id             The instance node pointer.
 /// @param [out] transform           A pointer to receive the transform data, 12 floating points of allocation is needed.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetOriginalInstanceNodeTransform(uint64_t tlas_index, uint32_t node_ptr, float* transform);
+RraErrorCode RraTlasGetOriginalInstanceNodeTransform(uint64_t tlas_index, uint32_t node_id, float* transform);
 
 /// @brief Get the BLAS index from a TLAS instance node.
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
-/// @param [in]  node_ptr            The instance node pointer.
+/// @param [in]  node_id             The instance node pointer.
 /// @param [out] out_blas_index      A pointer to receive the blas index.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetBlasIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_blas_index);
+RraErrorCode RraTlasGetBlasIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_id, uint64_t* out_blas_index);
 
 /// @brief Get the Instance index, given a TLAS index and an instance node pointer.
 ///
 /// These instances are shared among instances generated for rebraiding.
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
-/// @param [in]  node_ptr            The node pointer of the instance node.
+/// @param [in]  node_id             The node pointer of the instance node.
 /// @param [out] out_instance_index  A pointer to receive the instance index.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_instance_index);
+RraErrorCode RraTlasGetInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_id, uint32_t* out_instance_index);
 
 /// @brief Get the unique Instance index, given a TLAS index and an instance node pointer.
 ///
 /// This index is unique even among instances generated from rebraiding.
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
-/// @param [in]  node_ptr            The node pointer of the instance node.
+/// @param [in]  node_id             The node pointer of the instance node.
 /// @param [out] out_instance_index  A pointer to receive the unique instance index.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_instance_index);
+RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_id, uint32_t* out_instance_index);
 
 /// @brief Get the bounding volume extents of a given node.
 ///
@@ -256,20 +256,20 @@ RraErrorCode RraTlasGetBoundingVolumeExtents(uint64_t tlas_index, uint32_t node_
 /// @brief Get the surface area heuristic of a given node.
 ///
 /// @param [in]  tlas_index                 The index of the TLAS to use.
-/// @param [in]  node_ptr                   The node pointer whose SAH is to be found.
+/// @param [in]  node_id                    The node pointer whose SAH is to be found.
 /// @param [out] out_surface_area_heuristic A pointer to receive the surface area heuristic.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_ptr, float* out_surface_area_heuristic);
+RraErrorCode RraTlasGetSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_id, float* out_surface_area_heuristic);
 
 /// @brief Get the minimum surface area heuristic of a given node and its children.
 ///
 /// @param [in]  tlas_index                     The index of the TLAS to use.
-/// @param [in]  node_ptr                       The node pointer whose SAH is to be found.
+/// @param [in]  node_id                        The node pointer whose SAH is to be found.
 /// @param [out] out_min_surface_area_heuristic A pointer to receive the minimum surface area heuristic.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetMinimumSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_ptr, float* out_min_surface_area_heuristic);
+RraErrorCode RraTlasGetMinimumSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_id, float* out_min_surface_area_heuristic);
 
 /// @brief Get the average surface area heuristic of a given node and its children.
 ///
@@ -283,29 +283,29 @@ RraErrorCode RraTlasGetAverageSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t
 /// @brief Get the instance mask as specified through the API.
 ///
 /// @param tlas_index    The index of the TLAS to use.
-/// @param node_ptr      The node pointer containing the instance.
+/// @param node_id       The node pointer containing the instance.
 /// @param out_mask      The mask of this instance.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetInstanceNodeMask(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_mask);
+RraErrorCode RraTlasGetInstanceNodeMask(uint64_t tlas_index, uint32_t node_id, uint32_t* out_mask);
 
 /// @brief Get the instance ID as specified through the API.
 ///
 /// @param tlas_index    The index of the TLAS to use.
-/// @param node_ptr      The node pointer containing the instance.
+/// @param node_id       The node pointer containing the instance.
 /// @param out_id        The ID of this instance.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetInstanceNodeID(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_id);
+RraErrorCode RraTlasGetInstanceNodeID(uint64_t tlas_index, uint32_t node_id, uint32_t* out_id);
 
 /// @brief Get the instance hit group as specified through the API.
 ///
 /// @param tlas_index     The index of the TLAS to use.
-/// @param node_ptr       The node pointer containing the instance.
+/// @param node_id        The node pointer containing the instance.
 /// @param out_hit_group  The hit group of this instance.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetInstanceNodeHitGroup(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_hit_group);
+RraErrorCode RraTlasGetInstanceNodeHitGroup(uint64_t tlas_index, uint32_t node_id, uint32_t* out_hit_group);
 
 /// @brief Get the size of the TLAS, in bytes.
 ///
@@ -374,11 +374,11 @@ RraErrorCode RraTlasGetRebraidingEnabled(uint64_t tlas_index, bool* out_enabled)
 /// @brief Retrieve the instance flags.
 ///
 /// @param [in] tlas_index	The index of the TLAS to use.
-/// @param [in] node_ptr	The node pointer containing the instance.
+/// @param [in] node_id 	The node pointer containing the instance.
 /// @param [out] out_flags	The instance flags.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetInstanceFlags(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_flags);
+RraErrorCode RraTlasGetInstanceFlags(uint64_t tlas_index, uint32_t node_id, uint32_t* out_flags);
 
 /// @brief Query whether or not fused instances was used to build this TLAS.
 ///
@@ -391,23 +391,30 @@ RraErrorCode RraTlasGetFusedInstancesEnabled(uint64_t tlas_index, bool* out_enab
 /// @brief Get the index of the node's OBB.
 ///
 /// @param [in]  tlas_index   The index of the TLAS to use.
-/// @param [in]  node_ptr     The node of interest.
+/// @param [in]  node_id      The node of interest.
 /// @param [out] out_rotation A pointer to 9 floats to have the column-major matrix written to.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeObbIndex(uint64_t tlas_index, uint32_t node_ptr, uint32_t* obb_index);
+RraErrorCode RraTlasGetNodeObbIndex(uint64_t tlas_index, uint32_t node_id, uint32_t* obb_index);
 
 /// @brief Get the orientation of the node's OBB.
 ///
 /// @param [in]  tlas_index   The index of the TLAS to use.
-/// @param [in]  node_ptr     The node of interest.
+/// @param [in]  node_id      The node of interest.
 /// @param [out] out_rotation A pointer to 9 floats to have the column-major matrix written to.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32_t node_ptr, float* out_rotation);
+RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32_t node_id, float* out_rotation);
+
+/// @brief Get the metadata size.
+///
+/// @param [in]  tlas_index        The TLAS index.
+/// @param [out] out_byte_size     The metadata size, in bytes.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetMetaDataSize(uint64_t tlas_index, uint32_t* out_byte_size);
 
 #ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_TLAS_H_
-

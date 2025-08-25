@@ -33,6 +33,14 @@ namespace rra
         kBlasStatsPrimitiveIndexTriangle6,
         kBlasStatsPrimitiveIndexTriangle7,
         kBlasStatsPrimitiveIndexTriangle8,
+        kBlasStatsPrimitiveIndexLabel1,
+        kBlasStatsPrimitiveIndexLabel2,
+        kBlasStatsPrimitiveIndexLabel3,
+        kBlasStatsPrimitiveIndexLabel4,
+        kBlasStatsPrimitiveIndexLabel5,
+        kBlasStatsPrimitiveIndexLabel6,
+        kBlasStatsPrimitiveIndexLabel7,
+        kBlasStatsPrimitiveIndexLabel8,
         kBlasStatsGeometryIndex,
         kBlasStatsParent,
         kBlasStatsFocus,
@@ -161,6 +169,20 @@ namespace rra
         /// @return The parent node id.
         uint32_t GetParentNodeOfSelected(uint32_t blas_index);
 
+        /// @brief Set the labels for the triangle table.
+        ///
+        /// @param [in] model             The table model.
+        void SetTriTableLabels(QStandardItemModel* model);
+
+        /// @brief Apply the labels for the triangle table.
+        ///
+        /// @param [in] model             The table model.
+        /// @param [in] vertex_name       The name of the vertex.
+        /// @param [in] vert0             The name of vertex 0.
+        /// @param [in] vert1             The name of vertex 1.
+        /// @param [in] vert2             The name of vertex 2.
+        void SetTriTableModelLabels(QStandardItemModel* model, const QString& vertex_name, const QString& vert0, const QString& vert1, const QString& vert2);
+
         /// @brief Update the statistics for the selected BLAS node.
         ///
         /// @param [in] blas_index      The index of the BLAS to use.
@@ -175,4 +197,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_VIEWER_MODEL_H_
-

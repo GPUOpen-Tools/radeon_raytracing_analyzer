@@ -86,4 +86,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_LOAD_ANIMATION_MANAGER_H_
-

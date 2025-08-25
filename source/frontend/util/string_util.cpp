@@ -151,4 +151,3 @@ QString rra::string_util::GetBuildTypeString(VkBuildAccelerationStructureFlagBit
 
     return QString("Default");
 }
-

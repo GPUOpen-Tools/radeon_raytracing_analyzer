@@ -52,4 +52,3 @@ bool TrianglesTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
-

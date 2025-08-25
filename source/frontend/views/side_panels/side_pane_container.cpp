@@ -92,4 +92,3 @@ void SidePaneContainer::MarkProceduralGeometry(bool is_procedural)
 {
     view_pane_->NonProceduralWidgetsHidden(is_procedural);
 }
-

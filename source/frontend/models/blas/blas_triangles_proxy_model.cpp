@@ -133,4 +133,3 @@ namespace rra
         return QSortFilterProxyModel::lessThan(left, right);
     }
 }  // namespace rra
-

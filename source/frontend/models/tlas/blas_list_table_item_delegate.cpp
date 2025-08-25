@@ -32,4 +32,3 @@ bool BlasListTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
-

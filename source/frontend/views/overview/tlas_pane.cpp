@@ -80,4 +80,3 @@ void TlasPane::paintEvent(QPaintEvent* event)
     painter.fillRect(rect(), background_color);
     QWidget::paintEvent(event);
 }
-

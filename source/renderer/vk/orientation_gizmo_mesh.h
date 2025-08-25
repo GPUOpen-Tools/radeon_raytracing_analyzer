@@ -77,4 +77,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_ORIENTATION_GIZMO_MESH_H_
-

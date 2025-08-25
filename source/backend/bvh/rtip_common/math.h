@@ -70,6 +70,15 @@ inline glm::uvec3 asuint(glm::vec3& v)
     };
 }
 
+inline const glm::uvec3 asuint(const glm::vec3& v)
+{
+    return {
+        *reinterpret_cast<const uint32_t*>(&v[0]),
+        *reinterpret_cast<const uint32_t*>(&v[1]),
+        *reinterpret_cast<const uint32_t*>(&v[2]),
+    };
+}
+
 //=====================================================================================================================
 static glm::vec3 FloatOpWithRoundMode(uint32_t roundMode, uint32_t operation, glm::vec3 src0, glm::vec3 src1)
 {
@@ -118,11 +127,12 @@ static BoundingBox CombineAABB(BoundingBox b0, BoundingBox b1)
 }
 
 //=====================================================================================================================
-static uint32_t Pow2Align(uint32_t value,      ///< Value to align.
-                          uint32_t alignment)  ///< Desired alignment (must be a power of 2).
+/* Temporarily comment out since some things in this function are undefined.
+inline uint32_t countbits64(uint64_t val)
 {
-    return ((value + alignment - 1) & ~(alignment - 1));
+    return countbits(LowPart(val)) + countbits(HighPart(val));
 }
+*/
 
 //=====================================================================================================================
 // Search the mask data from least significant bit (LSB) / Lowest Order bit
@@ -332,4 +342,3 @@ static float Dequantize(float origin, uint32_t exponent, uint32_t plane, uint32_
 #endif
 
 #endif  // RRA_BACKEND_MATH_H_
-

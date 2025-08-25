@@ -61,4 +61,3 @@ void RraPrint(const char* format, ...)
 
     va_end(args);
 }
-

@@ -97,4 +97,3 @@ private:
 };
 
 #endif  // #define RRA_VIEWS_BLAS_BLAS_TRIANGLES_PANE_H_
-

@@ -65,10 +65,10 @@ namespace rra
         return blas_scene;
     }
 
-    bool BlasSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const
+    bool BlasSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const
     {
         Scene*     scene = GetSceneByIndex(blas_index);
-        SceneNode* node  = scene->GetNodeById(node_id);
+        SceneNode* node  = scene->GetNodeById(node_child_id);
         if (node)
         {
             return !(node->IsEnabled() && node->IsVisible());
@@ -138,4 +138,3 @@ namespace rra
     }
 
 }  // namespace rra
-

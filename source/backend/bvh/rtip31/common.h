@@ -20,7 +20,7 @@
 #endif
 
 //=====================================================================================================================
-// Transform a ray for a given OBB transform. TODO: Remove, opt for refactor of InstanceTransform instead.
+// Transform a ray for a given OBB transform.
 static void OBBTransform(const glm::mat3& transform, const glm::vec3& origin, const glm::vec3& direction, glm::vec3* newOrigin, glm::vec3* newDirection)
 {
     glm::vec3 t0 = transform[0];
@@ -71,4 +71,3 @@ static uint32_t ComputeInstanceSidebandOffset(uint32_t instanceNodeOffset, uint3
 #endif
 
 #endif  // RRA_BACKEND_COMMON_H_
-

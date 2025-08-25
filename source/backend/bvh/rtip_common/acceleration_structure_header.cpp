@@ -9,6 +9,7 @@
 
 #include "bvh/dxr_type_conversion.h"
 #include "bvh/utils.h"
+#include "public/rra_rtip_info.h"
 
 namespace rta
 {
@@ -345,4 +346,3 @@ namespace rta
     }
 
 }  // namespace rta
-

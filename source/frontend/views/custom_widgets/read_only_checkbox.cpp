@@ -35,4 +35,3 @@ void ReadOnlyCheckBox::paintEvent(QPaintEvent* event)
     bool checked = (checkState() == Qt::CheckState::Checked) ? true : false;
     rra::widget_util::DrawCheckboxCell(&painter, rect, checked, false);
 }
-

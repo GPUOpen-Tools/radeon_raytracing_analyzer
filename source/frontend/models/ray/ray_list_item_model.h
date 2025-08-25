@@ -112,4 +112,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_LIST_ITEM_MODEL_H_
-

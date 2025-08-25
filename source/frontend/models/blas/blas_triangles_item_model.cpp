@@ -325,4 +325,3 @@ namespace rra
         return num_columns_;
     }
 }  // namespace rra
-

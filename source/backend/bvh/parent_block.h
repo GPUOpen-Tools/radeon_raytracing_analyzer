@@ -76,4 +76,3 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_PARENT_BLOCK_H_
-

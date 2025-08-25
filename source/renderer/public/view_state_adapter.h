@@ -70,4 +70,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VIEW_STATE_ADAPTER_H_
-

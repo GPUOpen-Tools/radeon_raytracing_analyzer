@@ -371,4 +371,3 @@ void DispatchPane::NavigateToRayHistory() const
     // Switch to the Ray history pane.
     emit rra::MessageManager::Get().PaneSwitchRequested(rra::kPaneIdRayHistory);
 }
-

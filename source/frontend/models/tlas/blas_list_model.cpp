@@ -52,8 +52,8 @@ namespace rra
         // Don't include any empty BLASes or BLASes that aren't referenced (0 instances).
         for (uint64_t blas_index = 0; blas_index < blas_count; blas_index++)
         {
-            uint64_t instance_count = 0;
-            RraErrorCode error_code = RraTlasGetInstanceCount(tlas_index, blas_index, &instance_count);
+            uint64_t     instance_count = 0;
+            RraErrorCode error_code     = RraTlasGetInstanceCount(tlas_index, blas_index, &instance_count);
             RRA_ASSERT(error_code == kRraOk);
             if (!RraBlasIsEmpty(blas_index) && instance_count > 0)
             {
@@ -204,4 +204,3 @@ namespace rra
     }
 
 }  // namespace rra
-

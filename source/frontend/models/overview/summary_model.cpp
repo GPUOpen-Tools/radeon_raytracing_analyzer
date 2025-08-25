@@ -77,9 +77,9 @@ namespace rra
 
     bool SummaryModel::RebraidingEnabled()
     {
-        uint64_t tlas_count = 0;
+        uint64_t     tlas_count = 0;
         RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
-        RRA_ASSERT(error_code);
+        RRA_ASSERT(error_code == kRraOk);
 
         bool rebraiding_enabled{false};
         for (uint64_t tlas_index = 0; tlas_index < tlas_count; ++tlas_index)
@@ -95,9 +95,9 @@ namespace rra
 
     bool SummaryModel::FusedInstancesEnabled()
     {
-        uint64_t tlas_count = 0;
+        uint64_t     tlas_count = 0;
         RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
-        RRA_ASSERT(error_code);
+        RRA_ASSERT(error_code == kRraOk);
 
         bool fused_instances_enabled{false};
         for (uint64_t tlas_index = 0; tlas_index < tlas_count; ++tlas_index)
@@ -188,9 +188,9 @@ namespace rra
 
     void SummaryModel::UpdateTlasList()
     {
-        uint64_t tlas_count = 0;
+        uint64_t     tlas_count = 0;
         RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
-        RRA_ASSERT(error_code);
+        RRA_ASSERT(error_code == kRraOk);
 
         uint64_t rows_added = 0;
 
@@ -303,4 +303,3 @@ namespace rra
     }
 
 }  // namespace rra
-

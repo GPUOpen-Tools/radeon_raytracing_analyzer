@@ -8,18 +8,13 @@
 #ifndef RRA_BACKEND_BITS_HLSLI
 #define RRA_BACKEND_BITS_HLSLI
 
+#include <cstdint>
+
 //=====================================================================================================================
 // Helper function for producing a 32 bit mask of one bit
 inline uint32_t bit(uint32_t index)
 {
     return 1u << index;
-}
-
-//=====================================================================================================================
-// Helper function for producing a 64 bit mask of one bit
-inline uint64_t bit64(uint32_t index)
-{
-    return 1ull << index;
 }
 
 //=====================================================================================================================
@@ -35,14 +30,6 @@ inline uint64_t bits64(uint64_t bitcount)
 {
     return (bitcount == 64) ? 0xFFFFFFFFFFFFFFFFull : ((1ull << bitcount) - 1ull);
 }
-
-//=====================================================================================================================
-/* Temporarily comment out since some things in this function are undefined.
-inline uint32_t countbits64(uint64_t val)
-{
-    return countbits(LowPart(val)) + countbits(HighPart(val));
-}
-*/
 
 //=====================================================================================================================
 // Helper function for inserting data into a src bitfield and returning the output
@@ -69,5 +56,11 @@ static uint32_t bitFieldExtract(uint32_t src, uint32_t bitOffset, uint32_t numBi
     return (src >> bitOffset) & bits(numBits);
 }
 
-#endif  // RRA_BACKEND_BITS_HLSLI
+//=====================================================================================================================
+static uint32_t Pow2Align(uint32_t value,      ///< Value to align.
+                          uint32_t alignment)  ///< Desired alignment (must be a power of 2).
+{
+    return ((value + alignment - 1) & ~(alignment - 1));
+}
 
+#endif  // RRA_BACKEND_BITS_HLSLI

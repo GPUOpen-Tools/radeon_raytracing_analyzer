@@ -218,4 +218,3 @@ namespace rra
         return proxy_model_;
     }
 }  // namespace rra
-

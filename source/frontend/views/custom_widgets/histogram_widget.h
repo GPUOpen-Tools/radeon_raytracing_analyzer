@@ -96,4 +96,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_HISTOGRAM_WIDGET_H_
-

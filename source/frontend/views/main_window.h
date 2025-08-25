@@ -236,4 +236,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_MAIN_WINDOW_H_
-

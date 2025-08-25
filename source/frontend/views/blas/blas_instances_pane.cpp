@@ -215,4 +215,3 @@ void BlasInstancesPane::ScrollToSelectedInstance()
     }
     ui_->instances_table_->scrollToTop();
 }
-

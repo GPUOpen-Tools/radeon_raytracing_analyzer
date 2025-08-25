@@ -138,4 +138,3 @@ void LicenseDialog::ScrollbarChanged()
         }
     }
 }
-

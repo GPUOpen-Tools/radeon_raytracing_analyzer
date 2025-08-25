@@ -76,4 +76,3 @@ namespace rra
         }
     }  // namespace math_util
 }  // namespace rra
-

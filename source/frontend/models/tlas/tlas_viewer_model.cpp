@@ -213,7 +213,7 @@ namespace rra
 
             // Row major 3x4 matrix.
             float instance_transform[12] = {};
-            error_code = RraTlasGetOriginalInstanceNodeTransform(tlas_index, node_id, instance_transform);
+            error_code                   = RraTlasGetOriginalInstanceNodeTransform(tlas_index, node_id, instance_transform);
             RRA_ASSERT(error_code == kRraOk);
 
             widget_util::SetTableModelDecimalData(transform_table_model_, instance_transform[0], 0, 0, Qt::AlignRight);
@@ -234,7 +234,6 @@ namespace rra
         else
         {
             SetModelData(kTlasStatsBlasAddress, "");
-            SetModelData(kTlasStatsParent, "");
             SetModelData(kTlasStatsInstanceIndex, "");
             SetModelData(kTlasStatsInstanceId, "");
             SetModelData(kTlasStatsInstanceMask, "");
@@ -303,8 +302,7 @@ namespace rra
     void TlasViewerModel::SetSceneSelection(const QModelIndex& model_index, uint64_t index)
     {
         uint32_t node_id = GetNodeIdFromModelIndex(model_index, index, kIsTlasModel);
-
-        Scene* scene = scene_collection_model_->GetSceneByIndex(index);
+        Scene*   scene   = scene_collection_model_->GetSceneByIndex(index);
         scene->SetSceneSelection(node_id);
     }
 
@@ -363,4 +361,3 @@ namespace rra
     }
 
 }  // namespace rra
-

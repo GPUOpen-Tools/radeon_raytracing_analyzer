@@ -56,4 +56,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_DEBUG_WINDOW_H_
-

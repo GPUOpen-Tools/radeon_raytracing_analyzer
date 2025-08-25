@@ -87,4 +87,3 @@ namespace rra
         writer_.writeTextElement("DeviceString", recent_file.device_string);
     }
 }  // namespace rra
-

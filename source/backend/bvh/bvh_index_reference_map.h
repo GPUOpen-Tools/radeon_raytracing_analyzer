@@ -17,4 +17,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_BVH_INDEX_REFERENCE_MAP_H_
-

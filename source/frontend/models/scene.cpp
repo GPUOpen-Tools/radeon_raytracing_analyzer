@@ -193,18 +193,18 @@ namespace rra
 
     renderer::RraVertex* Scene::AllocateVertexBuffer(uint32_t blas_index)
     {
-        uint32_t total_tri_count{};
+        uint32_t     total_tri_count{};
         RraErrorCode error_code = RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
-        RRA_ASSERT(error_code);
+        RRA_ASSERT(error_code == kRraOk);
         vertices_.resize((size_t)total_tri_count * 3);
         return vertices_.data();
     }
 
     std::byte* Scene::AllocateChildBuffer(uint32_t blas_index)
     {
-        uint64_t total_node_count{};
+        uint64_t     total_node_count{};
         RraErrorCode error_code = RraBlasGetTotalNodeCount(blas_index, &total_node_count);
-        RRA_ASSERT(error_code);
+        RRA_ASSERT(error_code == kRraOk);
         child_nodes_buffer_.resize(total_node_count * sizeof(SceneNode));
         return child_nodes_buffer_.data();
     }
@@ -290,9 +290,9 @@ namespace rra
         root_node_->AppendInstancesTo(instance_map);
         for (auto& iter : instance_map)
         {
-            uint32_t triangle_count = 0;
-            RraErrorCode error_code = RraBlasGetTriangleNodeCount(iter.first, &triangle_count);
-            RRA_ASSERT(error_code);
+            uint32_t     triangle_count = 0;
+            RraErrorCode error_code     = RraBlasGetTriangleNodeCount(iter.first, &triangle_count);
+            RRA_ASSERT(error_code == kRraOk);
             current_max = std::max(triangle_count, current_max);
         }
 
@@ -321,9 +321,9 @@ namespace rra
         root_node_->AppendInstancesTo(instance_map);
         for (auto& iter : instance_map)
         {
-            uint32_t depth = 0;
+            uint32_t     depth      = 0;
             RraErrorCode error_code = RraBlasGetMaxTreeDepth(iter.first, &depth);
-            RRA_ASSERT(error_code);
+            RRA_ASSERT(error_code == kRraOk);
             current_max_tree_depth = std::max(depth, current_max_tree_depth);
         }
 
@@ -346,9 +346,9 @@ namespace rra
 
         std::vector<renderer::SelectedVolumeInstance> substrate_instances;
 
-        uint32_t root_node;
+        uint32_t     root_node;
         RraErrorCode error_code = RraBvhGetRootNodePtr(&root_node);
-        RRA_ASSERT(error_code);
+        RRA_ASSERT(error_code == kRraOk);
 
         for (uint32_t node_id : selected_node_ids_)
         {
@@ -356,8 +356,8 @@ namespace rra
             if (instance)
             {
                 renderer::SelectedVolumeInstance selected_volume = {};
-                error_code = RraBlasGetBoundingVolumeExtents(instance->blas_index, root_node, &selection_extents);
-                RRA_ASSERT(error_code);
+                error_code                                       = RraBlasGetBoundingVolumeExtents(instance->blas_index, root_node, &selection_extents);
+                RRA_ASSERT(error_code == kRraOk);
 
                 selected_volume.min          = {selection_extents.min_x, selection_extents.min_y, selection_extents.min_z};
                 selected_volume.max          = {selection_extents.max_x, selection_extents.max_y, selection_extents.max_z};
@@ -532,7 +532,7 @@ namespace rra
         }
     }
 
-    void Scene::SetSceneSelection(uint32_t node_id)
+    void Scene::SetSceneSelection(uint32_t node_child_id)
     {
         auto old_selection{selected_node_ids_};
 
@@ -545,7 +545,7 @@ namespace rra
             selected_node_ids_.clear();
         }
 
-        auto node = GetNodeById(node_id);
+        auto node = GetNodeById(node_child_id);
         if (node)
         {
             if (node->IsSelected() && multi_select_)
@@ -686,9 +686,9 @@ namespace rra
         return false;
     }
 
-    SceneNode* Scene::GetNodeById(uint32_t node_id)
+    SceneNode* Scene::GetNodeById(uint32_t node_child_id)
     {
-        auto iter = nodes_.find(node_id);
+        auto iter = nodes_.find(node_child_id);
         if (iter != nodes_.end())
         {
             return iter->second;
@@ -765,20 +765,20 @@ namespace rra
                         // Get the child nodes. If this is not a box node, the child count is 0.
                         uint32_t child_node_count;
                         RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(bvh_index, (*traverse_nodes_ptr)[i], &child_node_count));
-                        StackVector<uint32_t, 8> child_nodes{};
+                        StackVector<uint32_t, MAX_CHILD_NODES> child_nodes{};
                         child_nodes.Resize(child_node_count);
                         RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(bvh_index, (*traverse_nodes_ptr)[i], child_nodes.Data()));
 
-                        for (uint32_t child : child_nodes)
+                        for (uint32_t child_idx = 0; child_idx < child_nodes.Size(); ++child_idx)
                         {
-                            swap_nodes_ptr->PushBack(child);
+                            swap_nodes_ptr->PushBack(child_nodes[child_idx]);
                         }
                     }
                 }
 
                 // Get the triangle nodes. If this is not a triangle the triangle count is 0.
                 RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangleCount(bvh_index, (*traverse_nodes_ptr)[i], &triangle_count));
-                StackVector<TriangleVertices, 8> triangles{};
+                StackVector<TriangleVertices, MAX_CHILD_NODES> triangles{};
                 triangles.Resize(triangle_count);
                 RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangles(bvh_index, (*traverse_nodes_ptr)[i], triangles.Data()));
 
@@ -897,6 +897,7 @@ namespace rra
                 if (scene_closest_hit.node)
                 {
                     const char* node_name{};
+
                     if (is_tlas_)
                     {
                         RraErrorCode error_code = RraTlasGetNodeName(scene_closest_hit.node->GetId(), &node_name);
@@ -1062,7 +1063,7 @@ namespace rra
         if (root_node_ && root_node_->IsVisible())
         {
             traversal_tree.volumes.reserve(nodes_.size());
-            root_node_->AddToTraversalTree(true, traversal_tree);
+            root_node_->AddToTraversalTree(true, is_tlas_, traversal_tree);
         }
 
         return traversal_tree;
@@ -1074,4 +1075,3 @@ namespace rra
     }
 
 }  // namespace rra
-

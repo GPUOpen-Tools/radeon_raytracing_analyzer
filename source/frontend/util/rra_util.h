@@ -41,4 +41,3 @@ namespace rra_util
 };  // namespace rra_util
 
 #endif  // RRA_UTIL_RRA_UTIL_H_
-

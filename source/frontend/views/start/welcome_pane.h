@@ -108,4 +108,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_START_WELCOME_PANE_H_
-

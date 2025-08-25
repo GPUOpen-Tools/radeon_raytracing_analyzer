@@ -22,6 +22,8 @@
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_print.h"
+#include "public/rra_rtip_info.h"
+#include "public/rra_tlas.h"
 
 #include "constants.h"
 #include "managers/message_manager.h"
@@ -318,7 +320,7 @@ namespace rra
 
     std::shared_ptr<renderer::GraphicsContextSceneInfo> GetGraphicsContextSceneInfo()
     {
-        uint64_t blas_count = 0;
+        uint64_t     blas_count = 0;
         RraErrorCode error_code = RraBvhGetTotalBlasCount(&blas_count);
         RRA_ASSERT(error_code == kRraOk);
 
@@ -356,7 +358,7 @@ namespace rra
                 SceneNode::ConstructFromBlas(static_cast<uint32_t>(blas_index), traversal_tree.vertices.data(), traversal_tree.child_nodes_buffer);
 
             // Add to the tree using the scene root.
-            scene_root->AddToTraversalTree(false, traversal_tree);
+            scene_root->AddToTraversalTree(false, false, traversal_tree);
         });
 
         // Deallocate child nodes buffers.
@@ -519,23 +521,23 @@ namespace rra
 
         scene_collection_model_->CastClosestHitRayOnBvh(scene_index, ray.origin, ray.direction, scene_model_closest_hit);
 
-        auto     scene           = scene_collection_model_->GetSceneByIndex(scene_index);
-        uint32_t scene_selection = UINT32_MAX;
+        auto     scene                 = scene_collection_model_->GetSceneByIndex(scene_index);
+        uint64_t scene_child_selection = UINT32_MAX;
 
         if (scene && scene_model_closest_hit.distance > 0.0f)
         {
             if (scene_model_closest_hit.instance_node != UINT32_MAX)
             {
-                scene_selection = scene_model_closest_hit.instance_node;
+                scene_child_selection = scene_model_closest_hit.instance_node;
             }
 
-            if (scene_model_closest_hit.triangle_node != UINT32_MAX)
+            if (scene_model_closest_hit.triangle_child_node != UINT32_MAX)
             {
-                scene_selection = scene_model_closest_hit.triangle_node;
+                scene_child_selection = scene_model_closest_hit.triangle_child_node;
             }
         }
 
-        scene->SetSceneSelection(scene_selection);
+        scene->SetSceneSelection(scene_child_selection);
 
         // Emit a signal with the new selection info.
         emit SceneSelectionChanged();
@@ -543,10 +545,10 @@ namespace rra
         return scene_model_closest_hit;
     }
 
-    QModelIndex AccelerationStructureViewerModel::GetModelIndexForNode(uint32_t node_id) const
+    QModelIndex AccelerationStructureViewerModel::GetModelIndexForNode(uint32_t node_child_id) const
     {
         // Use the tree view model to get the model index associated with the node.
-        QModelIndex source_index = tree_view_model_->GetModelIndexForNode(node_id);
+        QModelIndex source_index = tree_view_model_->GetModelIndexForNode(node_child_id);
         return tree_view_proxy_model_->mapFromSource(source_index);
     }
 
@@ -684,4 +686,3 @@ namespace rra
     }
 
 }  // namespace rra
-

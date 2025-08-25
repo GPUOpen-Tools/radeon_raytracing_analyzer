@@ -182,4 +182,3 @@ void BlasGeometriesPane::ScrollToSelectedGeometry()
     }
     ui_->geometries_table_->scrollToTop();
 }
-

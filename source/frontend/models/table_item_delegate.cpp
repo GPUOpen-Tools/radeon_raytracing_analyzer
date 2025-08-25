@@ -107,4 +107,3 @@ void TableItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
         painter->drawText(option.rect, Qt::AlignRight | Qt::AlignVCenter, index.data().toString());
     }
 }
-

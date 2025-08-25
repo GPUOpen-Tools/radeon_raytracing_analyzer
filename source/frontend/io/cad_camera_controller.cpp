@@ -370,4 +370,3 @@ namespace rra
         pan_distance_ = {};
     }
 }  // namespace rra
-

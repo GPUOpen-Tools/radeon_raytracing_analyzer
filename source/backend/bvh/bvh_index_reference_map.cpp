@@ -21,4 +21,3 @@ namespace rta
     };
 
 }  // namespace rta
-

@@ -66,7 +66,7 @@ namespace rra
         StackVector<uint32_t, 1024>* swap_nodes_ptr     = &buffer1;
         traverse_nodes_ptr->PushBack(root_node);
 
-        StackVector<uint32_t, 8> child_nodes{};
+        StackVector<uint32_t, MAX_CHILD_NODES> child_nodes{};
 
         // Memoized traversal of the tree.
         while (!traverse_nodes_ptr->Empty())
@@ -104,12 +104,12 @@ namespace rra
                 glm::mat3 rotation(1.0f);
                 if (RraRtipInfoGetOBBSupported() && (*traverse_nodes_ptr)[i] != root_node)
                 {
-                    uint32_t parent_node{};
+                    uint32_t     parent_node{};
                     RraErrorCode error_code = RraBlasGetNodeParent(bvh_index, (*traverse_nodes_ptr)[i], &parent_node);
-                    RRA_ASSERT(error_code);
+                    RRA_ASSERT(error_code == kRraOk);
 
                     error_code = RraBlasGetNodeBoundingVolumeOrientation(bvh_index, parent_node, &rotation[0][0]);
-                    RRA_ASSERT(error_code);
+                    RRA_ASSERT(error_code == kRraOk);
                     intersected = renderer::IntersectOBB(origin,
                                                          direction,
                                                          glm::vec3(extent.min_x, extent.min_y, extent.min_z),
@@ -138,14 +138,14 @@ namespace rra
                         continue;
                     }
 
-                    for (uint32_t child : child_nodes)
+                    for (uint32_t child_idx = 0; child_idx < child_nodes.Size(); ++child_idx)
                     {
-                        swap_nodes_ptr->PushBack(child);
+                        swap_nodes_ptr->PushBack(child_nodes[child_idx]);
                     }
                 }
 
                 std::vector<TriangleVertices> triangles(triangle_count);
-                if (RraBlasGetNodeTriangles(bvh_index, (*traverse_nodes_ptr)[i], triangles.data()) != kRraOk)
+                if (RraBlasGetNodeTriangles(bvh_index, (uint32_t)(*traverse_nodes_ptr)[i], triangles.data()) != kRraOk)
                 {
                     continue;
                 }
@@ -173,11 +173,11 @@ namespace rra
                         }
                         if (hit_distance > 0.0 && (scene_model_closest_hit.distance < 0.0f || hit_distance < scene_model_closest_hit.distance) && hit_in_bounds)
                         {
-                            scene_model_closest_hit.distance       = hit_distance;
-                            scene_model_closest_hit.blas_index     = bvh_index;
-                            scene_model_closest_hit.instance_node  = instance_node;
-                            scene_model_closest_hit.triangle_node  = (*traverse_nodes_ptr)[i];
-                            scene_model_closest_hit.triangle_index = UINT32_MAX;
+                            scene_model_closest_hit.distance            = hit_distance;
+                            scene_model_closest_hit.blas_index          = bvh_index;
+                            scene_model_closest_hit.instance_node       = instance_node;
+                            scene_model_closest_hit.triangle_child_node = (*traverse_nodes_ptr)[i];
+                            scene_model_closest_hit.triangle_index      = UINT32_MAX;
                         }
                     }
                 }
@@ -188,4 +188,3 @@ namespace rra
         }
     }
 }  // namespace rra
-

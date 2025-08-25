@@ -103,4 +103,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_START_ABOUT_PANE_H_
-

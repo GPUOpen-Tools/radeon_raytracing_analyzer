@@ -99,4 +99,3 @@ void ColorPickerButton::paintEvent(QPaintEvent* event)
         painter.fillRect(r1, button_color_);
     }
 }
-

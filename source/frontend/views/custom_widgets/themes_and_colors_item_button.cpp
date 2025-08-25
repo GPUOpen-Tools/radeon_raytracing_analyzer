@@ -63,4 +63,3 @@ void ThemesAndColorsItemButton::paintEvent(QPaintEvent* event)
     painter.setPen(QPen(font_color_, 1));
     painter.drawText(r1, Qt::AlignHCenter | Qt::AlignVCenter, this->text());
 }
-

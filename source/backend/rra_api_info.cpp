@@ -21,4 +21,3 @@ bool RraApiInfoIsVulkan()
 {
     return data_set_.api_info.IsVulkan();
 }
-

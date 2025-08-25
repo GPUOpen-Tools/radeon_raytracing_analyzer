@@ -218,4 +218,3 @@ private:
 };
 
 #endif  // QTCOMMON_CUSTOM_WIDGETS_DOUBLE_SLIDER_WIDGET_H_
-

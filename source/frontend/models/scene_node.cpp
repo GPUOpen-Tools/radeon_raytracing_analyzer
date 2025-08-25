@@ -257,6 +257,12 @@ namespace rra
         root_node->node_id_   = root_id;
         root_node->depth_     = 0;
         root_node->bvh_index_ = blas_index;
+        root_node->is_tlas_   = false;
+
+        if (RraBlasIsEmpty(blas_index))
+        {
+            return root_node;
+        }
 
         std::vector<SceneNode*> traversal_stack;
         traversal_stack.reserve(64);  // It is rare for the traversal stack to get deeper than ~28 so this should be sufficient memory to reserve.
@@ -273,7 +279,16 @@ namespace rra
             error_code = RraBlasGetBoundingVolumeExtents(blas_index, node->node_id_, &node->bounding_volume_);
             RRA_ASSERT(error_code == kRraOk);
 
-            if (RraBlasIsTriangleNode(blas_index, node->node_id_))
+            bool is_triangle_node{};
+            bool is_box_node{};
+            bool has_children{};
+            {
+                is_triangle_node = RraBlasIsTriangleNode(blas_index, node->node_id_);
+                is_box_node      = RraBvhIsBoxNode(node->node_id_);
+                has_children     = is_box_node;
+            }
+
+            if (is_triangle_node)
             {
                 // Get the triangle nodes. If this is not a triangle the triangle count is 0.
                 uint32_t triangle_count;
@@ -288,7 +303,7 @@ namespace rra
                 if (triangle_count > 0)
                 {
                     // Populate a vector of triangle vertex data.
-                    std::array<TriangleVertices, 8> triangles{};
+                    std::array<TriangleVertices, MAX_CHILD_NODES> triangles{};
                     error_code = RraBlasGetNodeTriangles(blas_index, node->node_id_, triangles.data());
                     RRA_ASSERT(error_code == kRraOk);
 
@@ -358,10 +373,14 @@ namespace rra
                 }
             }
 
-            if (!RraBvhIsBoxNode(node->node_id_))
+            if (!is_box_node)
             {
                 node->obb_index_ = kObbDisabled;
                 node->rotation_  = glm::mat3(1.0f);
+            }
+
+            if (!has_children)
+            {
                 continue;
             }
 
@@ -369,7 +388,7 @@ namespace rra
             error_code = RraBlasGetChildNodeCount(blas_index, node->node_id_, &child_node_count);
             RRA_ASSERT(error_code == kRraOk);
 
-            std::array<uint32_t, 8> child_nodes{};
+            std::array<uint32_t, MAX_CHILD_NODES> child_nodes{};
             error_code = RraBlasGetChildNodes(blas_index, node->node_id_, child_nodes.data());
             RRA_ASSERT(error_code == kRraOk);
 
@@ -386,13 +405,14 @@ namespace rra
                 current_child_buffer_offset += sizeof(SceneNode);
                 new_node->node_id_   = child_nodes[i];
                 new_node->bvh_index_ = blas_index;
+                new_node->is_tlas_   = false;
                 new_node->depth_     = node->depth_ + 1;
                 new_node->parent_    = node;
                 node->child_nodes_.PushBack(new_node);
                 traversal_stack.push_back(new_node);
             }
 
-            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() >= rta::RayTracingIpLevel::RtIp3_0)
+            if (is_box_node && (rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() >= rta::RayTracingIpLevel::RtIp3_0)
             {
                 error_code = RraBlasGetNodeObbIndex(blas_index, node->node_id_, &node->obb_index_);
                 RRA_ASSERT(error_code == kRraOk);
@@ -456,12 +476,17 @@ namespace rra
         node->node_id_   = node_id;
         node->depth_     = depth;
         node->bvh_index_ = tlas_index;
+        node->is_tlas_   = true;
 
-        RraErrorCode error_code = kRraOk;
-        error_code              = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &node->bounding_volume_);
+        RraErrorCode error_code = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &node->bounding_volume_);
         RRA_ASSERT(error_code == kRraOk);
 
-        if (RraBvhIsInstanceNode(node_id))
+        bool is_instance_node{};
+        {
+            is_instance_node = RraBvhIsInstanceNode(node_id);
+        }
+
+        if (is_instance_node)
         {
             renderer::Instance instance = {};
             instance.selected           = false;
@@ -843,10 +868,10 @@ namespace rra
         return &instance_.value();
     }
 
-    StackVector<SceneTriangle, 8> SceneNode::GetTriangles() const
+    StackVector<SceneTriangle, MAX_CHILD_NODES> SceneNode::GetTriangles() const
     {
         RRA_ASSERT(vertex_count_ % 3 == 0);
-        StackVector<SceneTriangle, 8> triangles;
+        StackVector<SceneTriangle, MAX_CHILD_NODES> triangles;
         for (size_t i = 0; i < vertex_count_; i += 3)
         {
             SceneTriangle triangle;
@@ -895,23 +920,36 @@ namespace rra
 
                 bvi.metadata = glm::vec4(-1.0f, depth_, 0.0f, 1.0f);
 
-                if (RraBvhIsBox16Node(node_id_))
+                bool is_box_16_node{};
+                bool is_box_32_node{};
+                bool is_instance_node{};
+                bool is_procedural_node{};
+                bool is_triangle_node{};
+                {
+                    is_box_16_node     = RraBvhIsBox16Node(node_id_);
+                    is_box_32_node     = RraBvhIsBox32Node(node_id_);
+                    is_instance_node   = RraBvhIsInstanceNode(node_id_);
+                    is_procedural_node = RraBvhIsProceduralNode(node_id_);
+                    is_triangle_node   = RraBlasIsTriangleNode(bvh_index_, node_id_);
+                }
+
+                if (is_box_16_node)
                 {
                     bvi.metadata.x = 1.0f;
                 }
-                else if (RraBvhIsBox32Node(node_id_))
+                else if (is_box_32_node)
                 {
                     bvi.metadata.x = 2.0f;
                 }
-                else if (RraBvhIsInstanceNode(node_id_))
+                else if (is_instance_node)
                 {
                     bvi.metadata.x = 3.0f;
                 }
-                else if (RraBvhIsProceduralNode(node_id_))
+                else if (is_procedural_node)
                 {
                     bvi.metadata.x = 4.0f;
                 }
-                else if (RraBlasIsTriangleNode(bvh_index_, node_id_))
+                else if (is_triangle_node)
                 {
                     bvi.metadata.x = 5.0f;
                 }
@@ -951,7 +989,7 @@ namespace rra
         return parent_;
     }
 
-    void SceneNode::AddToTraversalTree(bool populate_vertex_buffer, renderer::TraversalTree& traversal_tree)
+    void SceneNode::AddToTraversalTree(bool populate_vertex_buffer, bool is_tlas, renderer::TraversalTree& traversal_tree)
     {
         std::vector<std::pair<SceneNode*, uint32_t> > traversal_stack{};  // Pairs of scene node and its index into traversal_tree.volumes.
         traversal_stack.reserve(64);  // It is rare for the traversal stack to get deeper than ~28 so this should be sufficient memory to reserve.
@@ -971,12 +1009,22 @@ namespace rra
             SceneNode* node{pair.first};
             uint32_t   current_index{pair.second};
 
+            bool is_leaf_node{};
+            bool is_box_node{};
+            {
+                is_leaf_node = is_tlas ? RraBvhIsInstanceNode(node->node_id_) : RraBlasIsTriangleNode(node->bvh_index_, node->node_id_);
+                is_box_node  = RraBvhIsBoxNode(node->node_id_);
+            }
+
             renderer::TraversalVolume& traversal_volume = traversal_tree.volumes[current_index];
             traversal_volume.min       = glm::vec4(node->bounding_volume_.min_x, node->bounding_volume_.min_y, node->bounding_volume_.min_z, 1.0f);
             traversal_volume.max       = glm::vec4(node->bounding_volume_.max_x, node->bounding_volume_.max_y, node->bounding_volume_.max_z, 1.0f);
             traversal_volume.obb_index = node->obb_index_;
 
-            if (RraBvhIsInstanceNode(node->node_id_))
+            bool is_instance_node = is_tlas && is_leaf_node;
+            bool is_triangle_node = !is_tlas && is_leaf_node;
+
+            if (is_instance_node)
             {
                 traversal_volume.volume_type = renderer::TraversalVolumeType::kInstance;
                 traversal_volume.leaf_start  = static_cast<uint32_t>(traversal_tree.instances.size());
@@ -996,7 +1044,7 @@ namespace rra
 
                 traversal_volume.leaf_end = static_cast<uint32_t>(traversal_tree.instances.size());
             }
-            else if (RraBlasIsTriangleNode(bvh_index_, node->node_id_))
+            else if (is_triangle_node)
             {
                 traversal_volume.volume_type = renderer::TraversalVolumeType::kTriangle;
                 if (populate_vertex_buffer)
@@ -1012,7 +1060,7 @@ namespace rra
                     traversal_volume.leaf_end = vertices_size;
                 }
             }
-            else if (RraBvhIsBoxNode(node->node_id_))
+            else if (is_box_node)
             {
                 traversal_volume.volume_type = renderer::TraversalVolumeType::kBox;
 
@@ -1078,4 +1126,3 @@ namespace rra
     }
 
 }  // namespace rra
-

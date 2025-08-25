@@ -168,4 +168,3 @@ struct AccelStructHeader
 };
 
 #endif  // RRA_BACKEND_RTIP3_TYPES_H_
-

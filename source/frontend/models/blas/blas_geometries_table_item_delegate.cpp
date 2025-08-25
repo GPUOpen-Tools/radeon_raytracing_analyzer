@@ -36,4 +36,3 @@ bool GeometriesTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
-

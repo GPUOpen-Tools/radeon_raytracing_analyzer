@@ -50,4 +50,3 @@ public:
 };
 
 #endif  // RRA_MODELS_TRIANGLES_TABLE_ITEM_DELEGATE_H_
-

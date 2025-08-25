@@ -132,4 +132,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_NAVIGATION_MANAGER_H_
-

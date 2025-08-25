@@ -366,4 +366,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_SIDE_PANELS_VIEW_MODEL_H_
-

@@ -784,4 +784,3 @@ void AccelerationStructureViewerPane::FocusIn()
         }
     }
 }
-

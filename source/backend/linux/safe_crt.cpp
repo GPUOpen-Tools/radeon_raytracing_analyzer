@@ -154,4 +154,3 @@ errno_t strcat_s(char* destination, size_t size, const char* source)
 }
 
 #endif  // !_WIN32
-

@@ -84,4 +84,3 @@ void RraIconButton::leaveEvent(QEvent* event)
     QPushButton::leaveEvent(event);
     setAttribute(Qt::WA_UnderMouse, false);
 }
-

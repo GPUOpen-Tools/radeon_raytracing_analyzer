@@ -336,8 +336,6 @@ struct TrianglePairDesc : HwTrianglePairDesc
 };
 
 //=====================================================================================================================
-// TODO - combine TryInitTriStructHeader & Encode
-//        Simplify "UnpackedPrimStructHeader" to reduce from 16DW
 struct UnpackedPrimStructHeader
 {
     float    prefixSourceX;
@@ -1070,4 +1068,3 @@ static uint32_t GetPairIndex(uint32_t nodePointer)
 #endif
 
 #endif  // _GFX12_PRIMITIVE_NODE_H
-

@@ -90,4 +90,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_UTIL_WIDGET_UTIL_H_
-

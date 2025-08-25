@@ -25,22 +25,20 @@ rta::EncodedTopLevelBvh* RraTlasGetTlasFromTlasIndex(uint64_t tlas_index);
 /// @brief Get the surface area for a given TLAS node.
 ///
 /// @param [in]  tlas             The top level acceleration structure containing the node.
-/// @param [in]  node_ptr         The node of interest.
+/// @param [in]  node_id          The node of interest.
 /// @param [out] out_surface_area The calculated surface area.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetSurfaceAreaImpl(const rta::EncodedRtIp11TopLevelBvh* tlas, const dxr::amd::NodePointer* node_ptr, float* out_surface_area);
+RraErrorCode RraTlasGetSurfaceAreaImpl(const rta::EncodedRtIp11TopLevelBvh* tlas, uint32_t node_id, float* out_surface_area);
 
 /// @brief Get the BLAS associated with a given instance node.
 ///
 /// @param [in]  tlas             The top level acceleration structure containing the node.
-/// @param [in]  node_ptr         The instance node of interest.
+/// @param [in]  node_id          The instance node of interest.
 /// @param [out] out_blas         The BLAS associated with the instance node.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetBlasFromInstanceNode(const rta::EncodedRtIp11TopLevelBvh*     tlas,
-                                            const dxr::amd::NodePointer*             node_ptr,
-                                            const rta::EncodedRtIp11BottomLevelBvh** out_blas);
+RraErrorCode RraTlasGetBlasFromInstanceNode(const rta::EncodedRtIp11TopLevelBvh* tlas, uint32_t node_id, const rta::EncodedRtIp11BottomLevelBvh** out_blas);
 
 /// @brief Get the transformed surface area for an instance node.
 ///
@@ -48,15 +46,14 @@ RraErrorCode RraTlasGetBlasFromInstanceNode(const rta::EncodedRtIp11TopLevelBvh*
 /// the transform for the given instance node.
 ///
 /// @param [in]  tlas             The top level acceleration structure containing the node.
-/// @param [in]  node_ptr         The node of interest.
+/// @param [in]  node_id          The node of interest.
 /// @param [in]  volume_bvh       The BLAS associated with the instance node, whose bounding volume is to be transformed.
 /// @param [out] out_surface_area The calculated surface area.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetNodeTransformedSurfaceArea(const rta::EncodedRtIp11TopLevelBvh* tlas,
-                                                  const dxr::amd::NodePointer*         node_ptr,
+                                                  uint32_t                             node_id,
                                                   const rta::IBvh*                     volume_bvh,
                                                   float*                               out_surface_area);
 
 #endif  // RRA_BACKEND_RRA_TLAS_IMPL_H_
-

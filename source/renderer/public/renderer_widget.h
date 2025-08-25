@@ -207,4 +207,3 @@ private:
 };
 
 #endif  // RRA_RENDERER_RENDERER_WIDGET_H_
-

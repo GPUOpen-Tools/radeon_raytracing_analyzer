@@ -57,4 +57,3 @@ void TlasPropertiesPane::SetTlasIndex(uint64_t tlas_index)
     }
     model_->Update(tlas_index);
 }
-

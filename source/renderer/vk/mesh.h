@@ -251,4 +251,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_MESH_H_
-

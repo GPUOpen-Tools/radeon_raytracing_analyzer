@@ -293,7 +293,7 @@ namespace rra
 
         for (uint64_t i = 0; i < tlas_count; i++)
         {
-            uint64_t address;
+            uint64_t     address;
             RraErrorCode error_code = RraTlasGetBaseAddress(i, &address);
             RRA_ASSERT(error_code == kRraOk);
             tlas_address_to_index_[address] = i;
@@ -777,4 +777,3 @@ namespace rra
     }
 
 }  // namespace rra
-

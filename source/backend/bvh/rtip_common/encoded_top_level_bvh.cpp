@@ -70,7 +70,7 @@ namespace rta
         return 0;
     }
 
-    dxr::amd::NodePointer EncodedTopLevelBvh::GetInstanceNode(uint64_t blas_index, uint64_t instance_index) const
+    uint32_t EncodedTopLevelBvh::GetInstanceNode(uint64_t blas_index, uint64_t instance_index) const
     {
         size_t num_instances = 0;
         auto   iter          = instance_list_.find(blas_index);
@@ -101,21 +101,20 @@ namespace rta
         return procedural_count;
     }
 
-    float EncodedTopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const
+    float EncodedTopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const
     {
-        const int32_t index = GetInstanceIndex(&node_ptr);
+        const int32_t index = GetInstanceIndex(node_id);
         assert(index != -1);
         assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
         return instance_surface_area_heuristic_[index];
     }
 
-    void EncodedTopLevelBvh::SetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic)
+    void EncodedTopLevelBvh::SetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, float surface_area_heuristic)
     {
-        const int32_t index = GetInstanceIndex(&node_ptr);
+        const int32_t index = GetInstanceIndex(node_id);
         assert(index != -1);
         assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
         instance_surface_area_heuristic_[index] = surface_area_heuristic;
     }
 
 }  // namespace rta
-

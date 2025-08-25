@@ -10,8 +10,10 @@
 #include <deque>
 
 #include "public/rra_assert.h"
+#include "public/rra_blas.h"
 #include "public/rra_bvh.h"
 #include "public/rra_rtip_info.h"
+#include "public/rra_tlas.h"
 
 #include "models/acceleration_structure_tree_view_item.h"
 
@@ -33,7 +35,7 @@ namespace rra
         delete[] item_buffer_;
     }
 
-    bool AccelerationStructureTreeViewModel::InitializeModel(uint64_t node_count, uint32_t index, GetChildNodeFunction function)
+    bool AccelerationStructureTreeViewModel::InitializeModel(uint64_t node_count, uint32_t index, GetChildNodeFunction get_child)
     {
         beginResetModel();
 
@@ -79,19 +81,15 @@ namespace rra
 
             node_data_to_item_[node_data] = item;
 
-            uint32_t max_child_count{4};
-            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
-            {
-                max_child_count = 8;
-            }
+            uint32_t max_child_count = RraBvhGetMaxChildCount();
             // For each item on the stack, add the children if valid.
             // Sort node types. Loop once for box (interior) nodes, then once for leaf nodes.
             for (uint32_t child_index = 0; child_index < max_child_count; child_index++)
             {
                 uint32_t child_node = UINT32_MAX;
-                if (function(index, node_data, child_index, &child_node) == kRraOk)
+                if (get_child(index, node_data, child_index, &child_node) == kRraOk)
                 {
-                    if (RraBvhIsBoxNode(child_node))
+                    if (IsInternalNode(child_node, index))
                     {
                         traversal_stack.push_back(std::make_pair(child_node, item));
                     }
@@ -101,19 +99,24 @@ namespace rra
             for (uint32_t child_index = 0; child_index < max_child_count; child_index++)
             {
                 uint32_t child_node = UINT32_MAX;
-                if (function(index, node_data, child_index, &child_node) == kRraOk)
+                if (get_child(index, node_data, child_index, &child_node) == kRraOk)
                 {
-                    if (!RraBvhIsBoxNode(child_node))
+                    if (!IsInternalNode(child_node, index))
                     {
                         traversal_stack.push_back(std::make_pair(child_node, item));
                     }
                 }
             }
         }
-
         endResetModel();
 
         return true;
+    }
+
+    bool AccelerationStructureTreeViewModel::IsInternalNode(uint32_t node_id, uint32_t bvh_index)
+    {
+        RRA_UNUSED(bvh_index);
+        return RraBvhIsBoxNode(node_id);
     }
 
     AccelerationStructureTreeViewItem* AccelerationStructureTreeViewModel::AllocateMemory(uint32_t node_data, AccelerationStructureTreeViewItem* parent)
@@ -316,12 +319,12 @@ namespace rra
         return result;
     }
 
-    QModelIndex AccelerationStructureTreeViewModel::GetModelIndexForNode(uint32_t node_id)
+    QModelIndex AccelerationStructureTreeViewModel::GetModelIndexForNode(uint32_t node_child_id)
     {
         QModelIndex result;
 
         // Search for the node id within the value to item map.
-        auto item_iter = node_data_to_item_.find(node_id);
+        auto item_iter = node_data_to_item_.find(node_child_id);
         if (item_iter != node_data_to_item_.end())
         {
             AccelerationStructureTreeViewItem* item = item_iter->second;
@@ -336,12 +339,12 @@ namespace rra
         return result;
     }
 
-    QModelIndex AccelerationStructureTreeViewModel::GetModelIndexForNodeAndTriangle(uint32_t node_id, uint32_t triangle_index)
+    QModelIndex AccelerationStructureTreeViewModel::GetModelIndexForNodeAndTriangle(uint32_t node_child_id, uint32_t triangle_index)
     {
         QModelIndex result;
 
         // Search for the node id within the value to item map.
-        auto item_iter = node_data_to_item_.find(node_id);
+        auto item_iter = node_data_to_item_.find(node_child_id);
         if (item_iter != node_data_to_item_.end())
         {
             AccelerationStructureTreeViewItem* item = item_iter->second;
@@ -384,4 +387,3 @@ namespace rra
     }
 
 }  // namespace rra
-

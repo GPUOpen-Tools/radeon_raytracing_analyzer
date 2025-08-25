@@ -212,4 +212,3 @@ void HistogramWidget::resizeEvent(QResizeEvent* event)
 
     QGraphicsView::resizeEvent(event);
 }
-

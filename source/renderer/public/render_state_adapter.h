@@ -238,4 +238,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_RENDER_STATE_ADAPTER_H_
-

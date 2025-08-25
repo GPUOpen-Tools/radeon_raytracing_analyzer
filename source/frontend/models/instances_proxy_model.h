@@ -66,4 +66,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_INSTANCES_PROXY_MODEL_H_
-

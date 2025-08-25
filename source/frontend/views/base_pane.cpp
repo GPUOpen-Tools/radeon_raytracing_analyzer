@@ -27,4 +27,3 @@ void BasePane::OnTraceOpen()
 void BasePane::Reset()
 {
 }
-

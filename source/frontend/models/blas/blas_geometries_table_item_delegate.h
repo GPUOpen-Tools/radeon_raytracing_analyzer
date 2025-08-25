@@ -42,4 +42,3 @@ public:
 };
 
 #endif  // RRA_MODELS_GEOMETRIES_TABLE_ITEM_DELEGATE_H_
-

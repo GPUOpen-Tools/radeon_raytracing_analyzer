@@ -195,4 +195,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_HISTORY_MODEL_H_
-

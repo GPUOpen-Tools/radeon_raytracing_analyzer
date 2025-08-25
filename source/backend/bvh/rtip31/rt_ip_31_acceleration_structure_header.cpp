@@ -27,4 +27,3 @@ namespace rta
         build_info_->LoadFromBuffer(sizeof(header_.info), &header_.info);
     }
 }  // namespace rta
-

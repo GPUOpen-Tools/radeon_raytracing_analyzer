@@ -80,18 +80,18 @@ namespace rra
 
         /// @brief Get the tree view model index for the given node id.
         ///
-        /// @param [in] node_id The BVH node id to get the tree model index of.
+        /// @param [in] node_child_id The BVH node ID to get the tree model index of.
         ///
         /// @returns The tree view model index associated with the given node id.
-        QModelIndex GetModelIndexForNode(uint32_t node_id);
+        QModelIndex GetModelIndexForNode(uint32_t node_child_id);
 
         /// @brief Get the tree view model index for the given node id and triangle index if triangle index is applicable.
         ///
-        /// @param [in] node_id The BVH node id to get the tree model index of.
+        /// @param [in] node_child_id  The BVH node ID to get the tree model index of.
         /// @param [in] triangle_index The possible triangle index under the node.
         ///
         /// @returns The tree view model index associated with the given node id and triangle index.
-        QModelIndex GetModelIndexForNodeAndTriangle(uint32_t node_id, uint32_t triangle_index);
+        QModelIndex GetModelIndexForNodeAndTriangle(uint32_t node_child_id, uint32_t triangle_index);
 
         /// @brief Reset any values in the model to their default state.
         void ResetModelValues();
@@ -102,6 +102,8 @@ namespace rra
         std::vector<uint32_t> GetAllNodeIds() const;
 
     private:
+        bool IsInternalNode(uint32_t node_id, uint32_t bvh_index);
+
         /// @brief Claim a chunk of pre-allocated memory for a treeview item and initialize the item.
         ///
         /// @param [in] node_data The data for the item.
@@ -128,4 +130,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_MODEL_H_
-

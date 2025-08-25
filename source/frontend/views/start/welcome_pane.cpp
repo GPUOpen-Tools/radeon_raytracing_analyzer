@@ -290,4 +290,3 @@ void WelcomePane::NotifyOfNewVersion(UpdateCheck::ThreadController* thread, cons
         connect(ui_->notify_update_available_button_, &QPushButton::clicked, results_dialog, &QDialog::show);
     }
 }
-

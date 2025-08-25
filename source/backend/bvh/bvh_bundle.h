@@ -162,4 +162,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_BVH_BUNDLE_H_
-

@@ -109,4 +109,3 @@ bool RraSystemInfoAvailable()
 {
     return data_set_.system_info->version.major > 0;
 }
-

@@ -30,4 +30,3 @@ bool RraRtipInfoGetOBBSupported();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_RTIP_INFO_H_
-

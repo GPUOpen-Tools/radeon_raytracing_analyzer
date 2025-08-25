@@ -39,10 +39,10 @@ namespace rta
 
         /// @brief Get the index of an instance node from an instance node pointer.
         ///
-        /// @param [in] node_ptr  The instance node pointer.
+        /// @param [in] node_id  The instance node pointer.
         ///
         /// @return The instance index, or -1 if the index is invalid.
-        int32_t GetInstanceIndex(const dxr::amd::NodePointer* node_ptr) const;
+        int32_t GetInstanceIndex(uint32_t node_id) const override;
 
         /// @brief Does this BVH have references.
         ///
@@ -77,6 +77,8 @@ namespace rta
         bool PostLoad() override;
 
         /// @brief Convert the instance list from using BLAS addresses to using BLAS indices.
+        ///
+        /// @param [in] blas_map A map of (blas_address, blas_index) used to convert instance list.
         void ConvertBlasAddressesToIndices(const std::unordered_map<GpuVirtualAddress, uint64_t>& blas_map);
 
         /// @brief Get the number of instances in this TLAS.
@@ -124,16 +126,16 @@ namespace rta
 
         /// @brief Get the surface area heuristic for a given leaf node.
         ///
-        /// @param [in] node_ptr The leaf node whose SAH is to be found.
+        /// @param [in] node_id The leaf node whose SAH is to be found.
         ///
         /// @return The surface area heuristic.
-        float GetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr) const override;
+        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const override;
 
         /// @brief Set the surface area heuristic for a given leaf node.
         ///
-        /// @param [in] node_ptr               The interior node whose SAH is to be set.
+        /// @param [in] node_id                The interior node whose SAH is to be set.
         /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
-        void SetLeafNodeSurfaceAreaHeuristic(const dxr::amd::NodePointer node_ptr, float surface_area_heuristic);
+        void SetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, float surface_area_heuristic);
 
         /// @brief Build the list for the number of instances of each BLAS.
         ///
@@ -160,11 +162,11 @@ namespace rta
 
         /// @brief Get the parent node of the node passed in.
         ///
-        /// @param [in] node_ptr The node whose parent is to be found.
+        /// @param [in] node_id The node whose parent is to be found.
         ///
         /// @return The parent node. If the node passed in is the root node, the
         /// parent node will be an invalid node.
-        virtual dxr::amd::NodePointer GetParentNode(const dxr::amd::NodePointer* node_ptr) const;
+        virtual uint32_t GetParentNode(uint32_t node_id) const override;
 
     private:
         /// @brief Get the size of an instance node.
@@ -191,4 +193,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_RT_IP_31_TOP_LEVEL_BVH_H_
-

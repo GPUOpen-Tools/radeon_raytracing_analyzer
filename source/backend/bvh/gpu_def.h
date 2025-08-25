@@ -13,7 +13,7 @@
 
 // RawAccelStruct currently supported version numbers.
 #define GPURT_ACCEL_STRUCT_MAJOR_VERSION 16
-#define GPURT_ACCEL_STRUCT_MINOR_VERSION 3
+#define GPURT_ACCEL_STRUCT_MINOR_VERSION 5
 #define GPURT_ACCEL_STRUCT_VERSION ((GPURT_ACCEL_STRUCT_MAJOR_VERSION << 16) | GPURT_ACCEL_STRUCT_MINOR_VERSION)
 
 namespace rta
@@ -103,4 +103,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_GPU_DEF_H_
-

@@ -71,4 +71,3 @@ private:
 };
 
 #endif  // RRA_MODELS_TABLE_ITEM_DELEGATE_H_
-

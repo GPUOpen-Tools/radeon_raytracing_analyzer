@@ -133,4 +133,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_DISPATCH_PANE_H_
-

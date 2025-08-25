@@ -85,7 +85,10 @@
          <number>0</number>
         </property>
         <property name="rightMargin">
-         <number>5</number>
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>10</number>
         </property>
         <item row="0" column="0">
          <widget class="ScaledLabel" name="label_primitive_index_">
@@ -130,22 +133,9 @@
    <header>qt_common/custom_widgets/scaled_label.h</header>
   </customwidget>
   <customwidget>
-   <class>ScaledPushButton</class>
-   <extends>QLabel</extends>
-   <header>qt_common/custom_widgets/scaled_push_button.h</header>
-  </customwidget>
-  <customwidget>
    <class>ScaledTableView</class>
    <extends>QTreeView</extends>
    <header>qt_common/custom_widgets/scaled_table_view.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ReadOnlyCheckBox</class>
-   <extends>QCheckbox</extends>
-   <header>views/custom_widgets/read_only_checkbox.h</header>
-  </customwidget>
-  <customwidget>
-   <class>RayHistoryViewerWidget</class>
   </customwidget>
  </customwidgets>
  <resources>
@@ -153,4 +143,5 @@
  </resources>
  <connections/>
 </ui>
+
 

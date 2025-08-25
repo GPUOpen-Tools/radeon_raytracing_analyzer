@@ -336,4 +336,3 @@ bool RendererWidget::nativeEvent(const QByteArray& event_type, void* message, lo
 }
 
 #endif
-

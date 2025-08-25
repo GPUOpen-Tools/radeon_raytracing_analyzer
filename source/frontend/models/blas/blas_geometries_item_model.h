@@ -87,4 +87,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_GEOMETRIES_ITEM_MODEL_H_
-

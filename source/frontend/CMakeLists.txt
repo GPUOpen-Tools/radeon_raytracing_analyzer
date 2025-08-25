@@ -374,7 +374,6 @@ ENDIF ()
 
 if (LINUX)
     # Ensure that wayland plugin integration is enabled for deployment to work
-    # TODO(mguerret): This could eventually be removed if Qt improves their deployment script logic
     qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QWaylandIntegrationPlugin)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt::WaylandClient)

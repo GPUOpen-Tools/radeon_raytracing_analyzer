@@ -70,4 +70,3 @@ bool RraAssertReport(const char* file, int32_t line, const char* condition, cons
 
     return true;
 }
-

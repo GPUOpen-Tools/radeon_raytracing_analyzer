@@ -200,4 +200,3 @@ void TlasInstancesPane::ScrollToSelectedInstance()
     }
     ui_->instances_table_->scrollToTop();
 }
-

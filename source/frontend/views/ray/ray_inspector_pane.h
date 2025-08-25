@@ -185,4 +185,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_RAY_RAY_INSPECTOR_PANE_H_
-

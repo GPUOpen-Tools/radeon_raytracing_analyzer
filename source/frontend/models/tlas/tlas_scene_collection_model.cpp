@@ -16,6 +16,7 @@
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_error.h"
+#include "public/rra_rtip_info.h"
 #include "public/rra_tlas.h"
 
 namespace rra
@@ -82,10 +83,10 @@ namespace rra
         return tlas_scene;
     }
 
-    bool TlasSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_id) const
+    bool TlasSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const
     {
         RRA_UNUSED(blas_index);
-        RRA_UNUSED(node_id);
+        RRA_UNUSED(node_child_id);
         return false;
     }
 
@@ -121,7 +122,7 @@ namespace rra
             transform[3][3] = 1.0f;
 
             // Get the blas index for this transform;
-            uint64_t blas_index;
+            uint64_t     blas_index;
             RraErrorCode error_code = RraTlasGetBlasIndexFromInstanceNode(bvh_index, hit_instances[i], &blas_index);
             RRA_ASSERT(error_code == kRraOk);
 
@@ -131,7 +132,7 @@ namespace rra
 
             // Trace
             CastClosestHitRayOnBlas(blas_index, hit_instances[i], transformed_origin, transformed_direction, scene_model_closest_hit);
-            scene_model_closest_hit.triangle_node = UINT32_MAX;
+            scene_model_closest_hit.triangle_child_node = UINT32_MAX;
         }
 
         return kRraOk;
@@ -148,11 +149,10 @@ namespace rra
 
     bool TlasSceneCollectionModel::GetFusedInstancesEnabled(uint64_t bvh_index) const
     {
-        bool is_enabled = false;
+        bool         is_enabled = false;
         RraErrorCode error_code = RraTlasGetFusedInstancesEnabled(bvh_index, &is_enabled);
         RRA_ASSERT(error_code == kRraOk);
         return is_enabled;
     }
 
 }  // namespace rra
-

@@ -207,4 +207,3 @@ namespace rra
         return root_->ColumnCount();
     }
 }  // namespace rra
-

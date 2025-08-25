@@ -60,4 +60,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_RAY_LIST_PROXY_MODEL_H_
-

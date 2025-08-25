@@ -144,4 +144,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_OVERVIEW_SUMMARY_MODEL_H_
-

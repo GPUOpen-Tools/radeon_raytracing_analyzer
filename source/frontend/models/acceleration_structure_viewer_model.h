@@ -190,10 +190,10 @@ namespace rra
 
         /// @brief Get the tree model index associated with the node.
         ///
-        /// @param [in] node_id The acceleration structure node id.
+        /// @param [in] node_id The acceleration structure node ID.
         ///
         /// @returns The tree model index for the given node.
-        QModelIndex GetModelIndexForNode(uint32_t node_id) const;
+        QModelIndex GetModelIndexForNode(uint32_t node_child_id) const;
 
         /// @brief Get the tree model index associated with the node and a triangle if applicable.
         ///
@@ -356,4 +356,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_VIEWER_MODEL_H_
-

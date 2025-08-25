@@ -113,4 +113,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_BLAS_BLAS_VIEWER_PANE_H_
-

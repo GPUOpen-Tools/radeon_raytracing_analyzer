@@ -228,4 +228,3 @@ void AboutPane::CheckForUpdatesCancelled(UpdateCheck::ThreadController* thread)
         }
     }
 }
-

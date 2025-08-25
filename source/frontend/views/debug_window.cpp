@@ -132,4 +132,3 @@ void DebugWindow::DbgMsg(const char* format, ...)
         va_end(args);
     }
 }
-

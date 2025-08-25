@@ -72,4 +72,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_USER_MARKER_HISTORY_H_
-

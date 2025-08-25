@@ -82,4 +82,3 @@ private:
 };
 
 #endif  // QTCOMMON_CUSTOM_WIDGETS_COMPLETION_BAR_WIDGET_H_
-

@@ -188,4 +188,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VULKAN_RENDERER_VULKAN_H_
-

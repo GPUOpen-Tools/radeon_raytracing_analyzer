@@ -93,7 +93,13 @@ namespace rra
                 for (uint32_t child_index = 0; child_index < child_node_count; child_index++)
                 {
                     uint32_t child_node = child_nodes[child_index];
-                    if (RraBvhIsBoxNode(child_node))
+
+                    bool is_internal_node = false;
+                    {
+                        is_internal_node = RraBvhIsBoxNode(child_node);
+                    }
+
+                    if (is_internal_node)
                     {
                         // Add box nodes to the list of nodes to process.
                         traversal_stack.push_back(child_node);
@@ -237,4 +243,3 @@ namespace rra
     }
 
 }  // namespace rra
-

@@ -62,4 +62,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_START_RECENT_TRACES_PANE_H_
-

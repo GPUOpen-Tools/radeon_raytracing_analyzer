@@ -270,4 +270,3 @@ inline BoundingBox ChildInfo::DecodeBounds(glm::vec3 origin, glm::uvec3 exponent
 #endif
 
 #endif  // RRA_BACKEND_CHILD_INFO_H_
-

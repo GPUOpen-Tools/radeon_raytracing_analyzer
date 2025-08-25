@@ -64,4 +64,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TLAS_TLAS_PROPERTIES_MODEL_H_
-

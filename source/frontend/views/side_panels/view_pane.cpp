@@ -917,4 +917,3 @@ void ViewPane::OnColorThemeUpdated()
 
     ui_->lock_camera_button_->SetNormalIcon(QIcon(model_->GetCameraLock() ? closed_icon : open_icon));
 }
-

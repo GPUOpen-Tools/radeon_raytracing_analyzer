@@ -87,4 +87,3 @@ bool RraSystemInfoAvailable();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_SYSTEM_INFO_H_
-

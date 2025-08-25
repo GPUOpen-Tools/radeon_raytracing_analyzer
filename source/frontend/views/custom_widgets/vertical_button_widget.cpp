@@ -50,4 +50,3 @@ QSize VerticalButtonWidget::sizeHint() const
     // Swap width and height.
     return QSize(size_hint.height(), size_hint.width());
 }
-

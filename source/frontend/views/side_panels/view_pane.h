@@ -232,7 +232,6 @@ private slots:
     void SetMovementSpeed(int value);
 
 private:
-
     /// @brief An even filter to catch and discard some UI events.
     ///
     /// @param obj The object that the event came from.
@@ -257,4 +256,3 @@ private:
 };
 
 #endif  // RRA_VIEWS_SIDE_PANELS_VIEW_PANE_H_
-

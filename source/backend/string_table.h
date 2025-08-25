@@ -92,4 +92,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_STRING_TABLE_H_
-

@@ -33,8 +33,15 @@ This can be installed once Python is installed, as follows:
 * pip install -U sphinx
 * pip install sphinx_rtd_theme
 
-Run the python pre_build.py script in the build folder from a command prompt. If no command line options are provided, the defaults will be used (Qt 6.7.0 and Visual Studio 2022)
-
+Run the python pre_build.py script from a command prompt. If no command line options are provided, the defaults will be used (Qt 6.7.0 and Visual Studio 2022)
+```bash
+python3 build\pre_build.py
+```
+or
+```bash
+cd build
+python3 pre_build.py
+```
 Some useful options of the pre_build.py script:
 * --vs <Visual Studio version>: generate the solution files for a specific Visual Studio version. For example, to target Visual Studio 2017, add --vs 2017 to the command.
 * --qt <path>: full path to the folder from where you would like the Qt binaries to be retrieved. By default, CMake would try to auto-detect Qt on the system.
@@ -73,8 +80,9 @@ XCB libraries are required for Qt v5 and above. These can be installed by using:
 sudo apt-get install libxcb-cursor-dev
 ```
 
-Run the python pre_build.py in the build folder.
+Run the python pre_build.py script.
 ```bash
+cd build
 python3 pre_build.py
 ```
 Or run the pre_build.py script with the -qt option to specify another version of Qt. For example:

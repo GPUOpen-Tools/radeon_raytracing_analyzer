@@ -146,8 +146,8 @@ namespace rra
     static const int kGotoBlasTrianglesPane  = Qt::Key_D;
     static const int kGotoBlasGeometriesPane = Qt::Key_F;
     static const int kGotoBlasPropertiesPane = Qt::Key_G;
-    static const int kGotoRayHistoryPane   = Qt::Key_H;
-    static const int kGotoRayInspectorPane = Qt::Key_J;
+    static const int kGotoRayHistoryPane     = Qt::Key_H;
+    static const int kGotoRayInspectorPane   = Qt::Key_J;
 
     static const int kGotoWelcomePane           = Qt::Key_X;
     static const int kGotoRecentTracesPane      = Qt::Key_C;
@@ -271,4 +271,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_PANE_MANAGER_H_
-

@@ -43,4 +43,3 @@ void DispatchLegend::paintEvent(QPaintEvent* event)
     painter.fillRect(x, y, w, w, color_);
     painter.end();
 }
-

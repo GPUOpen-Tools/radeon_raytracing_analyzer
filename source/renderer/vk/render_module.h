@@ -135,4 +135,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULE_H_
-

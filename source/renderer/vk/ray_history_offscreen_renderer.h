@@ -158,4 +158,3 @@ namespace rra
     }  // namespace renderer
 }  // namespace rra
 #endif  // RRA_RAY_HISTORY_OFFSCREEN_RENDERER_H_
-

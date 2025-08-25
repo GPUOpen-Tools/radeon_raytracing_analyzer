@@ -291,4 +291,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_CAMERA_H_
-

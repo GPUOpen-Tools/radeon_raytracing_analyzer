@@ -43,4 +43,3 @@ public:
 };
 
 #endif  // RRA_MODELS_TLAS_INSTANCE_FLAGS_TABLE_ITEM_DELEGATE_H_
-

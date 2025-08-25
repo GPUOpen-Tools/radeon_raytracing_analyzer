@@ -20,7 +20,7 @@ namespace rra
     // @brief A data structure to pass to delegates. Note: Q_DECLARE_METATYPE at the bottom of this file.
     struct AccelerationStructureTreeViewItemData
     {
-        uint32_t node_id = 0;
+        uint64_t node_child_id = 0;
         QString  display_name;
     };
 
@@ -110,4 +110,3 @@ namespace rra
 Q_DECLARE_METATYPE(rra::AccelerationStructureTreeViewItemData);  // Declare as QT meta type to be used by the delegate.
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_ITEM_H_
-

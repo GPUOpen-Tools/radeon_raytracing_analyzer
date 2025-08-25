@@ -104,4 +104,3 @@ namespace rta
         return RayTracingBinaryVersion(0, 0);
     }
 }  // namespace rta
-

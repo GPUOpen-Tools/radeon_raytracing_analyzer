@@ -1078,4 +1078,3 @@ namespace rra
         return GetBoolValue(kSettingGeneralDriverOverridesAllowNotifications);
     }
 }  // namespace rra
-

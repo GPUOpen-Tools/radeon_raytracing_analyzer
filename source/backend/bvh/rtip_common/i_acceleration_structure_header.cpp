@@ -173,4 +173,3 @@ namespace rta
     static_assert(sizeof(VulkanUniversalIdentifier) == 8, "VulkanUniversalIdentifier size does not match 8 Bytes.");
 
 }  // namespace rta
-

@@ -73,4 +73,3 @@ void BlasPropertiesPane::SetTlasIndex(uint64_t tlas_index)
         tlas_index_ = tlas_index;
     }
 }
-

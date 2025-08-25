@@ -29,4 +29,3 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_UTILS_H_
-

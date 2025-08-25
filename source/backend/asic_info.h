@@ -308,4 +308,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_ASIC_INFO_H_
-

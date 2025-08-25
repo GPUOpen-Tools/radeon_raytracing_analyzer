@@ -79,4 +79,3 @@ void DispatchLoadingBar::paintEvent(QPaintEvent* paint_event)
     painter.setPen(palette().windowText().color());
     painter.drawText(rect, Qt::AlignHCenter | Qt::AlignVCenter, text);
 }
-

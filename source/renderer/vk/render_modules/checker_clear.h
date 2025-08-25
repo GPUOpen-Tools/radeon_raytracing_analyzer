@@ -54,4 +54,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULES_CHECKER_CLEAR_H_
-

@@ -158,4 +158,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_TRACE_MANAGER_H_
-

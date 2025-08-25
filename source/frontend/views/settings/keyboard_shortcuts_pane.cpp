@@ -22,4 +22,3 @@ KeyboardShortcutsPane::~KeyboardShortcutsPane()
 {
     delete ui_;
 }
-

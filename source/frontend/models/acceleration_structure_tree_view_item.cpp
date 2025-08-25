@@ -76,7 +76,6 @@ namespace rra
     {
         RRA_ASSERT(column == 0);
         AccelerationStructureTreeViewItemData item_data;
-        item_data.node_id = node_data_;
 
         if (column == 0)
         {
@@ -124,8 +123,8 @@ namespace rra
                         RRA_ASSERT(error_code == kRraOk);
                     }
 
-                    item_data.display_name = node_name + QString(" - 0x") + QString("%1").arg(node_address, 0, 16);
-                    item_data.node_id      = node_data_;
+                    item_data.display_name  = node_name + QString(" - 0x") + QString("%1").arg(node_address, 0, 16);
+                    item_data.node_child_id = node_data_;
 
                     const dxr::amd::NodePointer* node = reinterpret_cast<const dxr::amd::NodePointer*>(&node_data_);
                     if (node->IsInstanceNode())
@@ -163,7 +162,7 @@ namespace rra
             }
 
             case Qt::UserRole:
-                return node_data_;
+                return static_cast<qulonglong>(node_data_);
 
             default:
                 RRA_ASSERT_FAIL("Invalid role passed to AccelerationStructureTreeViewItem::Data");
@@ -195,4 +194,3 @@ namespace rra
     }
 
 }  // namespace rra
-

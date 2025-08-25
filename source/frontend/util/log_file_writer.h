@@ -61,4 +61,3 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_UTIL_LOG_FILE_WRITER_H_
-

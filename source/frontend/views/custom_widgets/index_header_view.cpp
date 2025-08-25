@@ -43,4 +43,3 @@ void IndexHeaderView::mouseReleaseEvent(QMouseEvent* event)
     QHeaderView::mouseReleaseEvent(event);
     setSectionsClickable(true);
 }
-

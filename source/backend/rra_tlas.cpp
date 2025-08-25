@@ -45,9 +45,9 @@ static RraErrorCode GetInstanceNodeFromInstancePointer(const rta::EncodedRtIp11T
     return kRraOk;
 }
 
-static RraErrorCode GetHwInstanceNodeFromInstancePointer(const rta::EncodedRtIp31TopLevelBvh* tlas,
-                                                         const dxr::amd::NodePointer*         node,
-                                                         InstanceNodeDataRRA*                 out_instance_node)
+static RraErrorCode GetRtIp3HwInstanceNodeFromInstancePointer(const rta::EncodedRtIp31TopLevelBvh* tlas,
+                                                              const dxr::amd::NodePointer*         node,
+                                                              InstanceNodeDataRRA*                 out_instance_node)
 {
     if (!node->IsInstanceNode())
     {
@@ -64,12 +64,14 @@ static RraErrorCode GetHwInstanceNodeFromInstancePointer(const rta::EncodedRtIp3
     return kRraOk;
 }
 
-static RraErrorCode GetBlasIndexFromInstanceNodeImpl(const rta::EncodedTopLevelBvh* tlas, const dxr::amd::NodePointer* node, uint64_t* out_blas_index)
+static RraErrorCode GetBlasIndexFromInstanceNodeImpl(const rta::EncodedTopLevelBvh* tlas, uint32_t node_id, uint64_t* out_blas_index)
 {
+    dxr::amd::NodePointer node_ptr = dxr::amd::NodePointer(node_id);
+
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
     {
         InstanceNodeDataRRA instance_node{};
-        auto                result = GetHwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
+        auto                result = GetRtIp3HwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, &node_ptr, &instance_node);
         if (result != kRraOk)
         {
             return result;
@@ -90,7 +92,7 @@ static RraErrorCode GetBlasIndexFromInstanceNodeImpl(const rta::EncodedTopLevelB
     else
     {
         const dxr::amd::InstanceNode* instance_node = nullptr;
-        auto                          result        = GetInstanceNodeFromInstancePointer((rta::EncodedRtIp11TopLevelBvh*)tlas, node, &instance_node);
+        auto                          result        = GetInstanceNodeFromInstancePointer((rta::EncodedRtIp11TopLevelBvh*)tlas, &node_ptr, &instance_node);
         if (result != kRraOk)
         {
             return result;
@@ -103,11 +105,11 @@ static RraErrorCode GetBlasIndexFromInstanceNodeImpl(const rta::EncodedTopLevelB
     return kRraOk;
 }
 
-static RraErrorCode RraTlasGetBoundingVolumeExtentsImpl(const rta::IBvh* tlas, const dxr::amd::NodePointer* node_ptr, BoundingVolumeExtents* out_extents)
+static RraErrorCode RraTlasGetBoundingVolumeExtentsImpl(const rta::IBvh* tlas, uint32_t node_id, BoundingVolumeExtents* out_extents)
 {
     dxr::amd::AxisAlignedBoundingBox bounding_box;
 
-    RraErrorCode error_code = RraBvhGetNodeBoundingVolume(tlas, node_ptr, bounding_box);
+    RraErrorCode error_code = RraBvhGetNodeBoundingVolume(tlas, node_id, bounding_box);
     if (error_code != kRraOk)
     {
         return error_code;
@@ -239,9 +241,9 @@ RraErrorCode RraTlasGetChildNodePtr(uint64_t tlas_index, uint32_t parent_node, u
     return RraBvhGetChildNodePtr(tlas, parent_node, child_index, out_node_ptr);
 }
 
-RraErrorCode RraTlasGetNodeName(uint32_t node_ptr, const char** out_name)
+RraErrorCode RraTlasGetNodeName(uint32_t node_id, const char** out_name)
 {
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     switch ((uint32_t)node->GetType())
     {
@@ -269,13 +271,12 @@ RraErrorCode RraTlasGetNodeName(uint32_t node_ptr, const char** out_name)
         *out_name = "Unknown";
         break;
     }
-
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetNodeNameToolTip(uint32_t node_ptr, const char** out_tooltip)
+RraErrorCode RraTlasGetNodeNameToolTip(uint32_t node_id, const char** out_tooltip)
 {
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     switch ((uint32_t)node->GetType())
     {
@@ -307,29 +308,29 @@ RraErrorCode RraTlasGetNodeNameToolTip(uint32_t node_ptr, const char** out_toolt
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetNodeBaseAddress(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_address)
+RraErrorCode RraTlasGetNodeBaseAddress(uint64_t tlas_index, uint32_t node_id, uint64_t* out_address)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
-    const auto                   base_addr = tlas->GetVirtualAddress();
-    const dxr::amd::NodePointer* node      = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    const auto base_addr = tlas->GetVirtualAddress();
+
+    const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     *out_address = base_addr + tlas->GetHeader().GetMetaDataSize() + node->GetGpuVirtualAddress();
 
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetNodeParent(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_parent_node_ptr)
+RraErrorCode RraTlasGetNodeParent(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_parent_node_id)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
-    const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
 
     const auto& interior_nodes = tlas->GetInteriorNodesData();
     if (interior_nodes.size() == 0)
@@ -337,13 +338,11 @@ RraErrorCode RraTlasGetNodeParent(uint64_t tlas_index, uint32_t node_ptr, uint32
         return kRraErrorInvalidPointer;
     }
 
-    dxr::amd::NodePointer parent_node = tlas->GetParentNode(node);
-    *out_parent_node_ptr              = *reinterpret_cast<uint32_t*>(&parent_node);
-
+    *out_parent_node_id = tlas->GetParentNode(node_ptr);
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetInstanceNodeInfo(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_blas_address, uint64_t* out_instance_count, bool* out_is_empty)
+RraErrorCode RraTlasGetInstanceNodeInfo(uint64_t tlas_index, uint32_t node_id, uint64_t* out_blas_address, uint64_t* out_instance_count, bool* out_is_empty)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
 
@@ -352,7 +351,7 @@ RraErrorCode RraTlasGetInstanceNodeInfo(uint64_t tlas_index, uint32_t node_ptr, 
         return kRraErrorInvalidPointer;
     }
 
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     const auto& bottom_level_bvhs = data_set_.bvh_bundle->GetBottomLevelBvhs();
     if (tlas_index >= bottom_level_bvhs.size())
@@ -365,7 +364,7 @@ RraErrorCode RraTlasGetInstanceNodeInfo(uint64_t tlas_index, uint32_t node_ptr, 
     {
         rta::EncodedRtIp31TopLevelBvh* rtip3_tlas = (rta::EncodedRtIp31TopLevelBvh*)tlas;
         InstanceNodeDataRRA            hw_instance_node{};
-        RraErrorCode                   result = GetHwInstanceNodeFromInstancePointer(rtip3_tlas, node, &hw_instance_node);
+        RraErrorCode                   result = GetRtIp3HwInstanceNodeFromInstancePointer(rtip3_tlas, node, &hw_instance_node);
         RRA_ASSERT(result == kRraOk);
 
         NodePointer64 temp_ptr{};
@@ -503,7 +502,7 @@ RraErrorCode RraTlasGetInstanceNodeCount(uint64_t tlas_index, uint64_t* out_inst
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetInstanceNode(uint64_t tlas_index, uint64_t blas_index, uint64_t instance_index, uint32_t* out_node_ptr)
+RraErrorCode RraTlasGetInstanceNode(uint64_t tlas_index, uint64_t blas_index, uint64_t instance_index, uint32_t* out_node_id)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -516,17 +515,13 @@ RraErrorCode RraTlasGetInstanceNode(uint64_t tlas_index, uint64_t blas_index, ui
         return kRraErrorIndexOutOfRange;
     }
 
-    dxr::amd::NodePointer ptr = tlas->GetInstanceNode(blas_index, instance_index);
-    if (ptr.IsInvalid())
-    {
-        return kRraErrorInvalidPointer;
-    }
+    uint32_t node_id = tlas->GetInstanceNode(blas_index, instance_index);
 
-    *out_node_ptr = ptr.GetRawPointer();
+    *out_node_id = node_id;
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetInstanceNodeTransform(uint64_t tlas_index, uint32_t node_ptr, float* transform)
+RraErrorCode RraTlasGetInstanceNodeTransform(uint64_t tlas_index, uint32_t node_id, float* transform)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -534,12 +529,12 @@ RraErrorCode RraTlasGetInstanceNodeTransform(uint64_t tlas_index, uint32_t node_
         return kRraErrorInvalidPointer;
     }
 
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
     {
         InstanceNodeDataRRA instance_node{};
-        RraErrorCode        result = GetHwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
+        RraErrorCode        result = GetRtIp3HwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
 
         if (result != kRraOk)
         {
@@ -565,7 +560,7 @@ RraErrorCode RraTlasGetInstanceNodeTransform(uint64_t tlas_index, uint32_t node_
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetOriginalInstanceNodeTransform(uint64_t tlas_index, uint32_t node_ptr, float* transform)
+RraErrorCode RraTlasGetOriginalInstanceNodeTransform(uint64_t tlas_index, uint32_t node_id, float* transform)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -573,12 +568,12 @@ RraErrorCode RraTlasGetOriginalInstanceNodeTransform(uint64_t tlas_index, uint32
         return kRraErrorInvalidPointer;
     }
 
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
     {
         InstanceNodeDataRRA instance_node{};
-        RraErrorCode        result = GetHwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
+        RraErrorCode        result = GetRtIp3HwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
 
         if (result != kRraOk)
         {
@@ -602,24 +597,21 @@ RraErrorCode RraTlasGetOriginalInstanceNodeTransform(uint64_t tlas_index, uint32
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetBlasIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_ptr, uint64_t* out_blas_index)
+RraErrorCode RraTlasGetBlasIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_id, uint64_t* out_blas_index)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
 
-    return GetBlasIndexFromInstanceNodeImpl(tlas, node, out_blas_index);
+    return GetBlasIndexFromInstanceNodeImpl(tlas, node_id, out_blas_index);
 }
 
-RraErrorCode RraTlasGetBlasFromInstanceNode(const rta::EncodedRtIp11TopLevelBvh*     tlas,
-                                            const dxr::amd::NodePointer*             node_ptr,
-                                            const rta::EncodedRtIp11BottomLevelBvh** out_blas)
+RraErrorCode RraTlasGetBlasFromInstanceNode(const rta::EncodedRtIp11TopLevelBvh* tlas, uint32_t node_id, const rta::EncodedRtIp11BottomLevelBvh** out_blas)
 {
     uint64_t     blas_index = 0;
-    RraErrorCode error_code = GetBlasIndexFromInstanceNodeImpl(tlas, node_ptr, &blas_index);
+    RraErrorCode error_code = GetBlasIndexFromInstanceNodeImpl(tlas, node_id, &blas_index);
     if (error_code != kRraOk)
     {
         return error_code;
@@ -648,12 +640,10 @@ RraErrorCode RraTlasGetBoundingVolumeExtents(uint64_t tlas_index, uint32_t node_
     {
         return kRraErrorInvalidPointer;
     }
-    dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-
-    return RraTlasGetBoundingVolumeExtentsImpl(tlas, current_node, out_extents);
+    return RraTlasGetBoundingVolumeExtentsImpl(tlas, node_ptr, out_extents);
 }
 
-RraErrorCode RraTlasGetSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_ptr, float* out_surface_area_heuristic)
+RraErrorCode RraTlasGetSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_id, float* out_surface_area_heuristic)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -661,14 +651,13 @@ RraErrorCode RraTlasGetSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_p
         return kRraErrorInvalidPointer;
     }
 
-    const dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-    return RraBvhGetSurfaceAreaHeuristic(tlas, *current_node, out_surface_area_heuristic);
+    return RraBvhGetSurfaceAreaHeuristic(tlas, node_id, out_surface_area_heuristic);
 }
 
-RraErrorCode RraTlasGetSurfaceAreaImpl(const rta::EncodedRtIp11TopLevelBvh* tlas, const dxr::amd::NodePointer* node_ptr, float* out_surface_area)
+RraErrorCode RraTlasGetSurfaceAreaImpl(const rta::EncodedRtIp11TopLevelBvh* tlas, uint32_t node_id, float* out_surface_area)
 {
     BoundingVolumeExtents extents    = {};
-    RraErrorCode          error_code = RraTlasGetBoundingVolumeExtentsImpl(tlas, node_ptr, &extents);
+    RraErrorCode          error_code = RraTlasGetBoundingVolumeExtentsImpl(tlas, node_id, &extents);
     if (error_code == kRraOk)
     {
         error_code = RraBvhGetBoundingVolumeSurfaceArea(&extents, out_surface_area);
@@ -676,7 +665,7 @@ RraErrorCode RraTlasGetSurfaceAreaImpl(const rta::EncodedRtIp11TopLevelBvh* tlas
     return error_code;
 }
 
-RraErrorCode RraTlasGetMinimumSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_ptr, float* out_max_surface_area_heuristic)
+RraErrorCode RraTlasGetMinimumSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t node_id, float* out_max_surface_area_heuristic)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -684,9 +673,7 @@ RraErrorCode RraTlasGetMinimumSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t
         return kRraErrorInvalidPointer;
     }
 
-    const dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-
-    *out_max_surface_area_heuristic = rra::GetMinimumSurfaceAreaHeuristic(tlas, *current_node, false);
+    *out_max_surface_area_heuristic = rra::GetMinimumSurfaceAreaHeuristic(tlas, node_id, false);
     return kRraOk;
 }
 
@@ -698,22 +685,15 @@ RraErrorCode RraTlasGetAverageSurfaceAreaHeuristic(uint64_t tlas_index, uint32_t
         return kRraErrorInvalidPointer;
     }
 
-    const dxr::amd::NodePointer* current_node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-
-    *out_avg_surface_area_heuristic = rra::GetAverageSurfaceAreaHeuristic(tlas, *current_node, false);
+    *out_avg_surface_area_heuristic = rra::GetAverageSurfaceAreaHeuristic(tlas, node_ptr, false);
     return kRraOk;
 }
 
 RraErrorCode RraTlasGetNodeTransformedSurfaceArea(const rta::EncodedRtIp11TopLevelBvh* tlas,
-                                                  const dxr::amd::NodePointer*         node_ptr,
+                                                  uint32_t                             node_id,
                                                   const rta::IBvh*                     volume_bvh,
                                                   float*                               out_surface_area)
 {
-    if (!node_ptr->IsInstanceNode())
-    {
-        return kRraErrorInvalidPointer;
-    }
-
     dxr::amd::AxisAlignedBoundingBox bounding_box;
 
     uint32_t     root_node = 0;
@@ -723,14 +703,15 @@ RraErrorCode RraTlasGetNodeTransformedSurfaceArea(const rta::EncodedRtIp11TopLev
         return result;
     }
 
-    result = RraBvhGetNodeBoundingVolume(volume_bvh, reinterpret_cast<dxr::amd::NodePointer*>(&root_node), bounding_box);
+    result = RraBvhGetNodeBoundingVolume(volume_bvh, root_node, bounding_box);
     if (result != kRraOk)
     {
         return result;
     }
 
     const dxr::amd::InstanceNode* instance_node = nullptr;
-    result                                      = GetInstanceNodeFromInstancePointer(tlas, node_ptr, &instance_node);
+    dxr::amd::NodePointer         node_ptr(node_id);
+    result = GetInstanceNodeFromInstancePointer(tlas, &node_ptr, &instance_node);
     if (result != kRraOk)
     {
         return result;
@@ -743,7 +724,7 @@ RraErrorCode RraTlasGetNodeTransformedSurfaceArea(const rta::EncodedRtIp11TopLev
     return RraBvhGetBoundingVolumeSurfaceArea(&extents, out_surface_area);
 }
 
-RraErrorCode RraTlasGetInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_instance_index)
+RraErrorCode RraTlasGetInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_id, uint32_t* out_instance_index)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -751,8 +732,7 @@ RraErrorCode RraTlasGetInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32
         return kRraErrorInvalidPointer;
     }
 
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
     if (!node->IsInstanceNode())
     {
         return kRraErrorInvalidPointer;
@@ -761,7 +741,7 @@ RraErrorCode RraTlasGetInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
     {
         InstanceNodeDataRRA instance_node{};
-        RraErrorCode        result = GetHwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
+        RraErrorCode        result = GetRtIp3HwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
 
         if (result != kRraOk)
         {
@@ -784,16 +764,14 @@ RraErrorCode RraTlasGetInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_instance_index)
+RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, uint32_t node_id, uint32_t* out_instance_index)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-
-    uint32_t instance_index = tlas->GetInstanceIndex(node);
+    uint32_t instance_index = tlas->GetInstanceIndex(node_id);
     if (instance_index == UINT_MAX)
     {
         return kRraErrorIndexOutOfRange;
@@ -803,9 +781,9 @@ RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, 
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetInstanceNodeMask(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_mask)
+RraErrorCode RraTlasGetInstanceNodeMask(uint64_t tlas_index, uint32_t node_id, uint32_t* out_mask)
 {
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -816,7 +794,7 @@ RraErrorCode RraTlasGetInstanceNodeMask(uint64_t tlas_index, uint32_t node_ptr, 
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
     {
         InstanceNodeDataRRA instance_node{};
-        RraErrorCode        result = GetHwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
+        RraErrorCode        result = GetRtIp3HwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
 
         if (result != kRraOk)
         {
@@ -840,9 +818,9 @@ RraErrorCode RraTlasGetInstanceNodeMask(uint64_t tlas_index, uint32_t node_ptr, 
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetInstanceNodeID(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_id)
+RraErrorCode RraTlasGetInstanceNodeID(uint64_t tlas_index, uint32_t node_id, uint32_t* out_id)
 {
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -853,7 +831,7 @@ RraErrorCode RraTlasGetInstanceNodeID(uint64_t tlas_index, uint32_t node_ptr, ui
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
     {
         InstanceNodeDataRRA instance_node{};
-        RraErrorCode        result = GetHwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
+        RraErrorCode        result = GetRtIp3HwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
 
         if (result != kRraOk)
         {
@@ -878,9 +856,9 @@ RraErrorCode RraTlasGetInstanceNodeID(uint64_t tlas_index, uint32_t node_ptr, ui
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetInstanceNodeHitGroup(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_hit_group)
+RraErrorCode RraTlasGetInstanceNodeHitGroup(uint64_t tlas_index, uint32_t node_id, uint32_t* out_hit_group)
 {
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -891,7 +869,7 @@ RraErrorCode RraTlasGetInstanceNodeHitGroup(uint64_t tlas_index, uint32_t node_p
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
     {
         InstanceNodeDataRRA instance_node{};
-        RraErrorCode        result = GetHwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
+        RraErrorCode        result = GetRtIp3HwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
 
         if (result != kRraOk)
         {
@@ -1026,9 +1004,9 @@ RraErrorCode RraTlasGetRebraidingEnabled(uint64_t tlas_index, bool* out_enabled)
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetInstanceFlags(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_flags)
+RraErrorCode RraTlasGetInstanceFlags(uint64_t tlas_index, uint32_t node_id, uint32_t* out_flags)
 {
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
+    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
 
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -1039,7 +1017,7 @@ RraErrorCode RraTlasGetInstanceFlags(uint64_t tlas_index, uint32_t node_ptr, uin
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
     {
         InstanceNodeDataRRA instance_node{};
-        RraErrorCode        result = GetHwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
+        RraErrorCode        result = GetRtIp3HwInstanceNodeFromInstancePointer((rta::EncodedRtIp31TopLevelBvh*)tlas, node, &instance_node);
 
         if (result != kRraOk)
         {
@@ -1078,7 +1056,7 @@ RraErrorCode RraTlasGetFusedInstancesEnabled(uint64_t tlas_index, bool* out_enab
     return kRraOk;
 }
 
-RraErrorCode RraTlasGetNodeObbIndex(uint64_t tlas_index, uint32_t node_ptr, uint32_t* obb_index)
+RraErrorCode RraTlasGetNodeObbIndex(uint64_t tlas_index, uint32_t node_id, uint32_t* obb_index)
 {
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
@@ -1086,14 +1064,12 @@ RraErrorCode RraTlasGetNodeObbIndex(uint64_t tlas_index, uint32_t node_ptr, uint
         return kRraErrorInvalidPointer;
     }
 
-    const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-
     glm::mat3    rotation{};
-    RraErrorCode error_code = RraBvhGetNodeObbIndex(tlas, node, obb_index);
+    RraErrorCode error_code = RraBvhGetNodeObbIndex(tlas, node_id, obb_index);
     return error_code;
 }
 
-RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32_t node_ptr, float* out_rotation)
+RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32_t node_id, float* out_rotation)
 {
     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() != rta::RayTracingIpLevel::RtIp3_1)
     {
@@ -1108,10 +1084,8 @@ RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32
         return kRraErrorInvalidPointer;
     }
 
-    const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr);
-
     glm::mat3    rotation{};
-    RraErrorCode error_code = RraBvhGetNodeBoundingVolumeOrientation(tlas, node, rotation);
+    RraErrorCode error_code = RraBvhGetNodeBoundingVolumeOrientation(tlas, node_id, rotation);
 
     if (error_code != kRraOk)
     {
@@ -1122,3 +1096,14 @@ RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32
     return kRraOk;
 }
 
+RraErrorCode RraTlasGetMetaDataSize(uint64_t tlas_index, uint32_t* out_byte_size)
+{
+    const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    *out_byte_size = tlas->GetMetaData().GetByteSize();
+    return kRraOk;
+}

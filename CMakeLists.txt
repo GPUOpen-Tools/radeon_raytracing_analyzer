@@ -16,7 +16,7 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 9)
+set(RRA_MINOR_VERSION 10)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()
@@ -123,6 +123,7 @@ endif()
 add_subdirectory(source/backend backend)
 add_subdirectory(source/frontend frontend)
 add_subdirectory(source/renderer renderer)
+add_subdirectory(test/source/backend_test backend_test)
 
 # Group external dependency targets into folder
 IF(WIN32)
@@ -140,6 +141,7 @@ ENDIF(WIN32)
 
 ## Copy Documentation and Samples to output directory. Note - this target is intentionally not included in
 ## the default project build. It needs to be explicitly built as a separate project
+
 set(DOCS_OUTPUT_DIR ${CMAKE_BINARY_DIR})
 
 # group sphinx source files into a sphinx folder
@@ -205,6 +207,7 @@ if (WIN32)
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION . COMPONENT apps)
 endif (WIN32)
 
+
 # CPack packaging
 
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
@@ -212,6 +215,7 @@ set(CPACK_COMPONENTS_GROUPING IGNORE)
 
 set(CPACK_ARCHIVE_APPS_FILE_NAME "RadeonRaytracingAnalyzer_${RRA_MAJOR_VERSION}.${RRA_MINOR_VERSION}.${RRA_BUGFIX_NUMBER}.${RRA_BUILD_NUMBER}")
 set(CPACK_ARCHIVE_DEBUG_FILE_NAME "RadeonRaytracingAnalyzer-PDB_${RRA_MAJOR_VERSION}.${RRA_MINOR_VERSION}.${RRA_BUGFIX_NUMBER}.${RRA_BUILD_NUMBER}")
+
 
 include(CPack)
 
@@ -221,4 +225,6 @@ cpack_add_component(apps
 cpack_add_component(debug
         DISPLAY_NAME "Debug Symbols"
         DESCRIPTION "Debug Symbols")
+
+
 

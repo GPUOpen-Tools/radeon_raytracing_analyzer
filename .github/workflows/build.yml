@@ -22,6 +22,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          lfs: true
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -102,8 +104,9 @@ jobs:
 
       - name: Run tests (Windows)
         if: runner.os == 'Windows'
-        run: build\win\debug\RraBackendTest-d.exe --rra samples\character.rra
+        shell: cmd
+        run: for %f in (samples\*.rra) do (build\win\debug\RraBackendTest-d.exe --rra %f || exit /b 1)
 
       - name: Run tests (Ubuntu)
         if: runner.os == 'Linux'
-        run: build/linux/debug/RraBackendTest-d --rra samples/character.rra
+        run: for f in samples/*.rra; do build/linux/debug/RraBackendTest-d --rra "$f"; done

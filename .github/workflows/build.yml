@@ -105,7 +105,7 @@ jobs:
       - name: Run tests (Windows)
         if: runner.os == 'Windows'
         shell: cmd
-        run: for %f in (samples\*.rra) do (build\win\debug\RraBackendTest-d.exe --rra %f || exit /b 1)
+        run: for %%f in (samples\*.rra) do (build\win\debug\RraBackendTest-d.exe --rra %%f || exit /b 1)
 
       - name: Run tests (Ubuntu)
         if: runner.os == 'Linux'

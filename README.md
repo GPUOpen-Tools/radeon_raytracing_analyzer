@@ -1,5 +1,7 @@
 # Radeon™ Raytracing Analyzer
 
+[![Build Status](https://github.com/GPUOpen-Tools/radeon_raytracing_analyzer/actions/workflows/build.yml/badge.svg)](https://github.com/GPUOpen-Tools/radeon_raytracing_analyzer/actions/workflows/build.yml)
+
 The Radeon Raytracing Analyzer (RRA) is a tool designed to help improve the raytracing performance of AMD GPUs that support raytracing.
 The tool thus far focuses on the visualization of the Acceleration Structures, which consist of Bounding Volume Hierarchies.
 

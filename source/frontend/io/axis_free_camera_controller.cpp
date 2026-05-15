@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the axis-free style camera controller.
@@ -461,3 +461,4 @@ namespace rra
         pitch_yaw_roll_                   = {};
     }
 }  // namespace rra
+

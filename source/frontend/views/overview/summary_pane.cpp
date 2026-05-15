@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Summary pane.
@@ -169,3 +169,4 @@ void SummaryPane::SetTlasIndex(uint64_t tlas_index)
         tlas_index_ = tlas_index;
     }
 }
+

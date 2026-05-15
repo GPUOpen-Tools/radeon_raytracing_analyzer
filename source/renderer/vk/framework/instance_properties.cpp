@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan instance properties object.
@@ -57,7 +57,7 @@ namespace rra
                 return true;
             }
 
-            RraPrint("The instance layer '%s' has not been found.\n", instance_layer_name);
+            RraPrint(kLogLevelWarning, "The instance layer '%s' has not been found.\n", instance_layer_name);
 
             return false;
         }
@@ -70,7 +70,7 @@ namespace rra
                 return true;
             }
 
-            RraPrint("The instance extension '%s' has not been found.\n", instance_extension_name);
+            RraPrint(kLogLevelWarning, "The instance extension '%s' has not been found.\n", instance_extension_name);
 
             return false;
         }
@@ -116,3 +116,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

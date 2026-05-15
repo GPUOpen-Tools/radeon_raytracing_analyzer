@@ -1,12 +1,9 @@
 #######################################################################################################################
-### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
 cmake_minimum_required(VERSION 3.11)
-
-set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
-
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(dev_tools)
@@ -16,16 +13,25 @@ project(RRA)
 
 # Define version information
 set(RRA_MAJOR_VERSION 1)
-set(RRA_MINOR_VERSION 10)
+set(RRA_MINOR_VERSION 11)
 if (NOT RRA_BUGFIX_NUMBER)
     set(RRA_BUGFIX_NUMBER 0)
 endif ()
 if (NOT RRA_BUILD_NUMBER)
     set(RRA_BUILD_NUMBER 0)
 endif ()
+set(RRA_VERSION "${RRA_MAJOR_VERSION}.${RRA_MINOR_VERSION}.${RRA_BUGFIX_NUMBER}.${RRA_BUILD_NUMBER}")
 string(TIMESTAMP DATE "\"%m/%d/%Y\"")
 string(TIMESTAMP YEAR "%Y")
 string(TIMESTAMP YEAR_STRING "\"%Y\"")
+
+if (PACKAGE_SUFFIX)
+    set(PACKAGE_SUFFIX "_${PACKAGE_SUFFIX}")
+else()
+    set(PACKAGE_SUFFIX "")
+endif()
+
+set(RRA_PACKAGE_VERSION "_${RRA_VERSION}${PACKAGE_SUFFIX}")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/version.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/version.h")
@@ -34,9 +40,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/version.h.in" "${CMA
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(devtools_qt_helper)
 include(dev_tools)
-
-option(RDF_ENABLE_CXX_BINDINGS "Allow usage of C++ interface for RDF library" ON)
-option(RDF_STATIC              "Build RDF as a static library" ON)
 
 ## For RRA we only care about the Debug and Release configuration types
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
@@ -51,7 +54,6 @@ ENDIF()
 # As default for RRA, include the debug status in filename - but not the platform bitness
 set (CMAKE_DEBUG_POSTFIX -d)
 set (CMAKE_RELEASE_POSTFIX )
-
 
 # Add definitions for supported hardware
 add_definitions(-DGPURT_BUILD_RTIP3)
@@ -107,16 +109,21 @@ MACRO(SOURCE_GROUP_BY_FOLDER target)
     ENDIF (files)
 ENDMACRO(SOURCE_GROUP_BY_FOLDER)
 
+set(UPDATE_CHECK_API_HEADLESS OFF)
+add_subdirectory(external/update_check_api)
+
 if (NOT TARGET QtUtils)
     add_subdirectory(external/qt_common qt_common)
 endif()
 
 if (NOT TARGET amdrdf)
-    add_subdirectory(external/rdf/imported/zstd)
-    add_subdirectory(external/rdf/rdf)
+    set(RDF_ENABLE_CXX_BINDINGS ON)
+    set(RDF_STATIC ON)
+    add_subdirectory(external/rdf)
 endif()
 
 if (NOT TARGET system_info)
+    set(SYSTEM_INFO_BUILD_RDF_INTERFACES ON)
     add_subdirectory(external/system_info_utils)
 endif()
 
@@ -207,15 +214,19 @@ if (WIN32)
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION . COMPONENT apps)
 endif (WIN32)
 
-
 # CPack packaging
 
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_GROUPING IGNORE)
 
-set(CPACK_ARCHIVE_APPS_FILE_NAME "RadeonRaytracingAnalyzer_${RRA_MAJOR_VERSION}.${RRA_MINOR_VERSION}.${RRA_BUGFIX_NUMBER}.${RRA_BUILD_NUMBER}")
-set(CPACK_ARCHIVE_DEBUG_FILE_NAME "RadeonRaytracingAnalyzer-PDB_${RRA_MAJOR_VERSION}.${RRA_MINOR_VERSION}.${RRA_BUGFIX_NUMBER}.${RRA_BUILD_NUMBER}")
+set(CPACK_PACKAGE_NAME "RadeonRaytracingAnalyzer")
+set(CPACK_PACKAGE_FILE_NAME "RadeonRaytracingAnalyzer${RRA_PACKAGE_VERSION}")
 
+set(CPACK_ARCHIVE_APPS_FILE_NAME "RadeonRaytracingAnalyzer${RRA_PACKAGE_VERSION}")
+set(CPACK_ARCHIVE_DEBUG_FILE_NAME "RadeonRaytracingAnalyzer-PDB${RRA_PACKAGE_VERSION}")
+
+# Run a post-build CPack script to reshape apps package with top-level directory
+set(CPACK_POST_BUILD_SCRIPTS "${CMAKE_SOURCE_DIR}/cmake/cpack_post_script.cmake")
 
 include(CPack)
 
@@ -225,6 +236,3 @@ cpack_add_component(apps
 cpack_add_component(debug
         DISPLAY_NAME "Debug Symbols"
         DESCRIPTION "Debug Symbols")
-
-
-

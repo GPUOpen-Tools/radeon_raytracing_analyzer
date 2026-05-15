@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test TLAS to BLAS mappings.
@@ -49,7 +49,9 @@ namespace backend_test
         ///
         /// @return true if the tests passed, false if not.
         bool GetBLASStats(const RRATestConfig& config);
+
     };
 }  // namespace backend_test
 
 #endif  //  RRA_BACKEND_TEST_RRA_TEST_TLAS_BLAS_MAPPING_H_
+

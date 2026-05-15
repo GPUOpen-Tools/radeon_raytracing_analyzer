@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration of the Renderer Widget.
@@ -49,7 +49,7 @@ public:
     /// @brief Query whether the 3D renderer is currently in focus.
     ///
     /// @return True if the 3D renderer is in focus.
-    bool GetRendererIsFocused() const;
+    bool GetIsRendererFocused() const;
 
     /// @brief Update swapchain size based on widget size.
     void UpdateSwapchainSize();
@@ -171,6 +171,9 @@ private slots:
     /// @brief Respond to the timer timeout and request the renderer to update using a queued connection.
     void HandleRenderFrameRequest();
 
+    /// @brief Update the pane based on the color theme.
+    void OnColorThemeUpdated();
+
 private:
     /// @brief Initialize the widget instance's underlying renderer.
     ///
@@ -207,3 +210,4 @@ private:
 };
 
 #endif  // RRA_RENDERER_RENDERER_WIDGET_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of rra_util which holds useful utility functions.
@@ -90,3 +90,19 @@ void rra_util::InitializeTableView(QTableView* table)
     // Set the vertical header style.
     table->verticalHeader()->setVisible(false);
 }
+
+void rra_util::UpdateRendererTooltip(rra::RRAPaneId pane_id, QWidget* renderer_widget, const QString& tool_tip_string)
+{
+    bool show_geometry = rra::Settings::Get().GetCheckboxSetting(pane_id, kCheckboxSettingShowGeometry);
+    int  render_mode   = rra::Settings::Get().GetRenderingMode(pane_id);
+
+    if (show_geometry == true || render_mode == kRenderingModeTraversal)
+    {
+        renderer_widget->setToolTip(tool_tip_string);
+    }
+    else
+    {
+        renderer_widget->setToolTip("");
+    }
+}
+

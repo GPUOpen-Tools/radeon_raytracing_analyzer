@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public ray history interface.
@@ -145,7 +145,7 @@ struct RayDispatchData
     uint32_t dispatch_height = 0;  ///< Dispatch height for coordinate mapping.
 
     std::vector<DispatchCoordinateData> dispatch_ray_indices;  ///< A buffer to keep all of the dispatch coordinate data.
-    bool                                error = false;         ///< True if an error occured during loading, such as malformed data.
+    bool                                error = false;         ///< True if an error occurred during loading, such as malformed data.
 
     /// @brief Get the dispatch coordinate data.
     /// @param x The x coord.
@@ -281,3 +281,4 @@ RraErrorCode RraRayGetDispatchUserMarkerString(uint32_t dispatch_id, char* buffe
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_RAY_HISTORY_H_
+

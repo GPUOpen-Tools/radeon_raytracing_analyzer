@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the SceneNode class.
@@ -11,6 +11,8 @@
 #include <array>
 #include <deque>
 
+#include <iomanip>
+#include <sstream>
 #include "public/intersect.h"
 #include "public/rra_blas.h"
 #include "public/rra_bvh.h"
@@ -51,8 +53,8 @@ namespace rra
 
         while (!traversal_stack.empty())
         {
-            const SceneNode* node = traversal_stack.front();
-            traversal_stack.pop_front();
+            const SceneNode* node = traversal_stack.back();
+            traversal_stack.pop_back();
             if (node->instance_.has_value())
             {
                 instances_map[node->instance_.value().blas_index].push_back(node->instance_.value());
@@ -232,20 +234,11 @@ namespace rra
         }
     }
 
-    void SceneNode::AppendTrianglesTo(VertexList& vertex_list) const
+    std::string uintToHexString(uint64_t value)
     {
-        // Skip if marked as not visible.
-        if (!visible_ || filtered_)
-        {
-            return;
-        }
-
-        vertex_list.insert(vertex_list.end(), vertices_, vertices_ + vertex_count_);
-
-        for (auto child_node : child_nodes_)
-        {
-            child_node->AppendTrianglesTo(vertex_list);
-        }
+        std::stringstream ss;
+        ss << std::hex << std::setfill('0') << std::setw(8) << value;
+        return "0x" + ss.str();
     }
 
     SceneNode* SceneNode::ConstructFromBlasNode(uint64_t blas_index, uint32_t root_id, renderer::RraVertex* vertex_buffer, std::byte* child_buffer)
@@ -254,45 +247,43 @@ namespace rra
 
         SceneNode* root_node = new (child_buffer + current_child_buffer_offset) SceneNode();
         current_child_buffer_offset += sizeof(SceneNode);
-        root_node->node_id_   = root_id;
-        root_node->depth_     = 0;
-        root_node->bvh_index_ = blas_index;
-        root_node->is_tlas_   = false;
+        root_node->node_id_            = root_id;
+        root_node->depth_              = 0;
+        root_node->bvh_index_          = blas_index;
+        root_node->is_tlas_            = false;
+        root_node->global_child_index_ = 0;
 
         if (RraBlasIsEmpty(blas_index))
         {
             return root_node;
         }
 
-        std::vector<SceneNode*> traversal_stack;
-        traversal_stack.reserve(64);  // It is rare for the traversal stack to get deeper than ~28 so this should be sufficient memory to reserve.
+        std::deque<SceneNode*> traversal_stack;
         traversal_stack.push_back(root_node);
 
         uint32_t vertex_buffer_idx{0};
+        uint32_t global_child_index{UINT32_MAX};
 
         RraErrorCode error_code = kRraOk;
         while (!traversal_stack.empty())
         {
             SceneNode* node{traversal_stack.back()};
             traversal_stack.pop_back();
+            ++global_child_index;
+            node->global_child_index_ = global_child_index;
 
-            error_code = RraBlasGetBoundingVolumeExtents(blas_index, node->node_id_, &node->bounding_volume_);
+            error_code = RraBlasGetBoundingVolumeExtents(blas_index, node->node_id_, node->child_index_, node->global_child_index_, &node->bounding_volume_);
             RRA_ASSERT(error_code == kRraOk);
 
-            bool is_triangle_node{};
-            bool is_box_node{};
-            bool has_children{};
-            {
-                is_triangle_node = RraBlasIsTriangleNode(blas_index, node->node_id_);
-                is_box_node      = RraBvhIsBoxNode(node->node_id_);
-                has_children     = is_box_node;
-            }
+            bool is_triangle_node = RraBlasIsTriangleNode(blas_index, node->node_id_);
+            bool is_box_node      = RraBlasIsBoxNode(blas_index, node->node_id_);
+            bool has_children     = RraBlasHasChildren(blas_index, node->node_id_);
 
             if (is_triangle_node)
             {
                 // Get the triangle nodes. If this is not a triangle the triangle count is 0.
                 uint32_t triangle_count;
-                error_code = RraBlasGetNodeTriangleCount(blas_index, node->node_id_, &triangle_count);
+                error_code = RraBlasGetNodeTriangleCount(blas_index, node->node_id_, node->child_index_, node->global_child_index_, &triangle_count);
                 RRA_ASSERT(error_code == kRraOk);
 
                 // Make vertices_ a subset of the BLAS's vertex buffer.
@@ -303,12 +294,12 @@ namespace rra
                 if (triangle_count > 0)
                 {
                     // Populate a vector of triangle vertex data.
-                    std::array<TriangleVertices, MAX_CHILD_NODES> triangles{};
-                    error_code = RraBlasGetNodeTriangles(blas_index, node->node_id_, triangles.data());
+                    std::array<TriangleVertices, MAX_TRIANGLES> triangles{};
+                    error_code = RraBlasGetNodeTriangles(blas_index, node->node_id_, node->child_index_, node->global_child_index_, triangles.data());
                     RRA_ASSERT(error_code == kRraOk);
 
                     // Retrieve the geometry index associated with the current triangle node.
-                    error_code = RraBlasGetGeometryIndex(blas_index, node->node_id_, &node->geometry_index_);
+                    error_code = RraBlasGetGeometryIndex(blas_index, node->node_id_, node->child_index_, node->global_child_index_, &node->geometry_index_);
                     RRA_ASSERT(error_code == kRraOk);
 
                     uint32_t geometry_flags = 0;
@@ -318,7 +309,8 @@ namespace rra
                     // Extract the opacity flag.
                     bool is_opaque = (geometry_flags & GeometryFlags::kOpaque) == GeometryFlags::kOpaque;
 
-                    error_code = RraBlasGetPrimitiveIndex(blas_index, node->node_id_, 0, &node->primitive_index_);
+                    error_code =
+                        RraBlasGetPrimitiveIndex(blas_index, node->node_id_, node->child_index_, node->global_child_index_, 0, &node->primitive_index_);
                     RRA_ASSERT(error_code == kRraOk);
 
                     // Step over each triangle and extract data used to populate the vertex buffer.
@@ -343,7 +335,7 @@ namespace rra
                         compact_normal.x         = (normal.z < 0.0f) ? compact_normal.x : compact_normal.x + kNormalSignIndicatorOffset;
 
                         float triangle_sah = 0.0f;
-                        error_code         = RraBlasGetTriangleSurfaceAreaHeuristic(blas_index, node->node_id_, &triangle_sah);
+                        error_code         = RraBlasGetTriangleSurfaceAreaHeuristic(blas_index, node->node_id_, node->global_child_index_, &triangle_sah);
                         RRA_ASSERT(error_code == kRraOk);
 
                         float average_epo = 0.0f;
@@ -362,12 +354,10 @@ namespace rra
                         renderer::RraVertex v0 = {p0, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node->node_id_};
                         renderer::RraVertex v1 = {p1, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node->node_id_};
                         renderer::RraVertex v2 = {p2, -triangle_sah, compact_normal, geometry_index_depth_split_opaque, node->node_id_};
-
                         // Add 3 new triangle vertices to the output array.
                         node->vertices_[node->vertex_count_ + 0] = v0;
                         node->vertices_[node->vertex_count_ + 1] = v1;
                         node->vertices_[node->vertex_count_ + 2] = v2;
-
                         node->vertex_count_ += 3;
                     }
                 }
@@ -392,6 +382,10 @@ namespace rra
             error_code = RraBlasGetChildNodes(blas_index, node->node_id_, child_nodes.data());
             RRA_ASSERT(error_code == kRraOk);
 
+            std::array<uint32_t, MAX_CHILD_NODES> child_indices{};
+            error_code = RraBlasGetChildIndices(blas_index, node->node_id_, child_indices.data());
+            RRA_ASSERT(error_code == kRraOk);
+
             for (uint32_t i{0}; i < child_node_count; ++i)
             {
                 if (child_nodes[i] == node->node_id_)
@@ -401,13 +395,15 @@ namespace rra
                 }
 
                 // Use placement new operator to allocate child in child_nodes_buffer_.
+                // Global child index is set at beginning of traversal loop.
                 SceneNode* new_node = new (child_buffer + current_child_buffer_offset) SceneNode();
                 current_child_buffer_offset += sizeof(SceneNode);
-                new_node->node_id_   = child_nodes[i];
-                new_node->bvh_index_ = blas_index;
-                new_node->is_tlas_   = false;
-                new_node->depth_     = node->depth_ + 1;
-                new_node->parent_    = node;
+                new_node->node_id_     = child_nodes[i];
+                new_node->bvh_index_   = blas_index;
+                new_node->is_tlas_     = false;
+                new_node->depth_       = node->depth_ + 1;
+                new_node->parent_      = node;
+                new_node->child_index_ = child_indices[i];
                 node->child_nodes_.PushBack(new_node);
                 traversal_stack.push_back(new_node);
             }
@@ -435,6 +431,11 @@ namespace rra
         }
         instance.selected = selected;
         instance_map[instance.blas_index].push_back(instance);
+    }
+
+    uint64_t SceneNode::GetChildIdHash() const
+    {
+        return node_id_;
     }
 
     SceneNode* SceneNode::ConstructFromBlas(uint32_t blas_index, renderer::RraVertex* vertex_buffer, std::byte* child_buffer)
@@ -470,22 +471,19 @@ namespace rra
         return (static_cast<uint64_t>(geometry_index) << 32) | static_cast<uint64_t>(primitive_index);
     }
 
-    SceneNode* SceneNode::ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t node_id, uint32_t depth)
+    SceneNode* SceneNode::ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t node_id, uint32_t child_index, uint32_t depth)
     {
-        SceneNode* node  = new SceneNode();
-        node->node_id_   = node_id;
-        node->depth_     = depth;
-        node->bvh_index_ = tlas_index;
-        node->is_tlas_   = true;
+        SceneNode* node    = new SceneNode();
+        node->node_id_     = node_id;
+        node->depth_       = depth;
+        node->bvh_index_   = tlas_index;
+        node->is_tlas_     = true;
+        node->child_index_ = child_index;
 
-        RraErrorCode error_code = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &node->bounding_volume_);
+        RraErrorCode error_code = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, child_index, &node->bounding_volume_);
         RRA_ASSERT(error_code == kRraOk);
 
-        bool is_instance_node{};
-        {
-            is_instance_node = RraBvhIsInstanceNode(node_id);
-        }
-
+        bool is_instance_node = RraTlasIsInstanceNode(tlas_index, node_id);
         if (is_instance_node)
         {
             renderer::Instance instance = {};
@@ -502,7 +500,7 @@ namespace rra
             // Navi IP 1.1 encoding specifies that the transform is inverse, so we inverse it again to get the correct transform.
             instance.transform = glm::inverse(instance.transform);
 
-            error_code = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &instance.bounding_volume);
+            error_code = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, child_index, &instance.bounding_volume);
             RRA_ASSERT(error_code == kRraOk);
 
             error_code = RraTlasGetBlasIndexFromInstanceNode(tlas_index, node_id, &instance.blas_index);
@@ -514,14 +512,16 @@ namespace rra
             RRA_ASSERT(error_code == kRraOk);
             error_code = RraBlasGetAvgTreeDepth(instance.blas_index, &instance.average_depth);
             RRA_ASSERT(error_code == kRraOk);
+            error_code = RraBlasGetTriangleNodeCount(instance.blas_index, &instance.triangle_count);
+            RRA_ASSERT(error_code == kRraOk);
 
             uint32_t root_node = UINT32_MAX;
             error_code         = RraBvhGetRootNodePtr(&root_node);
             RRA_ASSERT(error_code == kRraOk);
 
-            error_code = RraBlasGetAverageSurfaceAreaHeuristic(instance.blas_index, root_node, true, &instance.average_triangle_sah);
+            error_code = RraBlasGetAverageSurfaceAreaHeuristic(instance.blas_index, root_node, 0, true, &instance.average_triangle_sah);
             RRA_ASSERT(error_code == kRraOk);
-            error_code = RraBlasGetMinimumSurfaceAreaHeuristic(instance.blas_index, root_node, true, &instance.min_triangle_sah);
+            error_code = RraBlasGetMinimumSurfaceAreaHeuristic(instance.blas_index, root_node, 0, true, &instance.min_triangle_sah);
             RRA_ASSERT(error_code == kRraOk);
 
             error_code = RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_id, &instance.instance_unique_index);
@@ -555,13 +555,17 @@ namespace rra
         error_code = RraTlasGetChildNodeCount(tlas_index, node_id, &child_node_count);
         RRA_ASSERT(error_code == kRraOk);
 
-        std::vector<uint32_t> child_nodes(child_node_count);
+        std::array<uint32_t, MAX_CHILD_NODES> child_nodes{};
         error_code = RraTlasGetChildNodes(tlas_index, node_id, child_nodes.data());
         RRA_ASSERT(error_code == kRraOk);
 
-        for (auto child_node : child_nodes)
+        std::array<uint32_t, MAX_CHILD_NODES> child_node_indices{};
+        error_code = RraTlasGetChildIndices(tlas_index, node_id, child_node_indices.data());
+        RRA_ASSERT(error_code == kRraOk);
+
+        for (uint32_t i = 0; i < child_node_count; ++i)
         {
-            auto child_node_ptr     = SceneNode::ConstructFromTlasBoxNode(tlas_index, child_node, depth + 1);
+            auto child_node_ptr     = SceneNode::ConstructFromTlasBoxNode(tlas_index, child_nodes[i], child_node_indices[i], depth + 1);
             child_node_ptr->parent_ = node;
             node->child_nodes_.PushBack(child_node_ptr);
         }
@@ -574,13 +578,13 @@ namespace rra
         uint32_t     root_node_index = UINT32_MAX;
         RraErrorCode error_code      = RraBvhGetRootNodePtr(&root_node_index);
         RRA_ASSERT(error_code == kRraOk);
-        return ConstructFromTlasBoxNode(tlas_index, root_node_index, 0);
+        return ConstructFromTlasBoxNode(tlas_index, root_node_index, 0, 0);
     }
 
-    void SceneNode::ResetSelection(std::unordered_set<uint32_t>& selected_node_ids)
+    void SceneNode::ResetSelection(std::unordered_set<uint64_t>& selected_node_ids)
     {
         selected_ = false;
-        selected_node_ids.erase(node_id_);
+        selected_node_ids.erase(GetChildIdHash());
 
         for (auto child_node : child_nodes_)
         {
@@ -615,7 +619,7 @@ namespace rra
         }
     }
 
-    void SceneNode::ApplyNodeSelection(std::unordered_set<uint32_t>& selected_node_ids)
+    void SceneNode::ApplyNodeSelection(std::unordered_set<uint64_t>& selected_node_ids)
     {
         if (!(visible_ && enabled_) || filtered_)
         {
@@ -623,7 +627,7 @@ namespace rra
         }
 
         selected_ = true;
-        selected_node_ids.insert(node_id_);
+        selected_node_ids.insert(GetChildIdHash());
 
         for (auto child_node : child_nodes_)
         {
@@ -647,9 +651,9 @@ namespace rra
         return bounding_volume_;
     }
 
-    void SceneNode::CollectNodes(std::map<uint32_t, SceneNode*>& nodes)
+    void SceneNode::CollectNodes(std::map<uint64_t, SceneNode*>& nodes)
     {
-        nodes[node_id_] = this;
+        nodes[GetChildIdHash()] = this;
         for (auto child_node : child_nodes_)
         {
             child_node->CollectNodes(nodes);
@@ -752,12 +756,12 @@ namespace rra
         }
     }
 
-    void SceneNode::SetAllChildrenAsVisible(std::unordered_set<uint32_t>& selected_node_ids)
+    void SceneNode::SetAllChildrenAsVisible(std::unordered_set<uint64_t>& selected_node_ids)
     {
         if (!visible_)
         {
             visible_ = true;
-            selected_node_ids.insert(node_id_);
+            selected_node_ids.insert(GetChildIdHash());
             ApplyNodeSelection(selected_node_ids);
         }
 
@@ -893,12 +897,16 @@ namespace rra
         return geometry_index_;
     }
 
-    uint32_t SceneNode::GetId() const
+    uint64_t SceneNode::GetId() const
     {
-        return node_id_;
+        return is_tlas_ ? node_id_ : GetChildIdHash();
     }
 
-    void SceneNode::AppendBoundingVolumesTo(renderer::BoundingVolumeList& volume_list, uint32_t lower_bound, uint32_t upper_bound) const
+    void SceneNode::AppendBoundingVolumesTo(renderer::BoundingVolumeList& volume_list,
+                                            uint32_t                      lower_bound,
+                                            uint32_t                      upper_bound,
+                                            bool                          show_internal_bounds,
+                                            bool                          show_leaf_bounds) const
     {
         if (depth_ > upper_bound)
         {
@@ -909,7 +917,7 @@ namespace rra
         {
             for (auto child : child_nodes_)
             {
-                child->AppendBoundingVolumesTo(volume_list, lower_bound, upper_bound);
+                child->AppendBoundingVolumesTo(volume_list, lower_bound, upper_bound, show_internal_bounds, show_leaf_bounds);
             }
 
             if (depth_ >= lower_bound)
@@ -925,33 +933,46 @@ namespace rra
                 bool is_instance_node{};
                 bool is_procedural_node{};
                 bool is_triangle_node{};
+                if (is_tlas_)
                 {
-                    is_box_16_node     = RraBvhIsBox16Node(node_id_);
-                    is_box_32_node     = RraBvhIsBox32Node(node_id_);
-                    is_instance_node   = RraBvhIsInstanceNode(node_id_);
-                    is_procedural_node = RraBvhIsProceduralNode(node_id_);
+                    is_box_16_node   = RraTlasIsBox16Node(bvh_index_, node_id_);
+                    is_box_32_node   = RraTlasIsBox32Node(bvh_index_, node_id_);
+                    is_instance_node = RraTlasIsInstanceNode(bvh_index_, node_id_);
+                }
+                else
+                {
+                    is_box_16_node     = RraBlasIsBox16Node(bvh_index_, node_id_);
+                    is_box_32_node     = RraBlasIsBox32Node(bvh_index_, node_id_);
+                    is_procedural_node = RraBlasIsProceduralNode(bvh_index_, node_id_);
                     is_triangle_node   = RraBlasIsTriangleNode(bvh_index_, node_id_);
                 }
 
+                bool is_internal = false;
+                bool is_leaf     = false;
                 if (is_box_16_node)
                 {
                     bvi.metadata.x = 1.0f;
+                    is_internal    = true;
                 }
                 else if (is_box_32_node)
                 {
                     bvi.metadata.x = 2.0f;
+                    is_internal    = true;
                 }
                 else if (is_instance_node)
                 {
                     bvi.metadata.x = 3.0f;
+                    is_leaf        = true;
                 }
                 else if (is_procedural_node)
                 {
                     bvi.metadata.x = 4.0f;
+                    is_leaf        = true;
                 }
                 else if (is_triangle_node)
                 {
                     bvi.metadata.x = 5.0f;
+                    is_leaf        = true;
                 }
 
                 if (selected_)
@@ -961,7 +982,10 @@ namespace rra
 
                 bvi.rotation = parent_ ? parent_->rotation_ : glm::mat3(1.0f);
 
-                volume_list.push_back(bvi);
+                if ((is_internal && show_internal_bounds) || (is_leaf && show_leaf_bounds))
+                {
+                    volume_list.push_back(bvi);
+                }
             }
         }
     }
@@ -1011,9 +1035,15 @@ namespace rra
 
             bool is_leaf_node{};
             bool is_box_node{};
+            if (is_tlas)
             {
-                is_leaf_node = is_tlas ? RraBvhIsInstanceNode(node->node_id_) : RraBlasIsTriangleNode(node->bvh_index_, node->node_id_);
-                is_box_node  = RraBvhIsBoxNode(node->node_id_);
+                is_leaf_node = RraTlasIsInstanceNode(node->bvh_index_, node->node_id_);
+                is_box_node  = RraTlasIsBoxNode(node->bvh_index_, node->node_id_);
+            }
+            else
+            {
+                is_leaf_node = RraBlasIsTriangleNode(node->bvh_index_, node->node_id_);
+                is_box_node  = RraBlasIsBoxNode(node->bvh_index_, node->node_id_);
             }
 
             renderer::TraversalVolume& traversal_volume = traversal_tree.volumes[current_index];
@@ -1125,4 +1155,35 @@ namespace rra
         filtered_ = filtered;
     }
 
+    uint32_t SceneNode::GetChildIndex() const
+    {
+        return child_index_;
+    }
+
+    uint32_t SceneNode::GetGlobalChildIndex() const
+    {
+        return global_child_index_;
+    }
+
+    size_t SceneNode::GetChildCount() const
+    {
+        return child_nodes_.Size();
+    }
+
+    SceneNode* SceneNode::GetChild(uint32_t child_index)
+    {
+        return child_nodes_[child_index];
+    }
+
+    glm::mat3 SceneNode::GetRotation()
+    {
+        return rotation_;
+    }
+
+    uint64_t SceneNode::GetBvhIndex()
+    {
+        return bvh_index_;
+    }
+
 }  // namespace rra
+

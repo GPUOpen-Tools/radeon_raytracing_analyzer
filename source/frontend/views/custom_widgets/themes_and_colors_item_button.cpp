@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a helper class for custom button rendering for
@@ -63,3 +63,4 @@ void ThemesAndColorsItemButton::paintEvent(QPaintEvent* event)
     painter.setPen(QPen(font_color_, 1));
     painter.drawText(r1, Qt::AlignHCenter | Qt::AlignVCenter, this->text());
 }
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for ray history offscreen renderer type.
@@ -158,3 +158,4 @@ namespace rra
     }  // namespace renderer
 }  // namespace rra
 #endif  // RRA_RAY_HISTORY_OFFSCREEN_RENDERER_H_
+

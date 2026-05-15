@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the mesh render module.
@@ -209,3 +209,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULES_BLAS_MESH_RENDER_MODULE_H_
+

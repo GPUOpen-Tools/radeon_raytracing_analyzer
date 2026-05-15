@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the log file writer.
@@ -11,21 +11,14 @@
 #include <QMutex>
 #include <QString>
 
+#include "public/rra_print.h"
+
 namespace rra
 {
     /// @brief Log file writer class definition.
     class LogFileWriter
     {
     public:
-        /// @brief Log levels used by the logger from most severe to least severe.
-        enum LogLevel
-        {
-            kError,
-            kWarning,
-            kInfo,
-            kDebug,
-        };
-
         /// @brief LogFileWriter instance get function.
         ///
         /// @return a reference to the LogFileWriter instance.
@@ -54,10 +47,10 @@ namespace rra
         /// @param [in] log_message The message to write to the log file.
         void WriteLogMessage(const char* log_message);
 
-        QMutex                mutex_;      ///< The mutex to write the log.
-        static LogFileWriter* instance_;   ///< LogFileWriter instance pointer.
-        LogLevel              log_level_;  ///< The current log level.
+        QMutex                mutex_;     ///< The mutex to write the log.
+        static LogFileWriter* instance_;  ///< LogFileWriter instance pointer.
     };
 }  // namespace rra
 
 #endif  // RRA_UTIL_LOG_FILE_WRITER_H_
+

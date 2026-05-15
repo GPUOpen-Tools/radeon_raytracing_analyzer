@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS viewer model.
@@ -166,7 +166,7 @@ namespace rra
         widget_util::SetTableModelData(model, vert2, 2, 0, Qt::AlignLeft);
     }
 
-    void BlasViewerModel::UpdateStatistics(uint64_t blas_index, uint32_t node_id)
+    void BlasViewerModel::UpdateStatistics(uint64_t blas_index, uint32_t node_id, uint32_t child_index, uint32_t global_child_index)
     {
         // Show node name and base address.
         const char*  node_str{};
@@ -190,7 +190,7 @@ namespace rra
 
         // Show surface area and bounding box extents.
         BoundingVolumeExtents bounding_volume_extents;
-        if (RraBlasGetBoundingVolumeExtents(blas_index, node_id, &bounding_volume_extents) == kRraOk)
+        if (RraBlasGetBoundingVolumeExtents(blas_index, node_id, child_index, global_child_index, &bounding_volume_extents) == kRraOk)
         {
             PopulateExtentsTable(bounding_volume_extents);
         }
@@ -206,11 +206,11 @@ namespace rra
         if (SelectedNodeIsLeaf())
         {
             uint32_t tri_count{};
-            error_code = RraBlasGetNodeTriangleCount(blas_index, node_id, &tri_count);
+            error_code = RraBlasGetNodeTriangleCount(blas_index, node_id, child_index, global_child_index, &tri_count);
             RRA_ASSERT(error_code == kRraOk);
-            std::array<TriangleVertices, MAX_CHILD_NODES> tri_verts{};
-            RRA_ASSERT(tri_count <= MAX_CHILD_NODES);
-            error_code = RraBlasGetNodeTriangles(blas_index, node_id, tri_verts.data());
+            std::array<TriangleVertices, MAX_TRIANGLES> tri_verts{};
+            RRA_ASSERT(tri_count <= MAX_TRIANGLES);
+            error_code = RraBlasGetNodeTriangles(blas_index, node_id, child_index, global_child_index, tri_verts.data());
             RRA_ASSERT(error_code == kRraOk);
 
             last_selected_node_tri_count_ = tri_count;
@@ -218,15 +218,13 @@ namespace rra
             for (uint32_t tri_idx{0}; tri_idx < tri_count; ++tri_idx)
             {
                 TriangleVertices& verts = tri_verts[tri_idx];
-                {
-                    SetTriTableLabels(vertex_table_models_triangle_[tri_idx]);
-                    SetModelData(kBlasStatsPrimitiveIndexLabel1 + tri_idx, QString("Primitive index"));
+                SetTriTableLabels(vertex_table_models_triangle_[tri_idx]);
+                SetModelData(kBlasStatsPrimitiveIndexLabel1 + tri_idx, QString("Primitive index"));
 
-                    uint32_t primitive_index{};
-                    if (RraBlasGetPrimitiveIndex(blas_index, node_id, tri_idx, &primitive_index) == kRraOk)
-                    {
-                        SetModelData(kBlasStatsPrimitiveIndexTriangle1 + tri_idx, QString::number(primitive_index));
-                    }
+                uint32_t primitive_index{};
+                if (RraBlasGetPrimitiveIndex(blas_index, node_id, child_index, global_child_index, tri_idx, &primitive_index) == kRraOk)
+                {
+                    SetModelData(kBlasStatsPrimitiveIndexTriangle1 + tri_idx, QString::number(primitive_index));
                 }
 
                 widget_util::SetTableModelDecimalData(vertex_table_models_triangle_[tri_idx], verts.a.x, 0, 1, Qt::AlignRight);
@@ -241,7 +239,7 @@ namespace rra
             }
 
             uint32_t geometry_index{};
-            if (RraBlasGetGeometryIndex(blas_index, node_id, &geometry_index) == kRraOk)
+            if (RraBlasGetGeometryIndex(blas_index, node_id, child_index, global_child_index, &geometry_index) == kRraOk)
             {
                 // Show geometry flag here.
                 SetModelData(kBlasStatsGeometryIndex, QString::number(geometry_index));
@@ -267,7 +265,7 @@ namespace rra
 
         // Show surface area heuristic.
         float surface_area_heuristic = 0.0;
-        if (RraBlasGetSurfaceAreaHeuristic(blas_index, node_id, &surface_area_heuristic) == kRraOk)
+        if (RraBlasGetSurfaceAreaHeuristic(blas_index, node_id, global_child_index, &surface_area_heuristic) == kRraOk)
         {
             SetModelData(kBlasStatsCurrentSAH,
                          QString::number(surface_area_heuristic, kQtFloatFormat, decimal_precision),
@@ -275,14 +273,14 @@ namespace rra
         }
 
         // Show SAH max and average.
-        if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, node_id, false, &surface_area_heuristic) == kRraOk)
+        if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, node_id, global_child_index, false, &surface_area_heuristic) == kRraOk)
         {
             SetModelData(kBlasStatsSAHSubTreeMax,
                          QString::number(surface_area_heuristic, kQtFloatFormat, decimal_precision),
                          QString::number(surface_area_heuristic, kQtFloatFormat, kQtTooltipFloatPrecision));
         }
 
-        if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, node_id, false, &surface_area_heuristic) == kRraOk)
+        if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, node_id, global_child_index, false, &surface_area_heuristic) == kRraOk)
         {
             SetModelData(kBlasStatsSAHSubTreeMean,
                          QString::number(surface_area_heuristic, kQtFloatFormat, decimal_precision),
@@ -295,17 +293,72 @@ namespace rra
         AccelerationStructureViewerModel::SetSelectedNodeIndex(model_index);
         if (IsModelIndexNode(model_index))
         {
-            uint32_t node_id = GetNodeIdFromModelIndex(model_index, blas_index, kIsTlasModel);
+            uint32_t node_id            = GetNodeIdFromModelIndex(model_index, blas_index, kIsTlasModel);
+            uint32_t child_index        = GetChildIndexFromModelIndex(model_index);
+            uint32_t global_child_index = GetGlobalChildIndexFromModelIndex(model_index);
 
-            UpdateStatistics(blas_index, node_id);
+            UpdateStatistics(blas_index, node_id, child_index, global_child_index);
         }
         else
         {
-            uint32_t node_id = GetNodeIdFromModelIndex(model_index.parent(), blas_index, kIsTlasModel);
+            uint32_t node_id            = GetNodeIdFromModelIndex(model_index.parent(), blas_index, kIsTlasModel);
+            uint32_t child_index        = GetChildIndexFromModelIndex(model_index.parent());
+            uint32_t global_child_index = GetGlobalChildIndexFromModelIndex(model_index.parent());
 
             // Fill in the common stats for the triangle parent node.
-            UpdateStatistics(blas_index, node_id);
+            UpdateStatistics(blas_index, node_id, child_index, global_child_index);
         }
+    }
+
+    QString BlasViewerModel::UpdateToolTip(uint64_t bvh_index, rra::SceneCollectionModelClosestHit closest_hit)
+    {
+        RRA_UNUSED(bvh_index);
+
+        uint64_t   packed_node        = closest_hit.triangle_child_node;
+        uint32_t   node_id            = (uint32_t)(packed_node & UINT32_MAX);
+        uint32_t   global_child_index = (uint32_t)(packed_node >> 32);
+        SceneNode* triangle_node      = closest_hit.triangle_node;
+        bool       has_triangle       = (node_id != UINT32_MAX) && (triangle_node != nullptr);
+
+        if (!has_triangle || !render_state_adapter_)
+            return "";
+
+        uint64_t blas_index        = closest_hit.blas_index;
+        int      decimal_precision = rra::Settings::Get().GetDecimalPrecision();
+
+        renderer::GeometryColoringMode mode = render_state_adapter_->GetCurrentGeometryColoringModeValue();
+
+        switch (mode)
+        {
+        case renderer::GeometryColoringMode::kTriangleSAH:
+        {
+            float sah = 0.0f;
+            if (RraBlasGetSurfaceAreaHeuristic(blas_index, node_id, global_child_index, &sah) == kRraOk)
+                return "SAH: " + QString::number(sah, kQtFloatFormat, decimal_precision);
+            break;
+        }
+        case renderer::GeometryColoringMode::kTreeLevel:
+            return "Depth: " + QString::number(triangle_node->GetDepth());
+        case renderer::GeometryColoringMode::kGeometryIndex:
+            return "Geometry index: " + QString::number(triangle_node->GetGeometryIndex());
+        case renderer::GeometryColoringMode::kOpacity:
+        {
+            uint32_t geometry_flags = 0;
+            if (RraBlasGetGeometryFlags(blas_index, triangle_node->GetGeometryIndex(), &geometry_flags) == kRraOk)
+            {
+                bool is_opaque = (geometry_flags & GeometryFlags::kOpaque) != 0;
+                return QString("Opaque: ") + (is_opaque ? "yes" : "no");
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kTriangleSplitting:
+        case renderer::GeometryColoringMode::kLit:
+        case renderer::GeometryColoringMode::kTechnical:
+        default:
+            break;
+        }
+
+        return "";
     }
 
     void BlasViewerModel::SetSceneSelection(const QModelIndex& model_index, uint64_t index)
@@ -321,8 +374,10 @@ namespace rra
             node_id = GetNodeIdFromModelIndex(model_index.parent(), index, kIsTlasModel);
         }
 
-        Scene* current_scene_info_ = scene_collection_model_->GetSceneByIndex(index);
-        current_scene_info_->SetSceneSelection(node_id);
+        uint32_t global_child_index  = GetGlobalChildIndexFromModelIndex(model_index);
+        uint64_t node_child_id       = ((uint64_t)global_child_index << 32) | node_id;
+        Scene*   current_scene_info_ = scene_collection_model_->GetSceneByIndex(index);
+        current_scene_info_->SetSceneSelection(node_child_id);
     }
 
     bool BlasViewerModel::SelectedNodeIsLeaf() const
@@ -394,3 +449,4 @@ namespace rra
     }
 
 }  // namespace rra
+

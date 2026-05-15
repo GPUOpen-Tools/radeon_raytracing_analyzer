@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -8,7 +8,6 @@ cmake_minimum_required(VERSION 3.11)
 project(RraBackend)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-include_directories(AFTER ../backend ../../external/rdf/rdf/inc)
 
 # List of all source files. It may be possible to have the build process call cmake to update the makefiles
 # only when this file has changed (ie source files have been added or removed)
@@ -80,6 +79,8 @@ set( SOURCES
     "bvh/gpu_def.h"
     "bvh/ibvh.cpp"
     "bvh/ibvh.h"
+    "bvh/inode.cpp"
+    "bvh/inode.h"
     "bvh/metadata_v1.cpp"
     "bvh/metadata_v1.h"
     "bvh/node_pointer.cpp"
@@ -109,6 +110,8 @@ set( SOURCES
     "bvh/rtip11/rt_ip_11_acceleration_structure_header.cpp"
     "bvh/rtip11/rt_ip_11_acceleration_structure_header.h"
     "bvh/rtip11/rt_ip_11_header.h"
+    "bvh/rtip11/rt_ip_11_node.cpp"
+    "bvh/rtip11/rt_ip_11_node.h"
     "bvh/rtip31/child_info.h"
     "bvh/rtip31/common.h"
     "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.cpp"
@@ -119,6 +122,8 @@ set( SOURCES
     "bvh/rtip31/primitive_node.h"
     "bvh/rtip31/rt_ip_31_acceleration_structure_header.cpp"
     "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
+    "bvh/rtip31/rt_ip_31_node.cpp"
+    "bvh/rtip31/rt_ip_31_node.h"
     "bvh/rtip_common/acceleration_structure_header.cpp"
     "bvh/rtip_common/acceleration_structure_header.h"
     "bvh/rtip_common/bits.h"
@@ -156,19 +161,14 @@ ELSEIF(UNIX)
     add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
 ENDIF(WIN32)
 
+target_link_libraries(${PROJECT_NAME} PUBLIC rdf system_info)
+
 # Apply common developer tools target options and definitions
 devtools_target_options(${PROJECT_NAME})
 
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_CXX_BINDINGS)
-target_compile_definitions(${PROJECT_NAME} PRIVATE -DSYSTEM_INFO_ENABLE_RDF)
-target_compile_definitions(${PROJECT_NAME} PRIVATE -DDRIVER_OVERRIDES_ENABLE_RDF)
-
 IF (WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_PLATFORM_WINDOWS -D_CRT_SECURE_NO_WARNINGS)
     target_compile_options(${PROJECT_NAME} PRIVATE /wd4505 /wd4189 /wd4100)
 ELSEIF(UNIX)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -DRDF_PLATFORM_UNIX)
     target_compile_options(${PROJECT_NAME} PRIVATE -mavx2 -mf16c)
 ENDIF(WIN32)
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the API Info class.
@@ -10,7 +10,7 @@
 
 #include "public/rra_error.h"
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 namespace rra
 {
@@ -84,3 +84,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_API_INFO_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the BLAS properties model.
@@ -70,3 +70,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_PROPERTIES_MODEL_H_
+

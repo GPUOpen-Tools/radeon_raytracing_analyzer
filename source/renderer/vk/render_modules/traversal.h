@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for traversal module.
@@ -40,6 +40,12 @@ namespace rra
             ///
             /// @param [in] context The context to cleanup.
             virtual void Cleanup(const RenderModuleContext* context) override;
+
+            /// @brief Record per-frame copy/transfer commands that execute every frame.
+            ///
+            /// @param [in] command_buffer The command buffer to record into.
+            /// @param [in] current_frame  The current frame index.
+            virtual void RecordPerFrameCopyCommands(VkCommandBuffer command_buffer, uint32_t current_frame) override;
 
             /// @brief Render module functionality invoked every frame, even when there is no rendering update when the camera is not moved.
             ///
@@ -84,6 +90,22 @@ namespace rra
             ///
             /// @returns True if the traversal counter continuous update function is set.
             bool IsTraversalCounterContinuousUpdateFunctionSet() const;
+
+            /// @brief Set the pixel coordinates for which to read back the traversal counter.
+            ///
+            /// @param [in] x The x pixel coordinate.
+            /// @param [in] y The y pixel coordinate.
+            void SetHoveredPixel(uint32_t x, uint32_t y);
+
+            /// @brief Get the traversal counter value at the last hovered pixel.
+            ///
+            /// @returns The traversal counter value.
+            uint32_t GetHoveredTraversalCounter() const;
+
+            /// @brief Check if a valid hovered pixel traversal counter is available.
+            ///
+            /// @returns True if the hovered traversal counter value is valid.
+            bool IsHoveredTraversalCounterValid() const;
 
         private:
             const RenderModuleContext* context_ = nullptr;  ///< The renderer context for the module.
@@ -148,8 +170,14 @@ namespace rra
             ///
             /// @param [in] context the context to use to create the counter buffers.
             void CreateCounterBuffers(const RenderFrameContext* context);
+
+            uint32_t hovered_pixel_x_           = 0;      ///< The x pixel coordinate of the hovered pixel.
+            uint32_t hovered_pixel_y_           = 0;      ///< The y pixel coordinate of the hovered pixel.
+            uint32_t hovered_traversal_counter_ = 0;      ///< The traversal counter value at the hovered pixel.
+            bool     hovered_pixel_valid_       = false;  ///< Whether the hovered pixel counter is valid.
         };
     }  // namespace renderer
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULES_CHECKER_CLEAR_H_
+

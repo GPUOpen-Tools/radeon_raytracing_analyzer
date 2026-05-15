@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan device object.
@@ -273,10 +273,10 @@ namespace rra
             device_info.ppEnabledExtensionNames = device_info.enabledExtensionCount ? extension_names.data() : nullptr;
             device_info.pEnabledFeatures        = nullptr;
 
-            RraPrint("Device enabled extension names:");
+            RraPrint(kLogLevelInfo, "Device enabled extension names:");
             for (auto device_extension_name : extension_names)
             {
-                RraPrint("\t%s", device_extension_name);
+                RraPrint(kLogLevelInfo, "\t%s", device_extension_name);
             }
 
             result = vkCreateDevice(physical_device_, &device_info, nullptr, &device_);
@@ -614,3 +614,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

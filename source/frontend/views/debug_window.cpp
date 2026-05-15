@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the debug window.
@@ -11,6 +11,7 @@
 #include <QScrollBar>
 #include <QtDebug>
 #include <QtGlobal>
+#include <iostream>
 
 #ifndef _WIN32
 #include "public/linux/safe_crt.h"
@@ -119,8 +120,10 @@ void DebugWindow::RegisterDbgWindow()
     qInstallMessageHandler(MyMessageHandler);
 }
 
-void DebugWindow::DbgMsg(const char* format, ...)
+void DebugWindow::DbgMsg(LogLevel log_level, const char* format, ...)
 {
+    std::cout << format << '\n';
+
     if (debug_window != nullptr)
     {
         char    buffer[2048];
@@ -128,7 +131,8 @@ void DebugWindow::DbgMsg(const char* format, ...)
         va_start(args, format);
         vsnprintf(buffer, 2048, format, args);
         debug_window->EmitSetText(QString(buffer));
-        rra::LogFileWriter::Get().WriteLog(rra::LogFileWriter::kDebug, buffer);
+        rra::LogFileWriter::Get().WriteLog(log_level, buffer);
         va_end(args);
     }
 }
+

@@ -1,12 +1,12 @@
 //=============================================================================
-// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Bit manipulation helper functions.
 //=============================================================================
 
-#ifndef RRA_BACKEND_BITS_HLSLI
-#define RRA_BACKEND_BITS_HLSLI
+#ifndef RRA_BACKEND_BITS_H
+#define RRA_BACKEND_BITS_H
 
 #include <cstdint>
 
@@ -25,6 +25,13 @@ inline uint32_t bits(uint32_t bitcount)
 }
 
 //=====================================================================================================================
+// Helper function for generating a 16-bit bit mask
+inline uint16_t bits16(uint16_t bitcount)
+{
+    return (bitcount == 16) ? uint16_t(0xFFFFu) : uint16_t((1u << bitcount) - 1);
+}
+
+//=====================================================================================================================
 // Helper function for generating a 32-bit bit mask
 inline uint64_t bits64(uint64_t bitcount)
 {
@@ -36,6 +43,15 @@ inline uint64_t bits64(uint64_t bitcount)
 static uint32_t bitFieldInsert(uint32_t src, uint32_t bitOffset, uint32_t numBits, uint32_t data)
 {
     const uint32_t mask = bits(numBits);
+    src &= ~(mask << bitOffset);
+    return (src | ((data & mask) << bitOffset));
+}
+
+//=====================================================================================================================
+// Helper function for inserting data into a uint16_t src bitfield and returning the output
+static uint16_t bitFieldInsert16(uint16_t src, uint16_t bitOffset, uint16_t numBits, uint16_t data)
+{
+    const uint16_t mask = bits16(numBits);
     src &= ~(mask << bitOffset);
     return (src | ((data & mask) << bitOffset));
 }
@@ -57,10 +73,25 @@ static uint32_t bitFieldExtract(uint32_t src, uint32_t bitOffset, uint32_t numBi
 }
 
 //=====================================================================================================================
+// Helper function for extracting data from a src bitfield
+static uint16_t bitFieldExtract16(uint16_t src, uint16_t bitOffset, uint16_t numBits)
+{
+    return (src >> bitOffset) & bits16(numBits);
+}
+
+//=====================================================================================================================
+// Helper function for extracting data from a uint64_t src bitfield
+static uint64_t bitFieldExtract64(uint64_t src, uint64_t bitOffset, uint64_t numBits)
+{
+    return (src >> bitOffset) & bits64(numBits);
+}
+
+//=====================================================================================================================
 static uint32_t Pow2Align(uint32_t value,      ///< Value to align.
                           uint32_t alignment)  ///< Desired alignment (must be a power of 2).
 {
     return ((value + alignment - 1) & ~(alignment - 1));
 }
 
-#endif  // RRA_BACKEND_BITS_HLSLI
+#endif  // RRA_BACKEND_BITS_H
+

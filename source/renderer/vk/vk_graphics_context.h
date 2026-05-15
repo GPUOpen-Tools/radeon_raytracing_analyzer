@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for graphics context for the Vulkan API.
@@ -49,7 +49,7 @@ namespace rra
             /// @brief Initializes the Vulkan context and device.
             ///
             /// @returns True if the graphics context was initialized successfully, or false if a failure occurred.
-            bool Initialize(std::shared_ptr<GraphicsContextSceneInfo> info);
+            bool Initialize(GraphicsContextSceneInfo* info);
 
             /// @brief Cleans up the context.
             void Cleanup();
@@ -152,7 +152,7 @@ namespace rra
             /// @brief Collects and uploads the traversal trees to the device.
             ///
             /// returns True on successful upload.
-            bool CollectAndUploadTraversalTrees(std::shared_ptr<GraphicsContextSceneInfo> info);
+            bool CollectAndUploadTraversalTrees(GraphicsContextSceneInfo* info);
 
             Device                           device_{};                 ///< The renderer device.
             WindowInfo                       window_info_{};            ///< The window information.
@@ -160,7 +160,7 @@ namespace rra
             std::vector<VkTraversalTree>     blases_{};                 ///< The traversal tree.
             RendererSceneInfo*               scene_info_{};             ///< Information needed to render the scene.
 
-            /// We load our contents in a seperate thread so we can't show the error window and exit until we join main thread.
+            /// We load our contents in a separate thread so we can't show the error window and exit until we join main thread.
             bool error_window_primed_ = false;  /// A flag to track if the error window can be shown if the vulkan crashes after the loading has been complete.
             std::string initialization_error_message_ = "";  /// The error message in case of a crash before rendering starts (aka loading).
 
@@ -181,3 +181,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_GRAPHICS_CONTEXT_H_
+

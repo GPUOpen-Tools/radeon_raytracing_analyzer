@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Triangles pane on the BLAS tab.
@@ -65,7 +65,7 @@ private slots:
     /// Select the correct row in the table.
     ///
     /// @param triangle_node_id The node id of the triangle clicked on.
-    void SelectTriangle(uint32_t triangle_node_id);
+    void SelectTriangle(uint64_t triangle_node_id);
 
     /// @brief Set the BLAS index.
     ///
@@ -91,9 +91,10 @@ private:
     rra::BlasTrianglesModel* model_;             ///< Container class for the widget models.
     uint64_t                 blas_index_;        ///< The currently selected BLAS index.
     uint64_t                 tlas_index_;        ///< The currently selected TLAS index.
-    uint32_t                 triangle_node_id_;  ///< The currently selected triangle node id;
+    uint64_t                 triangle_node_id_;  ///< The currently selected triangle node id;
     bool                     data_valid_;        ///< Is the trace data valid.
     TableItemDelegate*       table_delegate_;    ///< The delegate responsible for painting the table.
 };
 
 #endif  // #define RRA_VIEWS_BLAS_BLAS_TRIANGLES_PANE_H_
+

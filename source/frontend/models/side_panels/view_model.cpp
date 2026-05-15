@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the View side pane model.
@@ -197,7 +197,8 @@ namespace rra
         if (render_state_adapter_ != nullptr)
         {
             SetModelData(kSidePaneViewRenderInstanceTransforms, render_state_adapter_->GetRenderInstancePretransform());
-            SetModelData(kSidePaneViewRenderBVH, render_state_adapter_->GetRenderBoundingVolumes());
+            SetModelData(kSidePaneViewRenderBVHInternal, render_state_adapter_->GetRenderInternalBoundingVolumes());
+            SetModelData(kSidePaneViewRenderBVHLeaf, render_state_adapter_->GetRenderLeafBoundingVolumes());
             SetModelData(kSidePaneViewRenderGeometry, render_state_adapter_->GetRenderGeometry());
             SetModelData(kSidePaneViewWireframeOverlay, render_state_adapter_->GetRenderWireframe());
             SetModelData(kSidePaneViewCullingMode, rra::Settings::Get().GetCullMode());
@@ -264,6 +265,14 @@ namespace rra
         return kCullingModes;
     }
 
+    void ViewModel::SetGeometryFilterRange(float min_value, float max_value, bool enabled)
+    {
+        if (render_state_adapter_ != nullptr)
+        {
+            render_state_adapter_->SetGeometryFilterRange(min_value, max_value, enabled);
+        }
+    }
+
     void ViewModel::SetRenderGeometry(bool enabled)
     {
         if (render_state_adapter_ != nullptr)
@@ -272,11 +281,11 @@ namespace rra
         }
     }
 
-    void ViewModel::SetRenderBVH(bool enabled)
+    void ViewModel::SetRenderBVH(bool internal_enabled, bool leaf_enabled)
     {
         if (render_state_adapter_ != nullptr)
         {
-            render_state_adapter_->SetRenderBoundingVolumes(enabled);
+            render_state_adapter_->SetRenderBoundingVolumes(internal_enabled, leaf_enabled);
         }
     }
 
@@ -335,7 +344,7 @@ namespace rra
     {
         if (render_state_adapter_ != nullptr)
         {
-            render_state_adapter_->AdaptTraversalCounterRangeToView([=](uint32_t min, uint32_t max) {
+            render_state_adapter_->AdaptTraversalCounterRangeToView([=, this](uint32_t min, uint32_t max) {
                 update_function(min, max);
                 Update();
             });
@@ -348,7 +357,7 @@ namespace rra
         {
             if (continous_update)
             {
-                render_state_adapter_->SetTraversalCounterContinuousUpdateFunction([=](uint32_t min, uint32_t max) {
+                render_state_adapter_->SetTraversalCounterContinuousUpdateFunction([=, this](uint32_t min, uint32_t max) {
                     update_function(min, max);
                     Update();
                 });
@@ -645,3 +654,4 @@ namespace rra
     }
 
 }  // namespace rra
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Summary model.
@@ -144,3 +144,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_OVERVIEW_SUMMARY_MODEL_H_
+

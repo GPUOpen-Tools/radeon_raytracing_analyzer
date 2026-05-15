@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS scene model.
@@ -16,6 +16,7 @@
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
 #include "public/rra_error.h"
+#include "public/rra_rtip_info.h"
 #include "public/rra_tlas.h"
 
 namespace rra
@@ -86,7 +87,7 @@ namespace rra
         return tlas_scene;
     }
 
-    bool RayInspectorSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const
+    bool RayInspectorSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint64_t node_child_id) const
     {
         RRA_UNUSED(blas_index);
         RRA_UNUSED(node_child_id);
@@ -96,8 +97,11 @@ namespace rra
     RraErrorCode RayInspectorSceneCollectionModel::CastClosestHitRayOnBvh(uint64_t                        bvh_index,
                                                                           const glm::vec3&                origin,
                                                                           const glm::vec3&                direction,
+                                                                          std::vector<rra::SceneNode*>*   blas_root_nodes,
                                                                           SceneCollectionModelClosestHit& scene_model_closest_hit) const
     {
+        RRA_UNUSED(blas_root_nodes);
+
         scene_model_closest_hit.distance = -1.0f;
         std::vector<uint32_t> hit_instances;
 
@@ -113,29 +117,29 @@ namespace rra
                     hit_instances.push_back(instance->instance_node);
                 }
             }
-        }
 
-        for (size_t i = 0; i < hit_instances.size(); i++)
-        {
-            // Gather the transform data for this instance.
-            glm::mat4 transform;
-            RRA_BUBBLE_ON_ERROR(RraTlasGetInstanceNodeTransform(bvh_index, hit_instances[i], reinterpret_cast<float*>(&transform)));
+            for (size_t i = 0; i < hit_instances.size(); i++)
+            {
+                // Gather the transform data for this instance.
+                glm::mat4 transform;
+                RRA_BUBBLE_ON_ERROR(RraTlasGetInstanceNodeTransform(bvh_index, hit_instances[i], reinterpret_cast<float*>(&transform)));
 
-            // Adjust the transform from 3x4 to 4x4.
-            transform[3][3] = 1.0f;
+                // Adjust the transform from 3x4 to 4x4.
+                transform[3][3] = 1.0f;
 
-            // Get the blas index for this transform;
-            uint64_t     blas_index;
-            RraErrorCode error_code = RraTlasGetBlasIndexFromInstanceNode(bvh_index, hit_instances[i], &blas_index);
-            RRA_ASSERT(error_code == kRraOk);
+                // Get the blas index for this transform;
+                uint64_t     blas_index;
+                RraErrorCode error_code = RraTlasGetBlasIndexFromInstanceNode(bvh_index, hit_instances[i], &blas_index);
+                RRA_ASSERT(error_code == kRraOk);
 
-            // Transform the ray into the blas space.
-            glm::vec3 transformed_origin    = glm::transpose(transform) * glm::vec4(origin, 1.0f);
-            glm::vec3 transformed_direction = glm::mat3(glm::transpose(transform)) * direction;
+                // Transform the ray into the blas space.
+                glm::vec3 transformed_origin    = glm::transpose(transform) * glm::vec4(origin, 1.0f);
+                glm::vec3 transformed_direction = glm::mat3(glm::transpose(transform)) * direction;
 
-            // Trace
-            CastClosestHitRayOnBlas(blas_index, hit_instances[i], transformed_origin, transformed_direction, scene_model_closest_hit);
-            scene_model_closest_hit.triangle_child_node = UINT32_MAX;
+                // Trace
+                CastClosestHitRayOnBlas(scene->GetRootNode(), hit_instances[i], transformed_origin, transformed_direction, scene_model_closest_hit);
+                scene_model_closest_hit.triangle_child_node = UINT32_MAX;
+            }
         }
 
         return kRraOk;
@@ -159,3 +163,4 @@ namespace rra
     }
 
 }  // namespace rra
+

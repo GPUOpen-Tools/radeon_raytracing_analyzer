@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Scene class.
@@ -12,6 +12,7 @@
 #undef max
 
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 #include <string>
 
@@ -105,7 +106,7 @@ namespace rra
         return instance_map;
     }
 
-    renderer::InstanceMap Scene::GetInstanceMap()
+    renderer::InstanceMap Scene::GetInstanceMap() const
     {
         renderer::InstanceMap instance_map;
 
@@ -156,12 +157,13 @@ namespace rra
         return itr->second;
     }
 
-    bool Scene::IsTriangleSplit(uint32_t goemetry_index, uint32_t primitive_index) const
+    bool Scene::IsTriangleSplit(uint32_t geometry_index, uint32_t primitive_index) const
     {
-        return GetSplitTriangles(goemetry_index, primitive_index).size() > 1;
+        auto itr = split_triangle_siblings_.find(GetGeometryPrimitiveIndexKey(geometry_index, primitive_index));
+        return (itr == split_triangle_siblings_.end()) ? false : itr->second.size() > 1;
     }
 
-    std::unordered_set<uint32_t>& Scene::GetSelectedNodeIDs()
+    std::unordered_set<uint64_t>& Scene::GetSelectedNodeIDs()
     {
         return selected_node_ids_;
     }
@@ -209,11 +211,42 @@ namespace rra
         return child_nodes_buffer_.data();
     }
 
+    SceneNode* Scene::GetRootNode()
+    {
+        return root_node_;
+    }
+
+    void Scene::SetGeometryFilterState(const GeometryFilterState& state)
+    {
+        geometry_filter_state_ = state;
+    }
+
+    const GeometryFilterState& Scene::GetGeometryFilterState() const
+    {
+        return geometry_filter_state_;
+    }
+
     void Scene::PopulateSceneInfo()
     {
-        scene_stats_.max_instance_count = ComputeMaxInstanceCount();
-        scene_stats_.max_triangle_count = ComputeMaxTriangleCount();
-        scene_stats_.max_tree_depth     = ComputeMaxTreeDepth();
+        if (is_tlas_)
+        {
+            scene_stats_.max_instance_count = ComputeMaxInstanceCount();
+            scene_stats_.max_triangle_count = ComputeMaxTriangleCount();
+            scene_stats_.max_tree_depth     = ComputeMaxTreeDepth();
+        }
+        else
+        {
+            // For BLAS scenes, query stats directly for this single BLAS.
+            scene_stats_.max_instance_count = 0;
+
+            uint32_t triangle_count = 0;
+            RraBlasGetTriangleNodeCount(bvh_index_, &triangle_count);
+            scene_stats_.max_triangle_count = triangle_count;
+
+            uint32_t depth = 0;
+            RraBlasGetMaxTreeDepth(bvh_index_, &depth);
+            scene_stats_.max_tree_depth = depth;
+        }
         PopulateRebraidMap();
         PopulateSplitTrianglesMap();
         PopulateInstanceNodes();
@@ -279,7 +312,8 @@ namespace rra
     void Scene::UpdateBoundingVolumes()
     {
         bounding_volume_list_.clear();
-        root_node_->AppendBoundingVolumesTo(bounding_volume_list_, depth_range_lower_bound_, depth_range_upper_bound_);
+        root_node_->AppendBoundingVolumesTo(
+            bounding_volume_list_, depth_range_lower_bound_, depth_range_upper_bound_, show_internal_bounds_, show_leaf_bounds_);
     }
 
     uint32_t Scene::ComputeMaxTriangleCount() const
@@ -350,21 +384,26 @@ namespace rra
         RraErrorCode error_code = RraBvhGetRootNodePtr(&root_node);
         RRA_ASSERT(error_code == kRraOk);
 
-        for (uint32_t node_id : selected_node_ids_)
+        for (uint64_t node_id : selected_node_ids_)
         {
-            renderer::Instance* instance = GetNodeById(node_id)->GetInstance();
-            if (instance)
+            SceneNode* node = GetNodeById(node_id);
+            if (node)
             {
-                renderer::SelectedVolumeInstance selected_volume = {};
-                error_code                                       = RraBlasGetBoundingVolumeExtents(instance->blas_index, root_node, &selection_extents);
-                RRA_ASSERT(error_code == kRraOk);
+                renderer::Instance* instance = node->GetInstance();
+                if (instance)
+                {
+                    renderer::SelectedVolumeInstance selected_volume = {};
+                    error_code                                       = RraBlasGetBoundingVolumeExtents(
+                        instance->blas_index, root_node, node->GetChildIndex(), node->GetGlobalChildIndex(), &selection_extents);
+                    RRA_ASSERT(error_code == kRraOk);
 
-                selected_volume.min          = {selection_extents.min_x, selection_extents.min_y, selection_extents.min_z};
-                selected_volume.max          = {selection_extents.max_x, selection_extents.max_y, selection_extents.max_z};
-                selected_volume.is_transform = true;
-                selected_volume.transform    = instance->transform;
+                    selected_volume.min          = {selection_extents.min_x, selection_extents.min_y, selection_extents.min_z};
+                    selected_volume.max          = {selection_extents.max_x, selection_extents.max_y, selection_extents.max_z};
+                    selected_volume.is_transform = true;
+                    selected_volume.transform    = instance->transform;
 
-                substrate_instances.push_back(selected_volume);
+                    substrate_instances.push_back(selected_volume);
+                }
             }
         }
 
@@ -457,7 +496,7 @@ namespace rra
         multi_select_ = multi_select;
     }
 
-    uint32_t Scene::GetArbitrarySelectedNodeId() const
+    uint64_t Scene::GetArbitrarySelectedNodeId() const
     {
         if (!selected_node_ids_.empty())
         {
@@ -466,10 +505,10 @@ namespace rra
         return 0;
     }
 
-    void Scene::UpdateCustomTriangleSelection(const std::unordered_set<uint32_t>& old_selection)
+    void Scene::UpdateCustomTriangleSelection(const std::unordered_set<uint64_t>& old_selection)
     {
         // Deselect old triangles.
-        for (uint32_t node_id : old_selection)
+        for (uint64_t node_id : old_selection)
         {
             auto node = GetNodeById(node_id);
             if (node)
@@ -498,7 +537,7 @@ namespace rra
         }
 
         // Select new triangles.
-        for (uint32_t node_id : selected_node_ids_)
+        for (uint64_t node_id : selected_node_ids_)
         {
             auto node = GetNodeById(node_id);
             if (node)
@@ -532,13 +571,13 @@ namespace rra
         }
     }
 
-    void Scene::SetSceneSelection(uint32_t node_child_id)
+    void Scene::SetSceneSelection(uint64_t node_child_id)
     {
         auto old_selection{selected_node_ids_};
 
         if (!multi_select_)
         {
-            for (uint32_t id : selected_node_ids_)
+            for (uint64_t id : selected_node_ids_)
             {
                 GetNodeById(id)->ResetSelectionNonRecursive();
             }
@@ -587,7 +626,7 @@ namespace rra
         return !selected_node_ids_.empty();
     }
 
-    uint32_t Scene::GetMostRecentSelectedNodeId() const
+    uint64_t Scene::GetMostRecentSelectedNodeId() const
     {
         return most_recent_selected_node_id_;
     }
@@ -686,9 +725,11 @@ namespace rra
         return false;
     }
 
-    SceneNode* Scene::GetNodeById(uint32_t node_child_id)
+    SceneNode* Scene::GetNodeById(uint64_t node_child_id) const
     {
-        auto iter = nodes_.find(node_child_id);
+        uint64_t node_id = is_tlas_ ? (uint32_t)node_child_id : node_child_id;
+
+        auto iter = nodes_.find(node_id);
         if (iter != nodes_.end())
         {
             return iter->second;
@@ -700,6 +741,13 @@ namespace rra
     {
         depth_range_lower_bound_ = lower_bound;
         depth_range_upper_bound_ = upper_bound;
+        IncrementSceneIteration();
+    }
+
+    void Scene::SetShowBounds(bool show_internal_bounds, bool show_leaf_bounds)
+    {
+        show_internal_bounds_ = show_internal_bounds;
+        show_leaf_bounds_     = show_leaf_bounds;
         IncrementSceneIteration();
     }
 
@@ -725,25 +773,99 @@ namespace rra
         return intersected_nodes;
     }
 
-    RraErrorCode CastClosestHitRayOnBlas(uint64_t         bvh_index,
-                                         SceneNode*       node,
-                                         const glm::vec3& origin,
-                                         const glm::vec3& direction,
-                                         SceneClosestHit& scene_closest_hit)
+    TriangleVertices SceneTriangleToTriVertices(const SceneTriangle& scene_tri)
     {
-        uint32_t root_node = UINT32_MAX;
-        RRA_BUBBLE_ON_ERROR(RraBvhGetRootNodePtr(&root_node));
+        const glm::vec3& a = scene_tri.a.position;
+        const glm::vec3& b = scene_tri.b.position;
+        const glm::vec3& c = scene_tri.c.position;
 
-        uint32_t triangle_count;
+        return {{a.x, a.y, a.z}, {b.x, b.y, b.z}, {c.x, c.y, c.z}};
+    }
 
+    bool Scene::ShouldFilterBlasInstance(const GeometryFilterState& filter_state, const renderer::Instance* instance, uint64_t blas_index) const
+    {
+        if (!filter_state.enabled || !instance)
+        {
+            return false;
+        }
+
+        float filter_value  = 0.0f;
+        bool  should_filter = false;
+        auto  mode          = filter_state.coloring_mode;
+
+        if (mode == renderer::GeometryColoringMode::kBlasMaxDepth)
+        {
+            filter_value  = static_cast<float>(instance->max_depth);
+            should_filter = true;
+        }
+        else if (mode == renderer::GeometryColoringMode::kBlasAverageDepth)
+        {
+            filter_value  = static_cast<float>(instance->average_depth);
+            should_filter = true;
+        }
+        else if (mode == renderer::GeometryColoringMode::kBlasTriangleCount)
+        {
+            filter_value  = static_cast<float>(instance->triangle_count);
+            should_filter = true;
+        }
+        else if (mode == renderer::GeometryColoringMode::kBlasInstanceCount)
+        {
+            filter_value  = static_cast<float>(GetTotalInstanceCountForBlas(blas_index));
+            should_filter = true;
+        }
+        else if (mode == renderer::GeometryColoringMode::kBlasMinSAH)
+        {
+            filter_value  = instance->min_triangle_sah;
+            should_filter = true;
+        }
+        else if (mode == renderer::GeometryColoringMode::kBlasAverageSAH)
+        {
+            filter_value  = instance->average_triangle_sah;
+            should_filter = true;
+        }
+
+        return should_filter && (filter_value < filter_state.min || filter_value > filter_state.max);
+    }
+
+    bool ShouldFilterTriangle(const GeometryFilterState& filter_state, const SceneTriangle& triangle, const SceneNode* node)
+    {
+        if (!filter_state.enabled || !node)
+        {
+            return false;
+        }
+
+        float filter_value  = 0.0f;
+        bool  should_filter = false;
+
+        if (filter_state.coloring_mode == renderer::GeometryColoringMode::kTriangleSAH)
+        {
+            filter_value  = std::abs(triangle.a.triangle_sah_and_selected);
+            should_filter = true;
+        }
+        else if (filter_state.coloring_mode == renderer::GeometryColoringMode::kTreeLevel)
+        {
+            filter_value  = static_cast<float>(node->GetDepth());
+            should_filter = true;
+        }
+
+        return should_filter && (filter_value < filter_state.min || filter_value > filter_state.max);
+    }
+
+    RraErrorCode CastClosestHitRayOnBlas(SceneNode*                 blas_root,
+                                         SceneNode*                 instance_node,
+                                         const glm::vec3&           origin,
+                                         const glm::vec3&           direction,
+                                         SceneClosestHit&           scene_closest_hit,
+                                         const GeometryFilterState& filter_state)
+    {
         // Two stack allocated buffers (since heap allocation was a bottleneck in this function).
-        StackVector<uint32_t, 1024> buffer0{};
-        StackVector<uint32_t, 1024> buffer1{};
+        StackVector<SceneNode*, 1024> buffer0{};
+        StackVector<SceneNode*, 1024> buffer1{};
 
         // We use the buffers indirectly through a pointer so we can swap them without having to copy.
-        StackVector<uint32_t, 1024>* traverse_nodes_ptr = &buffer0;
-        StackVector<uint32_t, 1024>* swap_nodes_ptr     = &buffer1;
-        traverse_nodes_ptr->PushBack(root_node);
+        StackVector<SceneNode*, 1024>* traverse_nodes_ptr = &buffer0;
+        StackVector<SceneNode*, 1024>* swap_nodes_ptr     = &buffer1;
+        traverse_nodes_ptr->PushBack(blas_root);
 
         // Memoized traversal of the tree.
         while (!traverse_nodes_ptr->Empty())
@@ -752,40 +874,36 @@ namespace rra
 
             for (size_t i = 0; i < traverse_nodes_ptr->Size(); i++)
             {
-                BoundingVolumeExtents extent = {};
+                SceneNode* blas_node = (*traverse_nodes_ptr)[i];
+
+                BoundingVolumeExtents extent = {blas_node->GetBoundingVolume()};
 
                 float closest = std::numeric_limits<float>::infinity();
 
-                RRA_BUBBLE_ON_ERROR(RraBlasGetBoundingVolumeExtents(bvh_index, (*traverse_nodes_ptr)[i], &extent));
                 if (renderer::IntersectAABB(
                         origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z), closest))
                 {
                     if (closest >= 0.0 && (scene_closest_hit.distance <= 0.0f || closest <= scene_closest_hit.distance))
                     {
                         // Get the child nodes. If this is not a box node, the child count is 0.
-                        uint32_t child_node_count;
-                        RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(bvh_index, (*traverse_nodes_ptr)[i], &child_node_count));
-                        StackVector<uint32_t, MAX_CHILD_NODES> child_nodes{};
+                        uint32_t                  child_node_count = (uint32_t)blas_node->GetChildCount();
+                        StackVector<uint32_t, 16> child_nodes{};
                         child_nodes.Resize(child_node_count);
-                        RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(bvh_index, (*traverse_nodes_ptr)[i], child_nodes.Data()));
 
                         for (uint32_t child_idx = 0; child_idx < child_nodes.Size(); ++child_idx)
                         {
-                            swap_nodes_ptr->PushBack(child_nodes[child_idx]);
+                            swap_nodes_ptr->PushBack(blas_node->GetChild(child_idx));
                         }
                     }
                 }
 
                 // Get the triangle nodes. If this is not a triangle the triangle count is 0.
-                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangleCount(bvh_index, (*traverse_nodes_ptr)[i], &triangle_count));
-                StackVector<TriangleVertices, MAX_CHILD_NODES> triangles{};
-                triangles.Resize(triangle_count);
-                RRA_BUBBLE_ON_ERROR(RraBlasGetNodeTriangles(bvh_index, (*traverse_nodes_ptr)[i], triangles.Data()));
+                StackVector<SceneTriangle, MAX_CHILD_NODES> triangles{blas_node->GetTriangles()};
 
                 // Go over each triangle and test for intersection.
                 for (size_t k = 0; k < triangles.Size(); k++)
                 {
-                    TriangleVertices triangle_vertices = triangles[k];
+                    TriangleVertices triangle_vertices = SceneTriangleToTriVertices(triangles[k]);
                     float            hit_distance;
 
                     glm::vec3 a = {triangle_vertices.a.x, triangle_vertices.a.y, triangle_vertices.a.z};
@@ -796,8 +914,14 @@ namespace rra
                     {
                         if (hit_distance > 0.0 && (scene_closest_hit.distance < 0.0f || hit_distance < scene_closest_hit.distance))
                         {
+                            // Check geometry filter for per-triangle coloring modes.
+                            if (ShouldFilterTriangle(filter_state, triangles[k], blas_node))
+                            {
+                                continue;
+                            }
+
                             scene_closest_hit.distance = hit_distance;
-                            scene_closest_hit.node     = node;
+                            scene_closest_hit.node     = instance_node;
                         }
                     }
                 }
@@ -809,11 +933,12 @@ namespace rra
         return kRraOk;
     }
 
-    void CastClosestHitRayOnTriangle(SceneTriangle    triangle,
-                                     SceneNode*       node,
-                                     const glm::vec3& origin,
-                                     const glm::vec3& direction,
-                                     SceneClosestHit& scene_closest_hit)
+    void CastClosestHitRayOnTriangle(SceneTriangle              triangle,
+                                     SceneNode*                 node,
+                                     const glm::vec3&           origin,
+                                     const glm::vec3&           direction,
+                                     SceneClosestHit&           scene_closest_hit,
+                                     const GeometryFilterState& filter_state)
     {
         float hit_distance;
 
@@ -822,13 +947,19 @@ namespace rra
         {
             if (hit_distance > 0.0 && (scene_closest_hit.distance < 0.0f || hit_distance < scene_closest_hit.distance))
             {
+                // Check geometry filter for per-triangle coloring modes.
+                if (ShouldFilterTriangle(filter_state, triangle, node))
+                {
+                    return;
+                }
+
                 scene_closest_hit.distance = hit_distance;
                 scene_closest_hit.node     = node;
             }
         }
     }
 
-    SceneClosestHit Scene::CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction) const
+    SceneClosestHit Scene::CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction, std::vector<rra::SceneNode*>* blas_root_nodes) const
     {
         auto            cast_results      = CastRayCollectNodes(ray_origin, ray_direction);
         SceneClosestHit scene_closest_hit = {};
@@ -838,21 +969,28 @@ namespace rra
             renderer::Instance* instance = node->GetInstance();
             if (instance)
             {
+                // Check per-BLAS geometry filter before descending into the BLAS.
+                if (ShouldFilterBlasInstance(geometry_filter_state_, instance, instance->blas_index))
+                {
+                    continue;
+                }
+
                 glm::vec3 transformed_origin    = glm::transpose(glm::inverse(instance->transform)) * glm::vec4(ray_origin, 1.0f);
                 glm::vec3 transformed_direction = glm::mat3(glm::transpose(glm::inverse(instance->transform))) * ray_direction;
-                CastClosestHitRayOnBlas(instance->blas_index, node, transformed_origin, transformed_direction, scene_closest_hit);
+                CastClosestHitRayOnBlas(
+                    (*blas_root_nodes)[instance->blas_index], node, transformed_origin, transformed_direction, scene_closest_hit, geometry_filter_state_);
             }
 
             for (auto& triangle : node->GetTriangles())
             {
-                CastClosestHitRayOnTriangle(triangle, node, ray_origin, ray_direction, scene_closest_hit);
+                CastClosestHitRayOnTriangle(triangle, node, ray_origin, ray_direction, scene_closest_hit, geometry_filter_state_);
             }
         }
 
         return scene_closest_hit;
     }
 
-    SceneContextMenuOptions Scene::GetSceneContextOptions(SceneContextMenuRequest request)
+    SceneContextMenuOptions Scene::GetSceneContextOptions(SceneContextMenuRequest request, std::vector<rra::SceneNode*>* blas_root_nodes)
     {
         std::map<std::string, std::function<void()>> options;
 
@@ -883,14 +1021,25 @@ namespace rra
                     renderer::Instance* instance = node->GetInstance();
                     if (instance)
                     {
+                        // Check per-BLAS geometry filter before descending into the BLAS.
+                        if (ShouldFilterBlasInstance(geometry_filter_state_, instance, instance->blas_index))
+                        {
+                            continue;
+                        }
+
                         glm::vec3 transformed_origin    = glm::transpose(glm::inverse(instance->transform)) * glm::vec4(request.origin, 1.0f);
                         glm::vec3 transformed_direction = glm::mat3(glm::transpose(glm::inverse(instance->transform))) * request.direction;
-                        CastClosestHitRayOnBlas(instance->blas_index, node, transformed_origin, transformed_direction, scene_closest_hit);
+                        CastClosestHitRayOnBlas((*blas_root_nodes)[instance->blas_index],
+                                                node,
+                                                transformed_origin,
+                                                transformed_direction,
+                                                scene_closest_hit,
+                                                geometry_filter_state_);
                     }
 
                     for (auto& triangle : node->GetTriangles())
                     {
-                        CastClosestHitRayOnTriangle(triangle, node, request.origin, request.direction, scene_closest_hit);
+                        CastClosestHitRayOnTriangle(triangle, node, request.origin, request.direction, scene_closest_hit, geometry_filter_state_);
                     }
                 }
 
@@ -900,18 +1049,18 @@ namespace rra
 
                     if (is_tlas_)
                     {
-                        RraErrorCode error_code = RraTlasGetNodeName(scene_closest_hit.node->GetId(), &node_name);
+                        RraErrorCode error_code = RraTlasGetNodeName(bvh_index_, (uint32_t)scene_closest_hit.node->GetId(), &node_name);
                         RRA_ASSERT(error_code == kRraOk);
                     }
                     else
                     {
-                        RraErrorCode error_code = RraBlasGetNodeName(bvh_index_, scene_closest_hit.node->GetId(), &node_name);
+                        RraErrorCode error_code = RraBlasGetNodeName(bvh_index_, (uint32_t)scene_closest_hit.node->GetId(), &node_name);
                         RRA_ASSERT(error_code == kRraOk);
                     }
                     std::string node_display_name = std::to_string(scene_closest_hit.node->GetId());
 
                     uint64_t node_address;
-                    auto     error_code = RraBvhGetNodeOffset(scene_closest_hit.node->GetId(), &node_address);
+                    auto     error_code = RraBvhGetNodeOffset((uint32_t)scene_closest_hit.node->GetId(), &node_address);
                     if (error_code == kRraOk)
                     {
                         std::ostringstream ss;
@@ -951,7 +1100,7 @@ namespace rra
                     most_recent_node->SetVisible(true, this);
                     most_recent_node->ApplyNodeSelection(selected_node_ids_);
 
-                    for (uint32_t id : selected_node_ids_)
+                    for (uint64_t id : selected_node_ids_)
                     {
                         auto node = GetNodeById(id);
                         if (node)
@@ -974,7 +1123,7 @@ namespace rra
 
     void Scene::HideSelectedNodes()
     {
-        for (uint32_t id : selected_node_ids_)
+        for (uint64_t id : selected_node_ids_)
         {
             auto node = GetNodeById(id);
             if (node)
@@ -1024,7 +1173,7 @@ namespace rra
             node.second->SetVisible(false, this);
         }
 
-        for (uint32_t id : selected_node_ids_)
+        for (uint64_t id : selected_node_ids_)
         {
             auto node = GetNodeById(id);
             if (node)
@@ -1075,3 +1224,4 @@ namespace rra
     }
 
 }  // namespace rra
+

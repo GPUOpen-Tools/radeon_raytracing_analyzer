@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the geometry info class.
@@ -59,3 +59,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_GEOMETRY_INFO_H_
+

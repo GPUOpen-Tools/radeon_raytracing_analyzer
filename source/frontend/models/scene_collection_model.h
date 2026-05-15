@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the BVH scene model.
@@ -14,14 +14,17 @@
 
 namespace rra
 {
+    class SceneNode;
+
     /// @brief Info on a raycast's closest intersection.
     struct SceneCollectionModelClosestHit
     {
-        float    distance            = -1.0f;
-        uint64_t blas_index          = ULLONG_MAX;
-        uint32_t instance_node       = UINT32_MAX;
-        uint32_t triangle_child_node = UINT32_MAX;
-        uint32_t triangle_index      = UINT32_MAX;
+        float      distance            = -1.0f;
+        uint64_t   blas_index          = ULLONG_MAX;
+        uint64_t   instance_node       = UINT32_MAX;
+        uint64_t   triangle_child_node = UINT32_MAX;
+        uint32_t   triangle_index      = UINT32_MAX;
+        SceneNode* triangle_node       = nullptr;
     };
 
     /// @brief The SceneCollectionModel base class declaration.
@@ -69,15 +72,17 @@ namespace rra
 
         /// @brief Cast a ray into the scene for a closest hit.
         ///
-        /// @param [in] bvh_index The index of the BVH used to cast the ray into.
-        /// @param [in] origin The origin of the ray.
-        /// @param [in] direction The direction of the ray.
+        /// @param [in] bvh_index                The index of the BVH used to cast the ray into.
+        /// @param [in] origin                   The origin of the ray.
+        /// @param [in] direction                The direction of the ray.
+        /// @param [in] blas_root_nodes          All root nodes of BLASes.
         /// @param [out] scene_model_closest_hit The closest hit.
         ///
         /// @returns Will return 'kRraOk' when successful, or an error code in case of failure.
         virtual RraErrorCode CastClosestHitRayOnBvh(uint64_t                        bvh_index,
                                                     const glm::vec3&                origin,
                                                     const glm::vec3&                direction,
+                                                    std::vector<rra::SceneNode*>*   blas_root_nodes,
                                                     SceneCollectionModelClosestHit& scene_model_closest_hit) const = 0;
 
         /// @brief Reset any values in the model to their default state.
@@ -90,16 +95,21 @@ namespace rra
         /// @returns True if fused instances are enabled.
         virtual bool GetFusedInstancesEnabled(uint64_t bvh_index) const = 0;
 
+        /// @brief Set the geometry filter state for CPU-side raycast filtering.
+        ///
+        /// @param [in] state The geometry filter state.
+        void SetGeometryFilterState(const GeometryFilterState& state);
+
     protected:
         /// @brief Cast a ray into a BLAS to find the closest hit.
         ///
-        /// @param bvh_index     The index of the BLAS.
-        /// @param instance_node The nod
-        /// @param origin
-        /// @param direction
-        /// @param scene_model_closest_hit
-        void CastClosestHitRayOnBlas(uint64_t                        bvh_index,
-                                     uint32_t                        instance_node,
+        /// @param blas_root               The root node of the BLAS.
+        /// @param instance_node           The instance node.
+        /// @param origin                  The origin of the ray.
+        /// @param direction               The direction of the ray.
+        /// @param scene_model_closest_hit The scene collection model closest hit.
+        void CastClosestHitRayOnBlas(SceneNode*                      blas_root,
+                                     uint64_t                        instance_node,
                                      const glm::vec3&                origin,
                                      const glm::vec3&                direction,
                                      SceneCollectionModelClosestHit& scene_model_closest_hit) const;
@@ -110,8 +120,11 @@ namespace rra
         /// @param node_child_id The node to query.
         ///
         /// @return true if node should be skipped, false otherwise.
-        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const = 0;
+        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint64_t node_child_id) const = 0;
+
+        GeometryFilterState geometry_filter_state_;  ///< The current geometry filter state for CPU-side raycast filtering.
     };
 }  // namespace rra
 
 #endif  // RRA_MODELS_SCENE_MODEL_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Render State Adapter interface. This type can
@@ -107,6 +107,11 @@ namespace rra
             /// @returns The coloring mode index.
             int32_t GetGeometryColoringMode() const;
 
+            /// @brief Get the current geometry coloring mode enum value.
+            ///
+            /// @returns The current GeometryColoringMode enum value.
+            GeometryColoringMode GetCurrentGeometryColoringModeValue() const;
+
             /// @brief Retrieve the list of available coloring modes for the given BVH type flags.
             ///
             /// @param [in] type Flags indicating the BVH types to retrieve valid coloring modes for.
@@ -156,6 +161,28 @@ namespace rra
             /// @returns The traversal counter max
             uint32_t GetTraversalCounterMax() const;
 
+            /// @brief Set the geometry filter range.
+            ///
+            /// @param [in] min_value The minimum filter value in raw coloring mode domain.
+            /// @param [in] max_value The maximum filter value in raw coloring mode domain.
+            /// @param [in] enabled   Whether the filter is enabled.
+            void SetGeometryFilterRange(float min_value, float max_value, bool enabled);
+
+            /// @brief Get the geometry filter minimum.
+            ///
+            /// @returns The geometry filter minimum value.
+            float GetGeometryFilterMin() const;
+
+            /// @brief Get the geometry filter maximum.
+            ///
+            /// @returns The geometry filter maximum value.
+            float GetGeometryFilterMax() const;
+
+            /// @brief Get whether the geometry filter is enabled.
+            ///
+            /// @returns True if the geometry filter is enabled.
+            bool GetGeometryFilterEnabled() const;
+
             /// @brief Set whether or not to render the traversal.
             ///
             /// @param [in] render_traversal A flag indicating if the traversal should be rendered.
@@ -166,15 +193,44 @@ namespace rra
             /// @returns True if the traversal should be rendered, or false if not.
             bool GetRenderTraversal() const;
 
+            /// @brief Set the pixel coordinates for which to read back the traversal counter.
+            ///
+            /// @param [in] x The x pixel coordinate.
+            /// @param [in] y The y pixel coordinate.
+            void SetHoveredPixel(uint32_t x, uint32_t y);
+
+            /// @brief Get the traversal counter value at the last hovered pixel.
+            ///
+            /// @returns The traversal counter value.
+            uint32_t GetHoveredTraversalCounter() const;
+
+            /// @brief Check if a valid hovered pixel traversal counter is available.
+            ///
+            /// @returns True if the hovered traversal counter value is valid.
+            bool IsHoveredTraversalCounterValid() const;
+
+            /// @brief Get the name of the current traversal counter mode.
+            ///
+            /// @param [in] type The BVH type flags to filter available modes.
+            ///
+            /// @returns The name of the current traversal counter mode.
+            std::string GetCurrentTraversalCounterModeName(BvhTypeFlags type) const;
+
             /// @brief Set whether or not to render bounding volume geometry.
             ///
-            /// @param [in] render_bounding_volumes A flag indicating if the BVH geometry should be rendered or not.
-            void SetRenderBoundingVolumes(bool render_bounding_volumes);
+            /// @param [in] render_internal_bounding_volumes A flag indicating if the BVH internal geometry should be rendered or not.
+            /// @param [in] render_leaf_bounding_volumes    A flag indicating if the BVH leaf geometry should be rendered or not.
+            void SetRenderBoundingVolumes(bool render_internal_bounding_volumes, bool render_leaf_bounding_volumes);
 
-            /// @brief Get whether or not the BVH volume geometry will be rendered.
+            /// @brief Get whether or not the internal BVH volume geometry will be rendered.
             ///
-            /// @returns True if the BVH geometry should be rendered, or false if not.
-            bool GetRenderBoundingVolumes() const;
+            /// @returns True if the internal BVH geometry should be rendered, or false if not.
+            bool GetRenderInternalBoundingVolumes() const;
+
+            /// @brief Get whether or not the leaf BVH volume geometry will be rendered.
+            ///
+            /// @returns True if the leaf BVH geometry should be rendered, or false if not.
+            bool GetRenderLeafBoundingVolumes() const;
 
             /// @brief Get whether or not the instance pretransform is rendered.
             ///
@@ -230,11 +286,17 @@ namespace rra
             SelectionRenderModule*                                       selection_render_module_ = nullptr;  ///< The selection render volume instance.
             RayInspectorOverlayRenderModule*                             ray_inspector_overlay_module_ = nullptr;  ///< The ray inspector module to draw rays.
             std::vector<std::function<void(rra::renderer::HeatmapData)>> heatmap_update_callbacks_;                ///< The heatmap update callbacks.
-            uint32_t traversal_counter_min_ = 0;      ///< The min traversal value to compare against to check if the renderer should re-render.
-            uint32_t traversal_counter_max_ = 0;      ///< The max traversal value to compare against to check if the renderer should re-render.
-            bool     using_navi_3_          = false;  ///< The flag to determine which Architecture to render for.
+            uint32_t traversal_counter_min_      = 0;      ///< The min traversal value to compare against to check if the renderer should re-render.
+            uint32_t traversal_counter_max_      = 0;      ///< The max traversal value to compare against to check if the renderer should re-render.
+            bool     using_navi_3_               = false;  ///< The flag to determine which Architecture to render for.
+            float    geometry_filter_min_        = 0.0f;   ///< CPU-side copy of the geometry filter minimum.
+            float    geometry_filter_max_        = 0.0f;   ///< CPU-side copy of the geometry filter maximum.
+            bool     geometry_filter_enabled_    = false;  ///< CPU-side copy of whether the geometry filter is enabled.
+            bool     internal_bvh_nodes_enabled_ = true;   ///< Is rendering of internal BVH nodes enabled.
+            bool     leaf_bvh_nodes_enabled_     = true;   ///< Is rendering of leaf BVH nodes enabled.
         };
     }  // namespace renderer
 }  // namespace rra
 
 #endif  // RRA_RENDERER_RENDER_STATE_ADAPTER_H_
+

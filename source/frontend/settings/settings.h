@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Define the settings and information about recently opened traces.
@@ -15,6 +15,7 @@
 #include "qt_common/utils/common_definitions.h"
 
 #include "public/renderer_types.h"
+#include "public/rra_print.h"
 
 #include "constants.h"
 #include "managers/pane_manager.h"
@@ -98,7 +99,8 @@ enum CheckboxSetting
 {
     kCheckboxSettingShowGeometry,
     kCheckboxSettingLockCamera,
-    kCheckboxSettingShowAxisAlignedBVH,
+    kCheckboxSettingShowAxisAlignedInternalBVH,
+    kCheckboxSettingShowAxisAlignedLeafBVH,
     kCheckboxSettingShowInstanceTransform,
     kCheckboxSettingShowWireframe,
     kCheckboxSettingAcceptFirstHit,
@@ -129,6 +131,7 @@ enum SettingID
     kSettingGeneralDecimalPrecision,
     kSettingGeneralPersistentUIState,
     kSettingGeneralDriverOverridesAllowNotifications,
+    kSettingGeneralLogLevel,
 
     kSettingThemesAndColorsPalette,
 
@@ -185,7 +188,8 @@ enum SettingID
     kSettingPersistenceTLASTraversalCounterMode,
     kSettingPersistenceTLASRenderingMode,
     kSettingPersistenceTLASShowGeometry,
-    kSettingPersistenceTLASShowAxisAlignedBVH,
+    kSettingPersistenceTLASShowAxisAlignedInternalBVH,
+    kSettingPersistenceTLASShowAxisAlignedLeafBVH,
     kSettingPersistenceTLASShowInstanceTransform,  // TLAS only.
     kSettingPersistenceTLASShowWireframe,
     kSettingPersistenceTLASAcceptFirstHit,
@@ -201,7 +205,8 @@ enum SettingID
     kSettingPersistenceBLASTraversalCounterMode,
     kSettingPersistenceBLASRenderingMode,
     kSettingPersistenceBLASShowGeometry,
-    kSettingPersistenceBLASShowAxisAlignedBVH,
+    kSettingPersistenceBLASShowAxisAlignedInternalBVH,
+    kSettingPersistenceBLASShowAxisAlignedLeafBVH,
     kSettingPersistenceBLASShowWireframe,
     kSettingPersistenceBLASAcceptFirstHit,
     kSettingPersistenceBLASCullBackFacingTriangles,
@@ -217,7 +222,8 @@ enum SettingID
     kSettingPersistenceInspectorRenderingMode,
     kSettingPersistenceInspectorShowGeometry,
     kSettingPersistenceInspectorLockCamera,
-    kSettingPersistenceInspectorShowAxisAlignedBVH,
+    kSettingPersistenceInspectorShowAxisAlignedInternalBVH,
+    kSettingPersistenceInspectorShowAxisAlignedLeafBVH,
     kSettingPersistenceInspectorShowWireframe,
     kSettingPersistenceInspectorAcceptFirstHit,
     kSettingPersistenceInspectorCullBackFacingTriangles,
@@ -419,6 +425,18 @@ namespace rra
         ///
         /// @param [in] node_id_type The node ID type.
         void SetTreeviewNodeIdType(TreeviewNodeIDType node_id_type);
+
+        /// @brief Get the value of the kSettingGeneralLogLevel in the settings.
+        ///
+        /// This corresponds to the Log level ie how much logging is output.
+        ///
+        /// @return The log level.
+        LogLevel GetLogLevel() const;
+
+        /// @brief Set the value of the kSettingGeneralLogLevel in the settings.
+        ///
+        /// @param [in] log_level The log level.
+        void SetLogLevel(LogLevel log_level);
 
         /// @brief Get the color palette from the settings.
         ///
@@ -773,3 +791,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_SETTINGS_SETTINGS_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific bottom level acceleration structure
@@ -12,6 +12,9 @@
 #include <array>
 #include <unordered_map>
 #include <utility>
+
+#include "public/rra_bvh.h"
+#include "public/rra_error.h"
 
 #include "bvh/geometry_info.h"
 #include "bvh/node_types/procedural_node.h"
@@ -33,6 +36,9 @@ namespace rta
         /// @brief Destructor.
         virtual ~EncodedRtIp31BottomLevelBvh();
 
+        /// @brief Get the total number of leaf nodes.
+        ///
+        /// @return The number of leaf nodes.
         virtual uint32_t GetLeafNodeCount() const override;
 
         /// @brief Get the geometry info data.
@@ -79,13 +85,113 @@ namespace rta
         /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
         void SetSurfaceAreaHeuristic(float surface_area_heuristic);
 
+        /// @brief Get the node name for a node.
+        ///
+        /// @param [in]  node_id             The node id.
+        /// @param [out] out_name            A pointer to receive the name string.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeName(uint32_t node_id, const char** out_name) const override;
+
+        /// @brief Get the node tooltip name for a node.
+        ///
+        /// @param [in]  node_id             The node id.
+        /// @param [out] out_name            A pointer to receive the tooltip string.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeNameToolTip(uint32_t node_id, const char** out_tooltip) const override;
+
+        /// @brief Retrieve the geometry index for the triangle node.
+        ///
+        /// @param [in]  node_id             The node whose geometry index is to be found.
+        /// @param [in]  child_index		 The node's child index from its parent.
+        /// @param [in]  global_child_index  The node's global child index.
+        /// @param [out] out_geometry_index  The geometry index for the triangle node.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetGeometryIndex(uint32_t node_id, uint32_t child_index, uint32_t global_child_index, uint32_t* out_geometry_index) const override;
+
+        /// @brief Retrieve the primitive index for the triangle node.
+        ///
+        /// @param [in]  node_id				The node whose primitive index is to be found.
+        /// @param [in]  child_index			The node's child index from its parent.
+        /// @param [in]  global_child_index     The node's global child index.
+        /// @param [in]  local_primitive_index	The local primitive index within the given node.
+        /// @param [out] out_primitive_index	The primitive index for the triangle node.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetPrimitiveIndex(uint32_t  node_id,
+                                               uint32_t  child_index,
+                                               uint32_t  global_child_index,
+                                               uint32_t  local_primitive_index,
+                                               uint32_t* out_primitive_index) const override;
+
+        /// @brief Retrieve whether the node is inactive.
+        ///
+        /// @param [in]  node_id            The node whose geometry flags are to be retrieved.
+        /// @param [in]  child_index		The node's child index from its parent.
+        /// @param [in]  global_child_index The node's global child index.
+        /// @param [out] out_is_inactive	Whether the node is inactive.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetIsInactive(uint32_t node_id, uint32_t child_index, uint32_t global_child_index, bool* out_is_inactive) const override;
+
+        /// @brief Retrieve the number of triangles on a given node.
+        ///
+        /// @param [in]  node_id            The node ID to retrieve the triangles from.
+        /// @param [in]  child_index		The node's child index from its parent.
+        /// @param [in]  global_child_index The node's global child index.
+        /// @param [out] out_triangle_count The number of triangles in the BLAS.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeTriangleCount(uint32_t  node_id,
+                                                  uint32_t  child_index,
+                                                  uint32_t  global_child_index,
+                                                  uint32_t* out_triangle_count) const override;
+
+        /// @brief Retrieve the triangles stored in the given node id.
+        ///
+        /// @param [in]  node_id            The node ID to retrieve the triangles for.
+        /// @param [in]  child_index	    The node's child index from its parent.
+        /// @param [in]  global_child_index The node's global child index.
+        /// @param [out] out_triangles      A preallocated pointer to dump the triangles into.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeTriangles(uint32_t          node_id,
+                                              uint32_t          child_index,
+                                              uint32_t          global_child_index,
+                                              TriangleVertices* out_triangles) const override;
+
+        /// @brief Retrieve the vertices stored in the given node id.
+        ///
+        /// @param [in]  node_id            The node ID to retrieve the vertices for.
+        /// @param [in]  child_index        The node's child index from its parent.
+        /// @param [in]  global_child_index The node's global child index.
+        /// @param [out] out_count          The number of vertices in the triangle node.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeVertexCount(uint32_t node_id, uint32_t child_index, uint32_t global_child_index, uint32_t* out_count) const override;
+
+        /// @brief Retrieve the vertices stored in the given node id.
+        ///
+        /// @param [in]  node_id            The node ID to retrieve the vertices for.
+        /// @param [in]  child_index        The node's child index from its parent.
+        /// @param [in]  global_child_index The node's global child index.
+        /// @param [out] out_triangles      A preallocated pointer to dump the vertices into.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeVertices(uint32_t               node_id,
+                                             uint32_t               child_index,
+                                             uint32_t               global_child_index,
+                                             struct VertexPosition* out_vertices) const override;
+
         /// @brief Get triangle pair indices of a triangle node.
         ///
         /// @param [in]  node_ptr  The node pointer.
         /// @param [out] out_count The number of triangle pair indices.
         ///
         /// @return List of pairs of (primitive_structure, triangle_pair_index).
-        std::array<std::pair<PrimitiveStructure*, uint32_t>, 8> GetTrianglePairIndices(dxr::amd::NodePointer node_ptr, uint32_t* out_count);
+        std::array<std::pair<const PrimitiveStructure*, uint32_t>, 8> GetTrianglePairIndices(dxr::amd::NodePointer node_ptr, uint32_t* out_count) const;
 
         /// @brief Get triangle primitive structure offsets of a triangle node.
         ///
@@ -114,25 +220,27 @@ namespace rta
         void CountNodes();
 
         /// @brief Traverse the tree for compute leaf node surface area heuristics.
-        void ComputeSurfaceAreaHeuristic();
+        virtual void ComputeSurfaceAreaHeuristic() override;
 
         /// @brief Get the parent node of the node passed in.
         ///
-        /// @param [in] node_id The node whose parent is to be found.
+        /// @param [in] node_addr          The node whose parent is to be found.
+        /// @param [in] global_child_index The node's global child index.
         ///
         /// @return The parent node. If the node passed in is the root node, the
         /// parent node will be an invalid node.
-        virtual uint32_t GetParentNode(uint32_t node_id) const override;
+        virtual uint32_t GetParentNode(uint32_t node_addr, uint32_t global_child_index = 0) const;
 
         /// @brief Traverse nodes to associate children with parents where necessary.
         virtual void PreprocessParents() override;
 
         /// @brief Get the surface area heuristic for a given leaf node.
         ///
-        /// @param [in] node_id The leaf node whose SAH is to be found.
+        /// @param [in] node_id            The leaf node whose SAH is to be found.
+        /// @param [in] global_child_index The leaf's global child index.
         ///
         /// @return The surface area heuristic.
-        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const override;
+        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, uint32_t global_child_index) const override;
 
         /// @brief Set the surface area heuristic for a given leaf node.
         ///
@@ -161,3 +269,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_RT_IP_31_BOTTOM_LEVEL_BVH_H_
+

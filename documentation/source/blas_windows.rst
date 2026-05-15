@@ -45,6 +45,9 @@ In the center is a rendering of the bounding volume and geometry contained withi
 volume. Please see the TLAS help section for more information since the control modes
 and functionality is similar to the TLAS scene display.
 
+Similar to the TLAS viewer, mousing over geometry in the scene will show a tooltip
+indicating the numeric value of that triangle for the currently selected color mode.
+
 It is possible to select individual triangles within the scene by clicking on a mesh within
 the viewport. The BLAS hierarchy tree view will expand as necessary to focus on the
 selected triangle node.

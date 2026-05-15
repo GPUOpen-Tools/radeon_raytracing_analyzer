@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the asynchronous ray history loader.
@@ -119,7 +119,7 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
 
     total_dispatch_indices_ = dim_x_ * dim_y_ * dim_z_;
 
-    process_ = std::async(std::launch::async, [=]() {
+    process_ = std::async(std::launch::async, [=, this]() {
         auto           file       = rdf::Stream::OpenFile(file_path);
         rdf::ChunkFile chunk_file = rdf::ChunkFile(file);
 
@@ -800,3 +800,4 @@ void RraAsyncRayHistoryLoader::UpdateInvocationCountsUi(const RraRayHistoryStats
     invocation_counts_.loop_iteration_count        = stats.loop_iteration_count;
     invocation_counts_.instance_intersection_count = stats.instance_intersection_count;
 }
+

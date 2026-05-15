@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the SceneNode class.
@@ -73,16 +73,11 @@ namespace rra
         /// @param [in] scene A pointer to the scene that is requesting this from the node.
         void AppendInstanceMap(renderer::InstanceMap& instance_map, const Scene* scene) const;
 
-        /// @brief Recursively adds triangles (aligned vertices) to the given list.
-        /// Note: Triangles in disabled branches are discarded.
-        /// @param [out] vertex_list A reference to the map to add instances on.
-        void AppendTrianglesTo(VertexList& vertex_list) const;
-
         /// @brief Construct the tree structure from BLAS.
         ///
-        /// @param [in] blas_index The blas index.
-        /// @param [out] vertex_buffer The vertex buffer that triangles nodes will sub-allocate from.
-        /// @param [out] child_buffer The buffer to sub-allocate node children from.
+        /// @param [in]  blas_index      The blas index.
+        /// @param [out] vertex_buffer   The vertex buffer that triangles nodes will sub-allocate from.
+        /// @param [out] child_buffer    The buffer to sub-allocate node children from.
         ///
         /// @returns A scene node.
         static SceneNode* ConstructFromBlas(uint32_t blas_index, renderer::RraVertex* vertex_buffer, std::byte* child_buffer);
@@ -102,7 +97,7 @@ namespace rra
         /// @brief Reset selection and child nodes.
         ///
         /// @param [out] selected_node_ids The set of selected node IDs.
-        void ResetSelection(std::unordered_set<uint32_t>& selected_node_ids);
+        void ResetSelection(std::unordered_set<uint64_t>& selected_node_ids);
 
         /// @brief Reset selection.
         void ResetSelectionNonRecursive();
@@ -110,7 +105,7 @@ namespace rra
         /// @brief Apply node selection.
         ///
         /// @param [out] selected_node_ids The set of selected node IDs.
-        void ApplyNodeSelection(std::unordered_set<uint32_t>& selected_node_ids);
+        void ApplyNodeSelection(std::unordered_set<uint64_t>& selected_node_ids);
 
         /// @brief Get the bounding volume of this node.
         ///
@@ -120,7 +115,7 @@ namespace rra
         /// @brief Collect the nodes in a map.
         ///
         /// @param [out] nodes The node map to register on.
-        void CollectNodes(std::map<uint32_t, SceneNode*>& nodes);
+        void CollectNodes(std::map<uint64_t, SceneNode*>& nodes);
 
         /// @brief Enable the node.
         ///
@@ -144,7 +139,7 @@ namespace rra
         /// @brief Set the all the children under this node as visible.
         ///
         /// @param [out] selected_node_ids The set of selected node IDs.
-        void SetAllChildrenAsVisible(std::unordered_set<uint32_t>& selected_node_ids);
+        void SetAllChildrenAsVisible(std::unordered_set<uint64_t>& selected_node_ids);
 
         /// @brief Check if the node is visible.
         ///
@@ -194,14 +189,18 @@ namespace rra
         /// @brief Get node id.
         ///
         /// @returns The node id.
-        uint32_t GetId() const;
+        uint64_t GetId() const;
 
         /// @brief Append bounding volumes to list.
         ///
         /// @param [out] volume_list The list to append onto.
         /// @param [in] lower_bound The lower depth bound.
         /// @param [in] upper_bound The upper depth bound.
-        void AppendBoundingVolumesTo(renderer::BoundingVolumeList& volume_list, uint32_t lower_bound, uint32_t upper_bound) const;
+        void AppendBoundingVolumesTo(renderer::BoundingVolumeList& volume_list,
+                                     uint32_t                      lower_bound,
+                                     uint32_t                      upper_bound,
+                                     bool                          show_internal_bounds,
+                                     bool                          show_leaf_bounds) const;
 
         /// @brief Get the depth of this node.
         ///
@@ -245,22 +244,55 @@ namespace rra
         /// @param filtered Culled if true.
         void SetFiltered(bool filtered);
 
+        /// @brief Get the child index of this node.
+        ///
+        /// @return The child index.
+        uint32_t GetChildIndex() const;
+
+        /// @brief Get the global child index of this node.
+        ///
+        /// @return The global child index.
+        uint32_t GetGlobalChildIndex() const;
+
+        /// @brief Get the number of children this node has.
+        ///
+        /// @return The child count.
+        size_t GetChildCount() const;
+
+        /// @brief Get a specific child of this node.
+        ///
+        /// @param child_index The child index to get.
+        ///
+        /// @return The child node.
+        SceneNode* GetChild(uint32_t child_index);
+
+        /// @brief Get the rotation of the node.
+        ///
+        /// @return The rotation.
+        glm::mat3 GetRotation();
+
+        /// @brief Get the BLAS index.
+        ///
+        /// @return The BLAS index.
+        uint64_t GetBvhIndex();
+
     private:
         /// @brief Construct the tree structure from TLAS.
         ///
         /// @param [in] tlas_index  The tlas index.
         /// @param [in] node_id     The ID of this node.
+        /// @param [in] child_index The child index of this node.
         /// @param [in] depth       The current depth for this node.
         ///
         /// @returns A scene node.
-        static SceneNode* ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t node_id, uint32_t depth);
+        static SceneNode* ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t node_id, uint32_t child_index, uint32_t depth);
 
         /// @brief Construct the tree structure from BLAS.
         ///
-        /// @param [in] blas_index The blas index.
-        /// @param [in] root_id The id of the root BLAS node.
-        /// @param [out] vertex_buffer The buffer to sub-allocate triangle node vertices from.
-        /// @param [out] child_buffer The buffer to sub-allocate node children from.
+        /// @param [in] blas_index       The blas index.
+        /// @param [in] root_id          The id of the root BLAS node.
+        /// @param [out] vertex_buffer   The buffer to sub-allocate triangle node vertices from.
+        /// @param [out] child_buffer    The buffer to sub-allocate node children from.
         ///
         /// @returns A scene node.
         static SceneNode* ConstructFromBlasNode(uint64_t blas_index, uint32_t root_id, renderer::RraVertex* vertex_buffer, std::byte* child_buffer);
@@ -274,26 +306,34 @@ namespace rra
         /// @param [in] scene The scene to collect rebraid siblings from.
         void AppendMergedInstanceToInstanceMap(renderer::Instance instance, renderer::InstanceMap& instance_map, const Scene* scene) const;
 
-        SceneNode*                               parent_ = nullptr;                   ///< The parent node.
-        uint32_t                                 node_id_;                            ///< The node id for this node.
-        uint64_t                                 bvh_index_;                          ///< The BVH index of the scene.
-        uint32_t                                 depth_           = 0;                ///< The depth of this node.
-        bool                                     enabled_         = true;             ///< A flag to represent enablement of this node.
-        bool                                     filtered_        = false;            ///< A flag to represent whether this node is disabled by being filtered.
-        bool                                     visible_         = true;             ///< A flag to represent the visibility of this node.
-        bool                                     selected_        = false;            ///< A flag to represent if this node is selected.
-        bool                                     is_tlas_         = false;            ///< A flag to represent if this node is in a TLAS scene.
-        BoundingVolumeExtents                    bounding_volume_ = {};               ///< The bounding volume of this node.
-        StackVector<SceneNode*, MAX_CHILD_NODES> child_nodes_     = {};               ///< The child nodes of this node.
-        std::optional<renderer::Instance>        instance_;                           ///< The optional instance that this node contains.
-        uint32_t                                 vertex_count_    = 0;                ///< The number of vertices.
-        renderer::RraVertex*                     vertices_        = nullptr;          ///< The vertices that this node contains. Aligned by 3.
-        uint32_t                                 primitive_index_ = 0;                ///< The primitive index of this node.
-        uint32_t                                 geometry_index_  = 0;                ///< The geometry index of this node.
-        uint32_t                                 obb_index_       = {};               ///< The oriented bounding box matrix index.
-        glm::mat3                                rotation_        = glm::mat3(1.0f);  ///< The rotation of a box node.
+        /// @brief Get a uint64_t hash of the child index and node ID.
+        ///
+        /// @return The hash of the child index and node ID.
+        uint64_t GetChildIdHash() const;
+
+        SceneNode*                               parent_ = nullptr;              ///< The parent node.
+        uint32_t                                 node_id_;                       ///< The node id for this node.
+        uint64_t                                 bvh_index_;                     ///< The BVH index of the scene.
+        uint32_t                                 depth_           = 0;           ///< The depth of this node.
+        bool                                     enabled_         = true;        ///< A flag to represent enablement of this node.
+        bool                                     filtered_        = false;       ///< A flag to represent whether this node is disabled by being filtered.
+        bool                                     visible_         = true;        ///< A flag to represent the visibility of this node.
+        bool                                     selected_        = false;       ///< A flag to represent if this node is selected.
+        bool                                     is_tlas_         = false;       ///< A flag to represent if this node is in a TLAS scene.
+        BoundingVolumeExtents                    bounding_volume_ = {};          ///< The bounding volume of this node.
+        StackVector<SceneNode*, MAX_CHILD_NODES> child_nodes_     = {};          ///< The child nodes of this node.
+        std::optional<renderer::Instance>        instance_;                      ///< The optional instance that this node contains.
+        uint32_t                                 vertex_count_       = 0;        ///< The number of vertices.
+        renderer::RraVertex*                     vertices_           = nullptr;  ///< The vertices that this node contains. Aligned by 3.
+        uint32_t                                 primitive_index_    = 0;        ///< The primitive index of this node.
+        uint32_t                                 geometry_index_     = 0;        ///< The geometry index of this node.
+        uint32_t                                 obb_index_          = {};       ///< The oriented bounding box matrix index.
+        glm::mat3                                rotation_           = glm::mat3(1.0f);  ///< The rotation of a box node.
+        uint32_t                                 child_index_        = 0;                ///< The parent node's child index of this node.
+        uint32_t                                 global_child_index_ = 0;                ///< The node index of all nodes in the BVH.
     };
 
 }  // namespace rra
 
 #endif  // RRA_RENDERER_SCENE_NODE_H_
+

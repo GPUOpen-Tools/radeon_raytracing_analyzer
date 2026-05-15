@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS viewer model.
@@ -148,10 +148,11 @@ namespace rra
     void TlasViewerModel::UpdateUI(const QModelIndex& model_index, uint64_t tlas_index)
     {
         AccelerationStructureViewerModel::SetSelectedNodeIndex(model_index);
-        uint32_t node_id = GetNodeIdFromModelIndex(model_index, tlas_index, kIsTlasModel);
+        uint32_t node_id     = GetNodeIdFromModelIndex(model_index, tlas_index, kIsTlasModel);
+        uint32_t child_index = GetChildIndexFromModelIndex(model_index);
 
         const char* node_str{};
-        RraTlasGetNodeName(node_id, &node_str);
+        RraTlasGetNodeName(tlas_index, node_id, &node_str);
         std::string node_type{node_str};
 
         if (IsRebraidedNode(tlas_index))
@@ -253,7 +254,7 @@ namespace rra
 
         // Show bounding box extents.
         BoundingVolumeExtents bounding_volume_extents;
-        if (RraTlasGetBoundingVolumeExtents(tlas_index, node_id, &bounding_volume_extents) == kRraOk)
+        if (RraTlasGetBoundingVolumeExtents(tlas_index, node_id, child_index, &bounding_volume_extents) == kRraOk)
         {
             PopulateExtentsTable(bounding_volume_extents);
         }
@@ -263,6 +264,245 @@ namespace rra
         {
             PopulateFlagsTable(instance_flags);
         }
+    }
+
+    QString TlasViewerModel::UpdateToolTip(uint64_t bvh_index, rra::SceneCollectionModelClosestHit closest_hit)
+    {
+        uint32_t instance_node = (uint32_t)closest_hit.instance_node;
+        if (instance_node == UINT32_MAX || !render_state_adapter_)
+        {
+            return "";
+        }
+
+        uint64_t   blas_index    = closest_hit.blas_index;
+        uint64_t   packed_node   = closest_hit.triangle_child_node;
+        SceneNode* triangle_node = closest_hit.triangle_node;
+        bool       has_triangle  = (packed_node != UINT32_MAX) && (triangle_node != nullptr);
+
+        uint32_t node_id            = (uint32_t)(packed_node & UINT32_MAX);
+        uint32_t global_child_index = (uint32_t)(packed_node >> 32);
+
+        int decimal_precision = rra::Settings::Get().GetDecimalPrecision();
+
+        renderer::GeometryColoringMode mode = render_state_adapter_->GetCurrentGeometryColoringModeValue();
+
+        switch (mode)
+        {
+        case renderer::GeometryColoringMode::kBlasAverageSAH:
+        {
+            uint32_t root_node = UINT32_MAX;
+            if (RraBvhGetRootNodePtr(&root_node) == kRraOk)
+            {
+                float sah = 0.0f;
+                if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, root_node, 0, true, &sah) == kRraOk)
+                    return "Avg. SAH: " + QString::number(sah, kQtFloatFormat, decimal_precision);
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kBlasMinSAH:
+        {
+            uint32_t root_node = UINT32_MAX;
+            if (RraBvhGetRootNodePtr(&root_node) == kRraOk)
+            {
+                float sah = 0.0f;
+                if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, root_node, 0, true, &sah) == kRraOk)
+                    return "Min. SAH: " + QString::number(sah, kQtFloatFormat, decimal_precision);
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kTriangleSAH:
+        {
+            if (!has_triangle)
+                break;
+            float sah = 0.0f;
+            if (RraBlasGetSurfaceAreaHeuristic(blas_index, node_id, global_child_index, &sah) == kRraOk)
+                return "SAH: " + QString::number(sah, kQtFloatFormat, decimal_precision);
+            break;
+        }
+        case renderer::GeometryColoringMode::kTreeLevel:
+        {
+            if (!has_triangle)
+                break;
+            return "Depth: " + QString::number(triangle_node->GetDepth());
+        }
+        case renderer::GeometryColoringMode::kBlasMaxDepth:
+        {
+            uint32_t depth = 0;
+            if (RraBlasGetMaxTreeDepth(blas_index, &depth) == kRraOk)
+                return "Max depth: " + QString::number(depth);
+            break;
+        }
+        case renderer::GeometryColoringMode::kBlasAverageDepth:
+        {
+            uint32_t depth = 0;
+            if (RraBlasGetAvgTreeDepth(blas_index, &depth) == kRraOk)
+                return "Avg. depth: " + QString::number(depth);
+            break;
+        }
+        case renderer::GeometryColoringMode::kBlasInstanceId:
+            return "BLAS index: " + QString::number(blas_index);
+        case renderer::GeometryColoringMode::kInstanceIndex:
+        {
+            uint32_t unique_index = 0;
+            if (RraTlasGetUniqueInstanceIndexFromInstanceNode(bvh_index, instance_node, &unique_index) == kRraOk)
+                return "Instance index: " + QString::number(unique_index);
+            break;
+        }
+        case renderer::GeometryColoringMode::kBlasInstanceCount:
+        {
+            uint64_t count = 0;
+            if (RraTlasGetInstanceCount(bvh_index, blas_index, &count) == kRraOk)
+                return "Instance count: " + QString::number(count);
+            break;
+        }
+        case renderer::GeometryColoringMode::kBlasTriangleCount:
+        {
+            uint32_t count = 0;
+            if (RraBlasGetUniqueTriangleCount(blas_index, &count) == kRraOk)
+                return "Triangle count: " + QString::number(count);
+            break;
+        }
+        case renderer::GeometryColoringMode::kInstanceMask:
+        {
+            uint32_t mask = 0;
+            if (RraTlasGetInstanceNodeMask(bvh_index, instance_node, &mask) == kRraOk)
+                return "Mask: 0x" + QString("%1").arg(mask, 2, 16, QChar('0'));
+            break;
+        }
+        case renderer::GeometryColoringMode::kGeometryIndex:
+        {
+            if (!has_triangle)
+                break;
+            return "Geometry index: " + QString::number(triangle_node->GetGeometryIndex());
+        }
+        case renderer::GeometryColoringMode::kOpacity:
+        {
+            if (!has_triangle)
+                break;
+            uint32_t geometry_flags = 0;
+            if (RraBlasGetGeometryFlags(blas_index, triangle_node->GetGeometryIndex(), &geometry_flags) == kRraOk)
+            {
+                bool is_opaque = (geometry_flags & GeometryFlags::kOpaque) != 0;
+                return QString("Opaque: ") + (is_opaque ? "yes" : "no");
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kFinalOpacity:
+        {
+            if (!has_triangle)
+                break;
+            uint32_t instance_flags = 0;
+            uint32_t geometry_flags = 0;
+            RraTlasGetInstanceFlags(bvh_index, instance_node, &instance_flags);
+            RraBlasGetGeometryFlags(blas_index, triangle_node->GetGeometryIndex(), &geometry_flags);
+            bool geo_opaque      = (geometry_flags & GeometryFlags::kOpaque) != 0;
+            bool force_opaque    = (instance_flags & VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR) != 0;
+            bool force_no_opaque = (instance_flags & VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR) != 0;
+            bool final_opaque    = force_opaque || (!force_no_opaque && geo_opaque);
+            return QString("Opaque: ") + (final_opaque ? "yes" : "no");
+        }
+        case renderer::GeometryColoringMode::kInstanceForceOpaqueOrNoOpaqueBits:
+        {
+            uint32_t instance_flags = 0;
+            if (RraTlasGetInstanceFlags(bvh_index, instance_node, &instance_flags) == kRraOk)
+            {
+                bool force_opaque    = (instance_flags & VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR) != 0;
+                bool force_no_opaque = (instance_flags & VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR) != 0;
+                if (force_opaque)
+                    return "Force opaque";
+                if (force_no_opaque)
+                    return "Force no opaque";
+                return "No force";
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kFastBuildOrTraceFlag:
+        {
+            VkBuildAccelerationStructureFlagBitsKHR flags{};
+            if (RraBlasGetBuildFlags(blas_index, &flags) == kRraOk)
+            {
+                bool fast_trace = (flags & VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR) != 0;
+                bool fast_build = (flags & VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR) != 0;
+                if (fast_trace)
+                    return "Fast trace";
+                if (fast_build)
+                    return "Fast build";
+                return "None";
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kAllowUpdateFlag:
+        {
+            VkBuildAccelerationStructureFlagBitsKHR flags{};
+            if (RraBlasGetBuildFlags(blas_index, &flags) == kRraOk)
+            {
+                bool allow_update = (flags & VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR) != 0;
+                return QString("Allow update: ") + (allow_update ? "yes" : "no");
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kAllowCompactionFlag:
+        {
+            VkBuildAccelerationStructureFlagBitsKHR flags{};
+            if (RraBlasGetBuildFlags(blas_index, &flags) == kRraOk)
+            {
+                bool allow_compaction = (flags & VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR) != 0;
+                return QString("Allow compaction: ") + (allow_compaction ? "yes" : "no");
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kLowMemoryFlag:
+        {
+            VkBuildAccelerationStructureFlagBitsKHR flags{};
+            if (RraBlasGetBuildFlags(blas_index, &flags) == kRraOk)
+            {
+                bool low_memory = (flags & VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR) != 0;
+                return QString("Low memory: ") + (low_memory ? "yes" : "no");
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kInstanceFacingCullDisableBit:
+        {
+            uint32_t instance_flags = 0;
+            if (RraTlasGetInstanceFlags(bvh_index, instance_node, &instance_flags) == kRraOk)
+            {
+                bool cull_disable = (instance_flags & VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR) != 0;
+                return QString("Facing cull disable: ") + (cull_disable ? "yes" : "no");
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kInstanceFlipFacingBit:
+        {
+            uint32_t instance_flags = 0;
+            if (RraTlasGetInstanceFlags(bvh_index, instance_node, &instance_flags) == kRraOk)
+            {
+                bool flip_facing = (instance_flags & VK_GEOMETRY_INSTANCE_TRIANGLE_FLIP_FACING_BIT_KHR) != 0;
+                return QString("Flip facing: ") + (flip_facing ? "yes" : "no");
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kInstanceRebraiding:
+        {
+            uint32_t unique_index = 0;
+            if (RraTlasGetUniqueInstanceIndexFromInstanceNode(bvh_index, instance_node, &unique_index) == kRraOk)
+            {
+                Scene* tlas_scene = scene_collection_model_->GetSceneByIndex(bvh_index);
+                if (tlas_scene)
+                {
+                    bool rebraided = tlas_scene->IsInstanceRebraided(unique_index);
+                    return QString("Rebraided: ") + (rebraided ? "yes" : "no");
+                }
+            }
+            break;
+        }
+        case renderer::GeometryColoringMode::kTriangleSplitting:
+        case renderer::GeometryColoringMode::kLit:
+        case renderer::GeometryColoringMode::kTechnical:
+        default:
+            break;
+        }
+
+        return "";
     }
 
     void TlasViewerModel::InitializeFlagsTableModel(ScaledTableView* table_view)
@@ -301,9 +541,12 @@ namespace rra
 
     void TlasViewerModel::SetSceneSelection(const QModelIndex& model_index, uint64_t index)
     {
-        uint32_t node_id = GetNodeIdFromModelIndex(model_index, index, kIsTlasModel);
-        Scene*   scene   = scene_collection_model_->GetSceneByIndex(index);
-        scene->SetSceneSelection(node_id);
+        uint32_t node_id            = GetNodeIdFromModelIndex(model_index, index, kIsTlasModel);
+        uint32_t global_child_index = GetGlobalChildIndexFromModelIndex(model_index);
+        uint64_t node_child_id      = ((uint64_t)global_child_index << 32) | node_id;
+
+        Scene* scene = scene_collection_model_->GetSceneByIndex(index);
+        scene->SetSceneSelection(node_child_id);
     }
 
     bool TlasViewerModel::SelectedNodeIsLeaf() const
@@ -316,7 +559,7 @@ namespace rra
         if (model_index.isValid())
         {
             uint32_t node_id                = GetNodeIdFromModelIndex(model_index, index, kIsTlasModel);
-            last_selected_node_is_instance_ = RraBvhIsInstanceNode(node_id);
+            last_selected_node_is_instance_ = RraTlasIsInstanceNode(index, node_id);
         }
         else
         {
@@ -361,3 +604,4 @@ namespace rra
     }
 
 }  // namespace rra
+

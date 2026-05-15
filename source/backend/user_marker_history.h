@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for UserMarkerHistory (a RDF chunk type) .
@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 #include "public/rra_error.h"
 
@@ -72,3 +72,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_BACKEND_USER_MARKER_HISTORY_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Colors and Themes pane.
@@ -465,7 +465,7 @@ void ThemesAndColorsPane::SetSettingsPaletteId(int button_id, int palette_id)
         break;
 
     default:
-        DebugWindow::DbgMsg("Warning: Hit unused default switch case.");
+        DebugWindow::DbgMsg(kLogLevelWarning, "Hit unused default switch case in SetSettingsPaletteId.");
         break;
     }
 }
@@ -514,3 +514,4 @@ int ThemesAndColorsPane::GetSettingsPaletteId(int button_id) const
         return -1;
     }
 }
+

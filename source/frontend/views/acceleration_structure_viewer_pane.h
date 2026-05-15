@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for an acceleration structure viewer pane base class.
@@ -77,6 +77,19 @@ public:
     /// be determined in the derived class implementation.
     virtual void SelectLeafNode(const uint64_t blas_index, const bool navigate_to_pane);
 
+    /// @brief Update the tooltip in the renderer widget.
+    ///
+    /// Implementation is done by the derived class since the derived class contains the actual renderer widget.
+    ///
+    /// @param [in] tool_tip_string  The tooltip text to be displayed.
+    virtual void UpdateToolTip(QString tool_tip_string) = 0;
+
+    /// @brief Update the bounding volume wireframes based on the checkbox settings.
+    ///
+    /// @param[in] show_internal  Should the internal (box) node wireframes be shown.
+    /// @param[in] show_leaf      Should the leaf (instance or triangle) node wireframes be shown.
+    void UpdateShowBoundingVolumes(bool show_internal, bool show_leaf);
+
 public slots:
     /// @brief Update the pane when the selected tree node has been changed.
     ///
@@ -121,6 +134,11 @@ protected:
     ///
     /// @param [in] table_view The table to apply the parameters to.
     void SetTableParams(ScaledTableView* table_view);
+
+    /// @brief Get the BLAS root nodes.
+    ///
+    /// @return The BLAS root nodes.
+    virtual std::vector<rra::SceneNode*>* GetBlasRootNodes() = 0;
 
     rra::AccelerationStructureViewerModel* model_                            = nullptr;  ///< The model backing the view.
     ArrowIconComboBox*                     acceleration_structure_combo_box_ = nullptr;  ///< The combo box showing the acceleration structures.
@@ -219,7 +237,8 @@ private:
     bool            cursor_overridden_{false};                               ///< True if the cursor has been overridden by the hand cursor.
 
     rra::renderer::OrientationGizmoHitType last_gizmo_hit_{
-        rra::renderer::OrientationGizmoHitType::kNone};  ///< The orientation gizmo hit type that occured at the last mouse movement.
+        rra::renderer::OrientationGizmoHitType::kNone};  ///< The orientation gizmo hit type that occurred at the last mouse movement.
 };
 
 #endif  // RRA_VIEWS_ACCELERATION_STRUCTURE_VIEWER_PANE_H_
+

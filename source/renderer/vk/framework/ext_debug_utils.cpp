@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for Vulkan debug extension utility functions.
@@ -33,7 +33,7 @@ namespace rra
             can_use_debug_utils = instance_properties->AddInstanceExtensionName("VK_EXT_debug_utils");
             if (can_use_debug_utils)
             {
-                RraPrint("Note that the extension 'VK_EXT_debug_utils' is only available under tools that enable them, like RenderDoc\n");
+                RraPrint(kLogLevelInfo, "Note that the extension 'VK_EXT_debug_utils' is only available under tools that enable them, like RenderDoc\n");
             }
 
             return can_use_debug_utils;
@@ -95,3 +95,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

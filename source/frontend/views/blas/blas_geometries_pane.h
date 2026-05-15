@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the geometries pane on the BLAS tab.
@@ -88,3 +88,4 @@ private:
 };
 
 #endif  // #define RRA_VIEWS_BLAS_BLAS_GEOMETRIES_PANE_H_
+

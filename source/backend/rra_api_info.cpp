@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the API info interface.
@@ -21,3 +21,4 @@ bool RraApiInfoIsVulkan()
 {
     return data_set_.api_info.IsVulkan();
 }
+

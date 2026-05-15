@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Ray history pane.
@@ -145,7 +145,7 @@ private:
     void ClearRaySelection();
 
     /// @brief Called repeatedly by timer_ while the dispatch is loading.
-    void TimerUpdate();
+    void UpdateTimer();
 
     /// @brief Loads the dispatches using backend.
     void LoadDispatches();
@@ -168,7 +168,7 @@ private:
     std::vector<bool>                            dispatches_loaded_;             ///< A flag indicating if all dispatches are loaded.
     TableItemDelegate*                           table_delegate_{};              ///< The delegate to draw the table rows.
     Ui_RayHistoryViewerWidget                    ray_history_viewer_{};          ///< The viewer widget for the ray history image.
-    bool                                         show_event_occured_{};          ///< True if showEvent() has been called.
+    bool                                         show_event_occurred_{};         ///< True if showEvent() has been called.
     std::vector<rra::renderer::HeatmapGenerator> heatmap_generators_{};          ///< The heatmap modes available at update.
     rra::renderer::DispatchIdData                max_statistics_{};              ///< The maximum of each statistic type in the current heatmap image.
     ZoomIconGroupManager*                        zoom_icon_manager_;             ///< The object responsible for the zoom icon status.
@@ -186,3 +186,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_RAY_RAY_HISTORY_PANE_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-//  Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+//  Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific primitive node definition.
@@ -218,7 +218,7 @@ struct HwTrianglePairDesc
         triDesc = 0;
     }
 
-    uint32_t GetData()
+    uint32_t GetData() const
     {
         return triDesc;
     }
@@ -228,62 +228,62 @@ struct HwTrianglePairDesc
         triDesc = packedData;
     }
 
-    uint32_t Tri1V0()
+    uint32_t Tri1V0() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI1_V0_IDX_SHIFT, TRI_VERTEX_IDX_NUM_BITS);
     }
 
-    uint32_t Tri1V1()
+    uint32_t Tri1V1() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI1_V1_IDX_SHIFT, TRI_VERTEX_IDX_NUM_BITS);
     }
 
-    uint32_t Tri1V2()
+    uint32_t Tri1V2() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI1_V2_IDX_SHIFT, TRI_VERTEX_IDX_NUM_BITS);
     }
 
-    bool Tri1Opaque()
+    bool Tri1Opaque() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI1_OPAQUE_SHIFT, 1);
     }
 
-    bool Tri1DoubleSided()
+    bool Tri1DoubleSided() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI1_DOUBLE_SIDED_SHIFT, 1);
     }
 
-    bool Tri1Valid()
+    bool Tri1Valid() const
     {
         return Tri1V0() != 0 || Tri1V1() != 0 || Tri1V2() != 0;
     }
 
-    uint32_t Tri0V0()
+    uint32_t Tri0V0() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI0_V0_IDX_SHIFT, TRI_VERTEX_IDX_NUM_BITS);
     }
 
-    uint32_t Tri0V1()
+    uint32_t Tri0V1() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI0_V1_IDX_SHIFT, TRI_VERTEX_IDX_NUM_BITS);
     }
 
-    uint32_t Tri0V2()
+    uint32_t Tri0V2() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI0_V2_IDX_SHIFT, TRI_VERTEX_IDX_NUM_BITS);
     }
 
-    bool Tri0Opaque()
+    bool Tri0Opaque() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI0_OPAQUE_SHIFT, OPAQUE_NUM_BITS);
     }
 
-    bool Tri0DoubleSided()
+    bool Tri0DoubleSided() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_TRI0_DOUBLE_SIDED_SHIFT, DOUBLE_SIDED_NUM_BITS);
     }
 
-    uint32_t PrimRangeStopBit()
+    uint32_t PrimRangeStopBit() const
     {
         return bitFieldExtract(triDesc, TRI_DESC_PRIM_RANGE_STOP_BIT_SHIFT, PRIM_RANGE_STOP_NUM_BITS);
     }
@@ -420,87 +420,87 @@ struct PrimitiveStructure
         }
     }
 
-    uint32_t PayloadXLength()
+    uint32_t PayloadXLength() const
     {
         return 1 + bitFieldExtract(primData[0], PAYLOAD_X_BIT_SHIFT_IN_DW0, PAYLOAD_NUM_BITS);
     }
 
-    uint32_t PayloadYLength()
+    uint32_t PayloadYLength() const
     {
         return 1 + bitFieldExtract(primData[0], PAYLOAD_Y_BIT_SHIFT_IN_DW0, PAYLOAD_NUM_BITS);
     }
 
-    uint32_t PayloadZLength()
+    uint32_t PayloadZLength() const
     {
         return 1 + bitFieldExtract(primData[0], PAYLOAD_Z_BIT_SHIFT_IN_DW0, PAYLOAD_NUM_BITS);
     }
 
-    uint32_t TrailingZeroLength()
+    uint32_t TrailingZeroLength() const
     {
         return bitFieldExtract(primData[0], TRAILING_ZERO_BIT_SHIFT_IN_DW0, TRIALING_ZERO_NUM_BITS);
     }
 
-    uint32_t GeoIdAnchorSize()
+    uint32_t GeoIdAnchorSize() const
     {
         return 2 * bitFieldExtract(primData[0], GEO_ID_ANCHOR_SIZE_BIT_SHIFT_IN_DW0, GEO_ID_ANCHOR_NUM_BITS);
     }
 
-    uint32_t GeoIdPayloadSize()
+    uint32_t GeoIdPayloadSize() const
     {
         return 2 * bitFieldExtract(primData[0], GEO_ID_PAYLOAD_SIZE_BIT_SHIFT_IN_DW0, GEO_ID_PAYLOAD_NUM_BITS);
     }
 
-    uint32_t TrianglePairCount()
+    uint32_t TrianglePairCount() const
     {
         return 1 + bitFieldExtract(primData[0], TRIANGLE_PAIR_COUNT_BIT_SHIFT_IN_DW0, TRIPAIR_COUNT_NUM_BITS);
     }
 
-    uint32_t VertexType()
+    uint32_t VertexType() const
     {
         return bitFieldExtract(primData[0], VERTEX_TYPE_BIT_SHIFT_IN_DW0, VERTEX_TYPE_NUM_BITS);
     }
 
-    uint32_t PrimIdAnchorSize()
+    uint32_t PrimIdAnchorSize() const
     {
         return bitFieldExtract(primData[1], PRIM_ID_ANCOR_SIZE_BIT_SHIFT_IN_DW1, PRIM_ID_ANCHOR_NUM_BITS);
     }
 
-    uint32_t PrimIdPayloadSize()
+    uint32_t PrimIdPayloadSize() const
     {
         return bitFieldExtract(primData[1], PRIM_ID_PAYLOAD_SIZE_BIT_SHIFT_IN_DW1, PRIM_ID_PAYLOAD_NUM_BITS);
     }
 
-    uint32_t IndexSectionMidpoint()
+    uint32_t IndexSectionMidpoint() const
     {
         return bitFieldExtract(primData[1], INDEX_SECTION_MIDPOINT_SHIFT_IN_DW1, INDEX_SECTION_MID_POINT_NUM_BITS);
     }
 
-    uint32_t PrefixXLength()
+    uint32_t PrefixXLength() const
     {
         return 32 - TrailingZeroLength() - PayloadXLength();
     }
 
-    uint32_t PrefixYLength()
+    uint32_t PrefixYLength() const
     {
         return 32 - TrailingZeroLength() - PayloadYLength();
     }
 
-    uint32_t PrefixZLength()
+    uint32_t PrefixZLength() const
     {
         return 32 - TrailingZeroLength() - PayloadZLength();
     }
 
-    uint32_t VertexPayloadLength()
+    uint32_t VertexPayloadLength() const
     {
         return PayloadXLength() + PayloadYLength() + PayloadZLength();
     }
 
-    uint32_t VertexPrefixesLength()
+    uint32_t VertexPrefixesLength() const
     {
         return PrefixXLength() + PrefixYLength() + PrefixZLength();
     }
 
-    uint32_t TriangleCount()
+    uint32_t TriangleCount() const
     {
         uint32_t triCount = 0;
         uint32_t i        = 0;
@@ -558,7 +558,7 @@ struct PrimitiveStructure
         }
     }
 
-    uint32_t PackPrimitiveStructureHeaderLo(UnpackedPrimStructHeader header)
+    uint32_t PackPrimitiveStructureHeaderLo(UnpackedPrimStructHeader header) const
     {
         uint32_t dataLo = PackMetadataHeaderBitsLo(header.payloadXLengthMinusOne,
                                                    header.payloadYLengthMinusOne,
@@ -572,7 +572,7 @@ struct PrimitiveStructure
     }
 
     // Pack the High 32bit of PrimitiveStructure Header
-    uint32_t PackPrimitiveStructureHeaderHi(UnpackedPrimStructHeader header)
+    uint32_t PackPrimitiveStructureHeaderHi(UnpackedPrimStructHeader header) const
     {
         uint32_t dataHi = PackMetadataHeaderBitsHi(header.primIdAnchorSize, header.primIdPayloadSize, header.indexSectionMidpoint);
         return dataHi;
@@ -712,7 +712,7 @@ struct PrimitiveStructure
         WriteGeoIdAnchor(header.anchorGeoId);
     }
 
-    uint32_t ReadPackedBits(uint32_t startBitOffset, uint32_t length)
+    uint32_t ReadPackedBits(uint32_t startBitOffset, uint32_t length) const
     {
         uint32_t startByteOffset = startBitOffset / 8;
         uint32_t startDWOffset   = startBitOffset / 32;
@@ -737,7 +737,7 @@ struct PrimitiveStructure
         return dataOut;
     }
 
-    glm::uvec3 VertexPrefixes()
+    glm::uvec3 VertexPrefixes() const
     {
         uint32_t prefixXLength = PrefixXLength();
         uint32_t prefixYLength = PrefixYLength();
@@ -756,7 +756,7 @@ struct PrimitiveStructure
         return prefixes;
     }
 
-    glm::vec3 ReadVertex(uint32_t index, bool isProcedural)
+    glm::vec3 ReadVertex(uint32_t index, bool isProcedural) const
     {
         uint32_t x = 0;
         uint32_t y = 0;
@@ -797,7 +797,7 @@ struct PrimitiveStructure
         return glm::vec3(xf, yf, zf);
     }
 
-    TrianglePairDesc ReadTrianglePairDesc(uint32_t triPairIndex)
+    TrianglePairDesc ReadTrianglePairDesc(uint32_t triPairIndex) const
     {
         const uint32_t startOffset = 1024 - TRI_PAIR_DESC_SIZE * (triPairIndex + 1);
         uint32_t       packedData  = ReadPackedBits(startOffset, TRI_PAIR_DESC_SIZE);
@@ -808,14 +808,14 @@ struct PrimitiveStructure
         return triDesc;
     }
 
-    uint32_t PrimIdAnchor()
+    uint32_t PrimIdAnchor() const
     {
         uint32_t indexSectionMidpoint = IndexSectionMidpoint();
         uint32_t primIdAnchorSize     = PrimIdAnchorSize();
         return ReadPackedBits(indexSectionMidpoint, primIdAnchorSize);
     }
 
-    uint32_t ReadPrimIdPayload(uint32_t triIndex)
+    uint32_t ReadPrimIdPayload(uint32_t triIndex) const
     {
         uint32_t anchor               = PrimIdAnchor();
         uint32_t indexSectionMidpoint = IndexSectionMidpoint();
@@ -845,7 +845,7 @@ struct PrimitiveStructure
         return ret;
     }
 
-    uint32_t GeoIdAnchor()
+    uint32_t GeoIdAnchor() const
     {
         uint32_t indexSectionMidpoint = IndexSectionMidpoint();
         uint32_t geoIdAnchorSize      = GeoIdAnchorSize();
@@ -853,7 +853,7 @@ struct PrimitiveStructure
         return ReadPackedBits(indexSectionMidpoint - geoIdAnchorSize, geoIdAnchorSize);
     }
 
-    uint32_t ReadGeoIdPayload(uint32_t triIndex)
+    uint32_t ReadGeoIdPayload(uint32_t triIndex) const
     {
         uint32_t anchor               = GeoIdAnchor();
         uint32_t indexSectionMidpoint = IndexSectionMidpoint();
@@ -884,7 +884,7 @@ struct PrimitiveStructure
         return ret;
     }
 
-    TriangleData UnpackTriangleVertices(uint32_t pair, uint32_t triIndex)
+    TriangleData UnpackTriangleVertices(uint32_t pair, uint32_t triIndex) const
     {
         TrianglePairDesc pairDesc = ReadTrianglePairDesc(pair);
 
@@ -907,13 +907,13 @@ struct PrimitiveStructure
         return tri;
     }
 
-    bool IsOpaque(uint32_t pair, uint32_t triIndex)
+    bool IsOpaque(uint32_t pair, uint32_t triIndex) const
     {
         TrianglePairDesc pairDesc = ReadTrianglePairDesc(pair);
         return (triIndex == 0) ? pairDesc.Tri0Opaque() : pairDesc.Tri1Opaque();
     }
 
-    bool IsProcedural(uint32_t pair, uint32_t triIndex)
+    bool IsProcedural(uint32_t pair, uint32_t triIndex) const
     {
         TrianglePairDesc pairDesc = ReadTrianglePairDesc(pair);
 
@@ -923,17 +923,17 @@ struct PrimitiveStructure
         return ((i0 == 0xF) && (i1 == 0xF));
     }
 
-    uint32_t UnpackGeometryIndex(uint32_t pair, uint32_t triIndex)
+    uint32_t UnpackGeometryIndex(uint32_t pair, uint32_t triIndex) const
     {
         return ReadGeoIdPayload(pair * 2 + triIndex);
     }
 
-    uint32_t UnpackPrimitiveIndex(uint32_t pair, uint32_t triIndex)
+    uint32_t UnpackPrimitiveIndex(uint32_t pair, uint32_t triIndex) const
     {
         return ReadPrimIdPayload(pair * 2 + triIndex);
     }
 
-    uint32_t CalcNavigationBits(uint32_t pair)
+    uint32_t CalcNavigationBits(uint32_t pair) const
     {
         TrianglePairDesc pairDesc          = ReadTrianglePairDesc(pair);
         const uint32_t   trianglePairCount = TrianglePairCount();
@@ -1068,3 +1068,4 @@ static uint32_t GetPairIndex(uint32_t nodePointer)
 #endif
 
 #endif  // _GFX12_PRIMITIVE_NODE_H
+

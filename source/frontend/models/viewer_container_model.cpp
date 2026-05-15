@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the viewer container model class.
@@ -81,4 +81,10 @@ namespace rra
         scene_ = scene;
     }
 
+    rra::Scene* ViewerContainerModel::GetScene() const
+    {
+        return scene_;
+    }
+
 }  // namespace rra
+

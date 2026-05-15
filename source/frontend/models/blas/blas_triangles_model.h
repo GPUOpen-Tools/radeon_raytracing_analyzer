@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the BLAS triangles model.
@@ -62,14 +62,14 @@ namespace rra
         /// @param [in] blas_index        The index where the triangle is to be found.
         ///
         /// @return The model index of the table row corresponding to the node id passed in.
-        QModelIndex FindTriangleIndex(uint32_t triangle_node_id, uint64_t blas_index) const;
+        QModelIndex FindTriangleIndex(uint64_t triangle_node_id, uint64_t blas_index) const;
 
         /// @brief Get the node ID for the triangle at a given row.
         ///
         /// @param row The row in the table.
         ///
         /// @return The node ID.
-        uint32_t GetNodeId(int row) const;
+        uint64_t GetNodeId(int row) const;
 
         /// @brief Get the proxy model. Used to set up a connection between the table being sorted and the UI update.
         ///
@@ -89,3 +89,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_TRIANGLES_MODEL_H_
+

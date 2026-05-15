@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for RTA ray history counter.
@@ -328,3 +328,4 @@ namespace GpuRt
 }  // namespace GpuRt
 #endif  // __cplusplus
 #endif  // RRA_BACKEND_RAY_HISTORY_GPURT_COUNTER_H_
+

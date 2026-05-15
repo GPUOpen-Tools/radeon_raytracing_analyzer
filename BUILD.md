@@ -43,8 +43,9 @@ cd build
 python3 pre_build.py
 ```
 Some useful options of the pre_build.py script:
-* --vs <Visual Studio version>: generate the solution files for a specific Visual Studio version. For example, to target Visual Studio 2017, add --vs 2017 to the command.
-* --qt <path>: full path to the folder from where you would like the Qt binaries to be retrieved. By default, CMake would try to auto-detect Qt on the system.
+* --vs \<Visual Studio version\>: generate the solution files for a specific Visual Studio version. For example, to target Visual Studio 2017, add --vs 2017 to the command.
+* --qt \<QT Version\>: specify the version of QT to be used with the script (default: 6.7.0).
+* --qt-root \<path\>: full path to the folder from where you would like the Qt binaries to be retrieved. By default, CMake would try to auto-detect Qt on the system.
 
 Once the script has finished, in the case of Visual Studio 2022, a sub-folder called 'vs2022' will be created containing the necessary build files.
 Go into the 'vs2022' folder (build/win/vs2022) and double click on the RRA.sln file and build the 64-bit Debug and Release builds.

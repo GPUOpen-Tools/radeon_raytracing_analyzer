@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the View side pane model.
@@ -20,7 +20,8 @@ namespace rra
     enum SidePaneViewWidgets
     {
         kSidePaneViewRenderGeometry,
-        kSidePaneViewRenderBVH,
+        kSidePaneViewRenderBVHInternal,
+        kSidePaneViewRenderBVHLeaf,
         kSidePaneViewRenderInstanceTransforms,
         kSidePaneViewWireframeOverlay,
         kSidePaneViewCullingMode,
@@ -102,8 +103,9 @@ namespace rra
 
         /// @brief Enable/disable whether to render the bounding volume hierarchy.
         ///
-        /// @param [in] enabled Flag indicating whether to render the BVH.
-        void SetRenderBVH(bool enabled);
+        /// @param [in] internal_enabled  Flag indicating whether to render the internal BVH nodes.
+        /// @param [in] leaf_enabled      Flag indicating whether to render the leaf BVH nodes.
+        void SetRenderBVH(bool internal_enabled, bool leaf_enabled);
 
         /// @brief Enable/disable whether to render the instance pretransform.
         ///
@@ -252,6 +254,13 @@ namespace rra
         /// @brief Set the up axis as Z.
         void SetUpAxisAsZ();
 
+        /// @brief Set the geometry filter range.
+        ///
+        /// @param [in] min_value The minimum filter value.
+        /// @param [in] max_value The maximum filter value.
+        /// @param [in] enabled   Whether the filter is enabled.
+        void SetGeometryFilterRange(float min_value, float max_value, bool enabled);
+
         /// @brief Set Architecture to Navi2.
         void SetArchitectureToNavi2();
 
@@ -366,3 +375,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_SIDE_PANELS_VIEW_MODEL_H_
+

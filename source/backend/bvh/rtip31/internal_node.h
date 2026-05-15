@@ -1,5 +1,5 @@
 //=============================================================================
-//  Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+//  Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific internal node definition.
@@ -87,19 +87,19 @@ struct QuantizedBVH8BoxNode
     static uint32_t PackExpChildIdxAndCount(glm::uvec3 exponents, uint32_t disableBoxSort, uint32_t indexInParent, uint32_t validChildCount);
 
     void       Init();
-    uint32_t   InternalNodeBaseOffset();
+    uint32_t   InternalNodeBaseOffset() const;
     void       SetInternalNodeBaseOffset(uint32_t internalNodeBaseOffsetVal);
-    uint32_t   OBBMatrixIndex();
+    uint32_t   OBBMatrixIndex() const;
     void       SetOBBMatrixIndex(uint32_t idx);
-    uint32_t   LeafNodeBaseOffset();
+    uint32_t   LeafNodeBaseOffset() const;
     void       SetLeafNodeBaseOffset(uint32_t leafNodeBaseOffsetVal);
-    uint32_t   ParentPointer();
+    uint32_t   ParentPointer() const;
     void       SetParentPointer(uint32_t parentPointerVal);
-    glm::vec3  Origin();
+    glm::vec3  Origin() const;
     void       SetOrigin(glm::vec3 originVal);
     glm::uvec3 Exponents() const;
     void       SetExponents(glm::uvec3 exponents);
-    uint32_t   IndexInParent();
+    uint32_t   IndexInParent() const;
     void       SetIndexInParent(uint32_t indexInParent);
     uint32_t   ValidChildCount() const;
     void       SetValidChildCount(uint32_t childCount);
@@ -158,7 +158,7 @@ inline void QuantizedBVH8BoxNode::Init()
 }
 
 //=====================================================================================================================
-inline uint32_t QuantizedBVH8BoxNode::InternalNodeBaseOffset()
+inline uint32_t QuantizedBVH8BoxNode::InternalNodeBaseOffset() const
 {
     return internalNodeBaseOffset;
 }
@@ -170,7 +170,7 @@ inline void QuantizedBVH8BoxNode::SetInternalNodeBaseOffset(uint32_t internalNod
 }
 
 //=====================================================================================================================
-inline uint32_t QuantizedBVH8BoxNode::OBBMatrixIndex()
+inline uint32_t QuantizedBVH8BoxNode::OBBMatrixIndex() const
 {
     return obbMatrixIndex;
 }
@@ -182,7 +182,7 @@ inline void QuantizedBVH8BoxNode::SetOBBMatrixIndex(uint32_t idx)
 }
 
 //=====================================================================================================================
-inline uint32_t QuantizedBVH8BoxNode::LeafNodeBaseOffset()
+inline uint32_t QuantizedBVH8BoxNode::LeafNodeBaseOffset() const
 {
     return leafNodeBaseOffset;
 }
@@ -194,7 +194,7 @@ inline void QuantizedBVH8BoxNode::SetLeafNodeBaseOffset(uint32_t leafNodeBaseOff
 }
 
 //=====================================================================================================================
-inline uint32_t QuantizedBVH8BoxNode::ParentPointer()
+inline uint32_t QuantizedBVH8BoxNode::ParentPointer() const
 {
     return parentPointer;
 }
@@ -206,7 +206,7 @@ inline void QuantizedBVH8BoxNode::SetParentPointer(uint32_t parentPointerVal)
 }
 
 //=====================================================================================================================
-inline glm::vec3 QuantizedBVH8BoxNode::Origin()
+inline glm::vec3 QuantizedBVH8BoxNode::Origin() const
 {
     return origin;
 }
@@ -237,7 +237,7 @@ inline void QuantizedBVH8BoxNode::SetExponents(glm::uvec3 exponents)
 }
 
 //=====================================================================================================================
-inline uint32_t QuantizedBVH8BoxNode::IndexInParent()
+inline uint32_t QuantizedBVH8BoxNode::IndexInParent() const
 {
     return bitFieldExtract(exponentsChildIndexAndChildCount, 25, 3);
 }
@@ -718,3 +718,4 @@ inline void QuantizedBVH8BoxNode::EncodeObbOnly(Float32BoxNode f32BoxNode0, Floa
 #endif
 
 #endif  // RRA_BACKEND_INTERNAL_NODE_H_
+

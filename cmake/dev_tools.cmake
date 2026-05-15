@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2019-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2019-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -15,7 +15,7 @@ endif ()
 function(devtools_target_options name)
 
     set_target_properties(${name} PROPERTIES
-            CXX_STANDARD 17
+            CXX_STANDARD 20
             CXX_STANDARD_REQUIRED ON)
 
     get_target_property(target_type ${name} TYPE)
@@ -53,7 +53,11 @@ function(devtools_target_options name)
                 # this warning is caused by QT header files and has been introduced by VS2019 16.9.6
                 # disable warning C5240: 'nodiscard': attribute is ignored in this syntactic position
                 /wd5240
+
+                # Enable control flow guard
+                /guard:cf
                 )
+        target_link_options(${name} PRIVATE /GUARD:CF)
     else ()
 
         message(FATAL_ERROR "Compiler ${CMAKE_CXX_COMPILER_ID} is not supported!")
@@ -76,4 +80,3 @@ function(devtools_target_options name)
     endif ()
 
 endfunction()
-

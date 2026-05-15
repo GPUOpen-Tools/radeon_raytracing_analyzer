@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -11,10 +11,6 @@ project(RadeonRaytracingAnalyzer)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
-
-# Add UpdateCheckAPI
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/update_check_api ${CMAKE_CURRENT_BINARY_DIR}/update_check_api)
-include_directories(${UPDATECHECKAPI_INC_DIRS})
 
 IF (WIN32)
     # get the location of the Visual Studio redist libraries - but don't create an install rule to install them
@@ -310,11 +306,6 @@ set(SOURCES
         "dark_mode_stylesheet.qss"
         "light_mode_stylesheet.qss"
         "stylesheet.qss"
-        ${UPDATECHECKAPI_SRC}
-        ${UPDATECHECKAPI_INC}
-        ${UPDATECHECKAPI_QT_SRC}
-        ${UPDATECHECKAPI_QT_INC}
-        ${UPDATECHECKAPI_QT_UI}
 )
 
 set(WINDOWS_SOURCES
@@ -366,10 +357,11 @@ IF (CMAKE_RELEASE_POSTFIX)
 ENDIF (CMAKE_RELEASE_POSTFIX)
 
 # executable file library dependency list
+target_link_libraries(${PROJECT_NAME} PRIVATE RraBackend Renderer system_info Qt::Widgets QtCustomWidgets QtUtils AMD::update_check_api_qt)
 IF (WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE RraBackend Renderer system_info rdf Qt::Widgets QtCustomWidgets QtUtils wsock32 winmm ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE wsock32 winmm)
 ELSEIF (UNIX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE RraBackend Renderer system_info rdf Qt::Widgets Qt::GuiPrivate QtCustomWidgets QtUtils Threads::Threads ${XCB_LIBRARIES} ${UPDATECHECKAPI_LIBS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt::GuiPrivate Threads::Threads ${XCB_LIBRARIES})
 ENDIF ()
 
 if (LINUX)

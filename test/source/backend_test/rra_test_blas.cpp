@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test BLAS implementation.
@@ -68,6 +68,7 @@ namespace backend_test
 
         std::deque<uint32_t> traversal_stack;
         traversal_stack.push_back(root_node);
+        uint32_t global_child_index = UINT32_MAX;
 
         // Assume traversal test will be OK.
         bool traversal_result = true;
@@ -75,8 +76,9 @@ namespace backend_test
         // Traverse the tree and add all triangle nodes to the table.
         while (!traversal_stack.empty())
         {
-            uint32_t node_id = traversal_stack.front();
-            traversal_stack.pop_front();
+            uint32_t node_id = traversal_stack.back();
+            traversal_stack.pop_back();
+            ++global_child_index;
 
             // For each item on the stack, add the children if valid.
             // Sort node types. Loop once for box (interior) nodes, then once for leaf nodes.
@@ -88,7 +90,7 @@ namespace backend_test
             for (uint32_t child_index = 0; child_index < child_node_count; child_index++)
             {
                 uint32_t child_node = child_nodes[child_index];
-                if (RraBvhIsBoxNode(child_node))
+                if (RraBlasIsBoxNode(blas_index, child_node))
                 {
                     // Add box nodes to the list of nodes to process.
                     traversal_stack.push_back(child_node);
@@ -96,7 +98,7 @@ namespace backend_test
                 else if (RraBlasIsTriangleNode(blas_index, child_node))
                 {
                     float surface_area = 0.0f;
-                    if (RraBlasGetSurfaceArea(blas_index, child_node, &surface_area) == kRraOk)
+                    if (RraBlasGetSurfaceArea(blas_index, child_node, child_index, global_child_index, &surface_area) == kRraOk)
                     {
                         if (surface_area <= 0.0f)
                         {
@@ -105,7 +107,7 @@ namespace backend_test
                     }
 
                     float surface_area_heuristic = 0.0f;
-                    if (RraBlasGetSurfaceAreaHeuristic(blas_index, child_node, &surface_area_heuristic) == kRraOk)
+                    if (RraBlasGetSurfaceAreaHeuristic(blas_index, child_node, global_child_index, &surface_area_heuristic) == kRraOk)
                     {
                         if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
                         {
@@ -117,7 +119,7 @@ namespace backend_test
                     }
 
                     // Show SAH max and average.
-                    if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, child_node, false, &surface_area_heuristic) == kRraOk)
+                    if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, child_node, global_child_index, false, &surface_area_heuristic) == kRraOk)
                     {
                         if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
                         {
@@ -128,7 +130,7 @@ namespace backend_test
                         }
                     }
 
-                    if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, child_node, false, &surface_area_heuristic) == kRraOk)
+                    if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, child_node, global_child_index, false, &surface_area_heuristic) == kRraOk)
                     {
                         if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
                         {
@@ -140,14 +142,14 @@ namespace backend_test
                     }
 
                     uint32_t triangle_count;
-                    if (RraBlasGetNodeTriangleCount(blas_index, child_node, &triangle_count) == kRraOk)
+                    if (RraBlasGetNodeTriangleCount(blas_index, child_node, child_index, global_child_index, &triangle_count) == kRraOk)
                     {
                         total_triangle_count += triangle_count;
                     }
 
                     // Make sure geometry index reported by a triangle node is within the geometry info struct range.
                     uint32_t geometry_index = 0;
-                    if (RraBlasGetGeometryIndex(blas_index, child_node, &geometry_index) != kRraOk)
+                    if (RraBlasGetGeometryIndex(blas_index, child_node, child_index, global_child_index, &geometry_index) != kRraOk)
                     {
                         log.Write(" WARNING: can't get geometry index for triangle node 0x%x in blas[%llu]", child_node, blas_index);
                     }
@@ -249,3 +251,4 @@ namespace backend_test
     }
 
 }  // namespace backend_test
+

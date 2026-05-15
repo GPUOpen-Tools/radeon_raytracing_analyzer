@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Implementation of an acceleration structure tree view.
@@ -50,7 +50,7 @@ void AccelerationStructureTreeView::contextMenuEvent(QContextMenuEvent* event)
     rra::SceneContextMenuRequest request = {};
     request.location                     = rra::SceneContextMenuLocation::kSceneContextMenuLocationTreeView;
 
-    auto context_options   = model_->GetSceneContextOptions(current_bvh_index_, request);
+    auto context_options   = model_->GetSceneContextOptions(current_bvh_index_, request, nullptr);
     auto camera_controller = model_->GetCameraController();
 
     context_options["Focus on selection"] = [=]() { camera_controller->FocusOnSelection(); };
@@ -105,3 +105,4 @@ bool AccelerationStructureTreeView::event(QEvent* event)
 
     return ScaledTreeView::event(event);
 }
+

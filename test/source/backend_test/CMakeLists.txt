@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.11)
 project(RraBackendTest)
 
 find_package (Threads)
-
-add_definitions(-DSYSTEM_INFO_ENABLE_RDF)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER
@@ -67,6 +65,7 @@ if (WIN32)
     )
 endif()
 
+
 if (WIN32)
     install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION . OPTIONAL COMPONENT debug)
 endif()
@@ -83,12 +82,12 @@ IF(CMAKE_RELEASE_POSTFIX)
 ENDIF(CMAKE_RELEASE_POSTFIX)
 
 IF (UNIX)
-    target_link_libraries(${PROJECT_NAME} RraBackend system_info rdf Threads::Threads dl)
+    target_link_libraries(${PROJECT_NAME} RraBackend Threads::Threads dl)
 ELSE()
-    target_link_libraries(${PROJECT_NAME} RraBackend system_info rdf Threads::Threads)
+    target_link_libraries(${PROJECT_NAME} RraBackend Threads::Threads)
 ENDIF()
 
-IF (WIN32 OR APPLE)
+IF (WIN32)
 SOURCE_GROUP_BY_FOLDER(${PROJECT_NAME})
 ENDIF()
 

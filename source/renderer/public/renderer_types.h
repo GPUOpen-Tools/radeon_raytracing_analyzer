@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration of types used in the renderer.
@@ -99,6 +99,7 @@ namespace rra
             uint32_t              max_depth{};                    ///< The max depth for this instance.
             uint32_t              average_depth{};                ///< The average depth for this instance.
             uint32_t              mask{};                         ///< The instance mask. A mask of 0 means it's totally inactive.
+            uint32_t              triangle_count{};               ///< The triangle count for this instance's BLAS.
             float                 min_triangle_sah{};             ///< The minimum triangle SAH in this instance.
             float                 average_triangle_sah{};         ///< The average triangle SAH in this instance.
             bool                  selected             = false;   ///< The flag to indicate if this instance is selected.
@@ -370,3 +371,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_TYPES_H_
+

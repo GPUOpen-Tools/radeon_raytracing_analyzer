@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Settings pane.
@@ -8,6 +8,8 @@
 #include "views/settings/settings_pane.h"
 
 #include "qt_common/custom_widgets/driver_overrides_model.h"
+
+#include "public/rra_print.h"
 
 #include "managers/message_manager.h"
 #include "settings/settings.h"
@@ -64,6 +66,16 @@ SettingsPane::SettingsPane(QWidget* parent)
     ui_->treeview_combo_push_button_->AddItem(rra::text::kSettingsTreeviewAddress);
     ui_->treeview_combo_push_button_->SetSelectedRow(0);
     connect(ui_->treeview_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::TreeviewNodeIdChanged);
+
+    // Populate the log level combo box.
+    rra::widget_util::InitSingleSelectComboBox(parent, ui_->log_combo_push_button_, rra::text::kSettingsLogLevelInfo, false);
+    ui_->log_combo_push_button_->ClearItems();
+    ui_->log_combo_push_button_->AddItem(rra::text::kSettingsLogLevelError);
+    ui_->log_combo_push_button_->AddItem(rra::text::kSettingsLogLevelWarning);
+    ui_->log_combo_push_button_->AddItem(rra::text::kSettingsLogLevelInfo);
+    ui_->log_combo_push_button_->AddItem(rra::text::kSettingsLogLevelDebug);
+    ui_->log_combo_push_button_->SetSelectedRow(kLogLevelInfo);
+    connect(ui_->log_combo_push_button_, &ArrowIconComboBox::SelectionChanged, this, &SettingsPane::LogLevelChanged);
 
     ui_->content_max_traversal_slider_value_->setMinimum(10);
     ui_->content_max_traversal_slider_value_->setMaximum(100000);
@@ -124,7 +136,10 @@ void SettingsPane::showEvent(QShowEvent* event)
 {
     // Update the combo box push button text.
     int node_id_type = rra::Settings::Get().GetTreeviewNodeIdType();
-    UpdateTreeviewComboBox(node_id_type);
+    ui_->treeview_combo_push_button_->SetSelectedRow(node_id_type);
+
+    int log_level = rra::Settings::Get().GetLogLevel();
+    ui_->log_combo_push_button_->SetSelectedRow(log_level);
 
     QWidget::showEvent(event);
 }
@@ -147,11 +162,6 @@ void SettingsPane::PersistentUIStateChanged()
     rra::Settings::Get().SaveSettings();
 }
 
-void SettingsPane::UpdateTreeviewComboBox(int index)
-{
-    ui_->treeview_combo_push_button_->SetSelectedRow(index);
-}
-
 void SettingsPane::TreeviewNodeIdChanged()
 {
     int index = ui_->treeview_combo_push_button_->CurrentRow();
@@ -159,14 +169,16 @@ void SettingsPane::TreeviewNodeIdChanged()
     rra::Settings::Get().SaveSettings();
 }
 
-void SettingsPane::SwitchTreeviewNodeId()
-{
-    int node_id_type = rra::Settings::Get().GetTreeviewNodeIdType();
-    UpdateTreeviewComboBox(node_id_type);
-}
-
 void SettingsPane::DriverOverridesAllowNotificationsChanged(const bool checked)
 {
     rra::Settings::Get().SetDriverOverridesAllowNotifications(checked);
     rra::Settings::Get().SaveSettings();
 }
+
+void SettingsPane::LogLevelChanged()
+{
+    int index = ui_->log_combo_push_button_->CurrentRow();
+    rra::Settings::Get().SetLogLevel(static_cast<LogLevel>(index));
+    rra::Settings::Get().SaveSettings();
+}
+

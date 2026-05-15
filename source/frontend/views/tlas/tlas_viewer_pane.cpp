@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS viewer pane.
@@ -18,6 +18,7 @@
 #include "models/acceleration_structure_viewer_model.h"
 #include "models/tlas/tlas_viewer_model.h"
 #include "settings/settings.h"
+#include "util/rra_util.h"
 #include "views/widget_util.h"
 
 static const int kSplitterWidth = 300;
@@ -86,12 +87,12 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     model_->InitializeModel(ui_->content_instance_mask_, rra::kTlasStatsInstanceMask, "text");
     model_->InitializeModel(ui_->content_instance_hit_group_index_, rra::kTlasStatsInstanceHitGroupIndex, "text");
 
-    connect(ui_->tlas_tree_, &QAbstractItemView::clicked, [=](const QModelIndex& index) { this->SelectBlasFromTree(index, false); });
-    connect(ui_->tlas_tree_, &QAbstractItemView::doubleClicked, [=](const QModelIndex& index) { this->SelectBlasFromTree(index, true); });
+    connect(ui_->tlas_tree_, &QAbstractItemView::clicked, [=, this](const QModelIndex& index) { this->SelectBlasFromTree(index, false); });
+    connect(ui_->tlas_tree_, &QAbstractItemView::doubleClicked, [=, this](const QModelIndex& index) { this->SelectBlasFromTree(index, true); });
     connect(ui_->tlas_tree_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TlasViewerPane::TreeNodeChanged);
     connect(acceleration_structure_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &TlasViewerPane::UpdateSelectedTlas);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::InstancesTableDoubleClicked, this, &TlasViewerPane::SetBlasInstanceSelection);
-    connect(model_, &rra::AccelerationStructureViewerModel::SceneSelectionChanged, [=]() { HandleSceneSelectionChanged(); });
+    connect(model_, &rra::AccelerationStructureViewerModel::SceneSelectionChanged, [=, this]() { HandleSceneSelectionChanged(); });
     connect(ui_->expand_collapse_tree_, &ScaledCycleButton::Clicked, model_, &rra::AccelerationStructureViewerModel::ExpandCollapseTreeView);
     connect(ui_->search_box_, &TextSearchWidget::textChanged, model_, &rra::AccelerationStructureViewerModel::SearchTextChanged);
     connect(ui_->content_blas_address_, &ScaledPushButton::clicked, this, &TlasViewerPane::GotoBlasPaneFromBlasAddress);
@@ -105,6 +106,8 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
 
     ui_->tree_depth_slider_->setCursor(Qt::PointingHandCursor);
     connect(ui_->tree_depth_slider_, &DepthSliderWidget::SpanChanged, this, &TlasViewerPane::UpdateTreeDepths);
+
+    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ShowBoundsChanged, this, &AccelerationStructureViewerPane::UpdateShowBoundingVolumes);
 
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ControlStyleChanged, this, &TlasViewerPane::UpdateCameraController);
     // Save selected control style to settings.
@@ -121,13 +124,13 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
             rra::Settings::Get().SetControlStyle(rra::kPaneIdTlasViewer, (ControlStyleType)camera_controller->GetComboBoxIndex());
         }
     });
-    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=](bool geometry_mode) {
+    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=, this](bool geometry_mode) {
         ui_->viewer_container_widget_->ShowColoringMode(geometry_mode);
     });
 
     // Reset the UI state. When the 'reset' button is clicked, it broadcasts a message from the message manager. Any objects interested in this
     // message can then act upon it.
-    connect(&rra::MessageManager::Get(), &rra::MessageManager::ResetUIState, [=](rra::RRAPaneId pane) {
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::ResetUIState, [=, this](rra::RRAPaneId pane) {
         if (pane == rra::kPaneIdTlasViewer)
         {
             ui_->side_panel_container_->GetViewPane()->ApplyUIStateFromSettings(rra::kPaneIdTlasViewer);
@@ -291,7 +294,7 @@ void TlasViewerPane::UpdateRebraidUI()
                             rebraid_sibling_button->setCursor(Qt::PointingHandCursor);
 
                             QModelIndex sibling_model_index = derived_model_->GetModelIndexForNode(sibling->GetId());
-                            connect(rebraid_sibling_button, &ScaledPushButton::clicked, this, [=]() {
+                            connect(rebraid_sibling_button, &ScaledPushButton::clicked, this, [=, this]() {
                                 ui_->tlas_tree_->selectionModel()->reset();
                                 ui_->tlas_tree_->selectionModel()->setCurrentIndex(sibling_model_index, QItemSelectionModel::Select);
                                 HandleSceneSelectionChanged();
@@ -395,6 +398,16 @@ void TlasViewerPane::SelectInstance(uint32_t instance_index)
     scene->SetSceneSelection(node->GetId());
 
     HandleSceneSelectionChanged();
+}
+
+void TlasViewerPane::SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes)
+{
+    model_->SetBlasRootNodes(blas_root_nodes);
+}
+
+std::vector<rra::SceneNode*>* TlasViewerPane::GetBlasRootNodes()
+{
+    return model_->GetBlasRootNodes();
 }
 
 void TlasViewerPane::UpdateWidgets(const QModelIndex& index)
@@ -537,3 +550,9 @@ void TlasViewerPane::OnColorThemeUpdated()
         ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
+
+void TlasViewerPane::UpdateToolTip(QString tool_tip_string)
+{
+    rra_util::UpdateRendererTooltip(rra::kPaneIdTlasViewer, ui_->tlas_scene_, tool_tip_string);
+}
+

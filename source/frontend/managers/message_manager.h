@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the MessageManager.
@@ -88,12 +88,12 @@ namespace rra
         /// @brief Signal to indicate that the user has selected a triangle in the BLAS viewer.
         ///
         /// @param [in] triangle_node_id The triangle node id selected.
-        void TriangleViewerSelected(uint32_t triangle_node_id);
+        void TriangleViewerSelected(uint64_t triangle_node_id);
 
         /// @brief Signal to indicate that the user has selected a triangle in the Triangles table.
         ///
         /// @param [in] triangle_node_id The triangle node id selected.
-        void TriangleTableSelected(uint32_t triangle_node_id);
+        void TriangleTableSelected(uint64_t triangle_node_id);
 
         /// @brief Signal to indicate the render state has changed.
         ///
@@ -101,10 +101,26 @@ namespace rra
         /// up render state can look for this signal and update themselves with the new render state.
         void RenderStateChanged();
 
+        /// @brief Signal to indicate that a Wireframe toggle has been requested.
+        ///
+        /// Emitted if a hotkey for a BVH wireframe checkbox was pressed.
+        ///
+        /// @param[in] toggle_internal  Is an internal node toggle requested.
+        /// @param[in] toggle_leaf      Is a leaf node toggle requested.
+        void ToggleWireframeRequested(bool toggle_internal, bool toggle_leaf);
+
         /// @brief Signal to indicate that the traversal counter slider needs updating.
         ///
         /// Emitted if a hotkey was pressed to update the traversal counter range.
         void TraversalSliderChanged(uint32_t min, uint32_t max);
+
+        /// @brief Signal to indicate that the geometry coloring mode has changed.
+        ///
+        /// @param [in] pane The pane that changed.
+        /// @param [in] geometry_coloring_mode The new geometry coloring mode enum value.
+        /// @param [in] mode_name The display name of the coloring mode.
+        /// @param [in] scene_max_value The scene-derived maximum for the filter slider, or 0 if unavailable.
+        void GeometryColoringModeChanged(rra::RRAPaneId pane, int geometry_coloring_mode, const QString& mode_name, int scene_max_value);
 
         /// @brief Signal to indicate the graphics context failed to initialize.
         ///
@@ -139,3 +155,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_MESSAGE_MANAGER_H_
+

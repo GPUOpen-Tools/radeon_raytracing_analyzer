@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test main program.
@@ -47,3 +47,4 @@ int32_t main(int32_t argc, char** argv)
     // or an integer containing the number of tests that failed.
     return test_result;
 }
+

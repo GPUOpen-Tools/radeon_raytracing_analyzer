@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the ray inspector model.
@@ -27,11 +27,12 @@ namespace rra
 {
     /// @brief Calculate the near plane by casting rays to detect closest triangle.
     ///
-    /// @param scene  The BVH scene.
-    /// @param camera The renderer camera.
+    /// @param scene                 The BVH scene.
+    /// @param camera                The renderer camera.
+    /// @param blas_root_nodes       The BLAS root nodes.
     ///
     /// @return The optimal near plane distance.
-    float GetNearPlane(Scene* scene, rra::renderer::Camera* camera);
+    float GetNearPlane(Scene* scene, rra::renderer::Camera* camera, std::vector<rra::SceneNode*>* blas_root_nodes);
 
     /// @brief The unique dispatch index to identify a "thread" that launches rays consecutively.
     struct RayInspectorKey
@@ -105,7 +106,10 @@ namespace rra
         void ToggleInstanceTransformWireframe();
 
         /// @brief Toggle the BVH wireframe rendering.
-        void ToggleBVHWireframe();
+        ///
+        /// @param [in] toggle_internal  If true, toggle the internal node wireframe rendering.
+        /// @param [in] toggle_leaf      If true, toggle the leaf node wireframe rendering.
+        void ToggleBVHWireframe(bool toggle_internal, bool toggle_leaf);
 
         /// @brief Toggle the Mesh wireframe rendering.
         void ToggleMeshWireframe();
@@ -167,6 +171,11 @@ namespace rra
         /// @returns The camera fit function.
         std::function<ViewerFitParams(rra::renderer::Camera*)> GetCameraFitFunction();
 
+        /// @brief Set the BLAS root nodes.
+        ///
+        /// @param blas_root_nodes The root nodes.
+        void SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes);
+
     public slots:
         /// @brief Connect the incoming map of RendererAdapter instances with the model.
         ///
@@ -195,7 +204,9 @@ namespace rra
         uint32_t                               camera_reset_countdown_  = 3;        ///< To keep track of camera reset to allow the renderer to adjust.
         uint32_t                               camera_update_countdown_ = 3;  ///< To keep track of camera update without reset to allow the renderer to adjust.
         rra::renderer::RenderStateAdapter*     render_state_adapter_    = nullptr;  ///< The adapter used to toggle mesh render states.
+        std::vector<rra::SceneNode*>*          blas_root_nodes_;                    ///< The BLAS scene collection model.
     };
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_MODEL_H_
+

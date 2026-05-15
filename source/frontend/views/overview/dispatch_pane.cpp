@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the dispatch pane.
@@ -183,7 +183,7 @@ void DispatchPane::SetTlasesParameters(const std::vector<uint64_t>& tlases_trave
         if (it != tlas_address_to_index_->end())
         {
             uint32_t tlas_index = (*it).second;
-            connect(tlas_button, &ScaledPushButton::clicked, this, [=]() { summary_pane_->SelectTlas(tlas_index, true); });
+            connect(tlas_button, &ScaledPushButton::clicked, this, [=, this]() { summary_pane_->SelectTlas(tlas_index, true); });
         }
         ui_->tlases_horizontal_layout_->addWidget(tlas_button);
     }
@@ -371,3 +371,4 @@ void DispatchPane::NavigateToRayHistory() const
     // Switch to the Ray history pane.
     emit rra::MessageManager::Get().PaneSwitchRequested(rra::kPaneIdRayHistory);
 }
+

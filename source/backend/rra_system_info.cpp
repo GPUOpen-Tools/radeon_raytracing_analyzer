@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the System info interface.
@@ -109,3 +109,4 @@ bool RraSystemInfoAvailable()
 {
     return data_set_.system_info->version.major > 0;
 }
+

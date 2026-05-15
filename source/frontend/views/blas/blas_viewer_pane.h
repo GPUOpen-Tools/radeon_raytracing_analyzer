@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the BLAS viewer pane.
@@ -13,6 +13,11 @@
 #include "models/acceleration_structure_flags_table_item_delegate.h"
 #include "models/blas/blas_viewer_model.h"
 #include "views/acceleration_structure_viewer_pane.h"
+
+namespace rra
+{
+    class BlasSceneCollectionModel;
+}
 
 /// @brief Class declaration.
 class BlasViewerPane : public AccelerationStructureViewerPane
@@ -45,11 +50,31 @@ public:
     /// @param [in] navigate_to_triangles_pane  If true, navigate to the Triangles pane.
     virtual void SelectLeafNode(const uint64_t blas_index, const bool navigate_to_triangles_pane) Q_DECL_OVERRIDE;
 
+    /// @brief Get the BLAS scene collection model.
+    ///
+    /// @return The scene model collection.
+    rra::BlasSceneCollectionModel* GetSceneCollection();
+
+    /// @brief Set the BLAS root nodes.
+    ///
+    /// @param blas_root_nodes The root nodes.
+    void SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes);
+
 protected:
     /// @brief Updates widgets depending on the model.
     ///
     /// @param [in] index The model index of the selected node.
     virtual void UpdateWidgets(const QModelIndex& index) override;
+
+    /// @brief Get the BLAS root nodes.
+    ///
+    /// @return The BLAS root nodes.
+    virtual std::vector<rra::SceneNode*>* GetBlasRootNodes() override;
+
+    /// @brief Update the tooltip in the renderer widget.
+    ///
+    /// @param [in] tool_tip_string  The tooltip text to be displayed.
+    virtual void UpdateToolTip(QString tool_tip_string) override;
 
 private slots:
     /// @brief Slot to handle whan happens when one of the slider handles is moved.
@@ -61,7 +86,7 @@ private slots:
     /// @brief Slot to select a triangle in the currently viewed BLAS.
     ///
     /// @param [in] triangle_node_index The triangle node index selected.
-    void SelectTriangle(uint32_t triangle_node_id);
+    void SelectTriangle(uint64_t triangle_node_id);
 
     /// @brief Select the parent of the currently selected node.
     ///
@@ -113,3 +138,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_BLAS_BLAS_VIEWER_PANE_H_
+

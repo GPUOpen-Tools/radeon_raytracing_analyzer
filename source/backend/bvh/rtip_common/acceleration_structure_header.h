@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 acceleration structure header definition.
@@ -53,3 +53,4 @@ namespace rta
     };
 }  // namespace rta
 #endif  // RRA_BACKEND_BVH_ACCELERATION_STRUCTURE_HEADER_H_
+

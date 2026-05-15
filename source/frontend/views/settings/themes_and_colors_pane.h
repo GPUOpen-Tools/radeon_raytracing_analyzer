@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Colors and Themes pane.
@@ -108,3 +108,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_SETTINGS_THEMES_AND_COLORS_PANE_H_
+

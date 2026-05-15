@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan renderer.
@@ -213,8 +213,8 @@ namespace rra
                 {
                     if (render_module->IsEnabled())
                     {
-                        context.begin_render_pass = [=, &render_module]() { BeginRenderPass(cmd, render_module->GetRenderPassHint()); };
-                        context.end_render_pass   = [=]() { EndRenderPass(cmd); };
+                        context.begin_render_pass = [=, this, &render_module]() { BeginRenderPass(cmd, render_module->GetRenderPassHint()); };
+                        context.end_render_pass   = [=, this]() { EndRenderPass(cmd); };
                         render_module->Draw(&context);
 
                         if (render_module->ShouldCopyDepthBuffer())
@@ -226,6 +226,15 @@ namespace rra
 
                 states_[current_frame_index] = current_state;
             }
+
+            // Record per-frame copy commands that must execute every frame (e.g., hovered pixel readback).
+            for (auto render_module : render_modules_)
+            {
+                if (render_module->IsEnabled())
+                {
+                    render_module->RecordPerFrameCopyCommands(cmd, current_frame_index);
+                }
+            };
 
             // Update every frame even if force updates is false.
             for (auto render_module : render_modules_)
@@ -567,3 +576,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

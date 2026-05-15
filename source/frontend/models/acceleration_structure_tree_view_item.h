@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure (AS) tree-view item.
@@ -20,7 +20,8 @@ namespace rra
     // @brief A data structure to pass to delegates. Note: Q_DECLARE_METATYPE at the bottom of this file.
     struct AccelerationStructureTreeViewItemData
     {
-        uint64_t node_child_id = 0;
+        uint64_t node_child_id    = 0;
+        uint32_t node_child_index = 0;
         QString  display_name;
     };
 
@@ -35,9 +36,10 @@ namespace rra
 
         /// @brief Initialize an acceleration structure tree view item.
         ///
-        /// @param [in] node_data The raw data containing information about this node.
-        /// @param [in] parent    A pointer to the parent item.
-        void Initialize(uint32_t node_data, AccelerationStructureTreeViewItem* parent);
+        /// @param [in] node_data   The raw data containing information about this node.
+        /// @param [in] child_index The node's child index.
+        /// @param [in] parent      A pointer to the parent item.
+        void Initialize(uint64_t node_data, uint32_t child_index, AccelerationStructureTreeViewItem* parent);
 
         /// @brief Initialize an acceleration structure tree view item.
         ///
@@ -102,11 +104,13 @@ namespace rra
     private:
         QList<AccelerationStructureTreeViewItem*> child_items_{};   ///< A list of child items for this item.
         AccelerationStructureTreeViewItem*        parent_item_{};   ///< A pointer to the parent item.
-        uint32_t                                  node_data_{};     ///< The encoded data contained in this item for column 0.
-        bool                                      is_node_ = true;  ///< The indicator to describe if this item is not a node.
+        uint64_t                                  node_data_{};     ///< The encoded data contained in this item for column 0.
+        uint32_t                                  child_index_{};   ///< The child index of the node.
+        bool                                      is_node_ = true;  ///< The indicator to describe if this item is a node.
     };
 }  // namespace rra
 
 Q_DECLARE_METATYPE(rra::AccelerationStructureTreeViewItemData);  // Declare as QT meta type to be used by the delegate.
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_ITEM_H_
+

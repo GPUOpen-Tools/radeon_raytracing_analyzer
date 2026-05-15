@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the welcome pane.
@@ -101,7 +101,7 @@ WelcomePane::WelcomePane(QWidget* parent)
             new UpdateCheck::ThreadController(this, PRODUCT_MAJOR_VERSION, PRODUCT_MINOR_VERSION, PRODUCT_BUILD_NUMBER, PRODUCT_BUGFIX_NUMBER));
 
         // Get notified when the check for updates has completed.
-        // There is not a way in the UI to cancel this thread, so no reason to connect to its CheckForUpdatesCancelled callback.
+        // There is no way in the UI to cancel this thread, so no reason to connect to its CheckForUpdatesCancelled callback.
         connect(check_for_updates_thread_.get(), &UpdateCheck::ThreadController::CheckForUpdatesComplete, this, &WelcomePane::NotifyOfNewVersion);
 
         check_for_updates_thread_->StartCheckForUpdates(rra::kUpdateCheckUrl, rra::kUpdateCheckAssetName);
@@ -290,3 +290,4 @@ void WelcomePane::NotifyOfNewVersion(UpdateCheck::ThreadController* thread, cons
         connect(ui_->notify_update_available_button_, &QPushButton::clicked, results_dialog, &QDialog::show);
     }
 }
+

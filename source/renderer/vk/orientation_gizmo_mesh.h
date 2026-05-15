@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for static orientation gizmo mesh type.
@@ -77,3 +77,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_ORIENTATION_GIZMO_MESH_H_
+

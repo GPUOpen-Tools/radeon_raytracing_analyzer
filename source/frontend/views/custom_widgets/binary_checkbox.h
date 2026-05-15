@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header of a widget that implements a custom check box.
@@ -100,3 +100,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_BINARY_CHECKBOX_H_
+

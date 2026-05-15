@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public BVH interface.
@@ -18,6 +18,7 @@
 extern "C" {
 #endif  // #ifdef __cplusplus
 
+#define MAX_TRIANGLES (8)
 #define MAX_CHILD_NODES (8)
 
 /// @brief Structure describing the statistics for a bounding volume.
@@ -80,41 +81,6 @@ RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const struct BoundingVolumeExten
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBvhGetNodeOffset(uint32_t node_id, uint64_t* out_offset);
-
-/// @brief Check if the given node is a box node.
-///
-/// @param [in] node_ptr The encoded node pointer.
-///
-/// @return True if the given node is a box node, and false if it's not.
-bool RraBvhIsBoxNode(uint32_t node_ptr);
-
-/// @brief Check if the given node is a box 16 node.
-///
-/// @param [in] node_ptr The encoded node pointer.
-///
-/// @return True if the given node is a box 16 node, and false if it's not.
-bool RraBvhIsBox16Node(uint32_t node_ptr);
-
-/// @brief Check if the given node is a box 32 node.
-///
-/// @param [in] node_ptr The encoded node pointer.
-///
-/// @return True if the given node is a box 32 node, and false if it's not.
-bool RraBvhIsBox32Node(uint32_t node_ptr);
-
-/// @brief Check if the given node is an instance node.
-///
-/// @param [in] node_ptr The encoded node pointer.
-///
-/// @return True if the given node is an instance node, and false if it's not.
-bool RraBvhIsInstanceNode(uint32_t node_ptr);
-
-/// @brief Check if the given node is a procedural node.
-///
-/// @param [in] node_ptr The encoded node pointer.
-///
-/// @return True if the given node is a procedural node, and false if it's not.
-bool RraBvhIsProceduralNode(uint32_t node_ptr);
 
 /// @brief Get the number of TLAS's in the loaded trace.
 ///
@@ -193,3 +159,4 @@ uint32_t RraBvhGetMaxChildCount();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_BVH_H_
+

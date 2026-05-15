@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the main window.
@@ -45,7 +45,7 @@ using namespace driver_overrides;
 // The maximum number of traces to list in the recent traces list.
 static const int kMaxSubmenuTraces = 10;
 
-MainWindow::MainWindow(QWidget* parent)
+MainWindow::MainWindow(std::vector<rra::SceneNode*>* blas_root_nodes, QWidget* parent)
     : QMainWindow(parent)
     , ui_(new Ui::MainWindow)
     , file_menu_(nullptr)
@@ -104,6 +104,9 @@ MainWindow::MainWindow(QWidget* parent)
     }
 
     ui_->setupUi(this);
+    ui_->tlas_viewer_tab_->SetBlasRootNodes(blas_root_nodes);
+    ui_->blas_viewer_tab_->SetBlasRootNodes(blas_root_nodes);
+    ui_->ray_inspector_tab_->SetBlasSceneCollection(blas_root_nodes);
 
     setWindowTitle(GetTitleBarString());
     setWindowIcon(QIcon(":/Resources/assets/icon_32x32.png"));
@@ -220,6 +223,8 @@ MainWindow::~MainWindow()
     disconnect(ui_->blas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
     disconnect(ui_->ray_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
 
+    delete recent_traces_menu_;
+
     delete open_trace_action_;
     delete close_trace_action_;
     delete exit_action_;
@@ -265,7 +270,7 @@ RraIconButton* MainWindow::CreateUIResetButton()
     reset_ui_state->setFlat(true);
     reset_ui_state->setToolTip("Reset the UI to its default state.");
 
-    connect(reset_ui_state, &ScaledPushButton::clicked, [=]() {
+    connect(reset_ui_state, &ScaledPushButton::clicked, [=, this]() {
         const auto& pane = pane_manager_.GetCurrentPane();
         rra::Settings::Get().SetPersistentUIToDefault(pane);
         rra::Settings::Get().SetPersistentUIToDefault();
@@ -433,7 +438,7 @@ void MainWindow::SetupHotkeyNavAction(int key, int pane)
     navigation_actions_.push_back(action);
 
     this->addAction(action);
-    connect(action, &QAction::triggered, [=]() { ViewPane(pane); });
+    connect(action, &QAction::triggered, [=, this]() { ViewPane(pane); });
 }
 
 void MainWindow::CreateActions()
@@ -536,7 +541,7 @@ void MainWindow::SetupRecentTracesMenu()
 
             recent_traces_menu_->addAction(recent_trace_actions_[i]);
 
-            recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=]() { LoadTrace(files[i].path); });
+            recent_trace_connections_[i] = connect(recent_trace_actions_[i], &QAction::triggered, [=, this]() { LoadTrace(files[i].path); });
         }
     }
 
@@ -589,15 +594,14 @@ void MainWindow::OpenTrace()
     }
 
     // Apply driver overrides if applicable.
-    DriverOverridesModel* driver_overrides_model = DriverOverridesModel::GetInstance();
     if (RraTraceLoaderValid())
     {
-        driver_overrides_model->ImportFromJsonText(RraTraceLoaderGetDriverOverridesString());
+        DriverOverridesModel::GetInstance()->ImportFromJsonText(RraTraceLoaderGetDriverOverridesString());
     }
     else
     {
         // Remove any old settings from the Driver Overrides model.
-        driver_overrides_model->Reset();
+        DriverOverridesModel::GetInstance()->Reset();
     }
 
     pane_manager_.OnTraceOpen();
@@ -861,3 +865,4 @@ void MainWindow::DontShowDriverOverridesNotification()
 {
     rra::Settings::Get().SetDriverOverridesAllowNotifications(false);
 }
+

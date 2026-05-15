@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Utility macro definitions.
@@ -42,3 +42,4 @@
 #define RRA_ARRAY_ELEMENTS(x) (int32_t)((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_MACRO_H_
+

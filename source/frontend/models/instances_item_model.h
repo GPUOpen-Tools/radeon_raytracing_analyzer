@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the instances item model. Shared between TLAS and
@@ -114,3 +114,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_INSTANCES_ITEM_MODEL_H_
+

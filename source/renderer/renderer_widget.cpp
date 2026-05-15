@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Renderer Widget.
@@ -11,8 +11,11 @@
 #include <QDebug>
 #include <QEvent>
 #include <QScreen>
+#include <QToolTip>
 #include <QWheelEvent>
 #include <QtMath>
+
+#include "qt_common/utils/qt_util.h"
 
 #include "public/orientation_gizmo.h"
 #include "public/renderer_types.h"
@@ -42,9 +45,12 @@ RendererWidget::RendererWidget(QWidget* parent)
 
     parent->setStyleSheet(kFocusOutBorderStyle);
 
+    OnColorThemeUpdated();
+
     // Use a queued connection to request the renderer to update. Use a queued connection so that we don't interrupt any work already being done.
     // Ask the renderer to update once the application is finished processing pending events.
     connect(this, &RendererWidget::RequestRenderFrame, this, &RendererWidget::RenderFrame, Qt::ConnectionType::QueuedConnection);
+    connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &RendererWidget::OnColorThemeUpdated);
 }
 
 void RendererWidget::Run()
@@ -116,7 +122,7 @@ void RendererWidget::SetRendererInterface(rra::renderer::RendererInterface* rend
     }
 }
 
-bool RendererWidget::GetRendererIsFocused() const
+bool RendererWidget::GetIsRendererFocused() const
 {
     return renderer_is_focused_;
 }
@@ -257,6 +263,22 @@ void RendererWidget::SetFocus() const
 #endif
 }
 
+void RendererWidget::OnColorThemeUpdated()
+{
+    // Make sure the tooltip colors are correct. User could have switched from light to dark mode.
+    const QPalette& palette          = QtCommon::QtUtils::ColorTheme::Get().GetCurrentPalette();
+    auto            background_color = palette.color(QPalette::ToolTipBase);
+    auto            text_color       = palette.color(QPalette::ToolTipText);
+    QString         style            = QString("QToolTip { border: 1px solid %1; background-color: %2; color: %3; }")
+                        .arg(text_color.name())
+                        .arg(background_color.name())
+                        .arg(text_color.name());
+    if (styleSheet() != style)
+    {
+        setStyleSheet(style);
+    }
+}
+
 bool RendererWidget::event(QEvent* event)
 {
     switch (event->type())
@@ -282,6 +304,23 @@ bool RendererWidget::event(QEvent* event)
         break;
     case QEvent::MouseMove:
         emit MouseMoved(static_cast<QMouseEvent*>(event));
+        {
+            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            RRA_ASSERT(mouse_event != nullptr);
+            // Since the tooltip doesn't update if the text stays the same, force an update
+            // by changing the text to something else before using the real text. This can't
+            // be an empty string, hence the check to make sure there's actually some text in
+            // the tooltip.
+            if (!toolTip().isEmpty())
+            {
+                QToolTip::showText(mouse_event->globalPosition().toPoint(), " ", this);
+                QToolTip::showText(mouse_event->globalPosition().toPoint(), toolTip(), this);
+            }
+            else
+            {
+                QToolTip::hideText();
+            }
+        }
         break;
     case QEvent::MouseButtonPress:
         emit MousePressed(static_cast<QMouseEvent*>(event));
@@ -336,3 +375,4 @@ bool RendererWidget::nativeEvent(const QByteArray& event_type, void* message, lo
 }
 
 #endif
+

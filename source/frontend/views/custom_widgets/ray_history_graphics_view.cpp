@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a widget that implements a custom graphics view.
@@ -436,3 +436,4 @@ void RayHistoryGraphicsView::HideSelectedPixelIcon()
     pixel_selected_info_.selected = false;
     UpdateSelectedPixelIcon();
 }
+

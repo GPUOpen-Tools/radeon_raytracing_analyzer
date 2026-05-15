@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the main window.
@@ -40,7 +40,7 @@ public:
     /// @brief Constructor.
     ///
     /// @param [in] parent The window's parent.
-    explicit MainWindow(QWidget* parent = nullptr);
+    explicit MainWindow(std::vector<rra::SceneNode*>* blas_root_nodes, QWidget* parent = nullptr);
 
     /// @brief Destructor.
     virtual ~MainWindow();
@@ -236,3 +236,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_MAIN_WINDOW_H_
+

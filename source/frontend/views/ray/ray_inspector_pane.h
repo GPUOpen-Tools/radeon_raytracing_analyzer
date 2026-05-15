@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Ray inspector pane.
@@ -63,6 +63,11 @@ public:
 
     /// @brief Update coloring legend.
     void UpdateColoringLegend();
+
+    /// @brief Set the BLAS root nodes.
+    ///
+    /// @param scene_collection The BLAS root nodes.
+    void SetBlasSceneCollection(std::vector<rra::SceneNode*>* blas_root_nodes);
 
 private slots:
     /// @brief Set the currently selected ray coordinate to show stats for.
@@ -181,7 +186,8 @@ private:
     bool            ctrl_key_down_{false};                                   ///< Is the control key pressed?
     rra::renderer::OrientationGizmoHitType last_gizmo_hit_{
         rra::renderer::OrientationGizmoHitType::kNone,
-    };  ///< The orientation gizmo hit type that occured at the last mouse movement.
+    };  ///< The orientation gizmo hit type that occurred at the last mouse movement.
 };
 
 #endif  // RRA_VIEWS_RAY_RAY_INSPECTOR_PANE_H_
+

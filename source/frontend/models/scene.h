@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Scene class.
@@ -68,6 +68,13 @@ namespace rra
         glm::vec4 zero_mask_ray_color;                    ///< The zero mask ray color.
     };
 
+    /// @brief Convert a SceneTriangle to TriangleVertices.
+    ///
+    /// @param scene_tri The scene triangle to convert.
+    ///
+    /// @return The converted triangle data.
+    TriangleVertices SceneTriangleToTriVertices(const SceneTriangle& scene_tri);
+
     /// @brief Set the global scene node colors.
     ///
     /// @param [in] new_colors The colors to set.
@@ -86,6 +93,24 @@ namespace rra
         int32_t  max_tree_depth     = 0;  ///< The maximum BVH tree depth in the scene.
         uint32_t max_node_depth     = 0;  ///< The maximum node depth in the scene.
     };
+
+    /// @brief State of the geometry filter for CPU-side raycast filtering.
+    struct GeometryFilterState
+    {
+        float                          min           = 0.0f;
+        float                          max           = 0.0f;
+        bool                           enabled       = false;
+        renderer::GeometryColoringMode coloring_mode = renderer::GeometryColoringMode::kTreeLevel;
+    };
+
+    /// @brief Check if a triangle should be filtered based on geometry filter state.
+    ///
+    /// @param [in] filter_state The current filter state.
+    /// @param [in] triangle The triangle to check.
+    /// @param [in] node The scene node containing the triangle.
+    ///
+    /// @return True if the triangle should be filtered out (hidden), false otherwise.
+    bool ShouldFilterTriangle(const GeometryFilterState& filter_state, const SceneTriangle& triangle, const SceneNode* node);
 
     /// @brief Info on a raycast's closest intersection.
     struct SceneClosestHit
@@ -131,7 +156,7 @@ namespace rra
         /// @brief Get the render data without frustum culling.
         ///
         /// @returns A map of instances.
-        renderer::InstanceMap GetInstanceMap();
+        renderer::InstanceMap GetInstanceMap() const;
 
         /// @brief Get the bounding volume instances.
         ///
@@ -151,12 +176,12 @@ namespace rra
         /// @brief Update the set of currently selected triangles.
         ///
         /// @param old_selection The triangles that were selected before selecting the new one.
-        void UpdateCustomTriangleSelection(const std::unordered_set<uint32_t>& old_selection);
+        void UpdateCustomTriangleSelection(const std::unordered_set<uint64_t>& old_selection);
 
         /// @brief Set the scene selection.
         ///
-        /// @param [in] node_child_id The node ID.
-        void SetSceneSelection(uint32_t node_child_id);
+        /// @param [in] node_child_id The node child index and node ID hashed together.
+        void SetSceneSelection(uint64_t node_child_id);
 
         /// @brief Reset the scene selection.
         ///
@@ -171,7 +196,7 @@ namespace rra
         /// @brief Get the most recent selected node id.
         ///
         /// @returns The most recent selected node id.
-        uint32_t GetMostRecentSelectedNodeId() const;
+        uint64_t GetMostRecentSelectedNodeId() const;
 
         /// @brief Return an id of any selected node.
         ///
@@ -180,7 +205,7 @@ namespace rra
         /// So we assign it an arbitrary selected node.
         ///
         /// @return The id of a selected node.
-        uint32_t GetArbitrarySelectedNodeId() const;
+        uint64_t GetArbitrarySelectedNodeId() const;
 
         /// @brief Get the scene volume.
         ///
@@ -238,18 +263,19 @@ namespace rra
 
         /// @brief Cast a ray and report closest distance.
         ///
-        /// @param [in] ray_origin The origin of the ray.
-        /// @param [in] ray_direction The direction of the ray.
+        /// @param [in] ray_origin            The origin of the ray.
+        /// @param [in] ray_direction         The direction of the ray.
+        /// @param [in] blas_root_nodes       All of the BLAS root nodes.
         ///
         /// @returns The closest distance to the origin.
-        SceneClosestHit CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction) const;
+        SceneClosestHit CastRayGetClosestHit(glm::vec3 ray_origin, glm::vec3 ray_direction, std::vector<rra::SceneNode*>* blas_root_nodes) const;
 
         /// @brief Get node by id.
         ///
-        /// @param [in] node_child_id The node ID.
+        /// @param [in] node_child_id The node child index and node ID hashed together.
         ///
         /// @returns A scene node.
-        SceneNode* GetNodeById(uint32_t node_child_id);
+        SceneNode* GetNodeById(uint64_t node_child_id) const;
 
         /// @brief Set the depth range for the scene.
         ///
@@ -267,12 +293,19 @@ namespace rra
         /// @returns The lower bound.
         uint32_t GetDepthRangeUpperBound() const;
 
+        /// @brief Set the bounding volume wireframe visibility state for the scene.
+        ///
+        /// @param [in] show_internal_bounds  Should the internal bounding volume wireframes be shown.
+        /// @param [in] show_leaf_bounds      Should the leaf bounding volume wireframes be shown.
+        void SetShowBounds(bool show_internal_bounds, bool show_leaf_bounds);
+
         /// @brief Get the current options avaiable for the selection in the scene.
         ///
-        /// @param [in] request The request that the options are requested with.
+        /// @param [in] request               The request that the options are requested with.
+        /// @param [in] blas_root_nodes       All of the BLAS root nodes.
         ///
         /// @returns The selection context options with their corresponding functions.
-        SceneContextMenuOptions GetSceneContextOptions(SceneContextMenuRequest request);
+        SceneContextMenuOptions GetSceneContextOptions(SceneContextMenuRequest request, std::vector<rra::SceneNode*>* blas_root_nodes);
 
         /// @brief Generates the traversal tree
         ///
@@ -330,12 +363,12 @@ namespace rra
         /// @param [in] geometry_index The geometry index of the triangle to query.
         /// @param [in] primitive_index The primitive index of the triangle to query.
         /// @return True if split, false otherwise.
-        bool IsTriangleSplit(uint32_t goemetry_index, uint32_t primitive_index) const;
+        bool IsTriangleSplit(uint32_t geometry_index, uint32_t primitive_index) const;
 
         /// @brief Get the set of the currently selected nodes.
         ///
         /// @return The set of currently selected node IDs.
-        std::unordered_set<uint32_t>& GetSelectedNodeIDs();
+        std::unordered_set<uint64_t>& GetSelectedNodeIDs();
 
         /// @brief Make instances invisible depending on their instance mask.
         ///
@@ -358,6 +391,30 @@ namespace rra
         ///
         /// @return A pointer to the allocated buffer.
         std::byte* AllocateChildBuffer(uint32_t blas_index);
+
+        /// @brief Get the root node of the scene.
+        ///
+        /// @return The root node.
+        SceneNode* GetRootNode();
+
+        /// @brief Set the geometry filter state for CPU-side raycast filtering.
+        ///
+        /// @param [in] state The geometry filter state.
+        void SetGeometryFilterState(const GeometryFilterState& state);
+
+        /// @brief Get the current geometry filter state.
+        ///
+        /// @return The geometry filter state.
+        const GeometryFilterState& GetGeometryFilterState() const;
+
+        /// @brief Check if a BLAS instance should be filtered based on geometry filter state.
+        ///
+        /// @param [in] filter_state The current filter state.
+        /// @param [in] instance The instance to check.
+        /// @param [in] blas_index The BLAS index of the instance.
+        ///
+        /// @return True if the instance should be filtered out (hidden), false otherwise.
+        bool ShouldFilterBlasInstance(const GeometryFilterState& filter_state, const renderer::Instance* instance, uint64_t blas_index) const;
 
     private:
         /// @brief Populate the scene info values.
@@ -401,10 +458,10 @@ namespace rra
         std::vector<renderer::SelectedVolumeInstance> selected_volume_instances_;  ///< A list of all the selected volume instances to be rendered.
         SceneStatistics                               scene_stats_ = {};           ///< A structure containing computed scene info.
         std::map<uint64_t, uint32_t>                  blas_instance_counts_;       ///< A map to contain instance counts for a given blas.
-        std::map<uint32_t, SceneNode*>
-                    nodes_;             ///< A map of all the nodes connected to root node (inclusive). Pairs of ((child_index << 32) | node_id, scene_node).
-        VertexList  custom_triangles_;  ///< A list of custom triangles in the scene.
-        uint32_t    most_recent_selected_node_id_ = 0;             ///< The most recent selected node id.
+        std::map<uint64_t, SceneNode*>
+                    nodes_;  ///< A map of all the nodes connected to root node (inclusive). Pairs of ((global_child_index << 32) | node_id, scene_node).
+        VertexList  custom_triangles_;                             ///< A list of custom triangles in the scene.
+        uint64_t    most_recent_selected_node_id_ = 0;             ///< The most recent selected node id.
         static bool multi_select_;                                 ///< Allows multiple nodes to be selected if true.
         std::vector<std::vector<SceneNode*>> rebraid_siblings_{};  ///< The ith index contains all instances with index i, indicating they're rebraid siblings.
         std::unordered_map<uint64_t, std::vector<SceneNode*>>
@@ -414,14 +471,19 @@ namespace rra
         std::vector<std::byte>           child_nodes_buffer_{};
 
         // Using a map instead of a vector since only the visible node IDs are included in the list.
-        std::unordered_map<uint32_t, uint32_t> custom_triangle_map_{};  ///< Contains pairs (node_id, custom_triangles_ index) of all visible triangle nodes.
-        std::unordered_set<uint32_t>           selected_node_ids_{};    ///< Set of all selected node IDs.
+        std::unordered_map<uint64_t, uint32_t> custom_triangle_map_{};  ///< Contains pairs (node_id, custom_triangles_ index) of all visible triangle nodes.
+        std::unordered_set<uint64_t>           selected_node_ids_{};    ///< Set of all selected node IDs.
 
         uint32_t depth_range_lower_bound_ = 0;  ///< The lower bound for the depth range.
         uint32_t depth_range_upper_bound_ = 0;  ///< The upper bound for the depth range.
 
+        bool show_internal_bounds_ = true;
+        bool show_leaf_bounds_     = true;
+
         uint64_t bvh_index_ = {};  ///< The BVH index of this scene.
         bool     is_tlas_   = {};  ///< True if this is a TLAS scene, false if it's a BLAS scene.
+
+        GeometryFilterState geometry_filter_state_;  ///< The current geometry filter state for CPU-side raycast filtering.
 
         // Static so that it monotonically increases across all scenes.
         // This prevents problems when storing last scene iteration and switching scenes.
@@ -430,3 +492,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_SCENE_H_
+

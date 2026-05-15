@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public BLAS header interface.
@@ -52,3 +52,4 @@ RraErrorCode RraBlasHeaderGetPrimitiveCount(uint64_t blas_index, uint32_t* out_p
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_BLAS_HEADER_H_
+

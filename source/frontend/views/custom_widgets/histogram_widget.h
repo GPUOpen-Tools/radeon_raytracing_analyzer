@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Header for the histogram graphics view.
@@ -96,3 +96,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_HISTOGRAM_WIDGET_H_
+

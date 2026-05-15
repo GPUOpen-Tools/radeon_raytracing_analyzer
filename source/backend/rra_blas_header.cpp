@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the public BLAS header interface.
@@ -58,3 +58,4 @@ RraErrorCode RraBlasHeaderGetPrimitiveCount(uint64_t blas_index, uint32_t* out_p
     *out_primitive_count = blas->GetHeader().GetPrimitiveCount();
     return kRraOk;
 }
+

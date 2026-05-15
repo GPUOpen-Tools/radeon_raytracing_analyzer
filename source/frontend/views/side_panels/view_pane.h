@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the View side pane.
@@ -97,6 +97,9 @@ signals:
     /// @brief A signal to notify for render mode changes.
     void RenderModeChanged(bool geometry_node);
 
+    /// @brief A signal to notify that one of the 'Show bounding volumes' checkboxes state has changed.
+    void ShowBoundsChanged(bool show_internal_bounds, bool show_leaf_bounds);
+
 public slots:
     /// @brief Set the control style for the camera.
     ///
@@ -113,6 +116,12 @@ private slots:
     ///
     /// Interrogates the UI control and passes the data off to the model.
     void SetRenderBVH(bool update_model);
+
+    /// @brief Handle what happens when a wireframe toggle has been requested.
+    ///
+    /// @param[in] toggle_internal  Is an internal node toggle requested.
+    /// @param[in] toggle_leaf      Is a leaf node toggle requested.
+    void ToggleBVHWireframes(bool toggle_internal, bool toggle_leaf);
 
     /// @brief Enable/disable whether to render the instance pretransoforms.
     ///
@@ -218,6 +227,20 @@ private slots:
     /// @brief Configure for traversal rendering layout.
     void ConfigureForTraversalRenderingLayout();
 
+    /// @brief Handle a geometry coloring mode change.
+    ///
+    /// @param [in] pane The pane that changed.
+    /// @param [in] geometry_coloring_mode The new geometry coloring mode enum value.
+    /// @param [in] mode_name The display name of the coloring mode.
+    /// @param [in] scene_max_value The scene-derived maximum for the filter slider, or 0 if unavailable.
+    void OnGeometryColoringModeChanged(rra::RRAPaneId pane, int geometry_coloring_mode, const QString& mode_name, int scene_max_value);
+
+    /// @brief Handle geometry filter slider range changes.
+    ///
+    /// @param [in] min_value The lower slider value.
+    /// @param [in] max_value The upper slider value.
+    void SetGeometryFilterRange(int min_value, int max_value);
+
     /// @brief Toggles the hotkey layout to show or hide.
     void ToggleHotkeyLayout();
 
@@ -232,6 +255,7 @@ private slots:
     void SetMovementSpeed(int value);
 
 private:
+
     /// @brief An even filter to catch and discard some UI events.
     ///
     /// @param obj The object that the event came from.
@@ -246,13 +270,17 @@ private:
     /// @brief Update the pane based on the color theme.
     void OnColorThemeUpdated();
 
-    Ui::ViewPane*                ui_             = nullptr;              ///< Pointer to the Qt UI design.
-    rra::ViewModel*              model_          = nullptr;              ///< The model for this pane.
-    rra::RRAPaneId               parent_pane_id_ = rra::kPaneIdInvalid;  ///< The parent pane id.
-    AbsoluteSliderPositionStyle* field_of_view_style_;                   ///< Keep track of FOV slider style.
-    AbsoluteSliderPositionStyle* movement_speed_style_;                  ///< Keep track of movement speed slider style.
+    Ui::ViewPane*                ui_             = nullptr;               ///< Pointer to the Qt UI design.
+    rra::ViewModel*              model_          = nullptr;               ///< The model for this pane.
+    rra::RRAPaneId               parent_pane_id_ = rra::kPaneIdInvalid;   ///< The parent pane id.
+    AbsoluteSliderPositionStyle* field_of_view_style_;                    ///< Keep track of FOV slider style.
+    AbsoluteSliderPositionStyle* movement_speed_style_;                   ///< Keep track of movement speed slider style.
+    bool                         geometry_filter_is_float_      = true;   ///< Whether the current geometry filter range uses float display.
+    float                        geometry_filter_max_raw_       = 1.0f;   ///< The maximum raw value for the current geometry filter mode.
+    bool                         geometry_filter_is_filterable_ = false;  ///< Whether the current geometry coloring mode supports filtering.
 
     static ViewPaneSignalHandler signal_handler;  ///< The singal handler for camera events.
 };
 
 #endif  // RRA_VIEWS_SIDE_PANELS_VIEW_PANE_H_
+

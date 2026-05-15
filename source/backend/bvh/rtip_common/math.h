@@ -1,5 +1,5 @@
 //=============================================================================
-//  Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+//  Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Math functions used in some RT IP 3.1 (Navi4x) specific code.
@@ -125,14 +125,6 @@ static BoundingBox CombineAABB(BoundingBox b0, BoundingBox b1)
 
     return bbox;
 }
-
-//=====================================================================================================================
-/* Temporarily comment out since some things in this function are undefined.
-inline uint32_t countbits64(uint64_t val)
-{
-    return countbits(LowPart(val)) + countbits(HighPart(val));
-}
-*/
 
 //=====================================================================================================================
 // Search the mask data from least significant bit (LSB) / Lowest Order bit
@@ -282,7 +274,7 @@ static glm::uvec3 ComputeQuantizedMax(glm::vec3 maxValue, glm::vec3 origin, glm:
 // assumes 12-bit encoding
 static glm::vec3 ComputeFastExpReciprocal(glm::uvec3 exponents)
 {
-    // Computing rcpExponents guarentees that the compiler will not emit
+    // Computing rcpExponents guarantees that the compiler will not emit
     // transcendental ops for the plane quantization.
     // The + 12 comes from the fact that 2 ** 12 = 4096 which is the encoding granularity
     glm::uvec3 rcpExponentsUint = (glm::uvec3(254, 254, 254) - exponents + glm::uvec3(12));
@@ -292,7 +284,7 @@ static glm::vec3 ComputeFastExpReciprocal(glm::uvec3 exponents)
     const glm::vec3 rcpExponents = asfloat(rcpExponentsUint);
 
     // Note that this optimization results in this function being ill-defined for inputs with exponent == 254.
-    // It is unlikely any app will use geometry with enourmous bounds like this. This could be handled with a special
+    // It is unlikely any app will use geometry with enormous bounds like this. This could be handled with a special
     // case or by falling back to infinitely large boxes and accepting all hits and pushing the problem down the BVH.
     return rcpExponents;
 }
@@ -342,3 +334,4 @@ static float Dequantize(float origin, uint32_t exponent, uint32_t plane, uint32_
 #endif
 
 #endif  // RRA_BACKEND_MATH_H_
+

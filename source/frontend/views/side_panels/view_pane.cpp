@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the View side pane.
@@ -16,6 +16,7 @@
 #include "qt_common/utils/qt_util.h"
 
 #include "public/heatmap.h"
+#include "public/renderer_types.h"
 #include "public/rra_asic_info.h"
 
 #include "constants.h"
@@ -63,7 +64,8 @@ ViewPane::ViewPane(QWidget* parent)
 
     // Initialize any check boxes.
     ui_->content_render_geometry_->Initialize(false, rra::kCheckboxEnableColor);
-    ui_->content_render_bvh_->Initialize(false, rra::kCheckboxEnableColor);
+    ui_->content_render_internal_bvh_->Initialize(false, rra::kCheckboxEnableColor);
+    ui_->content_render_leaf_bvh_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_render_instance_transform_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_wireframe_overlay_->Initialize(false, rra::kCheckboxEnableColor);
 
@@ -94,9 +96,17 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->traversal_counter_slider_->setCursor(Qt::PointingHandCursor);
     ui_->traversal_counter_slider_->Init();
 
+    // Initialize the geometry filter slider with a solid selection-blue fill.
+    ui_->geometry_filter_slider_->setCursor(Qt::PointingHandCursor);
+    ui_->geometry_filter_slider_->Init();
+    QImage geometry_filter_fill(1, 1, QImage::Format_RGBA8888);
+    geometry_filter_fill.setPixelColor(0, 0, QColor(0, 116, 214));
+    ui_->geometry_filter_slider_->SetHeatmap(QPixmap::fromImage(geometry_filter_fill));
+
     // Hook up any UI controls that need updating by the model.
     model_->InitializeModel(ui_->content_render_geometry_, rra::kSidePaneViewRenderGeometry, "checked");
-    model_->InitializeModel(ui_->content_render_bvh_, rra::kSidePaneViewRenderBVH, "checked");
+    model_->InitializeModel(ui_->content_render_internal_bvh_, rra::kSidePaneViewRenderBVHInternal, "checked");
+    model_->InitializeModel(ui_->content_render_leaf_bvh_, rra::kSidePaneViewRenderBVHLeaf, "checked");
     model_->InitializeModel(ui_->content_render_instance_transform_, rra::kSidePaneViewRenderInstanceTransforms, "checked");
     model_->InitializeModel(ui_->content_wireframe_overlay_, rra::kSidePaneViewWireframeOverlay, "checked");
     model_->InitializeModel(ui_->content_culling_mode_, rra::kSidePaneViewCullingMode, "currentItem");
@@ -193,9 +203,10 @@ ViewPane::ViewPane(QWidget* parent)
     model_->InitializeModel(ui_->traversal_continuous_update_, rra::kSidePaneViewTraversalContinuousUpdate, "unchecked");
 
     // Set up the connections.
-    connect(ui_->content_render_geometry_, &ColoredCheckbox::Clicked, [=]() { this->SetRenderGeometry(true); });
-    connect(ui_->content_render_bvh_, &ColoredCheckbox::Clicked, [=]() { this->SetRenderBVH(true); });
-    connect(ui_->content_render_instance_transform_, &ColoredCheckbox::Clicked, [=]() { this->SetRenderInstancePretransform(true); });
+    connect(ui_->content_render_geometry_, &ColoredCheckbox::Clicked, [=, this]() { this->SetRenderGeometry(true); });
+    connect(ui_->content_render_internal_bvh_, &ColoredCheckbox::Clicked, [=, this]() { this->SetRenderBVH(true); });
+    connect(ui_->content_render_leaf_bvh_, &ColoredCheckbox::Clicked, [=, this]() { this->SetRenderBVH(true); });
+    connect(ui_->content_render_instance_transform_, &ColoredCheckbox::Clicked, [=, this]() { this->SetRenderInstancePretransform(true); });
     connect(ui_->content_wireframe_overlay_, &ColoredCheckbox::Clicked, this, &ViewPane::SetWireframeOverlay);
     connect(ui_->content_culling_mode_, &ArrowIconComboBox::SelectionChanged, this, &ViewPane::SetCullingMode);
     connect(ui_->traversal_counter_slider_, &DoubleSliderHeatmapWidget::SpanChanged, this, &ViewPane::SetTraversalCounterRange);
@@ -212,9 +223,11 @@ ViewPane::ViewPane(QWidget* parent)
     connect(ui_->content_camera_position_y_, SIGNAL(valueChanged(double)), this, SLOT(CameraPositionChangedY(double)));
     connect(ui_->content_camera_position_z_, SIGNAL(valueChanged(double)), this, SLOT(CameraPositionChangedZ(double)));
 
-    connect(ui_->content_control_style_, &ArrowIconComboBox::SelectionChanged, [=]() { this->SetControlStyle(ui_->content_control_style_->CurrentRow()); });
     connect(
-        ui_->content_projection_mode_, &ArrowIconComboBox::SelectionChanged, [=]() { this->SetProjectionMode(ui_->content_projection_mode_->CurrentRow()); });
+        ui_->content_control_style_, &ArrowIconComboBox::SelectionChanged, [=, this]() { this->SetControlStyle(ui_->content_control_style_->CurrentRow()); });
+    connect(ui_->content_projection_mode_, &ArrowIconComboBox::SelectionChanged, [=, this]() {
+        this->SetProjectionMode(ui_->content_projection_mode_->CurrentRow());
+    });
 
     connect(&signal_handler, &ViewPaneSignalHandler::CameraParametersChanged, model_, &rra::ViewModel::SetCameraControllerParameters);
     connect(&signal_handler, &ViewPaneSignalHandler::CameraHotkeysChanged, model_, &rra::ViewModel::UpdateControlHotkeys);
@@ -242,18 +255,34 @@ ViewPane::ViewPane(QWidget* parent)
     connect(ui_->content_rendering_mode_geometry_, &ColoredRadioButton::Clicked, this, &ViewPane::ConfigureForGeometryRenderingLayout);
     connect(ui_->content_rendering_mode_traversal_, &ColoredRadioButton::Clicked, this, &ViewPane::ConfigureForTraversalRenderingLayout);
 
+    connect(ui_->geometry_filter_slider_, &DoubleSliderHeatmapWidget::SpanChanged, this, &ViewPane::SetGeometryFilterRange);
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::GeometryColoringModeChanged, this, &ViewPane::OnGeometryColoringModeChanged);
+
     ui_->vertical_layout_traversal_counter_controls_container_->setContentsMargins(0, 0, 0, 0);
     ui_->vertical_layout_traversal_counter_controls_container_->setSpacing(0);
+    ui_->vertical_layout_geometry_filter_container_->setContentsMargins(0, 0, 0, 0);
+    ui_->vertical_layout_geometry_filter_container_->setSpacing(0);
 
     // Refresh the UI if any render state has changed externally.
     connect(&rra::MessageManager::Get(), &rra::MessageManager::RenderStateChanged, model_, &rra::ViewModel::Update);
 
+    // Handle what happens when a wireframe toggle is requested (usually via a hotkey).
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::ToggleWireframeRequested, this, &ViewPane::ToggleBVHWireframes);
+
     // Refresh the traversal slider if it has changed externally.
-    connect(&rra::MessageManager::Get(), &rra::MessageManager::TraversalSliderChanged, [=](uint32_t min, uint32_t max) {
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::TraversalSliderChanged, [=, this](uint32_t min, uint32_t max) {
         ui_->traversal_counter_slider_->SetSpan(min, max);
     });
 
     connect(&QtCommon::QtUtils::ColorTheme::Get(), &QtCommon::QtUtils::ColorTheme::ColorThemeUpdated, this, &ViewPane::OnColorThemeUpdated);
+
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::BlasSelected, [=, this]() {
+        emit ShowBoundsChanged(ui_->content_render_internal_bvh_->isChecked(), ui_->content_render_leaf_bvh_->isChecked());
+    });
+
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasSelected, [=, this]() {
+        emit ShowBoundsChanged(ui_->content_render_internal_bvh_->isChecked(), ui_->content_render_leaf_bvh_->isChecked());
+    });
 
     // Set the heatmap update callback.
     model_->SetHeatmapUpdateCallback([&](rra::renderer::HeatmapData heatmap_data) {
@@ -337,7 +366,8 @@ void ViewPane::OnTraceOpen()
     ui_->content_ray_flags_cull_front_facing_triangles_->setChecked(false);
     UpdateBoxSortHeuristicLabel();
 
-    ui_->content_render_bvh_->setChecked(true);
+    ui_->content_render_internal_bvh_->setChecked(true);
+    ui_->content_render_leaf_bvh_->setChecked(true);
     ui_->content_render_instance_transform_->setChecked(true);
 
     model_->SetViewportCullingMode(rra::Settings::Get().GetCullMode());
@@ -381,7 +411,7 @@ void ViewPane::showEvent(QShowEvent* event)
     Q_UNUSED(event);
 
     model_->SetHistogramUpdateFunction(
-        [=](const std::vector<uint32_t>& hist_data, uint32_t buffer_width, uint32_t buffer_height) {
+        [=, this](const std::vector<uint32_t>& hist_data, uint32_t buffer_width, uint32_t buffer_height) {
             HistogramUpdateFunction(ui_, hist_data, buffer_width, buffer_height);
         },
         rra::Settings::Get().GetTraversalCounterMaximum());
@@ -400,8 +430,9 @@ void ViewPane::ApplyUIStateFromSettings(rra::RRAPaneId pane)
     bool lock_camera              = false;
 
     // Geometry settings.
-    bool show_geometry = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowGeometry);
-    bool show_bvh      = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowAxisAlignedBVH);
+    bool show_geometry     = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowGeometry);
+    bool show_internal_bvh = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowAxisAlignedInternalBVH);
+    bool show_leaf_bvh     = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowAxisAlignedLeafBVH);
     if (pane == rra::kPaneIdTlasViewer)
     {
         show_instance_transforms = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowInstanceTransform);
@@ -409,6 +440,9 @@ void ViewPane::ApplyUIStateFromSettings(rra::RRAPaneId pane)
     else if (pane == rra::kPaneIdRayInspector)
     {
         lock_camera = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingLockCamera);
+        // Hide and uncheck the render leaf BVH checkbox for the ray inspector pane. The ray inspector pane just uses the top-level internal node.
+        show_leaf_bvh = false;
+        ui_->content_render_leaf_bvh_->hide();
     }
 
     bool show_wireframe = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingShowWireframe);
@@ -421,7 +455,8 @@ void ViewPane::ApplyUIStateFromSettings(rra::RRAPaneId pane)
     // Set renderer checkbox states.
     ui_->content_render_geometry_->setChecked(show_geometry);
     SetRenderGeometry(false);
-    ui_->content_render_bvh_->setChecked(show_bvh);
+    ui_->content_render_internal_bvh_->setChecked(show_internal_bvh);
+    ui_->content_render_leaf_bvh_->setChecked(show_leaf_bvh);
     SetRenderBVH(false);
     if (pane == rra::kPaneIdTlasViewer)
     {
@@ -505,15 +540,43 @@ void ViewPane::SetRenderGeometry(bool update_model)
     rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowGeometry, show_geometry);
 }
 
+void ViewPane::ToggleBVHWireframes(bool toggle_internal, bool toggle_leaf)
+{
+    // Only toggle wireframe for currently visible side pane.
+    if (isVisible())
+    {
+        bool render_internal_bvh = ui_->content_render_internal_bvh_->isChecked();
+        bool render_leaf_bvh     = ui_->content_render_leaf_bvh_->isChecked();
+        if (toggle_internal)
+        {
+            render_internal_bvh = !render_internal_bvh;
+            ui_->content_render_internal_bvh_->setChecked(render_internal_bvh);
+        }
+        if (toggle_leaf)
+        {
+            render_leaf_bvh = !render_leaf_bvh;
+            ui_->content_render_leaf_bvh_->setChecked(render_leaf_bvh);
+        }
+        emit ShowBoundsChanged(render_internal_bvh, render_leaf_bvh);
+        model_->SetRenderBVH(render_internal_bvh, render_leaf_bvh);
+        model_->Update();
+        rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowAxisAlignedInternalBVH, render_internal_bvh);
+        rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowAxisAlignedLeafBVH, render_leaf_bvh);
+    }
+}
+
 void ViewPane::SetRenderBVH(bool update_model)
 {
-    bool render_bvh = ui_->content_render_bvh_->isChecked();
-    model_->SetRenderBVH(render_bvh);
+    bool render_internal_bvh = ui_->content_render_internal_bvh_->isChecked();
+    bool render_leaf_bvh     = ui_->content_render_leaf_bvh_->isChecked();
+    emit ShowBoundsChanged(render_internal_bvh, render_leaf_bvh);
+    model_->SetRenderBVH(render_internal_bvh, render_leaf_bvh);
     if (update_model)
     {
         model_->Update();
     }
-    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowAxisAlignedBVH, render_bvh);
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowAxisAlignedInternalBVH, render_internal_bvh);
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingShowAxisAlignedLeafBVH, render_leaf_bvh);
 }
 
 void ViewPane::SetRenderInstancePretransform(bool update_model)
@@ -550,7 +613,7 @@ void ViewPane::SetTraversalCounterRange(int min_value, int max_value)
 
 void ViewPane::AdaptTraversalCounterRangeToView()
 {
-    model_->AdaptTraversalCounterRangeToView([=](uint32_t min, uint32_t max) { ui_->traversal_counter_slider_->SetSpan(min, max); });
+    model_->AdaptTraversalCounterRangeToView([=, this](uint32_t min, uint32_t max) { ui_->traversal_counter_slider_->SetSpan(min, max); });
 }
 
 void ViewPane::UpdateBoxSortHeuristicLabel()
@@ -646,7 +709,8 @@ void ViewPane::ToggleTraversalCounterContinuousUpdate()
 
 void ViewPane::SetTraversalCounterContinuousUpdate(bool continuous_update)
 {
-    model_->SetTraversalCounterContinuousUpdate(continuous_update, [=](uint32_t min, uint32_t max) { ui_->traversal_counter_slider_->SetSpan(min, max); });
+    model_->SetTraversalCounterContinuousUpdate(continuous_update,
+                                                [=, this](uint32_t min, uint32_t max) { ui_->traversal_counter_slider_->SetSpan(min, max); });
     rra::Settings::Get().SetContinuousUpdateState(continuous_update);
     ui_->traversal_continuous_update_->setChecked(continuous_update);
     ui_->traversal_adapt_to_view_->setDisabled(continuous_update);
@@ -803,9 +867,11 @@ void ViewPane::ConfigureForGeometryRenderingLayout()
     rra::Settings::Get().SetRenderingMode(parent_pane_id_, kRenderingModeGeometry);
     model_->SetRenderTraversal(false);
     ui_->traversal_counter_controls_container_->hide();
+    ui_->geometry_filter_container_->setVisible(geometry_filter_is_filterable_);
     ui_->content_render_geometry_->show();
     ui_->content_culling_mode_->show();
     ui_->content_rendering_mode_geometry_->setChecked(true);
+    SetGeometryFilterRange(ui_->geometry_filter_slider_->LowerValue(), ui_->geometry_filter_slider_->UpperValue());
     model_->Update();
     emit RenderModeChanged(true);
 }
@@ -817,9 +883,129 @@ void ViewPane::ConfigureForTraversalRenderingLayout()
     ui_->content_render_geometry_->hide();
     ui_->content_culling_mode_->hide();
     ui_->traversal_counter_controls_container_->show();
+    ui_->geometry_filter_container_->hide();
     ui_->content_rendering_mode_traversal_->setChecked(true);
+    model_->SetGeometryFilterRange(0.0f, 0.0f, false);
     model_->Update();
     emit RenderModeChanged(false);
+}
+
+void ViewPane::OnGeometryColoringModeChanged(rra::RRAPaneId pane, int geometry_coloring_mode, const QString& mode_name, int scene_max_value)
+{
+    // Only handle signals meant for this pane.
+    if (pane != parent_pane_id_)
+    {
+        return;
+    }
+
+    using namespace rra::renderer;
+
+    // Extract short name by stripping the "Color geometry by " prefix.
+    static const QString kPrefix    = "Color geometry by ";
+    QString              short_name = mode_name;
+    if (short_name.startsWith(kPrefix))
+    {
+        short_name = short_name.mid(kPrefix.length());
+    }
+    ui_->label_geometry_filter_->setText("Filter geometry by " + short_name);
+
+    auto mode = static_cast<GeometryColoringMode>(geometry_coloring_mode);
+
+    // Determine if this mode is filterable and set slider range accordingly.
+    // SAH modes always use 0.0-1.0. Non-SAH modes use scene-derived max when available.
+    bool  is_filterable = true;
+    bool  is_float      = true;
+    float max_raw       = 1.0f;
+    int   slider_max    = 1000;
+
+    switch (mode)
+    {
+    case GeometryColoringMode::kBlasAverageSAH:
+    case GeometryColoringMode::kBlasMinSAH:
+    case GeometryColoringMode::kTriangleSAH:
+        is_float   = true;
+        max_raw    = 1.0f;
+        slider_max = 1000;
+        break;
+    case GeometryColoringMode::kTreeLevel:
+        is_float   = false;
+        max_raw    = (scene_max_value > 0) ? static_cast<float>(scene_max_value) : 64.0f;
+        slider_max = static_cast<int>(max_raw);
+        break;
+    case GeometryColoringMode::kBlasMaxDepth:
+    case GeometryColoringMode::kBlasAverageDepth:
+        is_float   = false;
+        max_raw    = (scene_max_value > 0) ? static_cast<float>(scene_max_value) : 128.0f;
+        slider_max = static_cast<int>(max_raw);
+        break;
+    case GeometryColoringMode::kBlasInstanceCount:
+        is_float   = false;
+        max_raw    = (scene_max_value > 0) ? static_cast<float>(scene_max_value) : 1000.0f;
+        slider_max = static_cast<int>(max_raw);
+        break;
+    case GeometryColoringMode::kBlasTriangleCount:
+        is_float   = false;
+        max_raw    = (scene_max_value > 0) ? static_cast<float>(scene_max_value) : 100000.0f;
+        slider_max = static_cast<int>(max_raw);
+        break;
+    default:
+        is_filterable = false;
+        break;
+    }
+
+    geometry_filter_is_float_      = is_float;
+    geometry_filter_max_raw_       = max_raw;
+    geometry_filter_is_filterable_ = is_filterable;
+
+    if (is_filterable)
+    {
+        // Only show the geometry filter if we're in geometry rendering mode, not traversal mode.
+        bool in_geometry_mode = rra::Settings::Get().GetRenderingMode(parent_pane_id_) == kRenderingModeGeometry;
+        ui_->geometry_filter_container_->setVisible(in_geometry_mode);
+        ui_->geometry_filter_slider_->setMinimum(0);
+        ui_->geometry_filter_slider_->setMaximum(slider_max);
+        ui_->geometry_filter_slider_->SetSpan(0, slider_max);
+        ui_->geometry_filter_slider_->setEnabled(true);
+        SetGeometryFilterRange(0, slider_max);
+
+        if (is_float)
+        {
+            ui_->geometry_filter_min_value_->setText("0.000");
+            ui_->geometry_filter_max_value_->setText(QString::number(static_cast<double>(max_raw), 'f', 3));
+        }
+        else
+        {
+            ui_->geometry_filter_min_value_->setText("0");
+            ui_->geometry_filter_max_value_->setText(QString::number(static_cast<int>(max_raw)));
+        }
+    }
+    else
+    {
+        ui_->geometry_filter_container_->hide();
+        model_->SetGeometryFilterRange(0.0f, 0.0f, false);
+    }
+}
+
+void ViewPane::SetGeometryFilterRange(int min_value, int max_value)
+{
+    int slider_max = ui_->geometry_filter_slider_->maximum();
+
+    float raw_min = (slider_max > 0) ? geometry_filter_max_raw_ * (static_cast<float>(min_value) / slider_max) : 0.0f;
+    float raw_max = (slider_max > 0) ? geometry_filter_max_raw_ * (static_cast<float>(max_value) / slider_max) : geometry_filter_max_raw_;
+
+    bool is_full_range = (min_value <= 0 && max_value >= slider_max);
+    model_->SetGeometryFilterRange(raw_min, raw_max, !is_full_range);
+
+    if (geometry_filter_is_float_)
+    {
+        ui_->geometry_filter_min_value_->setText(QString::number(static_cast<double>(raw_min), 'f', 3));
+        ui_->geometry_filter_max_value_->setText(QString::number(static_cast<double>(raw_max), 'f', 3));
+    }
+    else
+    {
+        ui_->geometry_filter_min_value_->setText(QString::number(static_cast<int>(raw_min)));
+        ui_->geometry_filter_max_value_->setText(QString::number(static_cast<int>(raw_max)));
+    }
 }
 
 void ViewPane::ToggleHotkeyLayout()
@@ -917,3 +1103,4 @@ void ViewPane::OnColorThemeUpdated()
 
     ui_->lock_camera_button_->SetNormalIcon(QIcon(model_->GetCameraLock() ? closed_icon : open_icon));
 }
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the RT IP 1.1 acceleration structure header class.
@@ -9,6 +9,8 @@
 
 #include "bvh/dxr_type_conversion.h"
 #include "bvh/utils.h"
+
+#include "public/rra_print.h"
 #include "public/rra_rtip_info.h"
 
 namespace rta
@@ -299,11 +301,13 @@ namespace rta
         // The minimum file size for RT IP 1.1 BVHs is 256B.
         if (header_.sizeInBytes < kMinimumFileSize)
         {
+            RraPrint(kLogLevelError, "Error with acceleration structure header: Incorrect header size");
             return false;
         }
         // Meta data needs to be aligned with 128B.
         if (header_.metadataSizeInBytes < dxr::amd::kMetaDataAlignment)
         {
+            RraPrint(kLogLevelError, "Error with acceleration structure header: Incorrect metadata size");
             return false;
         }
         // Check if there is any root node defined in this header.
@@ -312,37 +316,45 @@ namespace rta
         // BVH. Otherwise, it's invalid.
         if ((header_.sizeInBytes > kMinimumFileSize) && (header_.numActivePrims > 0) && !has_root_node)
         {
+            RraPrint(kLogLevelError, "Error with acceleration structure header: No internal nodes");
             return false;
         }
         // Buffer offset values should be set in ascending order, according to the order they are
         // defined in the offset struct.
-        if (header_.offsets.leaf_nodes < header_.offsets.interior_nodes || header_.offsets.prim_node_ptrs < header_.offsets.geometry_info)
+        bool prim_nodes_invalid = header_.offsets.prim_node_ptrs < header_.offsets.geometry_info;
+        if (header_.offsets.leaf_nodes < header_.offsets.interior_nodes || prim_nodes_invalid)
         {
+            RraPrint(kLogLevelError, "Error with acceleration structure header: Incorrect buffer ordering");
             return false;
         }
         // For top-level BVHs, geometry info can be 0 as it is not used.
         // For bottom-level BVHs, however, this offset must be defined properly.
         if (build_info_->IsBottomLevel() && header_.offsets.geometry_info < header_.offsets.leaf_nodes)
         {
+            RraPrint(kLogLevelError, "Error with acceleration structure header: Incorrect geometry info ordering");
             return false;
         }
         // The first interior node buffer offsets starts right after the acceleration structure header,
         // given that there is any root node stored in this BVH.
         if (has_root_node && header_.offsets.interior_nodes < dxr::amd::kAccelerationStructureHeaderSize)
         {
+            RraPrint(kLogLevelError, "Error with acceleration structure header: Incorrect root node offset");
             return false;
         }
         // We cannot have more active primitives than stored in the BVH.
         if (header_.numPrimitives < header_.numActivePrims)
         {
+            RraPrint(kLogLevelError, "Error with acceleration structure header: Invalid number of primitves");
             return false;
         }
         // Build info must be initialized.
         if (!build_info_)
         {
+            RraPrint(kLogLevelError, "Error with acceleration structure header: Uninitialized build info");
             return false;
         }
         return true;
     }
 
 }  // namespace rta
+

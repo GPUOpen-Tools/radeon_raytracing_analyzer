@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Implementation of RRA's table item delegate.
@@ -107,3 +107,4 @@ void TableItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
         painter->drawText(option.rect, Qt::AlignRight | Qt::AlignVCenter, index.data().toString());
     }
 }
+

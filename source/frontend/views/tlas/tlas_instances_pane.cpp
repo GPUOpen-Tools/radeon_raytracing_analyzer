@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Instances pane on the TLAS tab.
@@ -200,3 +200,4 @@ void TlasInstancesPane::ScrollToSelectedInstance()
     }
     ui_->instances_table_->scrollToTop();
 }
+

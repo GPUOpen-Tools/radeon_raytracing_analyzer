@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test TLAS to BLAS mappings.
@@ -167,6 +167,7 @@ namespace backend_test
                         " ERROR - Can't get original instance node transform from TLAS[%d] and BLAS[%d], instance[%d]", tlas_index, blas_index, instance_index);
                     return false;
                 }
+
             }
         }
 
@@ -267,3 +268,4 @@ namespace backend_test
     }
 
 }  // namespace backend_test
+

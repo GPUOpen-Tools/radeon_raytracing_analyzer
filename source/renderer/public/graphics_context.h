@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the Graphics Context functions.
@@ -29,7 +29,7 @@ namespace rra
         /// @brief Initialize the graphics context. Note: must be called after CreateGraphicsContext.
         ///
         /// @returns True if the context was initialized successfully and false in case of failure.
-        bool InitializeGraphicsContext(std::shared_ptr<GraphicsContextSceneInfo> info);
+        bool InitializeGraphicsContext(GraphicsContextSceneInfo* info);
 
         /// @brief Get the human readable initialization error.
         ///
@@ -77,3 +77,4 @@ namespace rra
 }  // namespace rra
 
 #endif
+

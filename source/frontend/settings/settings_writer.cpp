@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the XML settings writer.
@@ -87,3 +87,4 @@ namespace rra
         writer_.writeTextElement("DeviceString", recent_file.device_string);
     }
 }  // namespace rra
+

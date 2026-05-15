@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test cases implementation.
@@ -147,3 +147,4 @@ bool RRATestCases::TestRayHistory(const char* test_name) const
     bool                            result = ray_history_test.RunTests(config_.log);
     return result;
 }
+

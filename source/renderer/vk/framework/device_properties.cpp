@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan device properties type.
@@ -42,7 +42,7 @@ namespace rra
                 return true;
             }
 
-            RraPrint("The device extension '%s' is not supported.", device_extension_name);
+            RraPrint(kLogLevelError, "The device extension '%s' is not supported.", device_extension_name);
 
             return false;
         }
@@ -70,3 +70,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

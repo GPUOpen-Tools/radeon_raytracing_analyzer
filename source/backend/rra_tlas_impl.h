@@ -1,10 +1,11 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the TLAS interface.
 ///
-/// Contains all functions specific to the TLAS.
+/// Contains functions specific to the TLAS that are not exposed to the public
+/// interface.
 //=============================================================================
 
 #ifndef RRA_BACKEND_RRA_TLAS_IMPL_H_
@@ -26,10 +27,11 @@ rta::EncodedTopLevelBvh* RraTlasGetTlasFromTlasIndex(uint64_t tlas_index);
 ///
 /// @param [in]  tlas             The top level acceleration structure containing the node.
 /// @param [in]  node_id          The node of interest.
+/// @param [in]  child_index      The node's child index.
 /// @param [out] out_surface_area The calculated surface area.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetSurfaceAreaImpl(const rta::EncodedRtIp11TopLevelBvh* tlas, uint32_t node_id, float* out_surface_area);
+RraErrorCode RraTlasGetSurfaceAreaImpl(const rta::EncodedRtIp11TopLevelBvh* tlas, uint32_t node_id, uint32_t child_index, float* out_surface_area);
 
 /// @brief Get the BLAS associated with a given instance node.
 ///
@@ -57,3 +59,4 @@ RraErrorCode RraTlasGetNodeTransformedSurfaceArea(const rta::EncodedRtIp11TopLev
                                                   float*                               out_surface_area);
 
 #endif  // RRA_BACKEND_RRA_TLAS_IMPL_H_
+

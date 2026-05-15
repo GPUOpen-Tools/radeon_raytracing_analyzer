@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Class definition for the Trace Manager.
@@ -158,3 +158,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MANAGERS_TRACE_MANAGER_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH bundle implementation.
@@ -13,7 +13,7 @@
 #include <iostream>
 #include <unordered_set>
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 #include "public/rra_assert.h"
 #include "public/rra_error.h"
@@ -23,8 +23,10 @@
 #include "bvh/ibvh.h"
 #include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
 #include "bvh/rtip11/encoded_rt_ip_11_top_level_bvh.h"
+#include "bvh/rtip11/rt_ip_11_node.h"
 #include "bvh/rtip31/encoded_rt_ip_31_bottom_level_bvh.h"
 #include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
+#include "bvh/rtip31/rt_ip_31_node.h"
 
 namespace rta
 {
@@ -32,6 +34,7 @@ namespace rta
 
     BvhBundle::BvhBundle(std::vector<std::unique_ptr<IBvh>>&&                 top_level_bvhs,
                          std::vector<std::unique_ptr<IBvh>>&&                 bottom_level_bvhs,
+                         std::unique_ptr<INode>&&                             bvh_node,
                          bool                                                 empty_placeholder,
                          uint64_t                                             missing_blas_count,
                          uint64_t                                             inactive_instance_count,
@@ -39,6 +42,7 @@ namespace rta
 
         : top_level_bvhs_(std::move(top_level_bvhs))
         , bottom_level_bvhs_(std::move(bottom_level_bvhs))
+        , bvh_node_(std::move(bvh_node))
         , blas_va_to_index_map_(blas_va_to_index_map)
         , empty_placeholder_(empty_placeholder)
         , missing_blas_count_(missing_blas_count)
@@ -105,6 +109,11 @@ namespace rta
         return bottom_level_bvhs_;
     }
 
+    const INode& BvhBundle::GetBvhNode() const
+    {
+        return *bvh_node_;
+    }
+
     size_t BvhBundle::GetBlasCount() const
     {
         auto size = bottom_level_bvhs_.size();
@@ -140,7 +149,7 @@ namespace rta
         return empty_placeholder_;
     }
 
-    std::optional<uint64_t> BvhBundle::GetBlasIndexFromVirtualAddress(GpuVirtualAddress address)
+    std::optional<uint64_t> BvhBundle::GetBlasIndexFromVirtualAddress(GpuVirtualAddress address) const
     {
         auto it = blas_va_to_index_map_.find(address);
         if (it == blas_va_to_index_map_.end())
@@ -215,7 +224,7 @@ namespace rta
     /// @param [out] io_error_code Variable to receive an error code if the load failed.
     ///
     /// @return The BVH object loaded in if successful or nullptr if error.
-    template <typename Tlas, typename Blas>
+    template <typename Tlas, typename Blas, typename Node>
     static std::unique_ptr<BvhBundle> LoadRawAccelStructBundleFromFile(rdf::ChunkFile&           chunk_file,
                                                                        const BvhBundleReadOption import_option,
                                                                        RraErrorCode*             io_error_code)
@@ -238,6 +247,7 @@ namespace rta
 
         std::vector<std::unique_ptr<IBvh>> top_level_bvhs;
         std::vector<std::unique_ptr<IBvh>> bottom_level_bvhs;
+        std::unique_ptr<INode>             bvh_node = std::make_unique<Node>();
 
         const auto bvh_chunk_count = chunk_file.GetChunkCount(bvh_identifier);
 
@@ -321,11 +331,8 @@ namespace rta
                 return nullptr;
             }
 
-            if ((RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == RayTracingIpLevel::RtIp3_1)
-            {
-                EncodedRtIp31TopLevelBvh* rtip3_tlas = (EncodedRtIp31TopLevelBvh*)top_level_bvh.get();
-                rtip3_tlas->ConvertBlasAddressesToIndices(blas_map);
-            }
+            auto* tlas = top_level_bvh.get();
+            tlas->ConvertBlasAddressesToIndices(blas_map);
         }
 
         // Replace absolute addresses in the BLAS with indices.
@@ -352,7 +359,7 @@ namespace rta
 
         *io_error_code = kRraOk;
         return std::make_unique<BvhBundle>(
-            std::move(top_level_bvhs), std::move(bottom_level_bvhs), true, missing_blas_set.size(), inactive_instance_count, blas_map);
+            std::move(top_level_bvhs), std::move(bottom_level_bvhs), std::move(bvh_node), true, missing_blas_set.size(), inactive_instance_count, blas_map);
     }
 
     RayTracingIpLevel DecodeRtIpLevel(rdf::ChunkFile& chunk_file, RraErrorCode* io_error_code)
@@ -417,6 +424,14 @@ namespace rta
                     current_rtip_level = (uint32_t)RayTracingIpLevel::RtIp1_1;
                 }
 
+                // Detect unsupported RTIP versions.
+                if (current_rtip_level >= (uint32_t)RayTracingIpLevel::RtIpCount)
+                {
+                    *io_error_code = kRraErrorUnrecognizedRtIpLevel;
+                    return RayTracingIpLevel::RtIpNone;
+                }
+
+                // Track highest valid RTIP version found.
                 if (current_rtip_level > highest_rtip_level && current_rtip_level < (uint32_t)RayTracingIpLevel::RtIpCount)
                 {
                     highest_rtip_level = current_rtip_level;
@@ -484,12 +499,15 @@ namespace rta
     {
         if (encoding == RayTracingIpLevel::RtIp3_1)
         {
-            return LoadRawAccelStructBundleFromFile<EncodedRtIp31TopLevelBvh, EncodedRtIp31BottomLevelBvh>(chunk_file, import_option, io_error_code);
+            return LoadRawAccelStructBundleFromFile<EncodedRtIp31TopLevelBvh, EncodedRtIp31BottomLevelBvh, Rtip31Node>(
+                chunk_file, import_option, io_error_code);
         }
         else
         {
-            return LoadRawAccelStructBundleFromFile<EncodedRtIp11TopLevelBvh, EncodedRtIp11BottomLevelBvh>(chunk_file, import_option, io_error_code);
+            return LoadRawAccelStructBundleFromFile<EncodedRtIp11TopLevelBvh, EncodedRtIp11BottomLevelBvh, Rtip11Node>(
+                chunk_file, import_option, io_error_code);
         }
     }
 
 }  // namespace rta
+

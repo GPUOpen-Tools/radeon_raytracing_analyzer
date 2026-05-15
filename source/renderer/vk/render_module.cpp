@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan render module.
@@ -19,6 +19,13 @@ namespace rra
         bool RenderModule::ShouldCopyDepthBuffer() const
         {
             return false;
+        }
+
+        void RenderModule::RecordPerFrameCopyCommands(VkCommandBuffer command_buffer, uint32_t current_frame)
+        {
+            // No-op by default.
+            RRA_UNUSED(command_buffer);
+            RRA_UNUSED(current_frame);
         }
 
         void RenderModule::EveryFrameUpdate(Device* device, uint32_t current_frame)
@@ -68,3 +75,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

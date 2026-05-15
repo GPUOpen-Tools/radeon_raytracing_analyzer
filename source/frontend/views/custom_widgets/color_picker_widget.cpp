@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2017-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2017-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a color picker widget.
@@ -139,3 +139,4 @@ void ColorPickerWidget::ButtonClicked(int button_id)
 {
     emit ColorSelected(button_id, palette_.GetColor(button_id));
 }
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ray inspector model.
@@ -119,7 +119,11 @@ namespace rra
                 // Am I the parent of the other item ?
                 if (dynamic_id == other_item_data->parent_id)
                 {
-                    item_data->child_rays.push_back(other_item_data);
+                    // Prevent cyclic references.
+                    if (item_data != other_item_data)
+                    {
+                        item_data->child_rays.push_back(other_item_data);
+                    }
                 }
             }
 
@@ -208,20 +212,9 @@ namespace rra
         }
     }
 
-    void RayInspectorModel::ToggleBVHWireframe()
+    void RayInspectorModel::ToggleBVHWireframe(bool toggle_internal, bool toggle_leaf)
     {
-        if (render_state_adapter_ != nullptr)
-        {
-            if (render_state_adapter_->GetRenderBoundingVolumes())
-            {
-                render_state_adapter_->SetRenderBoundingVolumes(false);
-            }
-            else
-            {
-                render_state_adapter_->SetRenderBoundingVolumes(true);
-            }
-            emit MessageManager::Get().RenderStateChanged();
-        }
+        emit MessageManager::Get().ToggleWireframeRequested(toggle_internal, toggle_leaf);
     }
 
     void RayInspectorModel::ToggleMeshWireframe()
@@ -311,7 +304,7 @@ namespace rra
         }
 
         // Use the same selection extents for the scene.
-        viewer_callbacks.get_scene_extents = [=]() -> BoundingVolumeExtents {
+        viewer_callbacks.get_scene_extents = [=, this]() -> BoundingVolumeExtents {
             BoundingVolumeExtents extents = {};
             extents.max_x                 = -std::numeric_limits<float>::infinity();
             extents.max_y                 = -std::numeric_limits<float>::infinity();
@@ -361,7 +354,7 @@ namespace rra
             return extents;
         };
 
-        viewer_callbacks.get_context_options = [=](rra::SceneContextMenuRequest request) -> rra::SceneContextMenuOptions {
+        viewer_callbacks.get_context_options = [=, this](rra::SceneContextMenuRequest request) -> rra::SceneContextMenuOptions {
             RRA_UNUSED(request);
             rra::SceneContextMenuOptions options{};
             options[kFocusOnSelectionName] = [&]() { BurstResetCamera(); };
@@ -444,7 +437,7 @@ namespace rra
 
     std::function<ViewerFitParams(rra::renderer::Camera*)> RayInspectorModel::GetCameraFitFunction()
     {
-        return [=](rra::renderer::Camera* camera) -> ViewerFitParams {
+        return [=, this](rra::renderer::Camera* camera) -> ViewerFitParams {
             ViewerFitParams params;
 
             auto camera_controller = static_cast<rra::ViewerIO*>(camera->GetCameraController());
@@ -492,6 +485,11 @@ namespace rra
 
             return params;
         };
+    }
+
+    void RayInspectorModel::SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes)
+    {
+        blas_root_nodes_ = blas_root_nodes;
     }
 
     void RayInspectorModel::SetRendererAdapters(const rra::renderer::RendererAdapterMap& adapters)
@@ -569,7 +567,7 @@ namespace rra
         return static_cast<uint32_t>(rays_.size());
     }
 
-    float GetNearPlane(Scene* scene, rra::renderer::Camera* camera)
+    float GetNearPlane(Scene* scene, rra::renderer::Camera* camera, std::vector<rra::SceneNode*>* blas_root_nodes)
     {
         const float kNearMultiplier = 0.01f;
 
@@ -598,7 +596,7 @@ namespace rra
 
             auto ray = camera->CastRay({x, y});
 
-            auto closest_hit = scene->CastRayGetClosestHit(ray.origin, ray.direction);
+            auto closest_hit = scene->CastRayGetClosestHit(ray.origin, ray.direction, blas_root_nodes);
 
             {
                 const std::lock_guard<std::mutex> lock{near_value_mutex};
@@ -651,7 +649,7 @@ namespace rra
         uint32_t ray_outline_count{};
         auto     rendering_rays = GetRenderableRays(&first_ray_outline, &ray_outline_count);
 
-        renderer->SetSceneInfoCallback([=](renderer::RendererSceneInfo& info, renderer::Camera* camera, bool frustum_culling, bool force_camera_update) {
+        renderer->SetSceneInfoCallback([=, this](renderer::RendererSceneInfo& info, renderer::Camera* camera, bool frustum_culling, bool force_camera_update) {
             auto& node_colors                          = GetSceneNodeColors();
             info.scene_iteration                       = bvh_scene->GetSceneIteration();
             info.depth_range_lower_bound               = bvh_scene->GetDepthRangeLowerBound();
@@ -722,7 +720,7 @@ namespace rra
                     info.closest_point_to_camera = camera->GetPosition() + glm::vec3(closest_point_distance, 0.0f, 0.0f);
                 }
 
-                auto near_plane = GetNearPlane(bvh_scene, camera);
+                auto near_plane = GetNearPlane(bvh_scene, camera, blas_root_nodes_);
                 camera->SetNearClipMultiplier(1.0f);
                 camera->SetNearClipScale(near_plane);
 
@@ -751,7 +749,7 @@ namespace rra
                     // Since we are casting rays instead of using frustum culling near plane value we can just iterate independently of rendering.
                     for (size_t i = 0; i < 3; i++)
                     {
-                        auto near_plane = GetNearPlane(bvh_scene, camera);
+                        auto near_plane = GetNearPlane(bvh_scene, camera, blas_root_nodes_);
                         camera->SetNearClipMultiplier(1.0f);
                         camera->SetNearClipScale(near_plane);
 
@@ -777,3 +775,4 @@ namespace rra
     }
 
 }  // namespace rra
+

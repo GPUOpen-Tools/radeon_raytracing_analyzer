@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the settings.
@@ -61,7 +61,8 @@ namespace rra
     static SettingLookups pane_checkbox_maps = {
         {rra::kPaneIdTlasViewer,
          {{kCheckboxSettingShowGeometry, kSettingPersistenceTLASShowGeometry},
-          {kCheckboxSettingShowAxisAlignedBVH, kSettingPersistenceTLASShowAxisAlignedBVH},
+          {kCheckboxSettingShowAxisAlignedInternalBVH, kSettingPersistenceTLASShowAxisAlignedInternalBVH},
+          {kCheckboxSettingShowAxisAlignedLeafBVH, kSettingPersistenceTLASShowAxisAlignedLeafBVH},
           {kCheckboxSettingShowInstanceTransform, kSettingPersistenceTLASShowInstanceTransform},
           {kCheckboxSettingShowWireframe, kSettingPersistenceTLASShowWireframe},
           {kCheckboxSettingAcceptFirstHit, kSettingPersistenceTLASAcceptFirstHit},
@@ -70,7 +71,8 @@ namespace rra
 
         {rra::kPaneIdBlasViewer,
          {{kCheckboxSettingShowGeometry, kSettingPersistenceBLASShowGeometry},
-          {kCheckboxSettingShowAxisAlignedBVH, kSettingPersistenceBLASShowAxisAlignedBVH},
+          {kCheckboxSettingShowAxisAlignedInternalBVH, kSettingPersistenceBLASShowAxisAlignedInternalBVH},
+          {kCheckboxSettingShowAxisAlignedLeafBVH, kSettingPersistenceBLASShowAxisAlignedLeafBVH},
           {kCheckboxSettingShowWireframe, kSettingPersistenceBLASShowWireframe},
           {kCheckboxSettingAcceptFirstHit, kSettingPersistenceBLASAcceptFirstHit},
           {kCheckboxSettingCullBackFacingTriangles, kSettingPersistenceBLASCullBackFacingTriangles},
@@ -79,7 +81,8 @@ namespace rra
         {rra::kPaneIdRayInspector,
          {{kCheckboxSettingShowGeometry, kSettingPersistenceInspectorShowGeometry},
           {kCheckboxSettingLockCamera, kSettingPersistenceInspectorLockCamera},
-          {kCheckboxSettingShowAxisAlignedBVH, kSettingPersistenceInspectorShowAxisAlignedBVH},
+          {kCheckboxSettingShowAxisAlignedInternalBVH, kSettingPersistenceInspectorShowAxisAlignedInternalBVH},
+          {kCheckboxSettingShowAxisAlignedLeafBVH, kSettingPersistenceInspectorShowAxisAlignedLeafBVH},
           {kCheckboxSettingShowWireframe, kSettingPersistenceInspectorShowWireframe},
           {kCheckboxSettingAcceptFirstHit, kSettingPersistenceInspectorAcceptFirstHit},
           {kCheckboxSettingCullBackFacingTriangles, kSettingPersistenceInspectorCullBackFacingTriangles},
@@ -229,7 +232,7 @@ namespace rra
             Q_ASSERT(read_settings_file == true);
         }
 
-        // If there is not file or if the parsing of an existing file failed, save a new file
+        // If there is no file or if the parsing of an existing file failed, save a new file
         if (!read_settings_file)
         {
             SaveSettings();
@@ -323,6 +326,7 @@ namespace rra
         default_settings_[kSettingGeneralFrustumCullRatio]                  = {"FrustumCullRatio", "0.0005"};
         default_settings_[kSettingGeneralDecimalPrecision]                  = {"DecimalPrecision", "2"};
         default_settings_[kSettingGeneralDriverOverridesAllowNotifications] = {"DriverOverridesAllowNotifications", "True"};
+        default_settings_[kSettingGeneralLogLevel]                          = {"LogLevel", "2"};
 
         default_settings_[kSettingThemesAndColorsPalette] = {"ColorPalette",
                                                              "#FFFFBA02,#FFFF8B00,#FFF76210,#FFE17F35,#FFDA3B01,#FFEF6950,#FFD03438,#FFFF4343,"
@@ -377,52 +381,55 @@ namespace rra
         default_settings_[kSettingPersistenceProjectionMode]   = {"Perspective", "0"};
         default_settings_[kSettingPersistenceContinuousUpdate] = {"ContinuousUpdate", "False"};
 
-        default_settings_[kSettingPersistenceTLASControlStyle]             = {"TLASControlStyle", "1"};
-        default_settings_[kSettingPersistenceTLASBVHColoringMode]          = {"TLASBVHColoringMode", "0"};
-        default_settings_[kSettingPersistenceTLASGeometryColoringMode]     = {"TLASGeometryColoringMode", "0"};
-        default_settings_[kSettingPersistenceTLASHeatmapColor]             = {"TLASHeatmapColor", "0"};
-        default_settings_[kSettingPersistenceTLASTraversalCounterMode]     = {"TLASTraversalCounterMode", "0"};
-        default_settings_[kSettingPersistenceTLASRenderingMode]            = {"TLASRenderingMode", "0"};
-        default_settings_[kSettingPersistenceTLASShowGeometry]             = {"TLASShowGeometry", "True"};
-        default_settings_[kSettingPersistenceTLASShowAxisAlignedBVH]       = {"TLASShowAxisAlignedBVH", "True"};
-        default_settings_[kSettingPersistenceTLASShowInstanceTransform]    = {"TLASShowInstanceTransform", "True"};
-        default_settings_[kSettingPersistenceTLASShowWireframe]            = {"TLASShowWireframe", "True"};
-        default_settings_[kSettingPersistenceTLASAcceptFirstHit]           = {"TLASAcceptFirstHit", "False"};
-        default_settings_[kSettingPersistenceTLASCullBackFacingTriangles]  = {"TLASCullBackFacingTriangles", "False"};
-        default_settings_[kSettingPersistenceTLASCullFrontFacingTriangles] = {"TLASCullFrontFacingTriangles", "False"};
-        default_settings_[kSettingPersistenceTLASFieldOfView]              = {"TLASFieldOfView", "75"};
-        default_settings_[kSettingPersistenceTLASMovementSpeed]            = {"TLASMovementSpeed", "3"};
+        default_settings_[kSettingPersistenceTLASControlStyle]               = {"TLASControlStyle", "1"};
+        default_settings_[kSettingPersistenceTLASBVHColoringMode]            = {"TLASBVHColoringMode", "0"};
+        default_settings_[kSettingPersistenceTLASGeometryColoringMode]       = {"TLASGeometryColoringMode", "0"};
+        default_settings_[kSettingPersistenceTLASHeatmapColor]               = {"TLASHeatmapColor", "0"};
+        default_settings_[kSettingPersistenceTLASTraversalCounterMode]       = {"TLASTraversalCounterMode", "0"};
+        default_settings_[kSettingPersistenceTLASRenderingMode]              = {"TLASRenderingMode", "0"};
+        default_settings_[kSettingPersistenceTLASShowGeometry]               = {"TLASShowGeometry", "True"};
+        default_settings_[kSettingPersistenceTLASShowAxisAlignedInternalBVH] = {"TLASShowAxisAlignedBVH", "True"};
+        default_settings_[kSettingPersistenceTLASShowAxisAlignedLeafBVH]     = {"TLASShowAxisAlignedLeafBVH", "True"};
+        default_settings_[kSettingPersistenceTLASShowInstanceTransform]      = {"TLASShowInstanceTransform", "True"};
+        default_settings_[kSettingPersistenceTLASShowWireframe]              = {"TLASShowWireframe", "True"};
+        default_settings_[kSettingPersistenceTLASAcceptFirstHit]             = {"TLASAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceTLASCullBackFacingTriangles]    = {"TLASCullBackFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceTLASCullFrontFacingTriangles]   = {"TLASCullFrontFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceTLASFieldOfView]                = {"TLASFieldOfView", "75"};
+        default_settings_[kSettingPersistenceTLASMovementSpeed]              = {"TLASMovementSpeed", "3"};
 
-        default_settings_[kSettingPersistenceBLASControlStyle]             = {"BLASControlStyle", "0"};
-        default_settings_[kSettingPersistenceBLASBVHColoringMode]          = {"BLASBVHColoringMode", "0"};
-        default_settings_[kSettingPersistenceBLASGeometryColoringMode]     = {"BLASGeometryColoringMode", "0"};
-        default_settings_[kSettingPersistenceBLASHeatmapColor]             = {"BLASHeatmapColor", "0"};
-        default_settings_[kSettingPersistenceBLASTraversalCounterMode]     = {"BLASTraversalCounterMode", "0"};
-        default_settings_[kSettingPersistenceBLASRenderingMode]            = {"BLASRenderingMode", "0"};
-        default_settings_[kSettingPersistenceBLASShowGeometry]             = {"BLASShowGeometry", "True"};
-        default_settings_[kSettingPersistenceBLASShowAxisAlignedBVH]       = {"BLASShowAxisAlignedBVH", "True"};
-        default_settings_[kSettingPersistenceBLASShowWireframe]            = {"BLASShowWireframe", "True"};
-        default_settings_[kSettingPersistenceBLASAcceptFirstHit]           = {"BLASAcceptFirstHit", "False"};
-        default_settings_[kSettingPersistenceBLASCullBackFacingTriangles]  = {"BLASCullBackFacingTriangles", "False"};
-        default_settings_[kSettingPersistenceBLASCullFrontFacingTriangles] = {"BLASCullFrontFacingTriangles", "False"};
-        default_settings_[kSettingPersistenceBLASFieldOfView]              = {"BLASFieldOfView", "75"};
-        default_settings_[kSettingPersistenceBLASMovementSpeed]            = {"BLASMovementSpeed", "3"};
+        default_settings_[kSettingPersistenceBLASControlStyle]               = {"BLASControlStyle", "0"};
+        default_settings_[kSettingPersistenceBLASBVHColoringMode]            = {"BLASBVHColoringMode", "0"};
+        default_settings_[kSettingPersistenceBLASGeometryColoringMode]       = {"BLASGeometryColoringMode", "0"};
+        default_settings_[kSettingPersistenceBLASHeatmapColor]               = {"BLASHeatmapColor", "0"};
+        default_settings_[kSettingPersistenceBLASTraversalCounterMode]       = {"BLASTraversalCounterMode", "0"};
+        default_settings_[kSettingPersistenceBLASRenderingMode]              = {"BLASRenderingMode", "0"};
+        default_settings_[kSettingPersistenceBLASShowGeometry]               = {"BLASShowGeometry", "True"};
+        default_settings_[kSettingPersistenceBLASShowAxisAlignedInternalBVH] = {"BLASShowAxisAlignedBVH", "True"};
+        default_settings_[kSettingPersistenceBLASShowAxisAlignedLeafBVH]     = {"BLASShowAxisAlignedLeafBVH", "True"};
+        default_settings_[kSettingPersistenceBLASShowWireframe]              = {"BLASShowWireframe", "True"};
+        default_settings_[kSettingPersistenceBLASAcceptFirstHit]             = {"BLASAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceBLASCullBackFacingTriangles]    = {"BLASCullBackFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceBLASCullFrontFacingTriangles]   = {"BLASCullFrontFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceBLASFieldOfView]                = {"BLASFieldOfView", "75"};
+        default_settings_[kSettingPersistenceBLASMovementSpeed]              = {"BLASMovementSpeed", "3"};
 
-        default_settings_[kSettingPersistenceInspectorControlStyle]             = {"InspectorControlStyle", "1"};
-        default_settings_[kSettingPersistenceInspectorBVHColoringMode]          = {"InspectorBVHColoringMode", "0"};
-        default_settings_[kSettingPersistenceInspectorGeometryColoringMode]     = {"InspectorGeometryColoringMode", "0"};
-        default_settings_[kSettingPersistenceInspectorHeatmapColor]             = {"InspectorHeatmapColor", "2"};
-        default_settings_[kSettingPersistenceInspectorTraversalCounterMode]     = {"InspectorTraversalCounterMode", "0"};
-        default_settings_[kSettingPersistenceInspectorRenderingMode]            = {"InspectorRenderingMode", "0"};
-        default_settings_[kSettingPersistenceInspectorShowGeometry]             = {"InspectorShowGeometry", "True"};
-        default_settings_[kSettingPersistenceInspectorLockCamera]               = {"InspectorLockCamera", "False"};
-        default_settings_[kSettingPersistenceInspectorShowAxisAlignedBVH]       = {"InspectorShowAxisAlignedBVH", "True"};
-        default_settings_[kSettingPersistenceInspectorShowWireframe]            = {"InspectorShowWireframe", "True"};
-        default_settings_[kSettingPersistenceInspectorAcceptFirstHit]           = {"InspectorAcceptFirstHit", "False"};
-        default_settings_[kSettingPersistenceInspectorCullBackFacingTriangles]  = {"InspectorCullBackFacingTriangles", "False"};
-        default_settings_[kSettingPersistenceInspectorCullFrontFacingTriangles] = {"InspectorCullFrontFacingTriangles", "False"};
-        default_settings_[kSettingPersistenceInspectorFieldOfView]              = {"InspectorFieldOfView", "75"};
-        default_settings_[kSettingPersistenceInspectorMovementSpeed]            = {"InspectorMovementSpeed", "3"};
+        default_settings_[kSettingPersistenceInspectorControlStyle]               = {"InspectorControlStyle", "1"};
+        default_settings_[kSettingPersistenceInspectorBVHColoringMode]            = {"InspectorBVHColoringMode", "0"};
+        default_settings_[kSettingPersistenceInspectorGeometryColoringMode]       = {"InspectorGeometryColoringMode", "0"};
+        default_settings_[kSettingPersistenceInspectorHeatmapColor]               = {"InspectorHeatmapColor", "2"};
+        default_settings_[kSettingPersistenceInspectorTraversalCounterMode]       = {"InspectorTraversalCounterMode", "0"};
+        default_settings_[kSettingPersistenceInspectorRenderingMode]              = {"InspectorRenderingMode", "0"};
+        default_settings_[kSettingPersistenceInspectorShowGeometry]               = {"InspectorShowGeometry", "True"};
+        default_settings_[kSettingPersistenceInspectorLockCamera]                 = {"InspectorLockCamera", "False"};
+        default_settings_[kSettingPersistenceInspectorShowAxisAlignedInternalBVH] = {"InspectorShowAxisAlignedBVH", "True"};
+        default_settings_[kSettingPersistenceInspectorShowAxisAlignedLeafBVH]     = {"InspectorShowAxisAlignedLeafBVH", "True"};
+        default_settings_[kSettingPersistenceInspectorShowWireframe]              = {"InspectorShowWireframe", "True"};
+        default_settings_[kSettingPersistenceInspectorAcceptFirstHit]             = {"InspectorAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceInspectorCullBackFacingTriangles]    = {"InspectorCullBackFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceInspectorCullFrontFacingTriangles]   = {"InspectorCullFrontFacingTriangles", "False"};
+        default_settings_[kSettingPersistenceInspectorFieldOfView]                = {"InspectorFieldOfView", "75"};
+        default_settings_[kSettingPersistenceInspectorMovementSpeed]              = {"InspectorMovementSpeed", "3"};
     }
 
     void Settings::AddActiveSetting(SettingID setting_id, const Setting& setting)
@@ -489,7 +496,8 @@ namespace rra
 
             SetToDefaultValue(kSettingPersistenceTLASRenderingMode);
             SetToDefaultValue(kSettingPersistenceTLASShowGeometry);
-            SetToDefaultValue(kSettingPersistenceTLASShowAxisAlignedBVH);
+            SetToDefaultValue(kSettingPersistenceTLASShowAxisAlignedInternalBVH);
+            SetToDefaultValue(kSettingPersistenceTLASShowAxisAlignedLeafBVH);
             SetToDefaultValue(kSettingPersistenceTLASShowInstanceTransform);
             SetToDefaultValue(kSettingPersistenceTLASShowWireframe);
 
@@ -510,7 +518,8 @@ namespace rra
 
             SetToDefaultValue(kSettingPersistenceBLASRenderingMode);
             SetToDefaultValue(kSettingPersistenceBLASShowGeometry);
-            SetToDefaultValue(kSettingPersistenceBLASShowAxisAlignedBVH);
+            SetToDefaultValue(kSettingPersistenceBLASShowAxisAlignedInternalBVH);
+            SetToDefaultValue(kSettingPersistenceBLASShowAxisAlignedLeafBVH);
             SetToDefaultValue(kSettingPersistenceBLASShowWireframe);
 
             SetToDefaultValue(kSettingPersistenceBLASAcceptFirstHit);
@@ -531,7 +540,8 @@ namespace rra
             SetToDefaultValue(kSettingPersistenceInspectorRenderingMode);
             SetToDefaultValue(kSettingPersistenceInspectorShowGeometry);
             SetToDefaultValue(kSettingPersistenceInspectorLockCamera);
-            SetToDefaultValue(kSettingPersistenceInspectorShowAxisAlignedBVH);
+            SetToDefaultValue(kSettingPersistenceInspectorShowAxisAlignedInternalBVH);
+            SetToDefaultValue(kSettingPersistenceInspectorShowAxisAlignedLeafBVH);
             SetToDefaultValue(kSettingPersistenceInspectorShowWireframe);
 
             SetToDefaultValue(kSettingPersistenceInspectorAcceptFirstHit);
@@ -699,6 +709,17 @@ namespace rra
     void Settings::SetTreeviewNodeIdType(TreeviewNodeIDType node_id_type)
     {
         SetIntValue(kSettingGeneralTreeviewNodeID, node_id_type);
+        SaveSettings();
+    }
+
+    LogLevel Settings::GetLogLevel() const
+    {
+        return static_cast<LogLevel>(GetIntValue(kSettingGeneralLogLevel));
+    }
+
+    void Settings::SetLogLevel(LogLevel node_id_type)
+    {
+        SetIntValue(kSettingGeneralLogLevel, node_id_type);
         SaveSettings();
     }
 
@@ -1078,3 +1099,4 @@ namespace rra
         return GetBoolValue(kSettingGeneralDriverOverridesAllowNotifications);
     }
 }  // namespace rra
+

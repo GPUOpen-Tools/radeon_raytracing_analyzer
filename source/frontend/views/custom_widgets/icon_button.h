@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Header file for a QPushButton derived widget with vector based icons
@@ -76,3 +76,4 @@ private:
 };
 
 #endif  // RRA_CUSTOM_WIDGETS_ICON_BUTTON_H_
+

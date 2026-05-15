@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Structures and functions for working with a data set.
@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "system_info_utils/source/system_info_reader.h"
+#include "system_info_reader.h"
 
 #include "public/rra_async_ray_history_loader.h"
 #include "public/rra_error.h"
@@ -72,3 +72,4 @@ RraErrorCode RraDataSetDestroy(RraDataSet* data_set);
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_RRA_DATA_SET_H_
+

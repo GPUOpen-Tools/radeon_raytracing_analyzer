@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS scene model.
@@ -65,13 +65,16 @@ namespace rra
         return blas_scene;
     }
 
-    bool BlasSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const
+    bool BlasSceneCollectionModel::ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint64_t node_child_id) const
     {
-        Scene*     scene = GetSceneByIndex(blas_index);
-        SceneNode* node  = scene->GetNodeById(node_child_id);
-        if (node)
+        Scene* scene = GetSceneByIndex(blas_index);
+        if (scene)
         {
-            return !(node->IsEnabled() && node->IsVisible());
+            SceneNode* node = scene->GetNodeById(node_child_id);
+            if (node)
+            {
+                return !(node->IsEnabled() && node->IsVisible());
+            }
         }
         return true;
     }
@@ -116,10 +119,19 @@ namespace rra
     RraErrorCode BlasSceneCollectionModel::CastClosestHitRayOnBvh(uint64_t                        bvh_index,
                                                                   const glm::vec3&                origin,
                                                                   const glm::vec3&                direction,
+                                                                  std::vector<rra::SceneNode*>*   blas_root_nodes,
                                                                   SceneCollectionModelClosestHit& scene_model_closest_hit) const
     {
-        CastClosestHitRayOnBlas(bvh_index, 0, origin, direction, scene_model_closest_hit);
-        return kRraOk;
+        RRA_UNUSED(blas_root_nodes);
+
+        auto scene = GetSceneByIndex(bvh_index);
+        if (scene)
+        {
+            CastClosestHitRayOnBlas(scene->GetRootNode(), UINT32_MAX, origin, direction, scene_model_closest_hit);
+            return kRraOk;
+        }
+
+        return kRraErrorIndexOutOfRange;
     }
 
     void BlasSceneCollectionModel::ResetModelValues()
@@ -138,3 +150,4 @@ namespace rra
     }
 
 }  // namespace rra
+

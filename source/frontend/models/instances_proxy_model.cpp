@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a proxy filter that processes the instances
@@ -145,3 +145,4 @@ namespace rra
         return QSortFilterProxyModel::lessThan(left, right);
     }
 }  // namespace rra
+

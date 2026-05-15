@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific top level acceleration structure
@@ -11,6 +11,8 @@
 
 #include <optional>
 #include <unordered_map>
+
+#include "public/rra_error.h"
 
 #include "bvh/node_types/instance_node.h"
 #include "bvh/rtip31/primitive_node.h"
@@ -30,12 +32,13 @@ namespace rta
         /// @brief Destructor.
         virtual ~EncodedRtIp31TopLevelBvh();
 
-        /// @brief Get an instance node from an instance node pointer.
+        /// @brief Get the instance node for a given node id.
         ///
-        /// @param [in] node_ptr  The instance node pointer.
+        /// @param [in]  node_id            The instance node pointer.
+        /// @param [out] out_instance_node  The instance node.
         ///
-        /// @return The instance node, or null optional if instance node is invalid.
-        std::optional<InstanceNodeDataRRA> GetHwInstanceNode(const dxr::amd::NodePointer* node_ptr) const;
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        RraErrorCode GetInstanceNodeFromInstancePointer(uint32_t node_id, InstanceNodeDataRRA* out_instance_node) const;
 
         /// @brief Get the index of an instance node from an instance node pointer.
         ///
@@ -79,7 +82,7 @@ namespace rta
         /// @brief Convert the instance list from using BLAS addresses to using BLAS indices.
         ///
         /// @param [in] blas_map A map of (blas_address, blas_index) used to convert instance list.
-        void ConvertBlasAddressesToIndices(const std::unordered_map<GpuVirtualAddress, uint64_t>& blas_map);
+        void ConvertBlasAddressesToIndices(const std::unordered_map<GpuVirtualAddress, uint64_t>& blas_map) override;
 
         /// @brief Get the number of instances in this TLAS.
         ///
@@ -116,6 +119,86 @@ namespace rta
         /// @return The number unique of triangles.
         virtual uint64_t GetUniqueTriangleCount() const override;
 
+        /// @brief Get the node name for an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_name            A pointer to receive the name string.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeName(uint32_t node_id, const char** out_name) const override;
+
+        /// @brief Get the node tooltip name for an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_name            A pointer to receive the tooltip string.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeNameToolTip(uint32_t node_id, const char** out_tooltip) const override;
+
+        /// @brief Get the blas index of an instance node.
+        ///
+        /// @param [in]  node_id         The instance node pointer.
+        /// @param [out] out_blas_index  A pointer to receive the blas index.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetBlasIndex(uint32_t node_id, uint64_t* out_blas_index) const override;
+
+        /// @brief Get the instance index of an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_instance_index  A pointer to receive the instance index.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceIndex(uint32_t node_id, uint32_t* out_instance_index) const override;
+
+        /// @brief Get the instance transformation for an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_transform       A pointer to receive the transform data, 12 floating points of allocation is needed.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceNodeTransform(uint32_t node_id, float* out_transform) const override;
+
+        /// @brief Get the original (not inverse) instance transformation for an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_transform       A pointer to receive the transform data, 12 floating points of allocation is needed.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetOriginalInstanceNodeTransform(uint32_t node_id, float* out_transform) const override;
+
+        /// @brief Get the instance mask as specified through the API.
+        ///
+        /// @param [in]  node_id       The node pointer containing the instance.
+        /// @param [out] out_mask      The mask of this instance.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceNodeMask(uint32_t node_id, uint32_t* out_mask) const override;
+
+        /// @brief Get the instance ID as specified through the API.
+        ///
+        /// @param [in]  node_id       The node pointer containing the instance.
+        /// @param [out] out_id        The ID of this instance.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceNodeID(uint32_t node_id, uint32_t* out_id) const override;
+
+        /// @brief Get the instance hit group as specified through the API.
+        ///
+        /// @param [in]  node_id        The node pointer containing the instance.
+        /// @param [out] out_hit_group  The hit group of this instance.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceNodeHitGroup(uint32_t node_id, uint32_t* out_hit_group) const override;
+
+        /// @brief Retrieve the instance flags.
+        ///
+        /// @param [in]  node_id 	The node pointer containing the instance.
+        /// @param [out] out_flags	The instance flags.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceFlags(uint32_t node_id, uint32_t* out_flags) const override;
+
         /// @brief Get the instance node for a given blas index and instance index.
         ///
         /// @param [in] blas_index     The index of the blas where the node is.
@@ -127,9 +210,10 @@ namespace rta
         /// @brief Get the surface area heuristic for a given leaf node.
         ///
         /// @param [in] node_id The leaf node whose SAH is to be found.
+        /// @param [in] node_id The leaf's global child index.
         ///
         /// @return The surface area heuristic.
-        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const override;
+        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, uint32_t global_child_index) const override;
 
         /// @brief Set the surface area heuristic for a given leaf node.
         ///
@@ -155,18 +239,21 @@ namespace rta
 
         /// @brief Convert a BLAS address to an index.
         ///
-        /// @param [in] address The BLAS address.
+        /// @param [in]  address    The BLAS address.
+        /// @param [out] out_index  A pointer to receive the BLAS index.
         ///
-        /// @return The BLAS index.
-        uint64_t BlasAddressToIndex(GpuVirtualAddress address) const;
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred. If out_index is nullptr,
+        ///         kRraErrorInvalidPointer is returned.
+        RraErrorCode BlasAddressToIndex(GpuVirtualAddress address, uint64_t* out_index) const;
 
         /// @brief Get the parent node of the node passed in.
         ///
         /// @param [in] node_id The node whose parent is to be found.
+        /// @param [in] global_child_index The node's global child index.
         ///
         /// @return The parent node. If the node passed in is the root node, the
         /// parent node will be an invalid node.
-        virtual uint32_t GetParentNode(uint32_t node_id) const override;
+        virtual uint32_t GetParentNode(uint32_t node_id, uint32_t global_child_index = 0) const override;
 
     private:
         /// @brief Get the size of an instance node.
@@ -188,8 +275,17 @@ namespace rta
         /// @return The number of inactive instances.
         virtual uint64_t GetInactiveInstanceCountImpl() const override;
 
+    private:
+        /// @brief Get an instance node from an instance node pointer.
+        ///
+        /// @param [in] node_ptr  The instance node pointer.
+        ///
+        /// @return The instance node, or null optional if instance node is invalid.
+        std::optional<InstanceNodeDataRRA> GetHwInstanceNode(const dxr::amd::NodePointer* node_ptr) const;
+
         std::unordered_map<GpuVirtualAddress, uint64_t> blas_map_;
     };
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_RT_IP_31_TOP_LEVEL_BVH_H_
+

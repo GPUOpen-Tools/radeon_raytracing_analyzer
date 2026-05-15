@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the TLAS viewer model.
@@ -146,6 +146,14 @@ namespace rra
         /// @param [in] index       The index of the TLAS selected (from the combo box).
         virtual void UpdateUI(const QModelIndex& model_index, uint64_t index) override;
 
+        /// @brief Update the tooltip depending in what the mouse is over.
+        ///
+        /// @param [in] bvh_index    The index of the acceleration structure selected (from the combo box). In this case, the current TLAS.
+        /// @param [in] closest_hit  A structure containing information about what geometry/BVH the mouse is over.
+        ///
+        /// @return A string containing the tooltip text to be displayed.
+        virtual QString UpdateToolTip(uint64_t bvh_index, rra::SceneCollectionModelClosestHit closest_hit) override;
+
         /// @brief Initialize the flags table model, used by the flags table in the viewer left-side pane.
         ///
         /// @param [in] table_view  The table view widget.
@@ -196,3 +204,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TLAS_TLAS_VIEWER_MODEL_H_
+

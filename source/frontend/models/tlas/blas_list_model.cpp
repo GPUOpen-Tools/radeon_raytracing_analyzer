@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS list model.
@@ -127,15 +127,15 @@ namespace rra
             uint32_t root_node = UINT32_MAX;
             if (RraBvhGetRootNodePtr(&root_node) == kRraOk)
             {
-                if (RraBlasGetSurfaceAreaHeuristic(blas_index, root_node, &stats.root_sah) != kRraOk)
+                if (RraBlasGetSurfaceAreaHeuristic(blas_index, root_node, 0, &stats.root_sah) != kRraOk)
                 {
                     continue;
                 }
-                if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, root_node, false, &stats.max_sah) != kRraOk)
+                if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, root_node, 0, false, &stats.max_sah) != kRraOk)
                 {
                     continue;
                 }
-                if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, root_node, false, &stats.mean_sah) != kRraOk)
+                if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, root_node, 0, false, &stats.mean_sah) != kRraOk)
                 {
                     continue;
                 }
@@ -204,3 +204,4 @@ namespace rra
     }
 
 }  // namespace rra
+

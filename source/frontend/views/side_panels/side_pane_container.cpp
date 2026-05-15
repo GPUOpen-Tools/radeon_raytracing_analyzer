@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Side pane container class.
@@ -31,7 +31,7 @@ SidePaneContainer::SidePaneContainer(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    connect(ui_->view_button_, &QPushButton::clicked, [=]() { UpdateSidePane(kPaneIndexView); });
+    connect(ui_->view_button_, &QPushButton::clicked, [=, this]() { UpdateSidePane(kPaneIndexView); });
     ui_->side_panel_scroll_area_->show();
     ui_->view_button_->setText(kTextHideControls);
 
@@ -92,3 +92,4 @@ void SidePaneContainer::MarkProceduralGeometry(bool is_procedural)
 {
     view_pane_->NonProceduralWidgetsHidden(is_procedural);
 }
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a QTableHeader class which prevents header selection
@@ -43,3 +43,4 @@ void IndexHeaderView::mouseReleaseEvent(QMouseEvent* event)
     QHeaderView::mouseReleaseEvent(event);
     setSectionsClickable(true);
 }
+

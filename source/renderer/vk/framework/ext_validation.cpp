@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for Vulkan validation extensions functionality.
@@ -48,7 +48,7 @@ namespace rra
 
             if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
             {
-                RraPrint("%s\n\n", message);
+                RraPrint(kLogLevelInfo, "%s\n\n", message);
             }
             return VK_FALSE;
         }
@@ -112,3 +112,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

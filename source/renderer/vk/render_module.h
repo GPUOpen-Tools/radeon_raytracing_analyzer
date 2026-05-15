@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Render Module.
@@ -88,6 +88,12 @@ namespace rra
             /// @return True if a copy of the depth buffer should be saved.
             virtual bool ShouldCopyDepthBuffer() const;
 
+            /// @brief Record per-frame copy/transfer commands that execute every frame, even when no rendering update occurs.
+            ///
+            /// @param [in] command_buffer The command buffer to record into.
+            /// @param [in] current_frame  The current frame index.
+            virtual void RecordPerFrameCopyCommands(VkCommandBuffer command_buffer, uint32_t current_frame);
+
             /// @brief Render module functionality invoked every frame, even when there is no rendering update when the camera is not moved.
             ///
             /// @param [in] device        The graphics device.
@@ -135,3 +141,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_RENDER_MODULE_H_
+

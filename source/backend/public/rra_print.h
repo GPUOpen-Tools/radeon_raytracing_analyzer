@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Printing helper functions for RRA.
@@ -12,12 +12,21 @@
 
 #include "public/rra_error.h"
 
-/// Callback function for printing.
-typedef void (*RraPrintingCallback)(const char* msg);
-
 #ifdef __cplusplus
 extern "C" {
 #endif  // #ifdef __cplusplus
+
+/// @brief Log levels used by the logger from most severe to least severe.
+typedef enum
+{
+    kLogLevelError,
+    kLogLevelWarning,
+    kLogLevelInfo,
+    kLogLevelDebug,
+} LogLevel;
+
+/// Callback function for printing.
+typedef void (*RraPrintingCallback)(LogLevel log_level, const char* msg);
 
 /// @brief Set the printing callback for backend functions to do logging.
 ///
@@ -30,11 +39,13 @@ void RraSetPrintingCallback(RraPrintingCallback callback_func, bool enable_print
 /// <c><i>RraSetPrintingCallback</i></c>. If nothing is set, then
 /// printf will be used.
 ///
-/// @param [in] format The formatting string.
-/// @param [in] ...    Variable parameters determined by <c><i>format</i></c>.
-void RraPrint(const char* format, ...);
+/// @param [in] log_level  The log message type (info, error, warning etc).
+/// @param [in] format     The formatting string.
+/// @param [in] ...        Variable parameters determined by <c><i>format</i></c>.
+void RraPrint(LogLevel log_level, const char* format, ...);
 
 #ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // #ifndef RRA_BACKEND_PUBLIC_RRA_PRINT_H_
+

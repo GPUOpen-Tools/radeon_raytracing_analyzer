@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a read-only checkbox. Used for displaying
@@ -35,3 +35,4 @@ void ReadOnlyCheckBox::paintEvent(QPaintEvent* event)
     bool checked = (checkState() == Qt::CheckState::Checked) ? true : false;
     rra::widget_util::DrawCheckboxCell(&painter, rect, checked, false);
 }
+

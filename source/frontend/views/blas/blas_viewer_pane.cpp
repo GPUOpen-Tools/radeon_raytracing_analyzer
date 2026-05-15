@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS viewer pane.
@@ -17,6 +17,7 @@
 #include "managers/message_manager.h"
 #include "models/acceleration_structure_tree_view_item.h"
 #include "settings/settings.h"
+#include "util/rra_util.h"
 #include "views/widget_util.h"
 
 #undef min
@@ -59,7 +60,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     Ui_TriangleGroup triangle_group{};
     ui_->triangle_list_->setSpacing(0);
     ui_->triangle_scroll_area_->setWidgetResizable(true);
-    uint32_t max_tri_count{MAX_CHILD_NODES};
+    uint32_t max_tri_count{MAX_TRIANGLES};
     for (uint32_t i{0}; i < max_tri_count; ++i)
     {
         QWidget* triangle_widget = new QWidget();
@@ -103,14 +104,16 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
 
     connect(acceleration_structure_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &BlasViewerPane::UpdateSelectedBlas);
     connect(ui_->blas_tree_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &BlasViewerPane::TreeNodeChanged);
-    connect(ui_->blas_tree_, &QAbstractItemView::doubleClicked, [=]() { this->SelectLeafNode(true); });
+    connect(ui_->blas_tree_, &QAbstractItemView::doubleClicked, [=, this]() { this->SelectLeafNode(true); });
     connect(&rra::MessageManager::Get(), &rra::MessageManager::BlasSelected, this, &BlasViewerPane::SetBlasSelection);
-    connect(model_, &rra::AccelerationStructureViewerModel::SceneSelectionChanged, [=]() { this->UpdateSceneSelection(ui_->blas_tree_); });
+    connect(model_, &rra::AccelerationStructureViewerModel::SceneSelectionChanged, [=, this]() { this->UpdateSceneSelection(ui_->blas_tree_); });
     connect(ui_->expand_collapse_tree_, &ScaledCycleButton::Clicked, model_, &rra::AccelerationStructureViewerModel::ExpandCollapseTreeView);
     connect(ui_->search_box_, &TextSearchWidget::textChanged, model_, &rra::AccelerationStructureViewerModel::SearchTextChanged);
 
     ui_->tree_depth_slider_->setCursor(Qt::PointingHandCursor);
     connect(ui_->tree_depth_slider_, &DepthSliderWidget::SpanChanged, this, &BlasViewerPane::UpdateTreeDepths);
+
+    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ShowBoundsChanged, this, &AccelerationStructureViewerPane::UpdateShowBoundingVolumes);
 
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ControlStyleChanged, this, &BlasViewerPane::UpdateCameraController);
     // Save selected control style to settings.
@@ -127,7 +130,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
             rra::Settings::Get().SetControlStyle(rra::kPaneIdBlasViewer, (ControlStyleType)camera_controller->GetComboBoxIndex());
         }
     });
-    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=](bool geometry_mode) {
+    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=, this](bool geometry_mode) {
         ui_->viewer_container_widget_->ShowColoringMode(geometry_mode);
     });
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TriangleTableSelected, this, &BlasViewerPane::SelectTriangle);
@@ -135,7 +138,7 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
 
     // Reset the UI state. When the 'reset' button is clicked, it broadcasts a message from the message manager. Any objects interested in this
     // message can then act upon it.
-    connect(&rra::MessageManager::Get(), &rra::MessageManager::ResetUIState, [=](rra::RRAPaneId pane) {
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::ResetUIState, [=, this](rra::RRAPaneId pane) {
         if (pane == rra::kPaneIdBlasViewer)
         {
             ui_->side_panel_container_->GetViewPane()->ApplyUIStateFromSettings(rra::kPaneIdBlasViewer);
@@ -230,6 +233,16 @@ void BlasViewerPane::UpdateTreeDepths(int min_value, int max_value)
     ui_->tree_depth_end_value_->setText(QString::number(max_value));
 }
 
+rra::BlasSceneCollectionModel* BlasViewerPane::GetSceneCollection()
+{
+    return (rra::BlasSceneCollectionModel*)model_->GetSceneCollectionModel();
+}
+
+void BlasViewerPane::SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes)
+{
+    model_->SetBlasRootNodes(blas_root_nodes);
+}
+
 void BlasViewerPane::UpdateWidgets(const QModelIndex& index)
 {
     // Figure out which groups to show.
@@ -262,17 +275,23 @@ void BlasViewerPane::UpdateWidgets(const QModelIndex& index)
     }
 }
 
+std::vector<rra::SceneNode*>* BlasViewerPane::GetBlasRootNodes()
+{
+    return model_->GetBlasRootNodes();
+}
+
 void BlasViewerPane::UpdateSelectedBlas()
 {
     last_selected_as_id_ = AccelerationStructureViewerPane::UpdateSelectedBvh();
     if (last_selected_as_id_ != UINT64_MAX)
     {
-        const rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
+        rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
         ui_->tree_depth_slider_->SetLowerValue(scene->GetDepthRangeLowerBound());
         ui_->tree_depth_slider_->SetUpperValue(scene->GetDepthRangeUpperBound());
         ui_->tree_depth_slider_->SetUpperBound(scene->GetSceneStatistics().max_node_depth);
 
         ui_->blas_tree_->SetViewerModel(model_, last_selected_as_id_);
+        ui_->viewer_container_widget_->SetScene(scene);
         ui_->expand_collapse_tree_->SetCurrentItemIndex(rra::AccelerationStructureViewerModel::TreeViewExpandMode::kCollapsed);
 
         int current_row = acceleration_structure_combo_box_->CurrentRow();
@@ -300,7 +319,7 @@ void BlasViewerPane::SelectLeafNode(const bool navigate_to_triangles_pane)
     rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
     if (scene)
     {
-        uint32_t        node_id = scene->GetMostRecentSelectedNodeId();
+        uint64_t        node_id = scene->GetMostRecentSelectedNodeId();
         rra::SceneNode* node    = scene->GetNodeById(node_id);
 
         // If the node isn't visible or enabled (it's grayed out), then don't select anything.
@@ -361,7 +380,7 @@ void BlasViewerPane::UpdateTriangleSplitUI(rra::Scene* scene, uint32_t blas_inde
                     rebraid_sibling_button->setCursor(Qt::PointingHandCursor);
 
                     QModelIndex sibling_model_index = derived_model_->GetModelIndexForNode(sibling->GetId());
-                    connect(rebraid_sibling_button, &ScaledPushButton::clicked, this, [=]() {
+                    connect(rebraid_sibling_button, &ScaledPushButton::clicked, this, [=, this]() {
                         ui_->blas_tree_->selectionModel()->reset();
                         ui_->blas_tree_->selectionModel()->setCurrentIndex(sibling_model_index, QItemSelectionModel::Select);
                     });
@@ -383,7 +402,7 @@ void BlasViewerPane::UpdateTriangleSplitUI(rra::Scene* scene, uint32_t blas_inde
     }
 }
 
-void BlasViewerPane::SelectTriangle(uint32_t triangle_node_id)
+void BlasViewerPane::SelectTriangle(uint64_t triangle_node_id)
 {
     rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
     if (scene)
@@ -447,3 +466,9 @@ void BlasViewerPane::OnColorThemeUpdated()
         ui_->content_focus_selected_volume_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
+
+void BlasViewerPane::UpdateToolTip(QString tool_tip_string)
+{
+    rra_util::UpdateRendererTooltip(rra::kPaneIdBlasViewer, ui_->blas_scene_, tool_tip_string);
+}
+

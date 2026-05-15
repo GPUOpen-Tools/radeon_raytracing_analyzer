@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the V1 MetaData class.
@@ -72,3 +72,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_METADATA_V1_H_
+

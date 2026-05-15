@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for miscellaneous GPU definitions.
@@ -32,7 +32,7 @@ namespace rta
         RtIpReserved = 0x5,  ///< Special value, should not be used
         RtIp3_1      = 0x6,  ///< Added improved bvh footprints (change to node pointer, 128 Byte primitive structure
                              ///  format, 128 Byte Quantized box node, obb support, wide sort)
-        RtIpCount = 0x8,
+        RtIpCount,
     };
 
     // Defines the generic type of a BVH.
@@ -103,3 +103,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_GPU_DEF_H_
+

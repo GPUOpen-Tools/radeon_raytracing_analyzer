@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Trace Manager.
@@ -20,12 +20,14 @@
 #endif
 
 #include "public/rra_assert.h"
+#include "public/rra_print.h"
 #include "public/rra_trace_loader.h"
 
 #include "managers/load_animation_manager.h"
 #include "managers/message_manager.h"
 #include "settings/settings.h"
 #include "util/rra_util.h"
+#include "views/debug_window.h"
 
 namespace rra
 {
@@ -158,6 +160,8 @@ namespace rra
     {
         bool result        = false;
         bool missing_trace = false;
+
+        DebugWindow::DbgMsg(kLogLevelInfo, "TraceManager::LoadTrace %s", path.toUtf8().data());
 
         if (ReadyToLoadTrace())
         {
@@ -356,3 +360,4 @@ namespace rra
     }
 
 }  // namespace rra
+

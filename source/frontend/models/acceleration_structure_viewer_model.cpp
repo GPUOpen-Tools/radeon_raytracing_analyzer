@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure viewer model base class.
@@ -12,6 +12,8 @@
 #define emit
 
 #include <QTreeView>
+#include <iomanip>
+#include <sstream>
 
 #include "qt_common/custom_widgets/scaled_check_box.h"
 #include "qt_common/custom_widgets/scaled_tree_view.h"
@@ -237,7 +239,7 @@ namespace rra
                 auto&  node_colors             = GetSceneNodeColors();
                 bool   fused_instances_enabled = scene_collection_model_->GetFusedInstancesEnabled(index);
                 renderer->SetSceneInfoCallback(
-                    [bvh_scene, &node_colors, fused_instances_enabled](
+                    [bvh_scene, &node_colors, fused_instances_enabled, this](
                         renderer::RendererSceneInfo& info, renderer::Camera* camera, bool frustum_culling, bool force_camera_update) {
                         info.scene_iteration                       = bvh_scene->GetSceneIteration();
                         info.depth_range_lower_bound               = bvh_scene->GetDepthRangeLowerBound();
@@ -302,7 +304,7 @@ namespace rra
                                 info.closest_point_to_camera = camera->GetPosition() + glm::vec3(closest_point_distance, 0.0f, 0.0f);
                             }
 
-                            auto near_plane = GetNearPlane(bvh_scene, camera);
+                            auto near_plane = GetNearPlane(bvh_scene, camera, blas_root_nodes_);
                             camera->SetNearClipMultiplier(1.0f);
                             camera->SetNearClipScale(near_plane);
 
@@ -318,13 +320,12 @@ namespace rra
         }
     }
 
-    std::shared_ptr<renderer::GraphicsContextSceneInfo> GetGraphicsContextSceneInfo()
+    renderer::GraphicsContextSceneInfo* GetGraphicsContextSceneInfo(std::vector<SceneNode*>& blas_root_nodes, renderer::GraphicsContextSceneInfo* info)
     {
         uint64_t     blas_count = 0;
         RraErrorCode error_code = RraBvhGetTotalBlasCount(&blas_count);
         RRA_ASSERT(error_code == kRraOk);
 
-        auto info = std::make_shared<renderer::GraphicsContextSceneInfo>();
         info->acceleration_structures.resize(blas_count);
 
         // Allocate memory.
@@ -350,6 +351,7 @@ namespace rra
 
         std::vector<uint32_t> blas_indices(blas_count);
         std::iota(blas_indices.begin(), blas_indices.end(), 0);
+        blas_root_nodes.resize(blas_count);
 
         std::for_each(std::execution::par, blas_indices.begin(), blas_indices.end(), [&](uint32_t blas_index) {
             renderer::TraversalTree& traversal_tree{info->acceleration_structures[blas_index]};
@@ -357,17 +359,11 @@ namespace rra
             SceneNode* scene_root =
                 SceneNode::ConstructFromBlas(static_cast<uint32_t>(blas_index), traversal_tree.vertices.data(), traversal_tree.child_nodes_buffer);
 
+            blas_root_nodes[blas_index] = scene_root;
+
             // Add to the tree using the scene root.
             scene_root->AddToTraversalTree(false, false, traversal_tree);
         });
-
-        // Deallocate child nodes buffers.
-        for (uint32_t blas_index{0}; blas_index < blas_count; ++blas_index)
-        {
-            renderer::TraversalTree& traversal_tree{info->acceleration_structures[blas_index]};
-            delete[] traversal_tree.child_nodes_buffer;
-            traversal_tree.child_nodes_buffer = nullptr;
-        }
 
         return info;
     }
@@ -377,7 +373,7 @@ namespace rra
         if (selected_node_index_.isValid())
         {
             uint32_t node_id = GetNodeIdFromModelIndex(selected_node_index_, tlas_index, is_tlas_);
-            return RraBvhIsInstanceNode(node_id);
+            return RraTlasIsInstanceNode(tlas_index, node_id);
         }
         return false;
     }
@@ -425,12 +421,30 @@ namespace rra
         selected_node_index_ = model_index;
     }
 
-    SceneContextMenuOptions AccelerationStructureViewerModel::GetSceneContextOptions(uint64_t bvh_index, SceneContextMenuRequest request)
+    GeometryFilterState AccelerationStructureViewerModel::GetCurrentGeometryFilterState() const
+    {
+        GeometryFilterState filter_state;
+        if (render_state_adapter_)
+        {
+            filter_state.min           = render_state_adapter_->GetGeometryFilterMin();
+            filter_state.max           = render_state_adapter_->GetGeometryFilterMax();
+            filter_state.enabled       = render_state_adapter_->GetGeometryFilterEnabled();
+            filter_state.coloring_mode = render_state_adapter_->GetCurrentGeometryColoringModeValue();
+        }
+        return filter_state;
+    }
+
+    SceneContextMenuOptions AccelerationStructureViewerModel::GetSceneContextOptions(uint64_t                      bvh_index,
+                                                                                     SceneContextMenuRequest       request,
+                                                                                     std::vector<rra::SceneNode*>* blas_root_nodes)
     {
         auto scene = GetSceneCollectionModel()->GetSceneByIndex(bvh_index);
         if (scene)
         {
-            auto options = scene->GetSceneContextOptions(request);
+            // Sync geometry filter state to the scene for context menu raycast filtering.
+            scene->SetGeometryFilterState(GetCurrentGeometryFilterState());
+
+            auto options = scene->GetSceneContextOptions(request, blas_root_nodes);
             for (const auto& option : options)
             {
                 auto option_func      = option.second;
@@ -474,6 +488,16 @@ namespace rra
         return camera_controller_;
     }
 
+    void AccelerationStructureViewerModel::SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes)
+    {
+        blas_root_nodes_ = blas_root_nodes;
+    }
+
+    std::vector<rra::SceneNode*>* AccelerationStructureViewerModel::GetBlasRootNodes()
+    {
+        return blas_root_nodes_;
+    }
+
     void AccelerationStructureViewerModel::RefreshUI(uint64_t index)
     {
         if (selected_node_index_.isValid())
@@ -507,19 +531,57 @@ namespace rra
         }
     }
 
-    SceneCollectionModelClosestHit AccelerationStructureViewerModel::SelectFromScene(uint64_t                scene_index,
-                                                                                     const renderer::Camera* camera,
-                                                                                     glm::vec2               normalized_window_coords)
+    SceneCollectionModelClosestHit AccelerationStructureViewerModel::GetClosestHit(uint64_t                scene_index,
+                                                                                   const renderer::Camera* camera,
+                                                                                   glm::vec2               normalized_window_coords)
     {
         // Invert to match coord space.
         normalized_window_coords.y *= -1.0f;
 
         renderer::CameraRay ray = camera->CastRay(normalized_window_coords);
 
+        // Sync geometry filter state from render adapter to scene collection model for CPU-side filtering.
+        scene_collection_model_->SetGeometryFilterState(GetCurrentGeometryFilterState());
+
         // Trace ray.
         SceneCollectionModelClosestHit scene_model_closest_hit;
 
-        scene_collection_model_->CastClosestHitRayOnBvh(scene_index, ray.origin, ray.direction, scene_model_closest_hit);
+        scene_collection_model_->CastClosestHitRayOnBvh(scene_index, ray.origin, ray.direction, blas_root_nodes_, scene_model_closest_hit);
+
+        return scene_model_closest_hit;
+    }
+
+    QString AccelerationStructureViewerModel::GetTraversalToolTip(uint32_t pixel_x, uint32_t pixel_y)
+    {
+        if (!render_state_adapter_ || !render_state_adapter_->GetRenderTraversal())
+        {
+            return "";
+        }
+
+        render_state_adapter_->SetHoveredPixel(pixel_x, pixel_y);
+
+        if (render_state_adapter_->IsHoveredTraversalCounterValid())
+        {
+            uint32_t counter_value = render_state_adapter_->GetHoveredTraversalCounter();
+            auto     bvh_type      = is_tlas_ ? renderer::BvhTypeFlags::TopLevel : renderer::BvhTypeFlags::BottomLevel;
+            auto     mode_name     = render_state_adapter_->GetCurrentTraversalCounterModeName(bvh_type);
+
+            return QString::fromStdString(mode_name) + ": " + QString::number(counter_value);
+        }
+
+        return "";
+    }
+
+    bool AccelerationStructureViewerModel::IsRenderingTraversal() const
+    {
+        return render_state_adapter_ && render_state_adapter_->GetRenderTraversal();
+    }
+
+    SceneCollectionModelClosestHit AccelerationStructureViewerModel::SelectFromScene(uint64_t                scene_index,
+                                                                                     const renderer::Camera* camera,
+                                                                                     glm::vec2               normalized_window_coords)
+    {
+        SceneCollectionModelClosestHit scene_model_closest_hit = GetClosestHit(scene_index, camera, normalized_window_coords);
 
         auto     scene                 = scene_collection_model_->GetSceneByIndex(scene_index);
         uint64_t scene_child_selection = UINT32_MAX;
@@ -530,8 +592,7 @@ namespace rra
             {
                 scene_child_selection = scene_model_closest_hit.instance_node;
             }
-
-            if (scene_model_closest_hit.triangle_child_node != UINT32_MAX)
+            else if (scene_model_closest_hit.triangle_child_node != UINT32_MAX)
             {
                 scene_child_selection = scene_model_closest_hit.triangle_child_node;
             }
@@ -545,7 +606,7 @@ namespace rra
         return scene_model_closest_hit;
     }
 
-    QModelIndex AccelerationStructureViewerModel::GetModelIndexForNode(uint32_t node_child_id) const
+    QModelIndex AccelerationStructureViewerModel::GetModelIndexForNode(uint64_t node_child_id) const
     {
         // Use the tree view model to get the model index associated with the node.
         QModelIndex source_index = tree_view_model_->GetModelIndexForNode(node_child_id);
@@ -577,6 +638,18 @@ namespace rra
         return node_data.toUInt();
     }
 
+    uint32_t AccelerationStructureViewerModel::GetChildIndexFromModelIndex(const QModelIndex& model_index) const
+    {
+        auto item_data = qvariant_cast<AccelerationStructureTreeViewItemData>(model_index.data(Qt::DisplayRole));
+        return item_data.node_child_index;
+    }
+
+    uint32_t AccelerationStructureViewerModel::GetGlobalChildIndexFromModelIndex(const QModelIndex& model_index) const
+    {
+        auto item_data = qvariant_cast<AccelerationStructureTreeViewItemData>(model_index.data(Qt::DisplayRole));
+        return (uint32_t)(item_data.node_child_id >> 32);
+    }
+
     bool AccelerationStructureViewerModel::IsModelIndexNode(const QModelIndex& model_index) const
     {
         const QModelIndex                       proxy_model_index = tree_view_proxy_model_->mapToSource(model_index);
@@ -606,20 +679,9 @@ namespace rra
         }
     }
 
-    void AccelerationStructureViewerModel::ToggleBVHWireframe()
+    void AccelerationStructureViewerModel::ToggleBVHWireframe(bool toggle_internal, bool toggle_leaf)
     {
-        if (render_state_adapter_ != nullptr)
-        {
-            if (render_state_adapter_->GetRenderBoundingVolumes())
-            {
-                render_state_adapter_->SetRenderBoundingVolumes(false);
-            }
-            else
-            {
-                render_state_adapter_->SetRenderBoundingVolumes(true);
-            }
-            emit MessageManager::Get().RenderStateChanged();
-        }
+        emit MessageManager::Get().ToggleWireframeRequested(toggle_internal, toggle_leaf);
     }
 
     void AccelerationStructureViewerModel::ToggleMeshWireframe()
@@ -686,3 +748,4 @@ namespace rra
     }
 
 }  // namespace rra
+

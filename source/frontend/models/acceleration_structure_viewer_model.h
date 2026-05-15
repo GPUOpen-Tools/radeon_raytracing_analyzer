@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure viewer model base class.
@@ -9,6 +9,9 @@
 #define RRA_MODELS_ACCELERATION_STRUCTURE_VIEWER_MODEL_H_
 
 #include <QStandardItemModel>
+#include <QString>
+
+#include <vector>
 
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/scaled_table_view.h"
@@ -30,7 +33,7 @@ namespace rra
 
     /// @brief Get the scene info needed for creating the graphics context.
     /// @return Scene info needed by graphics context.
-    std::shared_ptr<renderer::GraphicsContextSceneInfo> GetGraphicsContextSceneInfo();
+    renderer::GraphicsContextSceneInfo* GetGraphicsContextSceneInfo(std::vector<SceneNode*>& blas_root_nodes, renderer::GraphicsContextSceneInfo* info);
 
     class AccelerationStructureViewerModel : public ModelViewMapper
     {
@@ -119,6 +122,14 @@ namespace rra
         /// @param [in] index       The index of the acceleration structure selected (from the combo box).
         virtual void UpdateUI(const QModelIndex& model_index, uint64_t index) = 0;
 
+        /// @brief Update the tooltip depending in what the mouse is over.
+        ///
+        /// @param [in] bvh_index    The index of the acceleration structure selected (from the combo box).
+        /// @param [in] closest_hit  A structure containing information about what geometry/BVH the mouse is over.
+        ///
+        /// @return A string containing the tooltip text to be displayed.
+        virtual QString UpdateToolTip(uint64_t bvh_index, rra::SceneCollectionModelClosestHit closest_hit) = 0;
+
         /// @brief Refresh the UI elements based on what is selected in the tree view.
         ///
         /// @param [in] index The index of the acceleration structure selected (from the combo box).
@@ -179,6 +190,28 @@ namespace rra
         /// @param [in] index The index of the BVH to load.
         void PopulateScene(renderer::RendererInterface* renderer, uint64_t index);
 
+        /// @brief Get the closest hit information from the scene given normalized window coordinates.
+        ///
+        /// @param [in] scene_index The scene index to select from.
+        /// @param [in] camera The camera to use to calculate coordinate projection (using camera).
+        /// @param [in] normalized_window_coords The normalized coordinates to select with. The coordinate space is from -1.0 to 1.0.
+        ///
+        /// @returns The closest hit information.
+        SceneCollectionModelClosestHit GetClosestHit(uint64_t scene_index, const renderer::Camera* camera, glm::vec2 normalized_window_coords);
+
+        /// @brief Get the traversal mode tooltip string for the given pixel coordinates.
+        ///
+        /// @param [in] pixel_x The pixel x coordinate.
+        /// @param [in] pixel_y The pixel y coordinate.
+        ///
+        /// @returns The tooltip string for the traversal counter at the given pixel, or empty if not in traversal mode.
+        QString GetTraversalToolTip(uint32_t pixel_x, uint32_t pixel_y);
+
+        /// @brief Check if the renderer is currently in traversal rendering mode.
+        ///
+        /// @returns True if traversal mode is active.
+        bool IsRenderingTraversal() const;
+
         /// @brief Select from the scene given normalized window coordinates.
         ///
         /// @param [in] scene_index The scene index to select from.
@@ -190,10 +223,10 @@ namespace rra
 
         /// @brief Get the tree model index associated with the node.
         ///
-        /// @param [in] node_id The acceleration structure node ID.
+        /// @param [in] node_id The acceleration structure node ID hashed with child index.
         ///
         /// @returns The tree model index for the given node.
-        QModelIndex GetModelIndexForNode(uint32_t node_child_id) const;
+        QModelIndex GetModelIndexForNode(uint64_t node_child_id) const;
 
         /// @brief Get the tree model index associated with the node and a triangle if applicable.
         ///
@@ -212,7 +245,10 @@ namespace rra
         void ToggleInstanceTransformWireframe();
 
         /// @brief Toggle the BVH wireframe rendering.
-        void ToggleBVHWireframe();
+        ///
+        /// @param [in] toggle_internal  If true, toggle the internal node wireframe rendering.
+        /// @param [in] toggle_leaf      If true, toggle the leaf node wireframe rendering.
+        void ToggleBVHWireframe(bool toggle_internal, bool toggle_leaf);
 
         /// @brief Toggle the Mesh wireframe rendering.
         void ToggleMeshWireframe();
@@ -231,41 +267,42 @@ namespace rra
         /// nothing in the tree is selected.
         void SetSelectedNodeIndex(const QModelIndex& model_index);
 
-        /// @brief Is the selected model index a valid instance node.
+        /// @brief Is the selected index a valid instance node.
         ///
-        /// @param [in] index  The index of the TLAS selected (from the combo box).
+        /// @param [in] tlas_index  The index of the TLAS selected (from the combo box).
         ///
-        /// @return true if model index is an instance node, false if not.
+        /// @return true if tlas_index is an instance node, false if not.
         bool IsInstanceNode(uint64_t tlas_index) const;
 
-        /// @brief Is the selected model index a valid triangle node.
+        /// @brief Is the selected index a valid triangle node.
         ///
-        /// @param [in] index  The index of the BLAS selected (from the combo box).
+        /// @param [in] blas_index  The index of the BLAS selected (from the combo box).
         ///
-        /// @return true if model index is an triangle node, false if not.
+        /// @return true if blas_index is a triangle node, false if not.
         bool IsTriangleNode(uint64_t blas_index) const;
 
-        /// @brief Is the selected model index a rebraided instance node.
+        /// @brief Is the selected index a rebraided instance node.
         ///
-        /// @param [in] index The index of the TLAS selected (from the combo box).
+        /// @param [in] tlas_index  The index of the TLAS selected (from the combo box).
         ///
-        /// @return true if model index is a rebraided instance node, false if not.
+        /// @return true if tlas_index is a rebraided instance node, false if not.
         bool IsRebraidedNode(uint64_t tlas_index) const;
 
-        /// @brief Is the selected model index a split triangle node.
+        /// @brief Is the selected index a split triangle node.
         ///
-        /// @param [in] index The index of the TLAS selected (from the combo box).
+        /// @param [in] tlas_index  The index of the TLAS selected (from the combo box).
         ///
-        /// @return true if model index is a split triangle node, false if not.
+        /// @return true if tlas_index is a split triangle node, false if not.
         bool IsTriangleSplit(uint64_t tlas_index) const;
 
         /// @brief Get the current options avaiable for the selection in the given scene.
         ///
-        /// @param [in] bvh_index The index of the scene to get the options for.
-        /// @param [in] request The request that the options are requested on.
+        /// @param [in] bvh_index             The index of the scene to get the options for.
+        /// @param [in] request               The request that the options are requested on.
+        /// @param [in] blas_root_nodes       The BLAS root nodes.
         ///
         /// @returns The selection context options with their corresponding functions.
-        SceneContextMenuOptions GetSceneContextOptions(uint64_t bvh_index, SceneContextMenuRequest request);
+        SceneContextMenuOptions GetSceneContextOptions(uint64_t bvh_index, SceneContextMenuRequest request, std::vector<rra::SceneNode*>* blas_root_nodes);
 
         /// @brief Get whether the selected node is an instance.
         ///
@@ -299,6 +336,16 @@ namespace rra
         /// @returns The camera controller.
         rra::ViewerIO* GetCameraController() const;
 
+        /// @brief Set the BLAS root nodes.
+        ///
+        /// @param blas_root_nodes The root nodes.
+        void SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes);
+
+        /// @brief Get the BLAS root nodes.
+        ///
+        /// @return The BLAS root nodes.
+        std::vector<rra::SceneNode*>* GetBlasRootNodes();
+
     public slots:
         /// @brief Slot to handle what happens when the user clicks on a the collapse/expand button.
         ///
@@ -315,6 +362,11 @@ namespace rra
         void SceneSelectionChanged();
 
     protected:
+        /// @brief Get the current geometry filter state from the render adapter.
+        ///
+        /// @returns The current geometry filter state, or a default state if no adapter is available.
+        GeometryFilterState GetCurrentGeometryFilterState() const;
+
         /// @brief Get the node id associated with the model index.
         ///
         /// @param [in] model_index The model index of the item selected in the tree view.
@@ -323,6 +375,20 @@ namespace rra
         ///
         /// @returns The node id associated with the model index.
         uint32_t GetNodeIdFromModelIndex(const QModelIndex& model_index, uint64_t index, bool is_tlas) const;
+
+        /// @brief Get the child index associated with the model index.
+        ///
+        /// @param [in] model_index The model index of the item selected in the tree view.
+        ///
+        /// @returns The child index associated with the model index.
+        uint32_t GetChildIndexFromModelIndex(const QModelIndex& model_index) const;
+
+        /// @brief Get the child index associated with the model index.
+        ///
+        /// @param [in] model_index The model index of the item selected in the tree view.
+        ///
+        /// @returns The global child index associated with the model index.
+        uint32_t GetGlobalChildIndexFromModelIndex(const QModelIndex& model_index) const;
 
         /// @brief Check if the given model index is a node.
         ///
@@ -350,9 +416,11 @@ namespace rra
         QStandardItemModel*                 bottom_table_model_    = nullptr;  ///< Model associated with the rotation table.
         QModelIndex selected_node_index_;  ///< The model index for the selected node in the treeview (can be invalid - nothing selected).
         std::map<uint64_t, AccelerationStructureTreeViewItemDelegate*> item_delegate_map_;  ///< The item delegates for the tree view.
-        TreeViewExpandMode treeview_expand_state_ = kCollapsed;                             ///< The state of the treeview (expanded/collapsed).
-        bool               is_tlas_;                                                        ///< Is this a TLAS BVH.
+        TreeViewExpandMode            treeview_expand_state_ = kCollapsed;                  ///< The state of the treeview (expanded/collapsed).
+        bool                          is_tlas_;                                             ///< Is this a TLAS BVH.
+        std::vector<rra::SceneNode*>* blas_root_nodes_{};                                   ///< Pointer to blas root nodes (owned by main.cpp).
     };
 }  // namespace rra
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_VIEWER_MODEL_H_
+

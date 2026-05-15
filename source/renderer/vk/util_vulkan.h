@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for Vulkan utility functions.
@@ -46,3 +46,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VULKAN_UTIL_VULKAN_H_
+

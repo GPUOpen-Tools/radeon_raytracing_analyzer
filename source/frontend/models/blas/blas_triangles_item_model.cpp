@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS triangles item model.
@@ -182,10 +182,10 @@ namespace rra
             case kBlasTrianglesColumnVertex0:
             case kBlasTrianglesColumnVertex1:
             case kBlasTrianglesColumnVertex2:
-                return QVariant::fromValue<uint32_t>(cache.node_id);
+                return QVariant::fromValue<uint64_t>(cache.global_node_id);
             // Userdata in the padding column isn't going to be used so use it to return the node id.
             case kBlasTrianglesColumnPadding:
-                return QVariant::fromValue<uint32_t>(cache.node_id);
+                return QVariant::fromValue<uint64_t>(cache.global_node_id);
 
             default:
                 break;
@@ -325,3 +325,4 @@ namespace rra
         return num_columns_;
     }
 }  // namespace rra
+

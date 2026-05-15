@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure (AS) tree-view item.
@@ -34,11 +34,12 @@ namespace rra
         }
     }
 
-    void AccelerationStructureTreeViewItem::Initialize(uint32_t node_data, AccelerationStructureTreeViewItem* parent)
+    void AccelerationStructureTreeViewItem::Initialize(uint64_t node_data, uint32_t child_index, AccelerationStructureTreeViewItem* parent)
     {
         is_node_     = true;
         parent_item_ = parent;
         node_data_   = node_data;
+        child_index_ = child_index;
 
         child_items_.clear();
     }
@@ -114,7 +115,7 @@ namespace rra
 
                     if (is_tlas)
                     {
-                        error_code = RraTlasGetNodeName(node_data_, &node_name);
+                        error_code = RraTlasGetNodeName(as_index, node_data_, &node_name);
                         RRA_ASSERT(error_code == kRraOk);
                     }
                     else
@@ -123,8 +124,9 @@ namespace rra
                         RRA_ASSERT(error_code == kRraOk);
                     }
 
-                    item_data.display_name  = node_name + QString(" - 0x") + QString("%1").arg(node_address, 0, 16);
-                    item_data.node_child_id = node_data_;
+                    item_data.display_name     = node_name + QString(" - 0x") + QString("%1").arg(node_address, 0, 16);
+                    item_data.node_child_id    = node_data_;
+                    item_data.node_child_index = child_index_;
 
                     const dxr::amd::NodePointer* node = reinterpret_cast<const dxr::amd::NodePointer*>(&node_data_);
                     if (node->IsInstanceNode())
@@ -150,7 +152,7 @@ namespace rra
 
                 if (is_tlas)
                 {
-                    RraErrorCode error_code = RraTlasGetNodeNameToolTip(node_data_, &node_tooltip);
+                    RraErrorCode error_code = RraTlasGetNodeNameToolTip(as_index, node_data_, &node_tooltip);
                     RRA_ASSERT(error_code == kRraOk);
                 }
                 else
@@ -194,3 +196,4 @@ namespace rra
     }
 
 }  // namespace rra
+

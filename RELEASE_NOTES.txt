@@ -1,11 +1,12 @@
-Radeon Raytracing Analyzer V1.10
+Radeon Raytracing Analyzer V1.11
 --------------------------------
 
-V1.10 Changes
+V1.11 Changes
 ------------------------------------
-1) Uncheck checkboxes for disabled nodes in the BLAS/TLAS viewer treeviews.
-2) Fix the triangle area calculation for very small triangles.
-3) Bug/stability fixes.
+1) Tooltip added to the TLAS/BLAS viewers, showing useful stats for the instance (TLAS viewer) or triangle (BLAS viewer) the mouse is hovering over.
+2) Add a slider to filter geometry and only show triangles that match certain criteria (useful for only seeing triangles with low SAH values, for instance).
+3) Split the rendering of bounding volume wireframes into separate internal and leaf nodes. This allows seeing only the leaf or internal nodes at a particular tree depth.
+4) Bug/stability fixes.
 
 Known Issues
 ------------------------------------
@@ -27,6 +28,12 @@ Known Issues
 
 Release Notes History
 ------------------------------------
+
+V1.10 Changes
+------------------------------------
+1) Uncheck checkboxes for disabled nodes in the BLAS/TLAS viewer treeviews.
+2) Fix the triangle area calculation for very small triangles.
+3) Bug/stability fixes.
 
 V1.9 Changes
 ------------------------------------

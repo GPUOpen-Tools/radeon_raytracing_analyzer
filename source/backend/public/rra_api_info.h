@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public API info interface.
@@ -28,3 +28,4 @@ bool RraApiInfoIsVulkan();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_API_INFO_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the camera class.
@@ -78,7 +78,7 @@ namespace rra
 
             /// @brief Set the arc center position of the camera.
             ///
-            /// @param [in] arc_center_position The arc center positionm to set.
+            /// @param [in] arc_center_position The arc center position to set.
             void SetArcCenterPosition(glm::vec3 arc_center_position);
 
             /// @brief Get the field of view.
@@ -291,3 +291,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_CAMERA_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of printing helper functions for RRA.
@@ -29,7 +29,7 @@ void RraSetPrintingCallback(RraPrintingCallback callback_func, bool enable_print
     is_printing_enabled = enable_printing;
 }
 
-void RraPrint(const char* format, ...)
+void RraPrint(LogLevel log_level, const char* format, ...)
 {
     if (!is_printing_enabled)
     {
@@ -56,8 +56,9 @@ void RraPrint(const char* format, ...)
     {
         char buffer[RRA_STRING_BUFFER_SIZE];
         vsnprintf(buffer, RRA_STRING_BUFFER_SIZE, format, args);
-        printing_func(buffer);
+        printing_func(log_level, buffer);
     }
 
     va_end(args);
 }
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific top level acceleration structure
@@ -50,13 +50,26 @@ namespace rta
         }
     }
 
-    uint64_t EncodedRtIp31TopLevelBvh::BlasAddressToIndex(GpuVirtualAddress address) const
+    RraErrorCode EncodedRtIp31TopLevelBvh::BlasAddressToIndex(GpuVirtualAddress address, uint64_t* out_index) const
     {
-        return blas_map_.at(address);
+        if (out_index == nullptr)
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        const auto it = blas_map_.find(address);
+        if (it == blas_map_.end())
+        {
+            return kRraErrorIndexOutOfRange;
+        }
+        *out_index = it->second;
+
+        return kRraOk;
     }
 
-    uint32_t EncodedRtIp31TopLevelBvh::GetParentNode(uint32_t node_id) const
+    uint32_t EncodedRtIp31TopLevelBvh::GetParentNode(uint32_t node_id, uint32_t global_child_index) const
     {
+        RRA_UNUSED(global_child_index);
         dxr::amd::NodePointer node_ptr(node_id);
         if (node_ptr.IsLeafNode())
         {
@@ -267,11 +280,11 @@ namespace rta
         const auto& header_offsets = header_->GetBufferOffsets();
         while (!traversal_stack.empty())
         {
-            auto front    = traversal_stack.front();
+            auto front    = traversal_stack.back();
             auto node_ptr = front.first;
             auto level    = front.second;
 
-            traversal_stack.pop_front();
+            traversal_stack.pop_back();
 
             if (node_ptr.IsInstanceNode())
             {
@@ -280,7 +293,7 @@ namespace rta
                 {
                     HwInstanceNodeRRA* instance_node = reinterpret_cast<HwInstanceNodeRRA*>(&interior_nodes_[byte_offset]);
 
-                    NodePointer64 temp_ptr;
+                    NodePointer64 temp_ptr{};
                     temp_ptr.u64 = instance_node->data.childBasePtr;
                     // also shifted by 6 because it is aligned to 64.
                     uint64_t              blas_address = (temp_ptr.aligned_addr_64b << 6);
@@ -443,6 +456,175 @@ namespace rta
         return triangle_count;
     }
 
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetNodeName(uint32_t node_id, const char** out_name) const
+    {
+        dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+
+        switch ((uint32_t)node->GetType())
+        {
+        case (uint32_t)dxr::amd::NodeType::kAmdNodeBoxFp16:
+            *out_name = "Box16";
+            break;
+
+        case (uint32_t)dxr::amd::NodeType::kAmdNodeBoxFp32:
+            *out_name = "Bvh8";
+            break;
+
+        case (uint32_t)dxr::amd::NodeType::kAmdNodeInstance:
+            *out_name = "Instance";
+            break;
+
+        default:
+            *out_name = "Unknown";
+            break;
+        }
+        return kRraOk;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetNodeNameToolTip(uint32_t node_id, const char** out_tooltip) const
+    {
+        dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+
+        switch ((uint32_t)node->GetType())
+        {
+        case (uint32_t)dxr::amd::NodeType::kAmdNodeBoxFp16:
+            *out_tooltip = "A 16-bit floating point bounding volume node with up to 4 child nodes";
+            break;
+
+        case (uint32_t)dxr::amd::NodeType::kAmdNodeBoxFp32:
+            *out_tooltip = "A compressed bounding volume node with up to 8 child nodes";
+            break;
+
+        case (uint32_t)dxr::amd::NodeType::kAmdNodeInstance:
+            *out_tooltip = "A node containing an instance of a BLAS. Double-click to view this instance in the BLAS viewer";
+            break;
+
+        default:
+            *out_tooltip = "";
+            break;
+        }
+
+        return kRraOk;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetBlasIndex(uint32_t node_id, uint64_t* out_blas_index) const
+    {
+        InstanceNodeDataRRA hw_instance_node{};
+        RraErrorCode        result = GetInstanceNodeFromInstancePointer(node_id, &hw_instance_node);
+        if (result != kRraOk)
+        {
+            return result;
+        }
+
+        NodePointer64 temp_ptr{};
+        temp_ptr.u64 = hw_instance_node.hw_instance_node.data.childBasePtr;
+        // also shifted by 6 because it is aligned to 64.
+        uint64_t blas_address = (temp_ptr.aligned_addr_64b << 6);
+
+        result = BlasAddressToIndex(blas_address, out_blas_index);
+
+        return result;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetInstanceIndex(uint32_t node_id, uint32_t* out_instance_index) const
+    {
+        InstanceNodeDataRRA instance_node{};
+        RraErrorCode        result = GetInstanceNodeFromInstancePointer(node_id, &instance_node);
+        if (result != kRraOk)
+        {
+            return result;
+        }
+
+        *out_instance_index = instance_node.sideband.instanceIndex;
+        return result;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetInstanceNodeTransform(uint32_t node_id, float* out_transform) const
+    {
+        InstanceNodeDataRRA instance_node{};
+        RraErrorCode        result = GetInstanceNodeFromInstancePointer(node_id, &instance_node);
+
+        if (result != kRraOk)
+        {
+            return result;
+        }
+
+        memcpy(out_transform, instance_node.hw_instance_node.data.worldToObject, dxr::kMatrix3x4Size);
+        return result;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetOriginalInstanceNodeTransform(uint32_t node_id, float* out_transform) const
+    {
+        InstanceNodeDataRRA instance_node{};
+        RraErrorCode        result = GetInstanceNodeFromInstancePointer(node_id, &instance_node);
+
+        if (result != kRraOk)
+        {
+            return result;
+        }
+
+        memcpy(out_transform, instance_node.sideband.objectToWorld, dxr::kMatrix3x4Size);
+        return result;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetInstanceNodeMask(uint32_t node_id, uint32_t* out_mask) const
+    {
+        InstanceNodeDataRRA instance_node{};
+        RraErrorCode        result = GetInstanceNodeFromInstancePointer(node_id, &instance_node);
+
+        if (result != kRraOk)
+        {
+            return result;
+        }
+
+        *out_mask = instance_node.hw_instance_node.data.userDataAndInstanceMask >> 24;
+        return result;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetInstanceNodeID(uint32_t node_id, uint32_t* out_id) const
+    {
+        InstanceNodeDataRRA instance_node{};
+        RraErrorCode        result = GetInstanceNodeFromInstancePointer(node_id, &instance_node);
+
+        if (result != kRraOk)
+        {
+            return result;
+        }
+
+        constexpr uint32_t instance_id_bit_mask{0xFFFFFF};
+        *out_id = instance_node.sideband.instanceIdAndFlags & instance_id_bit_mask;
+        return result;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetInstanceNodeHitGroup(uint32_t node_id, uint32_t* out_hit_group) const
+    {
+        InstanceNodeDataRRA instance_node{};
+        RraErrorCode        result = GetInstanceNodeFromInstancePointer(node_id, &instance_node);
+
+        if (result != kRraOk)
+        {
+            return result;
+        }
+
+        constexpr uint32_t user_data_bit_mask{0xFFFFFF};
+        *out_hit_group = instance_node.hw_instance_node.data.userDataAndInstanceMask & user_data_bit_mask;
+        return result;
+    }
+
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetInstanceFlags(uint32_t node_id, uint32_t* out_flags) const
+    {
+        InstanceNodeDataRRA instance_node{};
+        RraErrorCode        result = GetInstanceNodeFromInstancePointer(node_id, &instance_node);
+
+        if (result != kRraOk)
+        {
+            return result;
+        }
+
+        *out_flags = instance_node.sideband.instanceIdAndFlags >> 24;
+        return result;
+    }
+
     uint64_t EncodedRtIp31TopLevelBvh::GetInstanceCount(uint64_t index) const
     {
         auto iter = instance_list_.find(index);
@@ -468,8 +650,9 @@ namespace rta
         return dxr::amd::kInvalidNode;
     }
 
-    float EncodedRtIp31TopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const
+    float EncodedRtIp31TopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, uint32_t global_child_index) const
     {
+        RRA_UNUSED(global_child_index);
         const int32_t index = GetInstanceIndex(node_id);
         assert(index != -1);
         assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
@@ -484,4 +667,23 @@ namespace rta
         instance_surface_area_heuristic_[index] = surface_area_heuristic;
     }
 
+    RraErrorCode EncodedRtIp31TopLevelBvh::GetInstanceNodeFromInstancePointer(uint32_t node_id, InstanceNodeDataRRA* out_instance_node) const
+    {
+        dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+        if (!node->IsInstanceNode())
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        auto instance_node = GetHwInstanceNode(node);
+        if (!instance_node)
+        {
+            return kRraErrorIndexOutOfRange;
+        }
+        *out_instance_node = instance_node.value();
+
+        return kRraOk;
+    }
+
 }  // namespace rta
+

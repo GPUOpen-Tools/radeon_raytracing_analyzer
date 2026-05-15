@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the viewer container widget class.
@@ -19,6 +19,7 @@
 #include "ui_viewer_container_widget.h"
 
 #include "managers/pane_manager.h"
+#include "models/scene.h"
 #include "models/viewer_container_model.h"
 #include "settings/settings.h"
 
@@ -123,7 +124,17 @@ private slots:
     void EvaluateInstanceMaskWarning(int mask);
 
 private:
-    Ui::ViewerContainerWidget*                           ui_    = nullptr;           ///< Pointer to the Qt UI design.
+    /// @brief Compute the scene-derived max value for the geometry filter slider for a given coloring mode.
+    ///
+    /// @param [in] mode The coloring mode.
+    ///
+    /// @return The scene max value, or 0 if unavailable.
+    int GetSceneMaxForMode(rra::renderer::GeometryColoringMode mode) const;
+
+    /// @brief Emit GeometryColoringModeChanged with the current mode and scene stats.
+    void EmitGeometryColoringModeChanged();
+
+    Ui::ViewerContainerWidget*                           ui_    = nullptr;
     rra::ViewerContainerModel*                           model_ = nullptr;           ///< The model backing the view.
     std::vector<rra::renderer::GeometryColoringModeInfo> filtered_color_modes_;      ///< The coloring modes available to the viewer.
     std::vector<rra::renderer::TraversalCounterModeInfo> filtered_traversal_modes_;  ///< The traversal counter modes available to the viewer.
@@ -134,3 +145,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_VIEWER_CONTAINER_WIDGET_H_
+

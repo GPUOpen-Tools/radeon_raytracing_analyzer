@@ -6,14 +6,26 @@ These settings are stored, and are persistent for all instances of RRA.
 
 General
 -------
-**Check for updates** If checked, the Radeon Raytracing Analyzer will alert you
+**Automatic updates** If checked, the Radeon Raytracing Analyzer will alert you
 that a new version is available for download.
+
+**Show Driver experiment notifications** If checked, the Radeon Raytracing Analyzer
+will display a notification banner under the main drop down menu of the user
+interface indicating when a scene contains modified Driver experiments.
+
+**Log level** Will allow selection of how verbose the logging should be. Options are
+**Error**, **Warning**, **Info** and **Debug**. Selecting **Error** will show only
+error messages. Selecting info will show Information messages, errors and warnings.
+The log file is saved to disk in the same location as the settings file. On Windows,
+this is in the user AppData\Roaming\RadeonRaytracingAnalyzer folder; on Linux,
+it can be found in the folder '~/.RadeonRaytracingAnalyzer'
 
 **Camera reset** If checked, the camera will reset to the starting position and
 orientation each time the camera's control style is changed.
 
-**Viewer UI state** If checked, certain elements of the viewer UI's are persistent
-between RRA sessions. These are typically selections that are seldom changed. The
+**Viewer UI state** If enabled, the state of the TLAS, BLAS and RAY inspector panes will be
+remembered from the last session. Otherwise they will be reset to default settings. Some
+state, like camera movement speed, will not be remembered in either case. The
 following UI elements are shared between all viewers:
 
 -  Culling mode
@@ -56,16 +68,6 @@ The following UI elements are saved per-view:
 
 -  Cull front-facing triangles
 
-**Automatic updates** Check for updates to Radeon Raytracing Analyzer when starting the
-program.
-
-**Camera reset** If enabled, the camera will reset position when the camera control style
-is changed.
-
-**Viewer UI state** If enabled, the state of the TLAS, BLAS and RAY inspector panes will be
-remembered from the last session. Otherwise they will be reset to default settings. Some
-state, like camera movement speed, will not be remembered in either case.
-
 **TLAS/BLAS Node display** Will allow the choice between showing the nodes
 in the treeviews on the viewer panes either by their GPU address, or by an offset.
 
@@ -86,10 +88,6 @@ and better performance.
 **Decimal precision** The number of decimal places that floating point values throughout
 the app will be displayed at. Hovering the mouse over a floating point value will display
 its full precision through a tooltip.
-
-**Show Driver experiment notifications** If checked, the Radeon Raytracing Analyzer
-will display a notification banner under the main drop down menu of the user
-interface indicating when a scene contains modified Driver experiments.
 
 .. image:: media/settings/general_1.png
 

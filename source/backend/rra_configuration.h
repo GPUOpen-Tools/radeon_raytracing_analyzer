@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Global configuration values for the RRA backend.
@@ -14,3 +14,4 @@
 #define RRA_STRING_BUFFER_SIZE (2048)
 
 #endif  // #ifndef RRA_BACKEND_RRA_CONFIGURATION_H_
+

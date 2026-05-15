@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a proxy filter that processes the ray inspector ray tree.
@@ -60,3 +60,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_RAY_LIST_PROXY_MODEL_H_
+

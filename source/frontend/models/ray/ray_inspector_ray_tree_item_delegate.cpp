@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Implementation of RRA's ray inspector ray list item delegate.
@@ -78,3 +78,4 @@ void RayInspectorRayTreeItemDelegate::paint(QPainter* painter, const QStyleOptio
         painter->drawText(option.rect, Qt::AlignRight | Qt::AlignVCenter, index.data().toString());
     }
 }
+

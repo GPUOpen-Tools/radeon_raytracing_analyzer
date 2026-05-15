@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure viewer pane base class.
@@ -88,6 +88,15 @@ void AccelerationStructureViewerPane::SelectedTreeNodeChanged(const QItemSelecti
     }
 }
 
+void AccelerationStructureViewerPane::UpdateShowBoundingVolumes(bool show_internal, bool show_leaf)
+{
+    rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
+    if (scene)
+    {
+        scene->SetShowBounds(show_internal, show_leaf);
+    }
+}
+
 void AccelerationStructureViewerPane::PopulateAccelerationStructure()
 {
     RRA_ASSERT(acceleration_structure_combo_box_ != nullptr);
@@ -172,7 +181,7 @@ void AccelerationStructureViewerPane::HandleTreeNodeSelected(const QModelIndex& 
 
             // We only update the scene selection if the renderer is not in focus, which means it was
             // clicked from the UI.
-            if (!renderer_widget_->GetRendererIsFocused())
+            if (!renderer_widget_->GetIsRendererFocused())
             {
                 model_->SetSceneSelection(model_index, bvh_index);
             }
@@ -413,23 +422,23 @@ void AccelerationStructureViewerPane::UpdateCameraController()
 
         if (selected_bvh_index != UINT64_MAX)
         {
-            viewer_callbacks.get_scene_extents = [=]() -> BoundingVolumeExtents {
+            viewer_callbacks.get_scene_extents = [=, this]() -> BoundingVolumeExtents {
                 BoundingVolumeExtents extents = {};
                 model_->GetSceneCollectionModel()->GetSceneBounds(selected_bvh_index, extents);
                 return extents;
             };
 
-            viewer_callbacks.get_selection_extents = [=]() -> BoundingVolumeExtents {
+            viewer_callbacks.get_selection_extents = [=, this]() -> BoundingVolumeExtents {
                 BoundingVolumeExtents extents = {};
                 model_->GetSceneCollectionModel()->GetSceneSelectionBounds(selected_bvh_index, extents);
                 return extents;
             };
 
-            viewer_callbacks.get_context_options = [=](rra::SceneContextMenuRequest request) -> rra::SceneContextMenuOptions {
-                return model_->GetSceneContextOptions(selected_bvh_index, request);
+            viewer_callbacks.get_context_options = [=, this](rra::SceneContextMenuRequest request) -> rra::SceneContextMenuOptions {
+                return model_->GetSceneContextOptions(selected_bvh_index, request, GetBlasRootNodes());
             };
 
-            viewer_callbacks.select_from_scene = [=](const rra::renderer::Camera* camera, glm::vec2 coords) -> rra::SceneCollectionModelClosestHit {
+            viewer_callbacks.select_from_scene = [=, this](const rra::renderer::Camera* camera, glm::vec2 coords) -> rra::SceneCollectionModelClosestHit {
                 return model_->SelectFromScene(selected_bvh_index, camera, coords);
             };
         }
@@ -657,6 +666,32 @@ void AccelerationStructureViewerPane::MouseMoved(QMouseEvent* mouse_event)
         }
 
         camera_controller->MouseMoved(QCursor::pos());
+
+        // Do the mouse move detection of what's under the mouse.
+
+        // Normalize coords to -1 to 1 space.
+        hit_coords /= window_size;
+        hit_coords *= 2.0f;
+        hit_coords -= 1.0f;
+
+        uint64_t selected_bvh_index = model_->FindAccelerationStructureIndex(acceleration_structure_combo_box_);
+
+        // In traversal rendering mode, show the hovered pixel's counter value.
+        if (model_->IsRenderingTraversal())
+        {
+            // Scale widget-logical coordinates to device pixel coordinates to match the framebuffer resolution.
+            double   ratio           = renderer_widget_->devicePixelRatioF();
+            uint32_t pixel_x         = static_cast<uint32_t>(mouse_event->pos().x() * ratio);
+            uint32_t pixel_y         = static_cast<uint32_t>(mouse_event->pos().y() * ratio);
+            QString  tool_tip_string = model_->GetTraversalToolTip(pixel_x, pixel_y);
+            UpdateToolTip(tool_tip_string);
+        }
+        else
+        {
+            rra::SceneCollectionModelClosestHit closest_hit     = model_->GetClosestHit(selected_bvh_index, &camera, hit_coords);
+            QString                             tool_tip_string = model_->UpdateToolTip(selected_bvh_index, closest_hit);
+            UpdateToolTip(tool_tip_string);
+        }
     }
 }
 
@@ -699,7 +734,11 @@ void AccelerationStructureViewerPane::KeyPressed(QKeyEvent* key_event)
         break;
 
     case Qt::Key_B:
-        model_->ToggleBVHWireframe();
+        model_->ToggleBVHWireframe(true, false);
+        break;
+
+    case Qt::Key_L:
+        model_->ToggleBVHWireframe(false, true);
         break;
 
     case Qt::Key_N:
@@ -784,3 +823,4 @@ void AccelerationStructureViewerPane::FocusIn()
         }
     }
 }
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Settings pane.
@@ -30,9 +30,6 @@ public:
     ///
     /// @param [in] event The show event object.
     virtual void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
-
-    /// @brief Update treeview Node ID.
-    void SwitchTreeviewNodeId();
 
 private slots:
     /// @brief Slot to handle what happens when the auto updates box changes.
@@ -81,13 +78,12 @@ private slots:
     /// Update and save the settings.
     void DriverOverridesAllowNotificationsChanged(const bool checked);
 
-private:
-    /// @brief Update the Treeview node ID combo box.
-    ///
-    /// @param [in] index The combo box index.
-    void UpdateTreeviewComboBox(int index);
+    /// @brief Slot to handle what happens when the Log level combo box changes.
+    void LogLevelChanged();
 
+private:
     Ui::SettingsPane* ui_;  ///< Pointer to the Qt UI design.
 };
 
 #endif  // RRA_VIEWS_SETTINGS_SETTINGS_PANE_H_
+

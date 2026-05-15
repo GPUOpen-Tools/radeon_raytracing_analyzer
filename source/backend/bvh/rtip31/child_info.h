@@ -1,5 +1,5 @@
 //=============================================================================
-//  Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+//  Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific child node definition.
@@ -86,20 +86,20 @@ struct ChildInfo
     void        Load(glm::uvec3 packedData);
     void        Init();
     void        Invalidate();
-    glm::uvec3  Min();
-    glm::uvec3  Max();
+    glm::uvec3  Min() const;
+    glm::uvec3  Max() const;
     void        SetMin(glm::uvec3 min);
     void        SetMax(glm::uvec3 max);
-    uint32_t    CullingFlags();
+    uint32_t    CullingFlags() const;
     void        SetCullingFlags(uint32_t cullingFlags);
-    uint32_t    InstanceMask();
+    uint32_t    InstanceMask() const;
     void        SetInstanceMask(uint32_t instanceMask);
     uint32_t    NodeType() const;
     void        SetNodeType(uint32_t nodeType);
     uint32_t    NodeRangeLength() const;
     void        SetNodeRangeLength(uint32_t nodeBoundaries);
-    bool        Valid();
-    BoundingBox DecodeBounds(glm::vec3 origin, glm::uvec3 exponents);
+    bool        Valid() const;
+    BoundingBox DecodeBounds(glm::vec3 origin, glm::uvec3 exponents) const;
 };
 #pragma pack(pop)
 
@@ -160,7 +160,7 @@ inline void ChildInfo::Invalidate()
 }
 
 //=====================================================================================================================
-inline glm::uvec3 ChildInfo::Min()
+inline glm::uvec3 ChildInfo::Min() const
 {
     glm::uvec3 min;
     min.x = bitFieldExtract(minXMinYAndCullingFlags, 0, 12);
@@ -170,7 +170,7 @@ inline glm::uvec3 ChildInfo::Min()
 }
 
 //=====================================================================================================================
-inline glm::uvec3 ChildInfo::Max()
+inline glm::uvec3 ChildInfo::Max() const
 {
     glm::uvec3 max;
     max.x = bitFieldExtract(minZMaxXAndInstanceMask, 12, 12);
@@ -196,7 +196,7 @@ inline void ChildInfo::SetMax(glm::uvec3 max)
 }
 
 //=====================================================================================================================
-inline uint32_t ChildInfo::CullingFlags()
+inline uint32_t ChildInfo::CullingFlags() const
 {
     return bitFieldExtract(minXMinYAndCullingFlags, 24, 4);
 }
@@ -208,7 +208,7 @@ inline void ChildInfo::SetCullingFlags(uint32_t cullingFlagsBits)
 }
 
 //=====================================================================================================================
-inline uint32_t ChildInfo::InstanceMask()
+inline uint32_t ChildInfo::InstanceMask() const
 {
     return bitFieldExtract(minZMaxXAndInstanceMask, 24, 8);
 }
@@ -244,7 +244,7 @@ inline void ChildInfo::SetNodeRangeLength(uint32_t nodeBoundariesBits)
 }
 
 //=====================================================================================================================
-inline bool ChildInfo::Valid()
+inline bool ChildInfo::Valid() const
 {
     glm::uvec3 min = Min();
     glm::uvec3 max = Max();
@@ -252,7 +252,7 @@ inline bool ChildInfo::Valid()
 }
 
 //=====================================================================================================================
-inline BoundingBox ChildInfo::DecodeBounds(glm::vec3 origin, glm::uvec3 exponents)
+inline BoundingBox ChildInfo::DecodeBounds(glm::vec3 origin, glm::uvec3 exponents) const
 {
     glm::uvec3  qmin = Min();
     glm::uvec3  qmax = Max();
@@ -270,3 +270,4 @@ inline BoundingBox ChildInfo::DecodeBounds(glm::vec3 origin, glm::uvec3 exponent
 #endif
 
 #endif  // RRA_BACKEND_CHILD_INFO_H_
+

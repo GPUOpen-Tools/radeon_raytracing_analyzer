@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for useful utility functions.
@@ -22,3 +22,4 @@ namespace file_util
 };  // namespace file_util
 
 #endif  // RRA_UTIL_FILE_UTIL_H_
+

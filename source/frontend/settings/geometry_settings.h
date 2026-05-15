@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Define the window geometry settings.
@@ -41,3 +41,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_SETTINGS_GEOMETRY_SETTINGS_H_
+

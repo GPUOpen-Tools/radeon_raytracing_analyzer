@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2018-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for rra_util which holds useful utility functions.
@@ -10,6 +10,8 @@
 
 #include <QColor>
 #include <QTableView>
+
+#include "managers/pane_manager.h"
 
 namespace rra_util
 {
@@ -38,6 +40,13 @@ namespace rra_util
     /// @param [in] table  The table to be initialized.
     void InitializeTableView(QTableView* table);
 
+    /// @brief Update the tooltip in the renderer widget.
+    ///
+    /// @param [in] pane_id          The pane ID of the renderer widget.
+    /// @param [in] renderer_widget  Pointer to the renderer widget.
+    /// @param [in] tool_tip_string  The tooltip text to be displayed.
+    void UpdateRendererTooltip(rra::RRAPaneId pane_id, QWidget* renderer_widget, const QString& tool_tip_string);
 };  // namespace rra_util
 
 #endif  // RRA_UTIL_RRA_UTIL_H_
+

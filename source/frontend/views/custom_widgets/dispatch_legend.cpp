@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief Widget for a colored legend.
@@ -43,3 +43,4 @@ void DispatchLegend::paintEvent(QPaintEvent* event)
     painter.fillRect(x, y, w, w, color_);
     painter.end();
 }
+

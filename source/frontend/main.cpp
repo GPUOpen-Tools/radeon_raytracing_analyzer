@@ -1,11 +1,12 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Main entry point.
 //=============================================================================
 
 #include <stdarg.h>
+#include <vector>
 
 #include <QApplication>
 #include <QDir>
@@ -17,6 +18,7 @@
 #include "qt_common/utils/scaling_manager.h"
 
 #include "public/graphics_context.h"
+#include "public/renderer_interface.h"
 #include "public/rra_print.h"
 
 #include "constants.h"
@@ -26,12 +28,17 @@
 #include "util/rra_util.h"
 #include "views/main_window.h"
 
+namespace rra
+{
+    class SceneNode;
+}
+
 /// @brief Handle printing from RRA backend.
 ///
 /// @param [in] message Incoming message.
-void PrintCallback(const char* message)
+void PrintCallback(LogLevel log_level, const char* message)
 {
-    DebugWindow::DbgMsg(message);
+    DebugWindow::DbgMsg(log_level, message);
 }
 
 /// @brief Detect RRA trace if any was specified as command line param.
@@ -59,9 +66,7 @@ static QString GetTracePath()
 /// @param [in] argv An array containing arguments.
 int main(int argc, char* argv[])
 {
-#ifdef _DEBUG
     RraSetPrintingCallback(PrintCallback, true);
-#endif
 
 #ifdef _LINUX
     qputenv("QT_QPA_PLATFORM", "xcb");
@@ -70,11 +75,17 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     a.setStyle(QStyleFactory::create("fusion"));
 
-    MainWindow* window = new (std::nothrow) MainWindow();
+    // The blas_root_nodes[i] node is the root node of BLAS index i.
+    std::vector<rra::SceneNode*> blas_root_nodes{};
+    MainWindow* window = new (std::nothrow) MainWindow(&blas_root_nodes);  // Save reference to BLAS root nodes in frontend before they're populated.
     int         result = -1;
     if (window != nullptr)
     {
+#ifdef _WIN32
+        SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
+#endif
         window->show();
+        rra::renderer::GraphicsContextSceneInfo* info = new rra::renderer::GraphicsContextSceneInfo{};
 
         // Initialize scaling manager and call ScaleFactorChanged at least once, so that
         // any existing Scaled classes run their initialization as well.
@@ -83,11 +94,11 @@ int main(int argc, char* argv[])
         rra::TraceManager::Get().Initialize(window);
 
         // Once the trace has been loaded initialize graphics context and upload data to the device via this callback.
-        rra::TraceManager::Get().SetLoadingFinishedCallback([window]() {
+        rra::TraceManager::Get().SetLoadingFinishedCallback([window, info, &blas_root_nodes]() {
             rra::renderer::CreateGraphicsContext(window);
 
             // Attempt to initialize the graphics context.
-            if (!rra::renderer::InitializeGraphicsContext(rra::GetGraphicsContextSceneInfo()))
+            if (!rra::renderer::InitializeGraphicsContext(rra::GetGraphicsContextSceneInfo(blas_root_nodes, info)))  // Populate BLAS root nodes.
             {
                 // Emit a signal to close the loaded trace and display a failure notification.
                 QString failure_message = QString::fromStdString(rra::renderer::GetGraphicsContextInitializationError());
@@ -106,8 +117,16 @@ int main(int argc, char* argv[])
         result = a.exec();
 
         driver_overrides::DriverOverridesModel::DestroyInstance();
+
+        for (rra::renderer::TraversalTree& traversal_tree : info->acceleration_structures)
+        {
+            delete[] traversal_tree.child_nodes_buffer;
+        }
+
         delete window;
+        delete info;
     }
 
     return result;
 }
+

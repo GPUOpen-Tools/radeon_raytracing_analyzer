@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Vulkan device properties type.
@@ -62,3 +62,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VK_FRAMEWORK_DEVICE_PROPERTIES_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for Vulkan GPU validation extensions functionality.
@@ -26,7 +26,7 @@ namespace rra
             {
                 if (instance_properties->AddInstanceExtensionName(ext) == false)
                 {
-                    RraPrint("GPU validation disabled, missing extension: %s.\n", ext);
+                    RraPrint(kLogLevelWarning, "GPU validation disabled, missing extension: %s.\n", ext);
                     return false;
                 }
             }
@@ -43,3 +43,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

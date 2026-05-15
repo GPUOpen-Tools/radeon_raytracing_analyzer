@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the TLAS viewer pane.
@@ -61,11 +61,26 @@ public:
     /// @param [in] instance_index The instance to select
     void SelectInstance(uint32_t instance_index);
 
+    /// @brief Set the BLAS root nodes.
+    ///
+    /// @param blas_root_nodes The root nodes.
+    void SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes);
+
+    /// @brief Update the tooltip in the renderer widget.
+    ///
+    /// @param [in] tool_tip_string  The tooltip text to be displayed.
+    virtual void UpdateToolTip(QString tool_tip_string) override;
+
 protected:
     /// @brief Updates widgets depending on the model.
     ///
     /// @param [in] index The model index of the selected node.
     virtual void UpdateWidgets(const QModelIndex& index) override;
+
+    /// @brief Get the BLAS root nodes.
+    ///
+    /// @return The BLAS root nodes.
+    virtual std::vector<rra::SceneNode*>* GetBlasRootNodes() override;
 
 private slots:
     /// @brief Slot to handle what happens when one of the slider handles is moved.
@@ -139,3 +154,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_TLAS_TLAS_VIEWER_PANE_H_
+

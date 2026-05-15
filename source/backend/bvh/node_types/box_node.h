@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Box node helper functions.
@@ -28,3 +28,4 @@ namespace dxr
 }  // namespace dxr
 
 #endif  // RRA_BACKEND_BVH_NODE_TYPES_BOX_NODE_H_
+

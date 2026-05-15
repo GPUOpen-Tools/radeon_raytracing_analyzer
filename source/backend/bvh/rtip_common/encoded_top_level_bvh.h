@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Top level acceleration structure definition common to all rt ip levels.
@@ -9,6 +9,8 @@
 #define RRA_BACKEND_BVH_ENCODED_TOP_LEVEL_BVH_H_
 
 #include <unordered_map>
+
+#include "public/rra_error.h"
 
 #include "bvh/ibvh.h"
 #include "bvh/node_types/instance_node.h"
@@ -78,6 +80,86 @@ namespace rta
         /// @return The number unique of triangles.
         virtual uint64_t GetUniqueTriangleCount() const = 0;
 
+        /// @brief Get the node name for an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_name            A pointer to receive the name string.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeName(uint32_t node_id, const char** out_name) const = 0;
+
+        /// @brief Get the node tooltip name for an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_name            A pointer to receive the tooltip string.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetNodeNameToolTip(uint32_t node_id, const char** out_tooltip) const = 0;
+
+        /// @brief Get the blas index of an instance node.
+        ///
+        /// @param [in]  node_id         The instance node pointer.
+        /// @param [out] out_blas_index  A pointer to receive the blas index.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetBlasIndex(uint32_t node_id, uint64_t* out_blas_index) const = 0;
+
+        /// @brief Get the instance index of an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_instance_index  A pointer to receive the instance index.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceIndex(uint32_t node_id, uint32_t* out_instance_index) const = 0;
+
+        /// @brief Get the instance transformation for an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_transform       A pointer to receive the transform data, 12 floating points of allocation is needed.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceNodeTransform(uint32_t node_id, float* out_transform) const = 0;
+
+        /// @brief Get the original (not inverse) instance transformation for an instance node.
+        ///
+        /// @param [in]  node_id             The instance node pointer.
+        /// @param [out] out_transform       A pointer to receive the transform data, 12 floating points of allocation is needed.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetOriginalInstanceNodeTransform(uint32_t node_id, float* out_transform) const = 0;
+
+        /// @brief Get the instance mask as specified through the API.
+        ///
+        /// @param [in]  node_id       The node pointer containing the instance.
+        /// @param [out] out_mask      The mask of this instance.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceNodeMask(uint32_t node_id, uint32_t* out_mask) const = 0;
+
+        /// @brief Get the instance ID as specified through the API.
+        ///
+        /// @param [in]  node_id       The node pointer containing the instance.
+        /// @param [out] out_id        The ID of this instance.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceNodeID(uint32_t node_id, uint32_t* out_id) const = 0;
+
+        /// @brief Get the instance hit group as specified through the API.
+        ///
+        /// @param [in]  node_id        The node pointer containing the instance.
+        /// @param [out] out_hit_group  The hit group of this instance.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceNodeHitGroup(uint32_t node_id, uint32_t* out_hit_group) const = 0;
+
+        /// @brief Retrieve the instance flags.
+        ///
+        /// @param [in]  node_id 	The node pointer containing the instance.
+        /// @param [out] out_flags	The instance flags.
+        ///
+        /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
+        virtual RraErrorCode GetInstanceFlags(uint32_t node_id, uint32_t* out_flags) const = 0;
+
         /// @brief Get the instance node for a given blas index and instance index.
         ///
         /// @param [in] blas_index     The index of the blas where the node is.
@@ -93,10 +175,11 @@ namespace rta
 
         /// @brief Get the surface area heuristic for a given leaf node.
         ///
-        /// @param [in] node_id The leaf node whose SAH is to be found.
+        /// @param [in] node_id            The leaf node whose SAH is to be found.
+        /// @param [in] global_child_index The leaf's global child index.
         ///
         /// @return The surface area heuristic.
-        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const override;
+        float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, uint32_t global_child_index) const override;
 
         /// @brief Set the surface area heuristic for a given leaf node.
         ///
@@ -124,3 +207,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_ENCODED_TOP_LEVEL_BVH_H_
+

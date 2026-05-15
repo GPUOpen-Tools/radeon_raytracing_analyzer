@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header of a widget that implements a custom graphics view.
@@ -169,3 +169,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_RAY_HISTORY_GRAPHICS_VIEW_H_
+

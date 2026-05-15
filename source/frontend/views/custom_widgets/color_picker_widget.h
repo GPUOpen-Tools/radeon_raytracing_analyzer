@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2017-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2017-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a color picker widget.
@@ -94,3 +94,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_COLOR_PICKER_WIDGET_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH base class definitions.
@@ -11,7 +11,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "glm/glm/glm.hpp"
+
+#include "amdrdf.h"
 
 #include "bvh/gpu_def.h"
 #include "bvh/metadata_v1.h"
@@ -21,8 +23,6 @@
 #include "bvh/node_types/procedural_node.h"
 #include "bvh/node_types/triangle_node.h"
 #include "bvh/parent_block.h"
-#include "bvh/rtip31/child_info.h"
-#include "bvh/rtip31/internal_node.h"
 #include "bvh/rtip_common/i_acceleration_structure_header.h"
 
 namespace rta
@@ -191,6 +191,11 @@ namespace rta
         /// @return true if successful, false if error.
         virtual bool PostLoad() = 0;
 
+        /// @brief Convert the instance list from using BLAS addresses to using BLAS indices.
+        ///
+        /// @param [in] blas_map A map of (blas_address, blas_index) used to convert instance list.
+        virtual void ConvertBlasAddressesToIndices(const std::unordered_map<GpuVirtualAddress, std::uint64_t>& blas_map);
+
         /// @brief Get the header for this acceleration structure.
         ///
         /// @return The header.
@@ -198,10 +203,11 @@ namespace rta
 
         /// @brief Get the surface area heuristic for a given leaf node.
         ///
-        /// @param [in] node_ptr The leaf node whose SAH is to be found.
+        /// @param [in] node_ptr           The leaf node whose SAH is to be found.
+        /// @param [in] global_child_index The leaf's global child index.
         ///
         /// @return The surface area heuristic.
-        virtual float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_ptr) const = 0;
+        virtual float GetLeafNodeSurfaceAreaHeuristic(uint32_t node_ptr, uint32_t global_child_index) const = 0;
 
         /// @brief Load the common BVH data from the file.
         ///
@@ -235,38 +241,6 @@ namespace rta
         ///
         /// @return The surface area heuristic.
         float GetInteriorNodeSurfaceAreaHeuristic(uint32_t node_id) const;
-
-        /// @brief Compute the bounding box for a root node.
-        ///
-        /// These don't have bounding boxes so the bounding box is calculated from the bounding boxes of the child nodes.
-        ///
-        /// @param [in] box_node The root node.
-        ///
-        /// @return The bounding box.
-        dxr::amd::AxisAlignedBoundingBox ComputeRootNodeBoundingBox(const dxr::amd::Float32BoxNode* box_node) const;
-
-        /// @brief Compute the bounding box for a root node.
-        ///
-        /// These don't have bounding boxes so the bounding box is calculated from the bounding boxes of the child nodes.
-        ///
-        /// @param [in] box_node The root node.
-        ///
-        /// @return The bounding box.
-        dxr::amd::AxisAlignedBoundingBox ComputeRootNodeBoundingBox(const QuantizedBVH8BoxNode* box_node) const;
-
-        /// @brief Get the node's oriented bounding box index.
-        ///
-        /// @param [in] node_id The node to get the orientation of.
-        ///
-        /// @return The bounding box.
-        uint32_t GetNodeObbIndex(uint32_t node_id) const;
-
-        /// @brief Get the orientation of node's OBB.
-        ///
-        /// @param [in] node_id The node to get the orientation of.
-        ///
-        /// @return The bounding box.
-        glm::mat3 GetNodeBoundingVolumeOrientation(uint32_t node_id) const;
 
         /// @brief Checks whether the BVH has been compacted.
         ///
@@ -322,11 +296,12 @@ namespace rta
 
         /// @brief Get the parent node of the node passed in.
         ///
-        /// @param [in] node_id The node whose parent is to be found.
+        /// @param [in] node_id            The node whose parent is to be found.
+        /// @param [in] global_child_index The global index.
         ///
         /// @return The parent node. If the node passed in is the root node, the
         /// parent node will be an invalid node.
-        virtual uint32_t GetParentNode(uint32_t node_id) const = 0;
+        virtual uint32_t GetParentNode(uint32_t node_id, uint32_t global_child_index) const = 0;
 
         /// @brief Traverse nodes to associate children with parents where necessary.
         virtual void PreprocessParents();
@@ -368,7 +343,15 @@ namespace rta
         ///
         /// @return The number of inactive instances.
         virtual uint64_t GetInactiveInstanceCountImpl() const;
+
+        /// @brief Get the surface area heuristic for a given index.
+        ///
+        /// @param [in] index  The interior node index.
+        ///
+        /// @return The surface area heuristic.
+        float GetBoxSurfaceAreaHeuristic(uint32_t index) const;
     };
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_IBVH_H_
+

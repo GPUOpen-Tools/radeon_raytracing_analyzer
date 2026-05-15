@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the binary file definitions class.
@@ -10,7 +10,7 @@
 #include <iostream>
 #include <vector>
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 namespace rta
 {
@@ -104,3 +104,4 @@ namespace rta
         return RayTracingBinaryVersion(0, 0);
     }
 }  // namespace rta
+

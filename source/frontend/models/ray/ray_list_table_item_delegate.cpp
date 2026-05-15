@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Implementation of RRA's blas list table item delegate.
@@ -17,3 +17,4 @@ RayListTableItemDelegate::RayListTableItemDelegate(QObject* parent)
 RayListTableItemDelegate::~RayListTableItemDelegate()
 {
 }
+

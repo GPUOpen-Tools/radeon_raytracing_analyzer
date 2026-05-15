@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Implementation of RRA's instance flags table item delegate.
@@ -49,3 +49,4 @@ bool FlagTableItemDelegate::CheckboxAt(int row, int column) const
         return false;
     }
 }
+

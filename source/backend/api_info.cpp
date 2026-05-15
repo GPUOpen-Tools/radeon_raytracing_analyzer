@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the API Info class.
@@ -7,7 +7,7 @@
 
 #include "api_info.h"
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 static_assert(sizeof(rra::ApiInfo::TraceChunkApiInfo) == 8, "ApiInfo does not have the expected byte size.");
 
@@ -125,3 +125,4 @@ namespace rra
     }
 
 }  // namespace rra
+

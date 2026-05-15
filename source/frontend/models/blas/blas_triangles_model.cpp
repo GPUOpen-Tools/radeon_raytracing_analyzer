@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS triangles model.
@@ -18,7 +18,6 @@
 
 #include "public/rra_blas.h"
 #include "public/rra_bvh.h"
-#include "public/rra_print.h"
 #include "public/rra_rtip_info.h"
 #include "public/rra_tlas.h"
 
@@ -70,8 +69,9 @@ namespace rra
             uint32_t root_node = UINT32_MAX;
             RRA_BUBBLE_ON_ERROR(RraBvhGetRootNodePtr(&root_node));
 
-            std::deque<uint32_t> traversal_stack;
-            traversal_stack.push_back(root_node);
+            std::deque<std::pair<uint32_t, uint32_t>> traversal_stack;  // Pairs of (node_addr, child_index).
+            traversal_stack.push_back({root_node, 0});
+            uint32_t global_child_index = UINT32_MAX;
 
             // Create a temporary stack vector once and reuse it.
             StackVector<VertexPosition, 4> verts{};
@@ -79,115 +79,115 @@ namespace rra
             // Traverse the tree and add all triangle nodes to the table.
             while (!traversal_stack.empty())
             {
-                BlasTrianglesStatistics stats     = {};
-                auto                    node_data = traversal_stack.front();
-                traversal_stack.pop_front();
+                BlasTrianglesStatistics stats       = {};
+                auto&                   pair        = traversal_stack.back();
+                uint32_t                node_addr   = pair.first;
+                uint32_t                child_index = pair.second;
+                traversal_stack.pop_back();
+                ++global_child_index;
 
-                // For each item on the stack, add the children if valid.
-                // Sort node types. Loop once for box (interior) nodes, then once for leaf nodes.
-                uint32_t child_node_count = 0;
-                RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(blas_index, node_data, &child_node_count));
-                std::vector<uint32_t> child_nodes(child_node_count);
-                RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(blas_index, node_data, child_nodes.data()));
-
-                for (uint32_t child_index = 0; child_index < child_node_count; child_index++)
+                bool is_internal_node = RraBlasHasChildren(blas_index, node_addr);
+                if (is_internal_node)
                 {
-                    uint32_t child_node = child_nodes[child_index];
+                    uint32_t child_node_count = 0;
+                    RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(blas_index, node_addr, &child_node_count));
+                    std::vector<uint32_t> child_nodes(child_node_count);
+                    RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(blas_index, node_addr, child_nodes.data()));
 
-                    bool is_internal_node = false;
+                    for (uint32_t i = 0; i < child_node_count; i++)
                     {
-                        is_internal_node = RraBvhIsBoxNode(child_node);
+                        uint32_t child_node = child_nodes[i];
+                        traversal_stack.push_back({child_node, i});
+                    }
+                }
+                else if (RraBlasIsTriangleNode(blas_index, node_addr))
+                {
+                    stats.global_node_id = ((uint64_t)global_child_index << 32) | node_addr;
+
+                    // Gather triangle data.
+                    if (RraBlasGetNodeBaseAddress(blas_index, node_addr, &stats.triangle_address) != kRraOk)
+                    {
+                        continue;
+                    }
+                    if (RraBvhGetNodeOffset(node_addr, &stats.triangle_offset) != kRraOk)
+                    {
+                        continue;
+                    }
+                    if (RraBlasGetGeometryIndex(blas_index, node_addr, child_index, global_child_index, &stats.geometry_index) != kRraOk)
+                    {
+                        continue;
+                    }
+                    uint32_t geometry_flags{};
+                    if (RraBlasGetGeometryFlags(blas_index, stats.geometry_index, &geometry_flags) != kRraOk)
+                    {
+                        continue;
+                    }
+                    stats.geometry_flag_opaque               = geometry_flags & VK_GEOMETRY_OPAQUE_BIT_KHR;
+                    stats.geometry_flag_no_duplicate_any_hit = geometry_flags & VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+
+                    if (RraBlasGetIsInactive(blas_index, node_addr, child_index, global_child_index, &stats.is_inactive) != kRraOk)
+                    {
+                        continue;
+                    }
+                    if (RraBlasGetSurfaceArea(blas_index, node_addr, child_index, global_child_index, &stats.triangle_surface_area) != kRraOk)
+                    {
+                        continue;
+                    }
+                    if (RraBlasGetSurfaceAreaHeuristic(blas_index, node_addr, global_child_index, &stats.sah) != kRraOk)
+                    {
+                        continue;
                     }
 
-                    if (is_internal_node)
+                    uint32_t triangle_count{};
+                    if (RraBlasGetNodeTriangleCount(blas_index, node_addr, child_index, global_child_index, &triangle_count) != kRraOk)
                     {
-                        // Add box nodes to the list of nodes to process.
-                        traversal_stack.push_back(child_node);
+                        continue;
                     }
-                    else if (RraBlasIsTriangleNode(blas_index, child_node))
+                    stats.triangle_count = triangle_count;
+
+                    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() <= rta::RayTracingIpLevel::RtIp2_0)
                     {
-                        stats.node_id = child_node;
+                        uint32_t vertex_count{};
+                        RraBlasGetNodeVertexCount(blas_index, node_addr, child_index, global_child_index, &vertex_count);
+                        verts.Resize(vertex_count);
 
-                        // Gather triangle data.
-                        if (RraBlasGetNodeBaseAddress(blas_index, child_node, &stats.triangle_address) != kRraOk)
+                        if (RraBlasGetNodeVertices(blas_index, node_addr, child_index, global_child_index, verts.Data()) != kRraOk)
                         {
                             continue;
                         }
-                        if (RraBvhGetNodeOffset(child_node, &stats.triangle_offset) != kRraOk)
-                        {
-                            continue;
-                        }
-                        if (RraBlasGetGeometryIndex(blas_index, child_node, &stats.geometry_index) != kRraOk)
-                        {
-                            continue;
-                        }
-                        uint32_t geometry_flags{};
-                        if (RraBlasGetGeometryFlags(blas_index, stats.geometry_index, &geometry_flags) != kRraOk)
-                        {
-                            continue;
-                        }
-                        stats.geometry_flag_opaque               = geometry_flags & VK_GEOMETRY_OPAQUE_BIT_KHR;
-                        stats.geometry_flag_no_duplicate_any_hit = geometry_flags & VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
-                        if (RraBlasGetIsInactive(blas_index, child_node, &stats.is_inactive) != kRraOk)
-                        {
-                            continue;
-                        }
-                        if (RraBlasGetSurfaceArea(blas_index, child_node, &stats.triangle_surface_area) != kRraOk)
-                        {
-                            continue;
-                        }
-                        if (RraBlasGetSurfaceAreaHeuristic(blas_index, child_node, &stats.sah) != kRraOk)
-                        {
-                            continue;
-                        }
+                        stats.vertex_0 = rra::renderer::float3(verts[0].x, verts[0].y, verts[0].z);
+                        stats.vertex_1 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
+                        stats.vertex_2 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
+                    }
 
-                        uint32_t triangle_count{};
-                        if (RraBlasGetNodeTriangleCount(blas_index, child_node, &triangle_count) != kRraOk)
-                        {
-                            continue;
-                        }
-                        stats.triangle_count = triangle_count;
+                    if (RraBlasGetPrimitiveIndex(blas_index, node_addr, child_index, global_child_index, 0, &stats.primitive_index) != kRraOk)
+                    {
+                        continue;
+                    }
 
-                        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() <= rta::RayTracingIpLevel::RtIp2_0)
-                        {
-                            uint32_t vertex_count{};
-                            RraBlasGetNodeVertexCount(blas_index, child_node, &vertex_count);
-                            verts.Resize(vertex_count);
+                    // Add this node and 0th index to the table.
+                    stats_list.push_back(stats);
 
-                            if (RraBlasGetNodeVertices(blas_index, child_node, verts.Data()) != kRraOk)
+                    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() <= rta::RayTracingIpLevel::RtIp2_0)
+                    {
+                        // Get the second triangle if node has more than one.
+                        if (triangle_count == 2)
+                        {
+                            if (RraBlasGetPrimitiveIndex(blas_index, node_addr, child_index, global_child_index, 1, &stats.primitive_index) != kRraOk)
                             {
                                 continue;
                             }
-                            stats.vertex_0 = rra::renderer::float3(verts[0].x, verts[0].y, verts[0].z);
-                            stats.vertex_1 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
-                            stats.vertex_2 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
-                        }
 
-                        if (RraBlasGetPrimitiveIndex(blas_index, child_node, 0, &stats.primitive_index) != kRraOk)
-                        {
-                            continue;
-                        }
-
-                        // Add this node and 0th index to the table.
-                        stats_list.push_back(stats);
-
-                        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() <= rta::RayTracingIpLevel::RtIp2_0)
-                        {
-                            // Get the second triangle if node has more than one.
-                            if (triangle_count == 2)
-                            {
-                                if (RraBlasGetPrimitiveIndex(blas_index, child_node, 1, &stats.primitive_index) != kRraOk)
-                                {
-                                    continue;
-                                }
-
-                                stats.vertex_0 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
-                                stats.vertex_1 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
-                                stats.vertex_2 = rra::renderer::float3(verts[3].x, verts[3].y, verts[3].z);
-                                stats_list.push_back(stats);
-                            }
+                            stats.vertex_0 = rra::renderer::float3(verts[1].x, verts[1].y, verts[1].z);
+                            stats.vertex_1 = rra::renderer::float3(verts[2].x, verts[2].y, verts[2].z);
+                            stats.vertex_2 = rra::renderer::float3(verts[3].x, verts[3].y, verts[3].z);
+                            stats_list.push_back(stats);
                         }
                     }
+                }
+                else
+                {
+                    RRA_ASSERT(false);  // Unrecognized node type.
                 }
             }
         }
@@ -215,17 +215,13 @@ namespace rra
         table_model_->Initialize(table_view);
     }
 
-    QModelIndex BlasTrianglesModel::FindTriangleIndex(uint32_t triangle_node_id, uint64_t blas_index) const
+    QModelIndex BlasTrianglesModel::FindTriangleIndex(uint64_t triangle_node_id, uint64_t blas_index) const
     {
-        uint64_t node_address = 0;
-        if (RraBlasGetNodeBaseAddress(blas_index, triangle_node_id, &node_address) == kRraOk)
-        {
-            return proxy_model_->FindModelIndex(node_address, kBlasTrianglesColumnNodeAddress);
-        }
-        return QModelIndex();
+        RRA_UNUSED(blas_index);
+        return proxy_model_->FindModelIndex(triangle_node_id, kBlasTrianglesColumnPadding);
     }
 
-    uint32_t BlasTrianglesModel::GetNodeId(int row) const
+    uint64_t BlasTrianglesModel::GetNodeId(int row) const
     {
         // The padding column is used to return the node id since it's not used for anything else.
         return proxy_model_->GetData(row, rra::kBlasTrianglesColumnPadding);
@@ -243,3 +239,4 @@ namespace rra
     }
 
 }  // namespace rra
+

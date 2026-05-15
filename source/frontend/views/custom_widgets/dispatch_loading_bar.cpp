@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the dispatch loading bar.
@@ -79,3 +79,4 @@ void DispatchLoadingBar::paintEvent(QPaintEvent* paint_event)
     painter.setPen(palette().windowText().color());
     painter.drawText(rect, Qt::AlignHCenter | Qt::AlignVCenter, text);
 }
+

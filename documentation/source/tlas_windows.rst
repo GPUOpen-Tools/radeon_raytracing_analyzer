@@ -105,6 +105,14 @@ selected instances are visible.
 An orientation gizmo is overlaid on the scene, in the top-right corner. This shows how
 the coordinate axes are aligned with the scene.
 
+Mousing over geometry in the scene will show a tooltip indicating the numeric value of that triangle,
+geometry, or BLAS corresponding to the currently selected color mode. Tooltips are also available
+in the traversal rendering mode and will show the traversal counter of the pixel the mouse is over.
+Note that in traversal rendering mode the tooltip will always be present, even if it isn't directly
+over geometry.
+
+.. image:: media/tlas/tooltip_1.png
+
 A context menu can be displayed by right-clicking on the scene.
 
 .. image:: media/tlas/context_menu_1.png
@@ -169,13 +177,27 @@ rendering mode can be seen at the beginning of this section.
 The **Traversal counter mode** is a display mode that counts ray intersections with elements from within
 the acceleration structure. Examples would include triangle/box hit and test counts.
 See the section below for more information on the traversal counters.
+
+Below this is a filter slider, which will use the currently selected coloring mode as the filter parameter.
+For example, if an SAH coloring mode is selected, the filter values will lie between 0.0 and 1.0. The 2 ends
+of the slider can be moved and any geometry not inside the filter window will not be shown. This is useful in
+this case to show triangles with very low SAH values. Simply move the right slider handle to the left and the
+highest SAH values outside of the slider range will be discarded.
+
+Note that the filter is only shown for numeric coloring modes, such as SAH values and tree depths; the slider
+is hidden for mask and boolean parameters, and the filter slider is only available in the geometry rendering
+mode.
   
-In geometry rendering mode, there are 4 checkboxes that control what is visible in the scene:
+In geometry rendering mode, there are 5 checkboxes that control what is visible in the scene:
 
 * **Show geometry** will only draw the scene if enabled. Switching it off will allow the bounding
   volumes or wireframes to be seen more easily.
 
-* **Show bounding volumes** will display the bounding volumes overlaid as wireframes if enabled.
+* **Show internal bounding volumes** will display the internal node bounding volumes overlaid as wireframes
+  if enabled.
+
+* **Show leaf bounding volumes** will display the leaf node bounding volumes overlaid as wireframes if enabled.
+  These are the bounding volumes around each instance node in the TLAS.
 
 * **Show instance transform** will display the instance bounding volume overlaid as a dashed wireframe.
   This bounding volume has the instance transform applied, so is effectively in BLAS-space.
@@ -225,8 +247,8 @@ In traversal counter rendering mode, the controls are slightly different, as see
   work of clicking on the wand icon to update the color range of the scene. NOTE: When **Continuous update**
   is enabled, the wand icon is disabled.
 
-The **Show bounding volumes**, **Show instance transform**, and **Show wireframe** checkboxes are also
-present, along with the culling mode combo box.
+The **Show internal bounding volumes**, **Show leaf bounding volumes**, **Show instance transform**, and
+**Show wireframe** checkboxes are also present, along with the culling mode combo box.
 
 In traversal counter rendering mode, the selected culling mode plays the part of the frontface/backface triangle
 culling flags passed to the trace ray call in the shader. This means that the culling behavior can be overridden
@@ -491,7 +513,7 @@ be toggled from the settings, described in the **Settings** section.
 
 Above the 'Show/hide controls' text button in the top-right of the view is an icon that allows
 the UI to be reset to its default settings. There is a similar button on the BLAS Viewer pane.
-Hoving over the button will display a help tooltip. Clicking on the button will reset the
+Hovering over the button will display a help tooltip. Clicking on the button will reset the
 persistent UI controls back to their defaults. Since some elements are shared between the BLAS
 and TLAS viewers, both the TLAS and BLAS controls will be reset, regardless of which reset
 button was pressed.

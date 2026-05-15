@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header of the dispatch loading bar.
@@ -82,3 +82,4 @@ private:
 };
 
 #endif  // QTCOMMON_CUSTOM_WIDGETS_COMPLETION_BAR_WIDGET_H_
+

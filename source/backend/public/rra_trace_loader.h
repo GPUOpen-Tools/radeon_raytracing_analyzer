@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the trace loader interface.
@@ -58,3 +58,4 @@ char* RraTraceLoaderGetDriverOverridesString();
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_TRACE_LOADER_H_
+

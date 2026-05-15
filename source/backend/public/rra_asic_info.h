@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public ASIC info interface.
@@ -109,3 +109,4 @@ RraErrorCode RraAsicInfoGetRaytracingVersion(uint16_t* out_version_major, uint16
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_ASIC_INFO_H_
+

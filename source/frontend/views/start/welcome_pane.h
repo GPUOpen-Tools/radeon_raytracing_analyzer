@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the welcome pane.
@@ -108,3 +108,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_START_WELCOME_PANE_H_
+

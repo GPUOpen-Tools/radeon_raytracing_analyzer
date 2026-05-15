@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public TLAS interface.
@@ -72,6 +72,15 @@ RraErrorCode RraTlasGetChildNodeCount(uint64_t tlas_index, uint32_t parent_node,
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetChildNodes(uint64_t tlas_index, uint32_t parent_node, uint32_t* out_child_nodes);
 
+/// @brief Get the child node indices for a given node.
+///
+/// @param [in]  tlas_index        The index of the TLAS to use.
+/// @param [in]  parent_node       The parent to get count for.
+/// @param [out] out_child_indices A pointer to a list allocated with the count of child nodes.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetChildIndices(uint64_t tlas_index, uint32_t parent_node, uint32_t* out_child_indices);
+
 /// @brief Get the child node pointer for a given node.
 ///
 /// @param [in]  tlas_index     The index of the TLAS to use.
@@ -89,21 +98,23 @@ RraErrorCode RraTlasGetChildNodePtr(uint64_t tlas_index, uint32_t parent_node, u
 ///
 /// This is encoded in the node data passed in.
 ///
-/// @param [in]  node_id     The encoded node pointer.
+/// @param [in]  tlas_index     The index of the TLAS to use.
+/// @param [in]  node_id    The encoded node pointer.
 /// @param [in]  out_name    The text string of the node name.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeName(uint32_t node_id, const char** out_name);
+RraErrorCode RraTlasGetNodeName(uint64_t tlas_index, uint32_t node_id, const char** out_name);
 
 /// @brief Get tooltip of the node provided.
 ///
 /// This is encoded in the node data passed in.
 ///
-/// @param [in]  node_id     The encoded node pointer.
+/// @param [in]  tlas_index     The index of the TLAS to use.
+/// @param [in]  node_id    The encoded node pointer.
 /// @param [in]  out_tooltip The tooltip text string of the node name. Can be empty string if no tooltip required.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetNodeNameToolTip(uint32_t node_id, const char** out_tooltip);
+RraErrorCode RraTlasGetNodeNameToolTip(uint64_t tlas_index, uint32_t node_id, const char** out_tooltip);
 
 /// @brief Get the base address for a given node.
 ///
@@ -248,10 +259,11 @@ RraErrorCode RraTlasGetUniqueInstanceIndexFromInstanceNode(uint64_t tlas_index, 
 ///
 /// @param [in]  tlas_index          The index of the TLAS to use.
 /// @param [in]  node_ptr            The node pointer whose bounding volume is to be found.
+/// @param [in]  child_index         The node's child index.
 /// @param [out] out_extents         The bounding volume extents structure.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraTlasGetBoundingVolumeExtents(uint64_t tlas_index, uint32_t node_ptr, struct BoundingVolumeExtents* out_extents);
+RraErrorCode RraTlasGetBoundingVolumeExtents(uint64_t tlas_index, uint32_t node_ptr, uint32_t child_index, struct BoundingVolumeExtents* out_extents);
 
 /// @brief Get the surface area heuristic of a given node.
 ///
@@ -414,7 +426,48 @@ RraErrorCode RraTlasGetNodeBoundingVolumeOrientation(uint64_t tlas_index, uint32
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetMetaDataSize(uint64_t tlas_index, uint32_t* out_byte_size);
 
+/// @brief Check if the given node is a box node.
+///
+/// @param [in] tlas_index  The index of the TLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node is a box node, and false if it's not.
+bool RraTlasIsBoxNode(uint64_t tlas_index, uint32_t node_id);
+
+/// @brief Check if the given node is a box 16 node.
+///
+/// @param [in] tlas_index  The index of the TLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node is a box 16 node, and false if it's not.
+bool RraTlasIsBox16Node(uint64_t tlas_index, uint32_t node_id);
+
+/// @brief Check if the given node is a box 32 node.
+///
+/// @param [in] tlas_index  The index of the TLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node is a box 32 node, and false if it's not.
+bool RraTlasIsBox32Node(uint64_t tlas_index, uint32_t node_id);
+
+/// @brief Check if the given node has child nodes.
+///
+/// @param [in] tlas_index  The index of the TLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node has children, and false if not.
+bool RraTlasHasChildren(uint64_t tlas_index, uint32_t node_id);
+
+/// @brief Check if the given node is an instance node.
+///
+/// @param [in] tlas_index  The TLAS index.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node is an instance node, and false if it's not.
+bool RraTlasIsInstanceNode(uint64_t tlas_index, uint32_t node_id);
+
 #ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_TLAS_H_
+

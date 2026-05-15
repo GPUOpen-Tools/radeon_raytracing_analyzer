@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for flag, bitfield and bit magic helpers that do not depend
@@ -140,3 +140,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_FLAGS_UTIL_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific bottom level acceleration structure
@@ -84,4 +84,72 @@ namespace rta
         return is_procedural_;
     }
 
+    double EncodedBottomLevelBvh::GetLength(const dxr::amd::Float3& vert_1, const dxr::amd::Float3& vert_2) const
+    {
+        double delta_x   = vert_1.x - vert_2.x;
+        double x_squared = delta_x * delta_x;
+        double delta_y   = vert_1.y - vert_2.y;
+        double y_squared = delta_y * delta_y;
+        double delta_z   = vert_1.z - vert_2.z;
+        double z_squared = delta_z * delta_z;
+
+        return sqrt(x_squared + y_squared + z_squared);
+    }
+
+    float EncodedBottomLevelBvh::TriangleSurfaceArea(const dxr::amd::Float3& v0, const dxr::amd::Float3& v1, const dxr::amd::Float3& v2) const
+    {
+        // Calculate the surface area of the triangle using Heron's Formula.
+        double length_a       = GetLength(v1, v0);
+        double length_b       = GetLength(v2, v1);
+        double length_c       = GetLength(v0, v2);
+        double semi_perimeter = (length_a + length_b + length_c) * 0.5f;
+        double area_squared   = semi_perimeter * (semi_perimeter - length_a) * (semi_perimeter - length_b) * (semi_perimeter - length_c);
+        if (area_squared < 0.0)
+        {
+            return 0.0;
+        }
+        return static_cast<float>(sqrt(area_squared));
+    }
+
+    float EncodedBottomLevelBvh::GetTriangleSurfaceArea(const dxr::amd::TriangleNode& triangle_node, uint32_t tri_count) const
+    {
+        auto  tri0         = triangle_node.GetTriangle(dxr::amd::NodeType::kAmdNodeTriangle0);
+        float surface_area = TriangleSurfaceArea(tri0.v0, tri0.v1, tri0.v2);
+
+        if (tri_count == 2)
+        {
+            auto tri1 = triangle_node.GetTriangle(dxr::amd::NodeType::kAmdNodeTriangle1);
+            surface_area += TriangleSurfaceArea(tri1.v0, tri1.v1, tri1.v2);
+        }
+
+        return surface_area;
+    }
+
+    RraErrorCode EncodedBottomLevelBvh::GetTriangleNodeCount(uint32_t* out_triangle_count) const
+    {
+        if (header_->GetGeometryType() == rta::BottomLevelBvhGeometryType::kTriangle)
+        {
+            *out_triangle_count = header_->GetLeafNodeCount();
+        }
+        else
+        {
+            *out_triangle_count = 0;
+        }
+        return kRraOk;
+    }
+
+    RraErrorCode EncodedBottomLevelBvh::GetProceduralNodeCount(uint32_t* out_procedural_Node_count) const
+    {
+        if (header_->GetGeometryType() == rta::BottomLevelBvhGeometryType::kAABB)
+        {
+            *out_procedural_Node_count = header_->GetLeafNodeCount();
+        }
+        else
+        {
+            *out_procedural_Node_count = 0;
+        }
+        return kRraOk;
+    }
+
 }  // namespace rta
+

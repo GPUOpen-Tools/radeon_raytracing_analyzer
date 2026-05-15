@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a proxy filter used to filter a tree view.
@@ -47,3 +47,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_TREE_VIEW_PROXY_MODEL_H_
+

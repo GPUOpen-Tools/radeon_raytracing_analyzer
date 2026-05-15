@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for a QTableHeader class which prevents header selection
@@ -46,3 +46,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_CUSTOM_WIDGETS_INDEX_HEADER_VIEW_H_
+

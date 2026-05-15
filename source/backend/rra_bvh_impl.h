@@ -1,10 +1,11 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the BVH interface.
 ///
-/// Contains all functions common to all acceleration structures.
+/// Contains functions common to all acceleration structures that are not
+/// exposed to the public interface.
 //=============================================================================
 
 #ifndef RRA_BACKEND_RRA_BVH_IMPL_H_
@@ -17,14 +18,37 @@
 #include "bvh/dxr_definitions.h"
 #include "bvh/ibvh.h"
 
-/// @brief Check if the given node is a triangle node.
+/// @brief Check if the given node is a box node.
 ///
-/// @param [in]  bvh           The acceleration structure containing the node of interest.
-/// @param [in]  node_ptr      The encoded node pointer.
-/// @param [out] out_is_tri    Output boolean, true if it's a triangle node.
+/// @param [in] bvh       The acceleration structure containing the node of interest.
+/// @param [in] node_id   The encoded node pointer.
 ///
-/// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBvhIsTriangleNode(rta::IBvh* bvh, uint32_t node_id, bool* out_is_tri);
+/// @return True if the given node is a box node, and false if it's not.
+bool RraBvhIsBoxNode(const rta::IBvh* bvh, uint32_t node_id);
+
+/// @brief Check if the given node is a box 16 node.
+///
+/// @param [in] bvh       The acceleration structure containing the node of interest.
+/// @param [in] node_id   The encoded node pointer.
+///
+/// @return True if the given node is a box 16 node, and false if it's not.
+bool RraBvhIsBox16Node(const rta::IBvh* bvh, uint32_t node_id);
+
+/// @brief Check if the given node is a box 32 node.
+///
+/// @param [in] bvh       The acceleration structure containing the node of interest.
+/// @param [in] node_id   The encoded node pointer.
+///
+/// @return True if the given node is a box 32 node, and false if it's not.
+bool RraBvhIsBox32Node(const rta::IBvh* bvh, uint32_t node_id);
+
+/// @brief Check if the given node has child nodes.
+///
+/// @param [in] bvh       The acceleration structure containing the node of interest.
+/// @param [in] node_id   The encoded node pointer.
+///
+/// @return True if the given node has children, and false if not.
+bool RraBvhHasChildren(const rta::IBvh* bvh, uint32_t node_id);
 
 /// @brief Get the child node count for a given node.
 ///
@@ -44,6 +68,15 @@ RraErrorCode RraBvhGetChildNodeCount(const rta::IBvh* bvh, uint32_t parent_node,
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBvhGetChildNodes(const rta::IBvh* bvh, uint32_t parent_node, uint32_t* out_child_nodes);
 
+/// @brief Get the child indices for a given node.
+///
+/// @param [in]  bvh                The acceleration structure containing the node of interest.
+/// @param [in]  parent_node        The parent node to get child nodes for.
+/// @param [out] out_child_indices   A pointer to a list allocated with the count of child nodes.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBvhGetChildIndices(const rta::IBvh* bvh, uint32_t parent_node, uint32_t* out_child_indices);
+
 /// @brief Get the child node pointer for a given node.
 ///
 /// @param [in]  bvh            The acceleration structure containing the node of interest.
@@ -59,12 +92,18 @@ RraErrorCode RraBvhGetChildNodePtr(const rta::IBvh* bvh, uint32_t parent_node, u
 
 /// @brief Get the bounding volume for a provided node.
 ///
-/// @param [in]  bvh              The acceleration structure containing the node of interest.
-/// @param [in]  node_id          The node of interest.
-/// @param [out] out_bounding_box The calculated bounding volume.
+/// @param [in]  bvh                The acceleration structure containing the node of interest.
+/// @param [in]  node_id            The node of interest.
+/// @param [in]  child_index        The node's child index.
+/// @param [in]  global_child_index The node's global child index.
+/// @param [out] out_bounding_box   The calculated bounding volume.
 ///
 /// @return RraOk if successful, an error code if not.
-RraErrorCode RraBvhGetNodeBoundingVolume(const rta::IBvh* bvh, uint32_t node_id, dxr::amd::AxisAlignedBoundingBox& out_bounding_box);
+RraErrorCode RraBvhGetNodeBoundingVolume(const rta::IBvh*                  bvh,
+                                         uint32_t                          node_id,
+                                         uint32_t                          child_index,
+                                         uint32_t                          global_child_index,
+                                         dxr::amd::AxisAlignedBoundingBox& out_bounding_box);
 
 /// @brief Get the index of the node's OBB matrix.
 ///
@@ -86,20 +125,39 @@ RraErrorCode RraBvhGetNodeBoundingVolumeOrientation(const rta::IBvh* bvh, uint32
 
 /// @brief Get the surface area of the bounding volume for a provided node.
 ///
-/// @param [in]  bvh              The acceleration structure containing the node of interest.
-/// @param [in]  node_id          The node of interest.
-/// @param [out] out_surface_area The calculated surface area.
+/// @param [in]  bvh                The acceleration structure containing the node of interest.
+/// @param [in]  node_id            The node of interest.
+/// @param [in]  child_index        The node's child index.
+/// @param [in]  global_child_index The node's global child index.
+/// @param [out] out_surface_area   The calculated surface area.
 ///
 /// @return RraOk if successful, an error code if not.
-RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const rta::IBvh* bvh, uint32_t node_id, float* out_surface_area);
+RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const rta::IBvh* bvh,
+                                                uint32_t         node_id,
+                                                uint32_t         child_index,
+                                                uint32_t         global_child_index,
+                                                float*           out_surface_area);
 
 /// @brief Get the surface area heuristic for a provided node.
 ///
-/// @param [in]  bvh              The acceleration structure containing the node of interest.
-/// @param [in]  node_ptr         The node of interest.
-/// @param [out] out_surface_area The calculated surface area heuristic.
+/// @param [in]  bvh                The acceleration structure containing the node of interest.
+/// @param [in]  node_ptr           The node of interest.
+/// @param [in]  global_child_index The node of interest's global child ID.
+/// @param [out] out_surface_area   The calculated surface area heuristic.
 ///
 /// @return RraOk if successful, an error code if not.
-RraErrorCode RraBvhGetSurfaceAreaHeuristic(const rta::IBvh* bvh, uint32_t node_id, float* out_surface_area_heuristic);
+RraErrorCode RraBvhGetSurfaceAreaHeuristic(const rta::IBvh* bvh, uint32_t node_id, uint32_t global_child_index, float* out_surface_area_heuristic);
+
+/// @brief Get a reference to the array of child nodes for a particular node.
+///
+/// Assumes the parent node is an internal/box node.
+///
+/// @param [in] bvh            The acceleration structure to use.
+/// @param [in] root_id        The parent node.
+/// @param [in] node_offset    The offset into the interior nodes array.
+///
+/// @return A reference to the array of child nodes.
+std::array<uint32_t, MAX_CHILD_NODES> RraBvhGetChildNodeArray(const rta::IBvh* bvh, uint32_t root_id, uint32_t node_offset);
 
 #endif  // RRA_BACKEND_RRA_BVH_IMPL_H_
+

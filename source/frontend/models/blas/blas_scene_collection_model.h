@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the BLAS scene model.
@@ -56,15 +56,17 @@ namespace rra
 
         /// @brief Cast a ray into the scene for a closest hit.
         ///
-        /// @param [in] bvh_index The index of the BVH used to cast the ray into.
-        /// @param [in] origin The origin of the ray.
-        /// @param [in] direction The direction of the ray.
+        /// @param [in] bvh_index                The index of the BVH used to cast the ray into.
+        /// @param [in] origin                   The origin of the ray.
+        /// @param [in] direction                The direction of the ray.
+        /// @param [in] blas_root_nodes          All root nodes of BLASes.
         /// @param [out] scene_model_closest_hit The closest hit.
         ///
         /// @returns Will return 'kRraOk' when successful, or an error code in case of failure.
         virtual RraErrorCode CastClosestHitRayOnBvh(uint64_t                        bvh_index,
                                                     const glm::vec3&                origin,
                                                     const glm::vec3&                direction,
+                                                    std::vector<rra::SceneNode*>*   blas_root_nodes,
                                                     SceneCollectionModelClosestHit& scene_model_closest_hit) const override;
 
         /// @brief Reset any values in the model to their default state.
@@ -93,10 +95,11 @@ namespace rra
         /// @param node_id The node to query.
         ///
         /// @return true if node should be skipped, false otherwise.
-        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint32_t node_child_id) const override;
+        virtual bool ShouldSkipBLASNodeInTraversal(uint64_t blas_index, uint64_t node_child_id) const override;
 
         std::map<uint64_t, Scene*> blas_scenes_;  ///< A map of all loaded BLAS scenes.
     };
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_SCENE_MODEL_H_
+

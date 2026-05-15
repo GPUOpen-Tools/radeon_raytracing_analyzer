@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public BLAS interface.
@@ -62,6 +62,15 @@ RraErrorCode RraBlasGetChildNodeCount(uint64_t blas_index, uint32_t parent_node,
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetChildNodes(uint64_t blas_index, uint32_t parent_node, uint32_t* out_child_nodes);
 
+/// @brief Get the child node indices for a given node.
+///
+/// @param [in]  blas_index        The index of the BLAS to use.
+/// @param [in]  parent_node       The parent to get count for.
+/// @param [out] out_child_indices A pointer to a list allocated with the count of child nodes.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetChildIndices(uint64_t blas_index, uint32_t parent_node, uint32_t* out_child_indices);
+
 /// @brief Get the total number of box nodes for the blas_index given.
 ///
 /// The total number of box nodes is the number of internal nodes.
@@ -114,13 +123,53 @@ RraErrorCode RraBlasGetAvgTreeDepth(uint64_t blas_index, uint32_t* out_tree_dept
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetChildNodePtr(uint64_t blas_index, uint32_t parent_node, uint32_t child_index, uint32_t* out_node_ptr);
 
+/// @brief Check if the given node is a box node.
+///
+/// @param [in] blas_index  The index of the BLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node is a box node, and false if it's not.
+bool RraBlasIsBoxNode(uint64_t blas_index, uint32_t node_id);
+
+/// @brief Check if the given node is a box 16 node.
+///
+/// @param [in] blas_index  The index of the BLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node is a box 16 node, and false if it's not.
+bool RraBlasIsBox16Node(uint64_t blas_index, uint32_t node_id);
+
+/// @brief Check if the given node is a box 32 node.
+///
+/// @param [in] blas_index  The index of the BLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node is a box 32 node, and false if it's not.
+bool RraBlasIsBox32Node(uint64_t blas_index, uint32_t node_id);
+
+/// @brief Check if the given node has child nodes.
+///
+/// @param [in] blas_index  The index of the BLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node has children, and false if not.
+bool RraBlasHasChildren(uint64_t blas_index, uint32_t node_id);
+
 /// @brief Check if the given node is a triangle node.
 ///
-/// @param [in] blas_index     The index of the BLAS to use.
-/// @param [in] node_ptr       The encoded node pointer.
+/// @param [in] blas_index  The index of the BLAS to use.
+/// @param [in] node_id     The encoded node pointer.
 ///
 /// @return True if the given node is a triangle node, and false if it's not.
-bool RraBlasIsTriangleNode(uint64_t blas_index, uint32_t node_ptr);
+bool RraBlasIsTriangleNode(uint64_t blas_index, uint32_t node_id);
+
+/// @brief Check if the given node is a procedural node.
+///
+/// @param [in] blas_index  The index of the BLAS to use.
+/// @param [in] node_id     The encoded node pointer.
+///
+/// @return True if the given node is a procedural node, and false if it's not.
+bool RraBlasIsProceduralNode(uint64_t blas_index, uint32_t node_id);
 
 /// @brief Get the base address for a given node.
 ///
@@ -144,57 +193,77 @@ RraErrorCode RraBlasGetNodeParent(uint64_t blas_index, uint32_t node_id, uint32_
 ///
 /// @param [in]  blas_index          The index of the BLAS to use.
 /// @param [in]  node_id             The node pointer whose bounding volume is to be found.
+/// @param [in]  child_index         The node's child index.
+/// @param [in]  global_child_index  The node's global child index.
 /// @param [out] out_surface_area    A pointer to receive the surface area.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetSurfaceArea(uint64_t blas_index, uint32_t node_id, float* out_surface_area);
+RraErrorCode RraBlasGetSurfaceArea(uint64_t blas_index, uint32_t node_id, uint32_t child_index, uint32_t global_child_index, float* out_surface_area);
 
 /// @brief Get the surface area heuristic of a given node.
 ///
 /// @param [in]  blas_index                 The index of the BLAS to use.
 /// @param [in]  node_id                    The node pointer whose SAH is to be found.
+/// @param [in]  global_child_index         The global child ID.
 /// @param [out] out_surface_area_heuristic A pointer to receive the surface area heuristic.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_id, float* out_surface_area_heuristic);
+RraErrorCode RraBlasGetSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_id, uint32_t global_child_index, float* out_surface_area_heuristic);
 
 /// @brief Get the minimum surface area heuristic of a given node's triangle leaf nodes.
 ///
 /// @param [in]  blas_index                     The index of the BLAS to use.
 /// @param [in]  node_id                        The node pointer whose SAH is to be found.
+/// @param [in]  global_child_index             The global child index.
 /// @param [in]  tri_only                       All non-triangle nodes will be ignored if this is true.
 /// @param [out] out_min_surface_area_heuristic A pointer to receive the minimum surface area heuristic.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetMinimumSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_id, bool tri_only, float* out_min_surface_area_heuristic);
+RraErrorCode RraBlasGetMinimumSurfaceAreaHeuristic(uint64_t blas_index,
+                                                   uint32_t node_id,
+                                                   uint32_t global_child_index,
+                                                   bool     tri_only,
+                                                   float*   out_min_surface_area_heuristic);
 
 /// @brief Get the average surface area heuristic of a given node's triangle leaf nodes.
 ///
 /// @param [in]  blas_index                     The index of the BLAS to use.
 /// @param [in]  node_id                        The node pointer whose SAH is to be found.
+/// @param [in]  global_node_id                 The global node ID.
 /// @param [in]  tri_only                       All non-triangle nodes will be ignored if this is true.
 /// @param [out] out_avg_surface_area_heuristic A pointer to receive the average surface area heuristic.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetAverageSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_id, bool tri_only, float* out_avg_surface_area_heuristic);
+RraErrorCode RraBlasGetAverageSurfaceAreaHeuristic(uint64_t blas_index,
+                                                   uint32_t node_id,
+                                                   uint32_t global_node_id,
+                                                   bool     tri_only,
+                                                   float*   out_avg_surface_area_heuristic);
 
 /// @brief Get the surface area heuristic of a given triangle node.
 ///
 /// @param [in]  blas_index                     The index of the BLAS to use.
 /// @param [in]  node_id                        The node pointer whose SAH is to be found.
+/// @param [in]  global_child_id                The global child index.
 /// @param [out] out_avg_surface_area_heuristic A pointer to receive the average surface area heuristic.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetTriangleSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_id, float* out_tri_surface_area_heuristic);
+RraErrorCode RraBlasGetTriangleSurfaceAreaHeuristic(uint64_t blas_index, uint32_t node_id, uint32_t global_child_id, float* out_tri_surface_area_heuristic);
 
 /// @brief Get the bounding volume extents of a given node.
 ///
 /// @param [in]  blas_index          The index of the BLAS to use.
 /// @param [in]  node_id             The node whose bounding volume is to be found.
+/// @param [in]  child_index         The node's child index.
+/// @param [in] global_child_index   The node's global child index.
 /// @param [out] out_extents         The bounding volume extents structure.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetBoundingVolumeExtents(uint64_t blas_index, uint32_t node_id, struct BoundingVolumeExtents* out_extents);
+RraErrorCode RraBlasGetBoundingVolumeExtents(uint64_t                      blas_index,
+                                             uint32_t                      node_id,
+                                             uint32_t                      child_index,
+                                             uint32_t                      global_child_index,
+                                             struct BoundingVolumeExtents* out_extents);
 
 /// @brief Retrieve the number of unique triangles in a BLAS mesh.
 ///
@@ -256,10 +325,12 @@ RraErrorCode RraBlasGetNodeNameToolTip(uint64_t blas_index, uint32_t node_ptr, c
 ///
 /// @param [in]  blas_index         The index of the BLAS to use.
 /// @param [in]  node_id            The node whose geometry index is to be found.
+/// @param [in]  child_index		The node's child index from its parent.
+/// @param [in] global_child_index  The node's global child index.
 /// @param [out] out_geometry_index	The geometry index for the triangle node.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_id, uint32_t* out_geometry_index);
+RraErrorCode RraBlasGetGeometryIndex(uint64_t blas_index, uint32_t node_id, uint32_t child_index, uint32_t global_child_index, uint32_t* out_geometry_index);
 
 /// @brief Retrieve the number of primitives in a geometry.
 ///
@@ -282,11 +353,18 @@ RraErrorCode RraBlasGetGeometryCount(uint64_t blas_index, uint32_t* out_geometry
 ///
 /// @param [in]  blas_index				The index of the BLAS to use.
 /// @param [in]  node_id				The node whose primitive index is to be found.
+/// @param [in]  child_index			The node's child index from its parent.
+/// @param [in]  global_child_index     The node's global child index.
 /// @param [in]  local_primitive_index	The local primitive index within the given node.
 /// @param [out] out_primitive_index	The primitive index for the triangle node.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetPrimitiveIndex(uint64_t blas_index, uint32_t node_id, uint32_t local_primitive_index, uint32_t* out_primitive_index);
+RraErrorCode RraBlasGetPrimitiveIndex(uint64_t  blas_index,
+                                      uint32_t  node_id,
+                                      uint32_t  child_index,
+                                      uint32_t  global_child_index,
+                                      uint32_t  local_primitive_index,
+                                      uint32_t* out_primitive_index);
 
 /// @brief Retrieve the geometry flags for a triangle node.
 ///
@@ -301,46 +379,68 @@ RraErrorCode RraBlasGetGeometryFlags(uint64_t blas_index, uint32_t geometry_inde
 ///
 /// @param [in]  blas_index         The index of the BLAS to use.
 /// @param [in]  node_id            The node whose geometry flags are to be retrieved.
+/// @param [in]  child_index		The node's child index from its parent.
+/// @param [in]  global_child_index The node's global child index.
 /// @param [out] out_is_inactive	Whether the node is inactive.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetIsInactive(uint64_t blas_index, uint32_t node_id, bool* out_is_inactive);
+RraErrorCode RraBlasGetIsInactive(uint64_t blas_index, uint32_t node_id, uint32_t child_index, uint32_t global_child_index, bool* out_is_inactive);
 
 /// @brief Retrieve the number of triangles on a given node.
 ///
 /// @param [in]  blas_index         The index of the BLAS to use.
 /// @param [in]  node_id            The node ID to retrieve the triangles from.
+/// @param [in]  child_index		The node's child index from its parent.
+/// @param [in]  global_child_index The node's global child index.
 /// @param [out] out_triangle_count The number of triangles in the BLAS.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetNodeTriangleCount(uint64_t blas_index, uint32_t node_id, uint32_t* out_triangle_count);
+RraErrorCode RraBlasGetNodeTriangleCount(uint64_t  blas_index,
+                                         uint32_t  node_id,
+                                         uint32_t  child_index,
+                                         uint32_t  global_child_index,
+                                         uint32_t* out_triangle_count);
 
 /// @brief Retrieve the triangles stored in the given node id.
 ///
-/// @param [in]  blas_index     The index of the BLAS to use.
-/// @param [in]  node_id        The node ID to retrieve the triangles for.
-/// @param [out] out_triangles  A preallocated pointer to dump the triangles into.
+/// @param [in]  blas_index         The index of the BLAS to use.
+/// @param [in]  node_id            The node ID to retrieve the triangles for.
+/// @param [in]  child_index	    The node's child index from its parent.
+/// @param [in]  global_child_index The node's global child index.
+/// @param [out] out_triangles      A preallocated pointer to dump the triangles into.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetNodeTriangles(uint64_t blas_index, uint32_t node_id, struct TriangleVertices* out_triangles);
+RraErrorCode RraBlasGetNodeTriangles(uint64_t                 blas_index,
+                                     uint32_t                 node_id,
+                                     uint32_t                 child_index,
+                                     uint32_t                 global_child_index,
+                                     struct TriangleVertices* out_triangles);
 
 /// @brief Retrieve the vertices stored in the given node id.
 ///
-/// @param [in]  blas_index  The index of the BLAS to use.
-/// @param [in]  node_id     The node ID to retrieve the vertices for.
-/// @param [out] out_count   The number of vertices in the triangle node.
+/// @param [in]  blas_index         The index of the BLAS to use.
+/// @param [in]  node_id            The node ID to retrieve the vertices for.
+/// @param [in]  child_index        The node's child index from its parent.
+/// @param [in]  global_child_index The node's global child index.
+/// @param [out] out_count          The number of vertices in the triangle node.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetNodeVertexCount(uint64_t blas_index, uint32_t node_id, uint32_t* out_count);
+RraErrorCode RraBlasGetNodeVertexCount(uint64_t blas_index, uint32_t node_id, uint32_t child_index, uint32_t global_child_index, uint32_t* out_count);
 
 /// @brief Retrieve the vertices stored in the given node id.
 ///
-/// @param [in]  blas_index    The index of the BLAS to use.
-/// @param [in]  node_id       The node ID to retrieve the vertices for.
-/// @param [out] out_triangles A preallocated pointer to dump the vertices into.
+/// @param [in]  blas_index         The index of the BLAS to use.
+/// @param [in]  node_id            The node ID to retrieve the vertices for.
+/// @param [in]  child_index        The node's child index from its parent.
+/// @param [in]  global_child_index The node's global child index.
+/// @param [out] out_triangles      A preallocated pointer to dump the vertices into.
 ///
 /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
-RraErrorCode RraBlasGetNodeVertices(uint64_t blas_index, uint32_t node_id, struct VertexPosition* out_vertices);
+RraErrorCode RraBlasGetNodeVertices(uint64_t               blas_index,
+                                    uint32_t               node_id,
+                                    uint32_t               child_index,
+                                    uint32_t               global_child_index,
+                                    struct VertexPosition* out_vertices);
 
 /// @brief Retrieve the build flags used to build this BLAS.
 ///
@@ -388,3 +488,4 @@ RraErrorCode RraBlasGetMetaDataSize(uint64_t blas_index, uint32_t* out_byte_size
 }
 #endif  // #ifdef __cplusplus
 #endif  // RRA_BACKEND_PUBLIC_RRA_BLAS_H_
+

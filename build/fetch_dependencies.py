@@ -1,15 +1,12 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief Script to fetch all external git and/or downloadable dependencies
 ##        needed to build the project.
 ##
-##   fetch_dependencies.py (--internal)
-##
-## If --internal is specified, then any additional dependencies required for internal builds will also
-## be checked out.
+##   fetch_dependencies.py
 ##
 ## Each git repo will be updated to the commit specified in the "gitMapping" table.
 ##=============================================================================

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BVH interface.
@@ -18,6 +18,7 @@
 #include "bvh/dxr_definitions.h"
 #include "bvh/gpu_def.h"
 #include "bvh/ibvh.h"
+#include "bvh/inode.h"
 #include "bvh/rtip31/child_info.h"
 #include "bvh/rtip31/internal_node.h"
 #include "bvh/rtip31/primitive_node.h"
@@ -27,8 +28,19 @@
 // External reference to the global dataset.
 extern RraDataSet data_set_;
 
-RraErrorCode RraBvhGetNodeBoundingVolume(const rta::IBvh* bvh, uint32_t node_id, dxr::amd::AxisAlignedBoundingBox& out_bounding_box)
+RraErrorCode RraBvhGetNodeBoundingVolume(const rta::IBvh*                  bvh,
+                                         uint32_t                          node_id,
+                                         uint32_t                          child_index,
+                                         uint32_t                          global_child_index,
+                                         dxr::amd::AxisAlignedBoundingBox& out_bounding_box)
 {
+    RRA_UNUSED(child_index);
+    RRA_ASSERT(data_set_.bvh_bundle.get() != nullptr);
+    if (data_set_.bvh_bundle.get() == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+    const auto& bvh_node       = data_set_.bvh_bundle->GetBvhNode();
     const auto& interior_nodes = bvh->GetInteriorNodesData();
 
     dxr::amd::NodePointer* node_ptr = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
@@ -48,24 +60,14 @@ RraErrorCode RraBvhGetNodeBoundingVolume(const rta::IBvh* bvh, uint32_t node_id,
         return kRraErrorInvalidPointer;
     }
 
-    dxr::amd::NodePointer parent_node = bvh->GetParentNode(node_ptr->GetRawPointer());
+    dxr::amd::NodePointer parent_node = bvh->GetParentNode(node_ptr->GetRawPointer(), global_child_index);
 
     // Need to get the node parent, and look for the node in the children of the parent, since that's where
     // the bounding box info is stored.
     if (parent_node.IsInvalid())
     {
-        if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
-        {
-            const auto node  = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[0]);
-            out_bounding_box = bvh->ComputeRootNodeBoundingBox(node);
-            return kRraOk;
-        }
-        else
-        {
-            const auto node  = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[0]);
-            out_bounding_box = bvh->ComputeRootNodeBoundingBox(node);
-            return kRraOk;
-        }
+        out_bounding_box = bvh_node.ComputeRootNodeBoundingBox(bvh);
+        return kRraOk;
     }
     else
     {
@@ -139,13 +141,27 @@ RraErrorCode RraBvhGetNodeBoundingVolume(const rta::IBvh* bvh, uint32_t node_id,
 
 RraErrorCode RraBvhGetNodeObbIndex(const rta::IBvh* bvh, uint32_t node_id, uint32_t* obb_index)
 {
-    *obb_index = bvh->GetNodeObbIndex(node_id);
+    RRA_ASSERT(data_set_.bvh_bundle.get() != nullptr);
+    if (data_set_.bvh_bundle.get() == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+
+    *obb_index = bvh_node.GetNodeObbIndex(node_id, bvh);
     return kRraOk;
 }
 
 RraErrorCode RraBvhGetNodeBoundingVolumeOrientation(const rta::IBvh* bvh, uint32_t node_id, glm::mat3& out_rotation)
 {
-    out_rotation = bvh->GetNodeBoundingVolumeOrientation(node_id);
+    RRA_ASSERT(data_set_.bvh_bundle.get() != nullptr);
+    if (data_set_.bvh_bundle.get() == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+
+    out_rotation = bvh_node.GetNodeBoundingVolumeOrientation(node_id, bvh);
     return kRraOk;
 }
 
@@ -179,45 +195,54 @@ RraErrorCode RraBvhGetNodeOffset(uint32_t node_id, uint64_t* out_offset)
     return kRraOk;
 }
 
-bool RraBvhIsBoxNode(uint32_t node_ptr)
+bool RraBvhIsBoxNode(const rta::IBvh* bvh, uint32_t node_id)
 {
-    dxr::amd::NodeType node_type = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr)->GetType();
-
-    return node_type == dxr::amd::NodeType::kAmdNodeBoxFp32 || node_type == dxr::amd::NodeType::kAmdNodeBoxFp16;
+    if (data_set_.bvh_bundle.get() == nullptr)
+    {
+        return false;
+    }
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+    return bvh_node.GetIsBoxNode(node_id, bvh);
 }
 
-bool RraBvhIsBox16Node(uint32_t node_ptr)
+bool RraBvhIsBox16Node(const rta::IBvh* bvh, uint32_t node_id)
 {
-    dxr::amd::NodeType node_type = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr)->GetType();
-
-    return node_type == dxr::amd::NodeType::kAmdNodeBoxFp16;
+    if (data_set_.bvh_bundle.get() == nullptr)
+    {
+        return false;
+    }
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+    return bvh_node.GetIsBox16Node(node_id, bvh);
 }
 
-bool RraBvhIsBox32Node(uint32_t node_ptr)
+bool RraBvhIsBox32Node(const rta::IBvh* bvh, uint32_t node_id)
 {
-    dxr::amd::NodeType node_type = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr)->GetType();
-
-    return node_type == dxr::amd::NodeType::kAmdNodeBoxFp32;
+    if (data_set_.bvh_bundle.get() == nullptr)
+    {
+        return false;
+    }
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+    return bvh_node.GetIsBox32Node(node_id, bvh);
 }
 
-bool RraBvhIsInstanceNode(uint32_t node_ptr)
+bool RraBvhHasChildren(const rta::IBvh* bvh, uint32_t node_id)
 {
-    dxr::amd::NodeType node_type = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr)->GetType();
-
-    return node_type == dxr::amd::NodeType::kAmdNodeInstance;
+    if (data_set_.bvh_bundle.get() == nullptr)
+    {
+        return false;
+    }
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+    return bvh_node.GetHasChildren(node_id, bvh);
 }
 
-bool RraBvhIsProceduralNode(uint32_t node_ptr)
-{
-    dxr::amd::NodeType node_type = reinterpret_cast<dxr::amd::NodePointer*>(&node_ptr)->GetType();
-
-    return node_type == dxr::amd::NodeType::kAmdNodeProcedural;
-}
-
-RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const rta::IBvh* bvh, uint32_t node_id, float* out_surface_area)
+RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const rta::IBvh* bvh,
+                                                uint32_t         node_id,
+                                                uint32_t         child_index,
+                                                uint32_t         global_child_index,
+                                                float*           out_surface_area)
 {
     dxr::amd::AxisAlignedBoundingBox bounding_box;
-    RraErrorCode                     result = RraBvhGetNodeBoundingVolume(bvh, node_id, bounding_box);
+    RraErrorCode                     result = RraBvhGetNodeBoundingVolume(bvh, node_id, child_index, global_child_index, bounding_box);
     if (result != kRraOk)
     {
         return result;
@@ -235,7 +260,7 @@ RraErrorCode RraBvhGetBoundingVolumeSurfaceArea(const rta::IBvh* bvh, uint32_t n
     return RraBvhGetBoundingVolumeSurfaceArea(&bounding_volume_extents, out_surface_area);
 }
 
-RraErrorCode RraBvhGetSurfaceAreaHeuristic(const rta::IBvh* bvh, uint32_t node_id, float* out_surface_area_heuristic)
+RraErrorCode RraBvhGetSurfaceAreaHeuristic(const rta::IBvh* bvh, uint32_t node_id, uint32_t global_child_index, float* out_surface_area_heuristic)
 {
     auto blas = dynamic_cast<const rta::EncodedBottomLevelBvh*>(bvh);
     if (blas && blas->IsProcedural())
@@ -264,40 +289,19 @@ RraErrorCode RraBvhGetSurfaceAreaHeuristic(const rta::IBvh* bvh, uint32_t node_i
     }
     else
     {
-        *out_surface_area_heuristic = bvh->GetLeafNodeSurfaceAreaHeuristic(node_id);
+        *out_surface_area_heuristic = bvh->GetLeafNodeSurfaceAreaHeuristic(node_id, global_child_index);
         return kRraOk;
     }
 }
 
-RraErrorCode RraBvhIsTriangleNode(rta::IBvh* bvh, uint32_t node_id, bool* out_is_triangle)
+std::array<uint32_t, MAX_CHILD_NODES> RraBvhGetChildNodeArray(const rta::IBvh* bvh, uint32_t root_id, uint32_t node_offset)
 {
-    rta::EncodedBottomLevelBvh* blas = dynamic_cast<rta::EncodedBottomLevelBvh*>(bvh);
-    if (blas && blas->IsProcedural())
+    if (data_set_.bvh_bundle.get() == nullptr)
     {
-        *out_is_triangle = false;
-        return kRraOk;
+        return {};
     }
-
-    dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
-
-    switch ((uint32_t)node->GetType())
-    {
-    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle0:
-    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle1:
-    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle2:
-    case (uint32_t)dxr::amd::NodeType::kAmdNodeTriangle3:
-    case NODE_TYPE_TRIANGLE_4:
-    case NODE_TYPE_TRIANGLE_5:
-    case NODE_TYPE_TRIANGLE_6:
-    case NODE_TYPE_TRIANGLE_7:
-        // Return true if the node is any of the valid triangle node types.
-        *out_is_triangle = true;
-        break;
-    default:
-        // If it's not a triangle node type, don't do anything.
-        break;
-    }
-    return kRraOk;
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+    return bvh_node.GetChildNodeArray(bvh, root_id, node_offset);
 }
 
 RraErrorCode RraBvhGetChildNodeCount(const rta::IBvh* bvh, uint32_t parent_node, uint32_t* out_child_count)
@@ -391,6 +395,62 @@ RraErrorCode RraBvhGetChildNodes(const rta::IBvh* bvh, uint32_t parent_node, uin
                 {
                     *out_child_nodes = children[i].GetRawPointer();
                     out_child_nodes++;
+                }
+            }
+        }
+    }
+    return kRraOk;
+}
+
+RraErrorCode RraBvhGetChildIndices(const rta::IBvh* bvh, uint32_t parent_node, uint32_t* out_child_indices)
+{
+    const auto& interior_nodes = bvh->GetInteriorNodesData();
+
+    const auto&            header_offsets = bvh->GetHeader().GetBufferOffsets();
+    dxr::amd::NodePointer* node_ptr       = reinterpret_cast<dxr::amd::NodePointer*>(&parent_node);
+    auto                   byte_offset    = node_ptr->GetByteOffset() - header_offsets.interior_nodes;
+
+    if (interior_nodes.size() > byte_offset)
+    {
+        if (node_ptr->IsFp32BoxNode())
+        {
+            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+            {
+                const auto node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[byte_offset]);
+                uint32_t   child_nodes[8]{};
+                node->DecodeChildrenOffsets(child_nodes);
+
+                // DecodeChildrenOffsets writes to all 8 children slots, but out_child_nodes only has allocated number of valid children.
+                for (uint32_t i{0}; i < node->ValidChildCount(); ++i)
+                {
+                    if (!dxr::amd::NodePointer(child_nodes[i]).IsInvalid())
+                    {
+                        out_child_indices[i] = i;
+                    }
+                }
+            }
+            else
+            {
+                const auto node     = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[byte_offset]);
+                const auto children = node->GetChildren();
+                for (size_t i = 0; i < children.size(); i++)
+                {
+                    if (!children[i].IsInvalid())
+                    {
+                        out_child_indices[i] = (uint32_t)i;
+                    }
+                }
+            }
+        }
+        else if (node_ptr->IsFp16BoxNode())
+        {
+            const auto node     = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[byte_offset]);
+            const auto children = node->GetChildren();
+            for (size_t i = 0; i < children.size(); i++)
+            {
+                if (!children[i].IsInvalid())
+                {
+                    out_child_indices[i] = (uint32_t)i;
                 }
             }
         }
@@ -549,11 +609,9 @@ RraErrorCode RraBvhGetTotalTlasSizeInBytes(uint64_t* out_size_in_bytes)
         const auto& top_level_bvhs = data_set_.bvh_bundle->GetTopLevelBvhs();
         for (uint64_t tlas_index = 0; tlas_index < tlas_count; tlas_index++)
         {
-            const rta::IBvh* tlas = dynamic_cast<rta::IBvh*>(&(*top_level_bvhs[tlas_index]));
-            if (tlas != nullptr)
-            {
-                *out_size_in_bytes += tlas->GetHeader().GetFileSize();
-            }
+            const rta::IBvh* tlas = top_level_bvhs[tlas_index].get();
+            RRA_ASSERT(tlas != nullptr);
+            *out_size_in_bytes += tlas->GetHeader().GetFileSize();
         }
     }
     return kRraOk;
@@ -573,11 +631,9 @@ RraErrorCode RraBvhGetTotalBlasSizeInBytes(uint64_t* out_size_in_bytes)
         }
         for (uint64_t blas_index = offset; blas_index < (blas_count + offset); blas_index++)
         {
-            const rta::IBvh* blas = dynamic_cast<rta::IBvh*>(&(*bottom_level_bvhs[blas_index]));
-            if (blas != nullptr)
-            {
-                *out_size_in_bytes += blas->GetHeader().GetFileSize();
-            }
+            const rta::IBvh* blas = bottom_level_bvhs[blas_index].get();
+            RRA_ASSERT(blas != nullptr);
+            *out_size_in_bytes += blas->GetHeader().GetFileSize();
         }
     }
     return kRraOk;
@@ -597,9 +653,12 @@ RraErrorCode RraBvhGetTotalTraceSizeInBytes(uint64_t* out_size_in_bytes)
 
 uint32_t RraBvhGetMaxChildCount()
 {
-    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+    RRA_ASSERT(data_set_.bvh_bundle.get() != nullptr);
+    if (data_set_.bvh_bundle.get() == nullptr)
     {
-        return 8;
+        return 0;
     }
-    return 4;
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+    return bvh_node.GetMaxChildCount();
 }
+

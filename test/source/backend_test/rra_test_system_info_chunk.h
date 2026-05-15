@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test system info header.
@@ -7,6 +7,8 @@
 
 #ifndef RRA_TEST_SYSTEM_INFO_H_
 #define RRA_TEST_SYSTEM_INFO_H_
+
+#include <cstdint>
 
 #include "log.h"
 #include "rra_test_base.h"
@@ -57,3 +59,4 @@ namespace backend_test
 }  // namespace backend_test
 
 #endif  //  RMV_TEST_SYSTEM_INFO_H_
+

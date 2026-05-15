@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for a tlas pane.
@@ -44,3 +44,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_TLAS_PANE_H_
+

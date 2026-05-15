@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific acceleration structure header
@@ -22,3 +22,4 @@ namespace rta
     };
 }  // namespace rta
 #endif  // RRA_BACKEND_BVH_RT_IP_31_ACCELERATION_STRUCTURE_HEADER_H_
+

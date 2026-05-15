@@ -1,5 +1,5 @@
 #######################################################################################################################
-### Copyright (c) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
@@ -15,7 +15,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(AFTER ../backend)
 
-IF (UNIX AND NOT APPLE)
+IF (UNIX)
     set(LINUX TRUE)
 ENDIF ()
 

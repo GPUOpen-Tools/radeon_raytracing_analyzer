@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for a tlas pane.
@@ -80,3 +80,4 @@ void TlasPane::paintEvent(QPaintEvent* event)
     painter.fillRect(rect(), background_color);
     QWidget::paintEvent(event);
 }
+

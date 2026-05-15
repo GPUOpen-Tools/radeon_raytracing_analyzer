@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend catch2 test cases.
@@ -56,3 +56,4 @@ TEST_CASE("TestRayHistory", "RRATest")
     bool result = RRATestCases::Get()->TestRayHistory("Ray history");
     REQUIRE(result == true);
 }
+

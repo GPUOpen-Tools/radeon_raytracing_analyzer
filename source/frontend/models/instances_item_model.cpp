@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the instances item model. Shared between TLAS
@@ -433,3 +433,4 @@ namespace rra
         return num_columns_;
     }
 }  // namespace rra
+

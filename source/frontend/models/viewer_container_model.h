@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the viewer container model class.
@@ -81,6 +81,11 @@ namespace rra
         /// @param scene The scene.
         void SetScene(rra::Scene* scene);
 
+        /// @brief Get the current scene.
+        ///
+        /// @return The scene, or nullptr if not set.
+        rra::Scene* GetScene() const;
+
     private:
         rra::renderer::RenderStateAdapter* render_state_adapter_ = nullptr;  ///< The adapter used to toggle mesh render states.
         rra::Scene*                        scene_                = nullptr;  ///< The current active scene.
@@ -89,3 +94,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_VIEWER_CONTAINER_MODEL_H_
+

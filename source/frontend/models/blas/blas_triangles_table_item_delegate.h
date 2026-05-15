@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Definition of RRA's triangle list table item delegate.
@@ -50,3 +50,4 @@ public:
 };
 
 #endif  // RRA_MODELS_TRIANGLES_TABLE_ITEM_DELEGATE_H_
+

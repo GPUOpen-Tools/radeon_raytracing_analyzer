@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of a widget that implements a custom check box.
@@ -180,3 +180,4 @@ qreal ColoredCheckbox::GetSwitchHeight(const QFontMetricsF& font_metrics) const
 {
     return font_metrics.height() * button_text_ratio_;
 }
+

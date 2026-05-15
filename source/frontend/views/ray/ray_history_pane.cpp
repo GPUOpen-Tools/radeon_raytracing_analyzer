@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Ray history pane.
@@ -103,7 +103,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
     model_->InitializeTableModel(ui_->ray_table_, 0, rra::kRayListColumnCount);
 
     auto header = ui_->ray_table_->horizontalHeader();
-    connect(header, &QHeaderView::sectionClicked, [=]() { ui_->ray_table_->setSortingEnabled(true); });
+    connect(header, &QHeaderView::sectionClicked, [=, this]() { ui_->ray_table_->setSortingEnabled(true); });
 
     QList<int> splitter_sizes = {1, 3};  // This is a ratio not pixel widths.
     ui_->ray_splitter_->setSizes(splitter_sizes);
@@ -137,7 +137,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
     });
 
     ray_history_viewer_.ray_graphics_view_->show();
-    ray_history_viewer_.ray_graphics_view_->SetBoxSelectCallback([=](uint32_t min_x, uint32_t min_y, uint32_t max_x, uint32_t max_y) {
+    ray_history_viewer_.ray_graphics_view_->SetBoxSelectCallback([=, this](uint32_t min_x, uint32_t min_y, uint32_t max_x, uint32_t max_y) {
         ui_->ray_table_->setSortingEnabled(false);
 
         GlobalInvocationID min_id{};
@@ -173,7 +173,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
         model_->GetProxyModel()->invalidate();
     });
 
-    ray_history_viewer_.ray_graphics_view_->SetPixelSelectCallback([=](uint32_t x, uint32_t y, bool double_click) {
+    ray_history_viewer_.ray_graphics_view_->SetPixelSelectCallback([=, this](uint32_t x, uint32_t y, bool double_click) {
         QModelIndex model_index{};
 
         if (GetDispatchDimension(dispatch_id_) == 1)
@@ -213,7 +213,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
         }
     });
 
-    ray_history_viewer_.ray_graphics_view_->SetPixelHoverCallback([=](uint32_t x, uint32_t y, bool in_bounds) {
+    ray_history_viewer_.ray_graphics_view_->SetPixelHoverCallback([=, this](uint32_t x, uint32_t y, bool in_bounds) {
         uint32_t coord_array[3]{};
         coord_array[GetDimensionIndexOf1DDispatch(dispatch_id_)] = Get1DCoordinate(x, y);
         QString coord                                            = "(" + QString::number(x) + ", " + QString::number(y) + ")";
@@ -269,7 +269,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
     connect(ray_history_viewer_.y_wrap_spin_box_, SIGNAL(valueChanged(int)), this, SLOT(ReshapeDimensionChanged(int)));
     connect(ray_history_viewer_.z_wrap_spin_box_, SIGNAL(valueChanged(int)), this, SLOT(ReshapeDimensionChanged(int)));
 
-    connect(&rra::MessageManager::Get(), &rra::MessageManager::DispatchSelected, [=](uint32_t dispatch_id) {
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::DispatchSelected, [=, this](uint32_t dispatch_id) {
         ui_->dispatch_combo_box_->SetSelectedRow(dispatch_id);
     });
 
@@ -277,7 +277,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
     // This is done when clicking the 'Next/Previous Ray' buttons on the Ray Inspector pane.
     // The message is emitted when clicking the button and this function simply selects the next or previous entry in the table
     // (depending on how it is sorted), which will automatically repopulate the Ray Inspector pane.
-    connect(&rra::MessageManager::Get(), &rra::MessageManager::RayStepSelected, [=](int32_t step_size) {
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::RayStepSelected, [this](int32_t step_size) {
         QModelIndex current_index = ui_->ray_table_->currentIndex();
         QModelIndex index         = model_->GetProxyModel()->index(current_index.row() + step_size, current_index.column(), QModelIndex());
         if (index.isValid())
@@ -310,7 +310,7 @@ RayHistoryPane::RayHistoryPane(QWidget* parent)
         ray_history_viewer_.zoom_to_selection_button_, &QPushButton::pressed, ray_history_viewer_.ray_graphics_view_, &RayHistoryGraphicsView::ZoomToSelection);
     connect(ray_history_viewer_.ray_graphics_view_, &RayHistoryGraphicsView::UpdateZoomButtons, this, &RayHistoryPane::UpdateZoomButtons);
 
-    connect(&timer_, &QTimer::timeout, this, &RayHistoryPane::TimerUpdate);
+    connect(&timer_, &QTimer::timeout, this, &RayHistoryPane::UpdateTimer);
 
     // Hide the shader binding table for now until correct data is parsed from the backend.
     ui_->shader_binding_table_container_->hide();
@@ -357,8 +357,8 @@ void RayHistoryPane::OnTraceOpen()
 
 void RayHistoryPane::OnTraceClose()
 {
-    show_event_occured_ = false;
-    dispatch_id_        = 0;
+    show_event_occurred_ = false;
+    dispatch_id_         = 0;
 }
 
 void RayHistoryPane::CreateAndRenderImage()
@@ -450,7 +450,7 @@ void RayHistoryPane::ClearRaySelection()
     ui_->ray_table_->selectionModel()->clear();
 }
 
-void RayHistoryPane::TimerUpdate()
+void RayHistoryPane::UpdateTimer()
 {
     uint32_t dispatch_count = 0;
     RraRayGetDispatchCount(&dispatch_count);
@@ -597,7 +597,7 @@ void RayHistoryPane::SetDispatchId(uint64_t dispatch_id)
         ui_->user_marker_stack_->hide();
     }
 
-    if (!show_event_occured_)
+    if (!show_event_occurred_)
     {
         return;
     }
@@ -788,7 +788,7 @@ void RayHistoryPane::SetColorMode()
         ray_history_viewer_.heatmap_combo_box_->show();
     }
 
-    if (show_event_occured_)
+    if (show_event_occurred_)
     {
         UpdateSliderRange();
         QImage heatmap_image{RenderRayHistoryImage()};
@@ -802,7 +802,7 @@ void RayHistoryPane::SetSlicePlane()
     model_->SetSlicePlane((rra::renderer::SlicePlane)row);
     ray_history_viewer_.ray_graphics_view_->HideSelectedPixelIcon();
 
-    if (show_event_occured_)
+    if (show_event_occurred_)
     {
         UpdateSliderRange();
         QImage heatmap_image{RenderRayHistoryImage()};
@@ -814,7 +814,7 @@ void RayHistoryPane::SetSlicePlane()
 
 void RayHistoryPane::SetTraversalCounterRange(int min_value, int max_value)
 {
-    if (show_event_occured_)
+    if (show_event_occurred_)
     {
         ray_history_viewer_.rh_traversal_min_value_->setText(QString::number(min_value));
         ray_history_viewer_.rh_traversal_max_value_->setText(QString::number(max_value));
@@ -825,7 +825,7 @@ void RayHistoryPane::SetTraversalCounterRange(int min_value, int max_value)
 
 void RayHistoryPane::SetCurrentRayIndex(int ray_index)
 {
-    if (show_event_occured_)
+    if (show_event_occurred_)
     {
         ray_history_viewer_.rh_traversal_ray_index_value_->setText(QString::number(ray_index));
         QImage heatmap_image{RenderRayHistoryImage()};
@@ -842,7 +842,7 @@ void RayHistoryPane::DispatchSliceChanged(int slice_index)
 
 void RayHistoryPane::ReshapeDimensionChanged(int)
 {
-    if (show_event_occured_)
+    if (show_event_occurred_)
     {
         uint32_t           w             = (uint32_t)ray_history_viewer_.x_wrap_spin_box_->value();
         uint32_t           h             = (uint32_t)ray_history_viewer_.y_wrap_spin_box_->value();
@@ -909,7 +909,7 @@ void RayHistoryPane::resizeEvent(QResizeEvent* event)
 
 void RayHistoryPane::showEvent(QShowEvent* event)
 {
-    if (!show_event_occured_)
+    if (!show_event_occurred_)
     {
         // The reshape spin box needs to start with the correct dimensions since SetDispatchId() will save its current state and
         // load the new state. If we don't set it here, it will be saved with reshape dimensions (1, 1, 1).
@@ -918,10 +918,10 @@ void RayHistoryPane::showEvent(QShowEvent* event)
             UpdateReshapedDimensions(dispatch_id_);
         }
 
-        show_event_occured_ = true;
+        show_event_occurred_ = true;
+        SetDispatchId(dispatch_id_);
     }
 
-    SetDispatchId(dispatch_id_);
     SetColorMode();
     CreateGrayscaleImage();
 
@@ -943,7 +943,7 @@ void RayHistoryPane::SetHeatmapMode()
     int row = ray_history_viewer_.heatmap_combo_box_->CurrentRow();
     model_->SetHeatmapData(heatmap_generators_[row].generator_function());
 
-    if (show_event_occured_)
+    if (show_event_occurred_)
     {
         QImage heatmap_image{RenderRayHistoryImage()};
         ray_history_viewer_.ray_graphics_view_->SetHeatmapImage(heatmap_image);
@@ -954,3 +954,4 @@ void RayHistoryPane::UpdateZoomButtons(bool zoom_in, bool zoom_out, bool zoom_se
 {
     zoom_icon_manager_->SetButtonStates(zoom_in, zoom_out, zoom_selection, reset);
 }
+

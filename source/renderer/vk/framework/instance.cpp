@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan instance wrapper object.
@@ -95,10 +95,10 @@ namespace rra
             instance_info.enabledExtensionCount   = static_cast<uint32_t>(instance_extension_names.size());
             instance_info.ppEnabledExtensionNames = instance_extension_names.data();
 
-            RraPrint("Instance extension names:");
+            RraPrint(kLogLevelInfo, "Instance extension names:");
             for (auto instance_extension_name : instance_extension_names)
             {
-                RraPrint("\t%s", instance_extension_name);
+                RraPrint(kLogLevelInfo, "\t%s", instance_extension_name);
             }
 
             VkResult result = vkCreateInstance(&instance_info, NULL, &instance);
@@ -120,3 +120,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

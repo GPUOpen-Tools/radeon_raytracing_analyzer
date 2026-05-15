@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure tree-view model.
@@ -8,6 +8,7 @@
 #include "models/acceleration_structure_tree_view_model.h"
 
 #include <deque>
+#include <tuple>
 
 #include "public/rra_assert.h"
 #include "public/rra_blas.h"
@@ -59,27 +60,31 @@ namespace rra
         item_buffer_ = new AccelerationStructureTreeViewItem[item_buffer_size_];
 
         // Allocate the Treeview root node.
-        root_item_ = AllocateMemory(UINT32_MAX, nullptr);
+        root_item_ = AllocateMemory(UINT32_MAX, UINT32_MAX, nullptr);
 
         // Get the root node of the acceleration structure from the backend and add it.
         uint32_t root_node = UINT32_MAX;
         RraBvhGetRootNodePtr(&root_node);
+        uint32_t global_child_index = UINT32_MAX;
 
-        std::deque<std::pair<uint32_t, AccelerationStructureTreeViewItem*>> traversal_stack;
-        traversal_stack.push_back(std::make_pair(root_node, root_item_));
+        std::deque<std::tuple<uint32_t, uint32_t, AccelerationStructureTreeViewItem*>> traversal_stack;  // Tuples of (node_id, child_index, item).
+        traversal_stack.push_back(std::make_tuple(root_node, 0, root_item_));
 
-        // Traverse the tree and enter stuff into the Treeview.
+        // Traverse the tree and enter nodes into the Treeview.
+        // NOTE: Tree traversal is different to before (using back rather than front).
+        // This is currently required so that the global_child_index is set up correctly.
         while (!traversal_stack.empty())
         {
-            auto front       = traversal_stack.front();
-            auto node_data   = front.first;
-            auto parent_item = front.second;
-            traversal_stack.pop_front();
+            auto     tuple            = traversal_stack.back();
+            uint32_t node_id          = std::get<0>(tuple);
+            uint32_t node_child_index = std::get<1>(tuple);
+            auto     parent_item      = std::get<2>(tuple);
+            traversal_stack.pop_back();
+            ++global_child_index;
 
-            AccelerationStructureTreeViewItem* item = AllocateMemory(node_data, parent_item);
+            AccelerationStructureTreeViewItem* item = AllocateMemory(node_id, node_child_index, parent_item);
             parent_item->AppendChild(item);
-
-            node_data_to_item_[node_data] = item;
+            node_data_to_item_[node_id] = item;
 
             uint32_t max_child_count = RraBvhGetMaxChildCount();
             // For each item on the stack, add the children if valid.
@@ -87,24 +92,9 @@ namespace rra
             for (uint32_t child_index = 0; child_index < max_child_count; child_index++)
             {
                 uint32_t child_node = UINT32_MAX;
-                if (get_child(index, node_data, child_index, &child_node) == kRraOk)
+                if (get_child(index, node_id, child_index, &child_node) == kRraOk)
                 {
-                    if (IsInternalNode(child_node, index))
-                    {
-                        traversal_stack.push_back(std::make_pair(child_node, item));
-                    }
-                }
-            }
-
-            for (uint32_t child_index = 0; child_index < max_child_count; child_index++)
-            {
-                uint32_t child_node = UINT32_MAX;
-                if (get_child(index, node_data, child_index, &child_node) == kRraOk)
-                {
-                    if (!IsInternalNode(child_node, index))
-                    {
-                        traversal_stack.push_back(std::make_pair(child_node, item));
-                    }
+                    traversal_stack.push_back(std::make_tuple(child_node, child_index, item));
                 }
             }
         }
@@ -113,18 +103,14 @@ namespace rra
         return true;
     }
 
-    bool AccelerationStructureTreeViewModel::IsInternalNode(uint32_t node_id, uint32_t bvh_index)
-    {
-        RRA_UNUSED(bvh_index);
-        return RraBvhIsBoxNode(node_id);
-    }
-
-    AccelerationStructureTreeViewItem* AccelerationStructureTreeViewModel::AllocateMemory(uint32_t node_data, AccelerationStructureTreeViewItem* parent)
+    AccelerationStructureTreeViewItem* AccelerationStructureTreeViewModel::AllocateMemory(uint64_t                           node_data,
+                                                                                          uint32_t                           child_index,
+                                                                                          AccelerationStructureTreeViewItem* parent)
     {
         RRA_ASSERT(buffer_item_index_ < item_buffer_size_);
         AccelerationStructureTreeViewItem* item = GetItemAtIndex(buffer_item_index_);
         RRA_ASSERT(item != nullptr);
-        item->Initialize(node_data, parent);
+        item->Initialize(node_data, child_index, parent);
         buffer_item_index_++;
         return item;
     }
@@ -319,7 +305,7 @@ namespace rra
         return result;
     }
 
-    QModelIndex AccelerationStructureTreeViewModel::GetModelIndexForNode(uint32_t node_child_id)
+    QModelIndex AccelerationStructureTreeViewModel::GetModelIndexForNode(uint64_t node_child_id)
     {
         QModelIndex result;
 
@@ -339,7 +325,7 @@ namespace rra
         return result;
     }
 
-    QModelIndex AccelerationStructureTreeViewModel::GetModelIndexForNodeAndTriangle(uint32_t node_child_id, uint32_t triangle_index)
+    QModelIndex AccelerationStructureTreeViewModel::GetModelIndexForNodeAndTriangle(uint64_t node_child_id, uint32_t triangle_index)
     {
         QModelIndex result;
 
@@ -387,3 +373,4 @@ namespace rra
     }
 
 }  // namespace rra
+

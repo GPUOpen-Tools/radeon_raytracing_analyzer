@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH bundle definition.
@@ -19,6 +19,7 @@
 
 #include "bvh/bvh_index_reference_map.h"
 #include "bvh/ibvh.h"
+#include "bvh/inode.h"
 
 namespace rta
 {
@@ -42,6 +43,7 @@ namespace rta
         /// @param [in] bottom_level_bvhs                The bottom level bvh structures.
         explicit BvhBundle(std::vector<std::unique_ptr<IBvh>>&&                 top_level_bvhs,
                            std::vector<std::unique_ptr<IBvh>>&&                 bottom_level_bvhs,
+                           std::unique_ptr<INode>&&                             bvh_node,
                            bool                                                 empty_placeholder,
                            uint64_t                                             missing_blas_count,
                            uint64_t                                             inactive_instance_count,
@@ -73,6 +75,10 @@ namespace rta
         /// @return The bottom level BVH structures.
         const std::vector<std::unique_ptr<IBvh>>& GetBottomLevelBvhs() const;
 
+        /// @brief Get the BVH node object.
+        ///
+        /// @return The BVH node object.
+        const INode& GetBvhNode() const;
         /// @brief Get the number of BLASes in the trace.
         ///
         /// This includes empty BLASes but not missing ones.
@@ -115,11 +121,12 @@ namespace rta
         /// @param address The address of the blas.
         ///
         /// @return The index of the blas.
-        std::optional<uint64_t> GetBlasIndexFromVirtualAddress(GpuVirtualAddress address);
+        std::optional<uint64_t> GetBlasIndexFromVirtualAddress(GpuVirtualAddress address) const;
 
     protected:
         std::vector<std::unique_ptr<IBvh>> top_level_bvhs_;     ///< The list of top level BVH's.
         std::vector<std::unique_ptr<IBvh>> bottom_level_bvhs_;  ///< The list of bottom level BVH's.
+        std::unique_ptr<INode>             bvh_node_;           ///< Node implementation class.
 
         std::unordered_map<GpuVirtualAddress, std::uint64_t> blas_va_to_index_map_;  ///< A map from blas virtual address to index.
 
@@ -162,3 +169,4 @@ namespace rta
 }  // namespace rta
 
 #endif  // RRA_BACKEND_BVH_BVH_BUNDLE_H_
+

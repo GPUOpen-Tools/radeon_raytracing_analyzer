@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Render State Adapter type.
@@ -302,7 +302,7 @@ namespace rra
         void RenderStateAdapter::AdaptTraversalCounterRangeToView(std::function<void(uint32_t min, uint32_t max)> update_function)
         {
             vulkan_renderer_->MarkAsDirty();
-            traversal_render_module_->QueueTraversalCounterRangeUpdate([=](uint32_t min, uint32_t max) {
+            traversal_render_module_->QueueTraversalCounterRangeUpdate([=, this](uint32_t min, uint32_t max) {
                 update_function(min, max);
                 if (vulkan_renderer_)
                 {
@@ -326,7 +326,7 @@ namespace rra
 
             scene_ubo.traversal_counter_use_custom_min_max = 0;
 
-            traversal_render_module_->SetTraversalCounterContinuousUpdateFunction([=](uint32_t min, uint32_t max) {
+            traversal_render_module_->SetTraversalCounterContinuousUpdateFunction([=, this](uint32_t min, uint32_t max) {
                 update_function(min, max);
                 if (vulkan_renderer_ && traversal_counter_min_ != min && traversal_counter_max_ != max)
                 {
@@ -351,6 +351,11 @@ namespace rra
         int32_t RenderStateAdapter::GetGeometryColoringMode() const
         {
             return GetIndexFromGeometryColoringMode((int32_t)mesh_render_module_->GetGeometryColoringMode());
+        }
+
+        GeometryColoringMode RenderStateAdapter::GetCurrentGeometryColoringModeValue() const
+        {
+            return mesh_render_module_->GetGeometryColoringMode();
         }
 
         void RenderStateAdapter::GetAvailableGeometryColoringModes(BvhTypeFlags type, std::vector<GeometryColoringModeInfo>& coloring_modes) const
@@ -408,6 +413,33 @@ namespace rra
             return static_cast<uint32_t>(vulkan_renderer_->GetSceneUbo().max_traversal_count_limit);
         }
 
+        void RenderStateAdapter::SetGeometryFilterRange(float min_value, float max_value, bool enabled)
+        {
+            SceneUniformBuffer& scene_ubo     = vulkan_renderer_->GetSceneUbo();
+            scene_ubo.geometry_filter_min     = min_value;
+            scene_ubo.geometry_filter_max     = max_value;
+            scene_ubo.geometry_filter_enabled = enabled ? 1 : 0;
+            geometry_filter_min_              = min_value;
+            geometry_filter_max_              = max_value;
+            geometry_filter_enabled_          = enabled;
+            vulkan_renderer_->MarkAsDirty();
+        }
+
+        float RenderStateAdapter::GetGeometryFilterMin() const
+        {
+            return geometry_filter_min_;
+        }
+
+        float RenderStateAdapter::GetGeometryFilterMax() const
+        {
+            return geometry_filter_max_;
+        }
+
+        bool RenderStateAdapter::GetGeometryFilterEnabled() const
+        {
+            return geometry_filter_enabled_;
+        }
+
         void RenderStateAdapter::SetRenderTraversal(bool render_traversal)
         {
             if (render_traversal)
@@ -440,8 +472,54 @@ namespace rra
             return traversal_render_module_->IsEnabled();
         }
 
-        void RenderStateAdapter::SetRenderBoundingVolumes(bool render_bounding_volumes)
+        void RenderStateAdapter::SetHoveredPixel(uint32_t x, uint32_t y)
         {
+            traversal_render_module_->SetHoveredPixel(x, y);
+        }
+
+        uint32_t RenderStateAdapter::GetHoveredTraversalCounter() const
+        {
+            return traversal_render_module_->GetHoveredTraversalCounter();
+        }
+
+        bool RenderStateAdapter::IsHoveredTraversalCounterValid() const
+        {
+            return traversal_render_module_->IsHoveredTraversalCounterValid();
+        }
+
+        std::string RenderStateAdapter::GetCurrentTraversalCounterModeName(BvhTypeFlags type) const
+        {
+            int32_t mode_value = vulkan_renderer_->GetSceneUbo().traversal_counter_mode;
+
+            std::vector<TraversalCounterModeInfo> counter_modes;
+            GetAvailableTraversalCounterModes(type, counter_modes);
+
+            for (const auto& mode_info : counter_modes)
+            {
+                if (static_cast<int32_t>(mode_info.value) == mode_value)
+                {
+                    std::string       name   = mode_info.name;
+                    const std::string prefix = "Color by ";
+                    if (name.substr(0, prefix.size()) == prefix)
+                    {
+                        name = name.substr(prefix.size());
+                        if (!name.empty())
+                        {
+                            name[0] = static_cast<char>(std::toupper(name[0]));
+                        }
+                    }
+                    return name;
+                }
+            }
+            return "Traversal count";
+        }
+
+        void RenderStateAdapter::SetRenderBoundingVolumes(bool render_internal_bounding_volumes, bool render_leaf_bounding_volumes)
+        {
+            bool render_bounding_volumes = render_internal_bounding_volumes || render_leaf_bounding_volumes;
+            internal_bvh_nodes_enabled_  = render_internal_bounding_volumes;
+            leaf_bvh_nodes_enabled_      = render_leaf_bounding_volumes;
+
             if (render_bounding_volumes)
             {
                 bounding_volume_module_->Enable();
@@ -460,9 +538,14 @@ namespace rra
             }
         }
 
-        bool RenderStateAdapter::GetRenderBoundingVolumes() const
+        bool RenderStateAdapter::GetRenderInternalBoundingVolumes() const
         {
-            return bounding_volume_module_->IsEnabled();
+            return internal_bvh_nodes_enabled_;
+        }
+
+        bool RenderStateAdapter::GetRenderLeafBoundingVolumes() const
+        {
+            return leaf_bvh_nodes_enabled_;
         }
 
         bool RenderStateAdapter::GetRenderInstancePretransform()
@@ -580,3 +663,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

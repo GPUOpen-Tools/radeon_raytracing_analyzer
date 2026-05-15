@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the RT IP 1.1 acceleration structure header class.
@@ -173,3 +173,4 @@ namespace rta
     static_assert(sizeof(VulkanUniversalIdentifier) == 8, "VulkanUniversalIdentifier size does not match 8 Bytes.");
 
 }  // namespace rta
+

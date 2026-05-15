@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the traversal module.
@@ -223,7 +223,7 @@ namespace rra
             last_offscreen_image_height_ = context->framebuffer_height;
 
             counter_gpu_buffer_size_   = (2 + last_offscreen_image_width_ * last_offscreen_image_height_) * sizeof(TraversalResult);
-            counter_cpu_buffer_size_   = 2 * sizeof(TraversalResult);
+            counter_cpu_buffer_size_   = 3 * sizeof(TraversalResult);
             histogram_gpu_buffer_size_ = max_traversal_count_setting_ * sizeof(uint32_t);
 
             for (uint32_t i = 0; i < swapchain_size; i++)
@@ -431,7 +431,7 @@ namespace rra
                                      nullptr);
 
                 VkBufferCopy download_region = {};
-                download_region.size         = counter_cpu_buffer_size_;
+                download_region.size         = 2 * sizeof(TraversalResult);
                 vkCmdCopyBuffer(context->command_buffer,
                                 counter_gpu_buffers_[context->current_frame].buffer,
                                 counter_cpu_buffers_[context->current_frame].buffer,
@@ -759,7 +759,7 @@ namespace rra
             if ((!traversal_counter_range_update_functions_.empty() || traversal_counter_range_continuous_update_function_) && counter_gpu_buffer_size_ > 0)
             {
                 std::vector<TraversalResult> counters;
-                counters.resize(2);  // Resize to 2 for min/max at the beginning.
+                counters.resize(3);  // Resize to 3 for min/max and hovered pixel.
 
                 device->ReadFromBuffer(counter_cpu_buffers_[current_frame].allocation, counters.data(), counter_cpu_buffer_size_);
 
@@ -777,6 +777,18 @@ namespace rra
                 {
                     traversal_counter_range_continuous_update_function_(min_counter, max_counter);
                 }
+
+                hovered_traversal_counter_ = counters[2].counter;
+                hovered_pixel_valid_       = true;
+            }
+            else if (counter_gpu_buffer_size_ > 0 && counter_cpu_buffer_size_ > 0)
+            {
+                // Even if no range update callbacks are set, still read back the hovered pixel value.
+                std::vector<TraversalResult> counters;
+                counters.resize(3);
+                device->ReadFromBuffer(counter_cpu_buffers_[current_frame].allocation, counters.data(), counter_cpu_buffer_size_);
+                hovered_traversal_counter_ = counters[2].counter;
+                hovered_pixel_valid_       = true;
             }
 
             if (histogram_update_function_ && histogram_gpu_buffer_size_ > 0)
@@ -790,6 +802,39 @@ namespace rra
                 }
             }
             rendered_this_frame_ = false;
+        }
+
+        void TraversalRenderModule::RecordPerFrameCopyCommands(VkCommandBuffer command_buffer, uint32_t current_frame)
+        {
+            // Copy the hovered pixel's traversal result to the third slot in the CPU buffer.
+            // This runs every frame (even when not dirty) so the tooltip updates on hover.
+            // Note: The shader uses column-major indexing: getPixelIndex = 2 + (x * screen_height + y).
+            if (counter_gpu_buffer_size_ > 0 && hovered_pixel_x_ < last_offscreen_image_width_ && hovered_pixel_y_ < last_offscreen_image_height_)
+            {
+                uint32_t     pixel_index          = hovered_pixel_x_ * last_offscreen_image_height_ + hovered_pixel_y_;
+                VkBufferCopy hovered_pixel_region = {};
+                hovered_pixel_region.srcOffset    = (2 + pixel_index) * sizeof(TraversalResult);
+                hovered_pixel_region.dstOffset    = 2 * sizeof(TraversalResult);
+                hovered_pixel_region.size         = sizeof(TraversalResult);
+                vkCmdCopyBuffer(
+                    command_buffer, counter_gpu_buffers_[current_frame].buffer, counter_cpu_buffers_[current_frame].buffer, 1, &hovered_pixel_region);
+            }
+        }
+
+        void TraversalRenderModule::SetHoveredPixel(uint32_t x, uint32_t y)
+        {
+            hovered_pixel_x_ = x;
+            hovered_pixel_y_ = y;
+        }
+
+        uint32_t TraversalRenderModule::GetHoveredTraversalCounter() const
+        {
+            return hovered_traversal_counter_;
+        }
+
+        bool TraversalRenderModule::IsHoveredTraversalCounterValid() const
+        {
+            return hovered_pixel_valid_;
         }
 
         void TraversalRenderModule::UploadTraversalData(const RenderFrameContext* context)
@@ -1033,3 +1078,4 @@ namespace rra
 
     }  // namespace renderer
 }  // namespace rra
+

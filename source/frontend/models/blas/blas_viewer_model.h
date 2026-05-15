@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the BLAS viewer model.
@@ -119,6 +119,14 @@ namespace rra
         /// @param [in] index       The index of the BLAS selected (from the combo box).
         virtual void UpdateUI(const QModelIndex& model_index, uint64_t index) override;
 
+        /// @brief Update the tooltip depending in what the mouse is over.
+        ///
+        /// @param [in] bvh_index    The index of the acceleration structure selected (from the combo box). In this case, the current BLAS.
+        /// @param [in] closest_hit  A structure containing information about what geometry/BVH the mouse is over.
+        ///
+        /// @return A string containing the tooltip text to be displayed.
+        virtual QString UpdateToolTip(uint64_t bvh_index, rra::SceneCollectionModelClosestHit closest_hit) override;
+
         /// @brief Reset the model to its default (empty) state.
         ///
         /// @param [in] reset_scene Should the scene be reset? Should be set to true when
@@ -185,9 +193,11 @@ namespace rra
 
         /// @brief Update the statistics for the selected BLAS node.
         ///
-        /// @param [in] blas_index      The index of the BLAS to use.
-        /// @param [in] node_id         The selected node in the BLAS.
-        void UpdateStatistics(uint64_t blas_index, uint32_t node_id);
+        /// @param [in] blas_index         The index of the BLAS to use.
+        /// @param [in] node_id            The selected node in the BLAS.
+        /// @param [in] child_index        The child index from the parent.
+        /// @param [in] global_child_index The global child index in the BVH.
+        void UpdateStatistics(uint64_t blas_index, uint32_t node_id, uint32_t child_index, uint32_t global_child_index);
 
         bool                             last_selected_node_is_tri_    = false;    ///< True if last selected node is triangle node.
         uint32_t                         last_selected_node_tri_count_ = 0;        ///< The triangle count of the last selected node.
@@ -197,3 +207,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_VIEWER_MODEL_H_
+

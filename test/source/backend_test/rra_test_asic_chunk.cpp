@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test ASIC chunk implementation.
@@ -7,7 +7,7 @@
 
 #include "rra_test_asic_chunk.h"
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 #include "public/rra_asic_info.h"
 #include "public/rra_macro.h"
@@ -132,3 +132,4 @@ namespace backend_test
     }
 
 }  // namespace backend_test
+

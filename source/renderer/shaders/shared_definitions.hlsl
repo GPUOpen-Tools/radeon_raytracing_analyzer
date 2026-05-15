@@ -92,9 +92,14 @@ struct SceneUBO
     int  traversal_cull_front_facing_triangles;
 
     int count_as_fused_instances;
-    
+
     // Application's color theme for changing colors based on whether it is in light or dark mode.
     int color_theme;
+
+    float geometry_filter_min;
+    float geometry_filter_max;
+    int   geometry_filter_enabled;
+    int   geometry_filter_padding;
 };
 
 /// @brief A vertex format for geometries.

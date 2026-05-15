@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the graphics context for the Vulkan API.
@@ -84,7 +84,7 @@ namespace rra
             }
         }
 
-        bool VkGraphicsContext::Initialize(std::shared_ptr<GraphicsContextSceneInfo> info)
+        bool VkGraphicsContext::Initialize(GraphicsContextSceneInfo* info)
         {
 // Enable validations in debug mode only.
 #ifndef NDEBUG
@@ -303,7 +303,7 @@ namespace rra
             return vulkan_heatmap;
         }
 
-        bool VkGraphicsContext::CollectAndUploadTraversalTrees(std::shared_ptr<GraphicsContextSceneInfo> info)
+        bool VkGraphicsContext::CollectAndUploadTraversalTrees(GraphicsContextSceneInfo* info)
         {
             PRE_RENDER_CHECK_HEALTH();
 
@@ -451,3 +451,4 @@ namespace rra
     }  // namespace renderer
 
 }  // namespace rra
+

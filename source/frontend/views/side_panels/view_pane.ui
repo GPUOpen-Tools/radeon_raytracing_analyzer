@@ -590,6 +590,120 @@
          </widget>
         </item>
         <item>
+         <widget class="QFrame" name="geometry_filter_container_">
+          <layout class="QVBoxLayout" name="vertical_layout_geometry_filter_container_">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="ScaledLabel" name="label_geometry_filter_">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Geometry filter</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="DoubleSliderHeatmapWidget" name="geometry_filter_slider_">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>1000</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="geometry_filter_values_layout_">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="ScaledLabel" name="geometry_filter_min_value_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontal_spacer_geometry_filter_">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>5</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="ScaledLabel" name="geometry_filter_max_value_">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <widget class="ColoredCheckbox" name="content_render_geometry_">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -606,7 +720,7 @@
          </widget>
         </item>
         <item>
-         <widget class="ColoredCheckbox" name="content_render_bvh_">
+         <widget class="ColoredCheckbox" name="content_render_internal_bvh_">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -614,10 +728,26 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Show bounding volumes</string>
+           <string>Show internal bounding volumes</string>
           </property>
           <property name="toolTip">
            <string>Toggle the bounding volume overlay. Pressing "B" offers the same functionality.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ColoredCheckbox" name="content_render_leaf_bvh_">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Show leaf bounding volumes</string>
+          </property>
+          <property name="toolTip">
+           <string>Toggle the bounding volume overlay. Pressing "L" offers the same functionality.</string>
           </property>
          </widget>
         </item>

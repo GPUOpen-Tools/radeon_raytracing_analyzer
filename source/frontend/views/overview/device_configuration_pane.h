@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the Device configuration pane.
@@ -49,3 +49,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_OVERVIEW_DEVICE_CONFIGURATION_PANE_H_
+

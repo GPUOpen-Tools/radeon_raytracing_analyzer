@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Implementation of a depth slider widget.
@@ -137,3 +137,4 @@ void DepthSliderWidget::paintEvent(QPaintEvent* event)
         x_offset += segment_width;
     }
 }
+

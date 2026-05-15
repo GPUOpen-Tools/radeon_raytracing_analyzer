@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Vulkan renderer.
@@ -63,7 +63,7 @@ namespace rra
 
             /// @brief Create the graphics device.
             ///
-            /// @returns True if the device was intialized successfully, or false if initialization failed.
+            /// @returns True if the device was initialized successfully, or false if initialization failed.
             virtual bool InitializeDevice() override;
 
             /// @brief Handle any synchronization required to advance to rendering the next frame.
@@ -188,3 +188,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_RENDERER_VULKAN_RENDERER_VULKAN_H_
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -94,10 +94,10 @@ namespace rra
         static const QString kHelpFile            = "/help/rra/index.html";
         static const QString kLicenseFile         = "/LICENSE.txt";
         static const QString kSampleTraceLocation = "/samples/sample_trace" + kRRATraceFileExtension;
-        static const QString kFileOpenFileTypes   = "RRA scene files (*" + kRRATraceFileExtension + ")";
-        static const QString kMissingHelpFile     = "Missing RRA help file: ";
+        static const QString kFileOpenFileTypes = "RRA scene files (*" + kRRATraceFileExtension + ")";
+        static const QString kMissingHelpFile = "Missing RRA help file: ";
 
-        // @brief External links.
+        /// @brief External links.
         static const QUrl kGpuOpenUrl                = QUrl("https://gpuopen.com");
         static const QUrl kRraGithubUrl              = QUrl("https://github.com/GPUOpen-Tools/radeon_raytracing_analyzer");
         static const QUrl kRgpGpuOpenUrl             = QUrl("https://gpuopen.com/rgp/");
@@ -106,9 +106,15 @@ namespace rra
         static const QUrl kRmvGpuOpenUrl             = QUrl("https://gpuopen.com/rmv/");
         static const QUrl kRdnaPerformanceGpuOpenUrl = QUrl("https://gpuopen.com/performance/");
 
-        // @brief Treeview node ID selection types in the settings.
+        /// @brief Treeview node ID selection types in the settings.
         static const QString kSettingsTreeviewOffset  = "Offset";
         static const QString kSettingsTreeviewAddress = "Virtual Address";
+
+        /// @brief Log level types in the settings.
+        static const QString kSettingsLogLevelError   = "Error";
+        static const QString kSettingsLogLevelWarning = "Warning";
+        static const QString kSettingsLogLevelInfo    = "Info";
+        static const QString kSettingsLogLevelDebug   = "Debug";
 
         /// @brief Event treeview expand/collapse button text.
         static const QString kTextExpandTree   = "Expand tree";    ///< Text string used for the button that expands a tree view.
@@ -148,3 +154,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_CONSTANTS_H_
+

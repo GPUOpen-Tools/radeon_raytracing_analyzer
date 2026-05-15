@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific top level acceleration structure
@@ -101,8 +101,9 @@ namespace rta
         return procedural_count;
     }
 
-    float EncodedTopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id) const
+    float EncodedTopLevelBvh::GetLeafNodeSurfaceAreaHeuristic(uint32_t node_id, uint32_t global_child_index) const
     {
+        RRA_UNUSED(global_child_index);
         const int32_t index = GetInstanceIndex(node_id);
         assert(index != -1);
         assert(index < static_cast<int32_t>(instance_surface_area_heuristic_.size()));
@@ -118,3 +119,4 @@ namespace rta
     }
 
 }  // namespace rta
+

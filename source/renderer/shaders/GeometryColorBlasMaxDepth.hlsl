@@ -52,6 +52,14 @@ PSInput VSMain(VSInput input, uint vertexId : SV_VertexID)
 float4 PSMain(PSInput input)
     : SV_TARGET
 {
+    if (scene_ubo.geometry_filter_enabled != 0)
+    {
+        if ((float)input.max_depth < scene_ubo.geometry_filter_min || (float)input.max_depth > scene_ubo.geometry_filter_max)
+        {
+            discard;
+        }
+    }
+
     float4 val                 = heatmap_temp((float)input.max_depth / (float)scene_ubo.max_tree_depth);
     float4 coloring_mode_color = float4(val.rgb, 1.0f);
 

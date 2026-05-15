@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the BLAS triangles item model.
@@ -19,7 +19,7 @@ namespace rra
     /// @brief Structure describing the statistics needed for the Triangles list pane.
     struct BlasTrianglesStatistics
     {
-        uint32_t              node_id;                             ///< The node ID.
+        uint64_t              global_node_id;                      ///< The node ID bitwise ORed with the global child index.
         uint32_t              primitive_index;                     ///< The primitive index.
         uint64_t              triangle_address;                    ///< The base address of the triangle.
         uint64_t              triangle_offset;                     ///< The offset of the triangle in the TLAS.
@@ -106,3 +106,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_BLAS_BLAS_TRIANGLES_ITEM_MODEL_H_
+

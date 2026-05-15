@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the ray inspector ray tree model.
@@ -62,3 +62,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_RAY_INSPECTOR_RAY_TREE_MODEL_H_
+

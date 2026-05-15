@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure tree-view model.
@@ -80,18 +80,18 @@ namespace rra
 
         /// @brief Get the tree view model index for the given node id.
         ///
-        /// @param [in] node_child_id The BVH node ID to get the tree model index of.
+        /// @param [in] node_child_id The BVH node ID hashed with child index to get the tree model index of.
         ///
         /// @returns The tree view model index associated with the given node id.
-        QModelIndex GetModelIndexForNode(uint32_t node_child_id);
+        QModelIndex GetModelIndexForNode(uint64_t node_child_id);
 
         /// @brief Get the tree view model index for the given node id and triangle index if triangle index is applicable.
         ///
-        /// @param [in] node_child_id  The BVH node ID to get the tree model index of.
+        /// @param [in] node_child_id  The BVH node ID hashed with child index to get the tree model index of.
         /// @param [in] triangle_index The possible triangle index under the node.
         ///
         /// @returns The tree view model index associated with the given node id and triangle index.
-        QModelIndex GetModelIndexForNodeAndTriangle(uint32_t node_child_id, uint32_t triangle_index);
+        QModelIndex GetModelIndexForNodeAndTriangle(uint64_t node_child_id, uint32_t triangle_index);
 
         /// @brief Reset any values in the model to their default state.
         void ResetModelValues();
@@ -102,15 +102,14 @@ namespace rra
         std::vector<uint32_t> GetAllNodeIds() const;
 
     private:
-        bool IsInternalNode(uint32_t node_id, uint32_t bvh_index);
-
         /// @brief Claim a chunk of pre-allocated memory for a treeview item and initialize the item.
         ///
-        /// @param [in] node_data The data for the item.
-        /// @param [in] parent    Pointer to the parent item (or nullptr if no parent).
+        /// @param [in] node_data   The data for the item.
+        /// @param [in] child_index The data for the item.
+        /// @param [in] parent      Pointer to the parent item (or nullptr if no parent).
         ///
         /// @return Pointer to the initialized EventTreeViewItem object.
-        AccelerationStructureTreeViewItem* AllocateMemory(uint32_t node_data, AccelerationStructureTreeViewItem* parent);
+        AccelerationStructureTreeViewItem* AllocateMemory(uint64_t node_data, uint32_t child_index, AccelerationStructureTreeViewItem* parent);
 
         /// @brief Gets a tree view item from a given index.
         ///
@@ -119,7 +118,7 @@ namespace rra
         /// @return A pointer to the AccelerationStructureTreeViewItem at the specified index, or nullptr if the index is invalid.
         AccelerationStructureTreeViewItem* GetItemAtIndex(uint32_t index) const;
 
-        std::map<uint32_t, AccelerationStructureTreeViewItem*> node_data_to_item_;  ///< The map used to associate node data with a treeview item.
+        std::map<uint64_t, AccelerationStructureTreeViewItem*> node_data_to_item_;  ///< The map used to associate node data with a treeview item.
         AccelerationStructureTreeViewItem*                     root_item_;          ///< The item at the root of the tree.
         AccelerationStructureTreeViewItem*                     item_buffer_;        ///< Allocated memory block for EventTreeViewItem objects.
         uint64_t                                               item_buffer_size_;   ///< Number of AccelerationStructureTreeViewItem the memory block can hold.
@@ -130,3 +129,4 @@ namespace rra
 }  // namespace rra
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_MODEL_H_
+

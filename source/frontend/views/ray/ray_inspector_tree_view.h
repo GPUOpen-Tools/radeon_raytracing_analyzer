@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2024-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Header file for a ray structure tree view.
@@ -62,3 +62,4 @@ private:
 };
 
 #endif  // RRA_VIEWS_ACCELERATION_STRUCTURE_TREE_VIEW_H_
+

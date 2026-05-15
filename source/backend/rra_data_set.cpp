@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <map>
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 #include "system_info_utils/source/driver_overrides_reader.h"
 
@@ -132,6 +132,7 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
         error_code = data_set->api_info.LoadChunk(chunk_file);
         if (error_code != kRraOk)
         {
+            RraPrint(kLogLevelError, "Error loading file chunk '%s'", rra::ApiInfo::kChunkIdentifier);
             return error_code;
         }
     }
@@ -140,6 +141,7 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
         error_code = data_set->asic_info.LoadChunk(chunk_file);
         if (error_code != kRraOk)
         {
+            RraPrint(kLogLevelError, "Error loading file chunk '%s'", rra::AsicInfo::kChunkIdentifier);
             return error_code;
         }
     }
@@ -147,6 +149,7 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     error_code = LoadDriverOverridesChunk(chunk_file.operator rdfChunkFile*());
     if (error_code != kRraOk)
     {
+        RraPrint(kLogLevelError, "Error loading driver overrides chunk");
         return error_code;
     }
 
@@ -164,16 +167,18 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     error_code                     = rta::GetMaxMajorVersions(chunk_file, &max_as_major_version, &max_dispatch_major_version);
     if (error_code != kRraOk)
     {
+        RraPrint(kLogLevelError, "Error getting maximum major versions from acceleration structure chunks");
         return error_code;
     }
 
     error_code = CheckMajorVersions(max_as_major_version, max_dispatch_major_version);
     if (error_code != kRraOk)
     {
+        RraPrint(kLogLevelError, "Error checking maximum major versions from acceleration structure chunks");
         return error_code;
     }
 
-    bool system_info_result = system_info_utils::SystemInfoReader::Parse(chunk_file, *data_set->system_info);
+    bool system_info_result = system_info_utils::SystemInfoReader::Parse(chunk_file.operator rdfChunkFile*(), *data_set->system_info);
     RRA_UNUSED(system_info_result);
 
     // Launch ray history loaders.
@@ -183,6 +188,7 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     data_set->rtip_level = rta::DecodeRtIpLevel(chunk_file, &error_code);
     if (error_code != kRraOk)
     {
+        RraPrint(kLogLevelError, "Error decoding RTIP level");
         return error_code;
     }
 
@@ -197,6 +203,7 @@ static RraErrorCode ParseRdf(const char* path, RraDataSet* data_set)
     data_set->bvh_bundle = rta::LoadBvhBundleFromFile(chunk_file, data_set->rtip_level, rta::BvhBundleReadOption::kDefault, &error_code);
     if (error_code != kRraOk)
     {
+        RraPrint(kLogLevelError, "Error loading BVH chunks");
         return error_code;
     }
 
@@ -265,3 +272,4 @@ RraErrorCode RraDataSetDestroy(RraDataSet* data_set)
 
     return kRraOk;
 }
+

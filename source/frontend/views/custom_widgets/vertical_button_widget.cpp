@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Implementation of a vertical QPushButton.
@@ -50,3 +50,4 @@ QSize VerticalButtonWidget::sizeHint() const
     // Swap width and height.
     return QSize(size_hint.height(), size_hint.width());
 }
+

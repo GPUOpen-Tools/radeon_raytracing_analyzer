@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Ray inspector pane.
@@ -48,20 +48,20 @@ RayInspectorPane::RayInspectorPane(QWidget* parent)
     ui_->ray_splitter_->setStretchFactor(0, 1);
     ui_->ray_splitter_->setStretchFactor(1, 10000);
 
-    connect(&rra::MessageManager::Get(), &rra::MessageManager::RayCoordinateSelected, [=](uint32_t dispatch_id, uint32_t x, uint32_t y, uint32_t z) {
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::RayCoordinateSelected, [=, this](uint32_t dispatch_id, uint32_t x, uint32_t y, uint32_t z) {
         this->SetRayCoordinate(dispatch_id, x, y, z);
     });
 
     connect(ui_->ray_tree_->selectionModel(), SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)), this, SLOT(SelectRay()));
-    connect(ui_->ray_tree_, &QAbstractItemView::doubleClicked, [&]() { FocusOnSelectedRay(); });
+    connect(ui_->ray_tree_, &QAbstractItemView::doubleClicked, [&, this]() { FocusOnSelectedRay(); });
 
-    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=](bool geometry_mode) {
+    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::RenderModeChanged, [=, this](bool geometry_mode) {
         ui_->viewer_container_widget_->ShowColoringMode(geometry_mode);
     });
 
     // Reset the UI state. When the 'reset' button is clicked, it broadcasts a message from the message manager. Any objects interested in this
     // message can then act upon it.
-    connect(&rra::MessageManager::Get(), &rra::MessageManager::ResetUIState, [=](rra::RRAPaneId pane) {
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::ResetUIState, [=, this](rra::RRAPaneId pane) {
         if (pane == rra::kPaneIdRayInspector)
         {
             // Only reset UI if a ray is selected.
@@ -369,7 +369,7 @@ void RayInspectorPane::showEvent(QShowEvent* event)
         proxy_model->sort(0);
     }
     ui_->ray_tree_->expandAll();
-    ui_->ray_tree_->repaint();
+    ui_->ray_tree_->update();
 
     BasePane::showEvent(event);
 }
@@ -580,6 +580,11 @@ void RayInspectorPane::UpdateColoringLegend()
     ui_->selected_ray_color_legend_->SetColor(InspectorGetQColorFromGLM(node_colors.selected_ray_color));
     ui_->accept_first_hit_ray_legend_->SetColor(InspectorGetQColorFromGLM(node_colors.shadow_ray_color));
     ui_->zero_mask_ray_legend_->SetColor(InspectorGetQColorFromGLM(node_colors.zero_mask_ray_color));
+}
+
+void RayInspectorPane::SetBlasSceneCollection(std::vector<rra::SceneNode*>* blas_root_nodes)
+{
+    model_->SetBlasRootNodes(blas_root_nodes);
 }
 
 void RayInspectorPane::MousePressed(QMouseEvent* mouse_event)
@@ -941,7 +946,7 @@ void RayInspectorPane::KeyPressed(QKeyEvent* key_event)
         break;
 
     case Qt::Key_B:
-        model_->ToggleBVHWireframe();
+        model_->ToggleBVHWireframe(true, false);
         break;
 
     case Qt::Key_N:
@@ -1215,3 +1220,5 @@ void RayInspectorPane::OnColorThemeUpdated()
         ui_->selected_ray_focus_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
+
+

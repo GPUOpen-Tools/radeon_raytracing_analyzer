@@ -1,5 +1,5 @@
 //==============================================================================
-// Copyright (c) 2016-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2016-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Linux implementation of Windows safe CRT functions.
@@ -154,3 +154,4 @@ errno_t strcat_s(char* destination, size_t size, const char* source)
 }
 
 #endif  // !_WIN32
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the public TLAS header interface.
@@ -58,3 +58,4 @@ RraErrorCode RraTlasHeaderGetPrimitiveCount(uint64_t tlas_index, uint32_t* out_p
     *out_primitive_count = tlas->GetHeader().GetPrimitiveCount();
     return kRraOk;
 }
+

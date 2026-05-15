@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of Recent traces pane.
@@ -141,3 +141,4 @@ void RecentTracesPane::HandleTraceNotFoundError(const QString path)
     const QString text = rra::text::kOpenRecentTraceStart + path + rra::text::kOpenRecentTraceEnd;
     QtCommon::QtUtils::ShowMessageBox(this, QMessageBox::Ok, QMessageBox::Critical, rra::text::kOpenRecentTraceTitle, text);
 }
+

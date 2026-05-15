@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Triangles pane on the BLAS tab.
@@ -34,8 +34,8 @@ BlasTrianglesPane::BlasTrianglesPane(QWidget* parent)
     ui_->triangles_table_->setCursor(Qt::PointingHandCursor);
 
     connect(ui_->search_box_, &QLineEdit::textChanged, model_, &rra::BlasTrianglesModel::SearchTextChanged);
-    connect(ui_->triangles_table_, &QAbstractItemView::doubleClicked, [=](const QModelIndex& index) { this->SelectTriangleInBlasViewer(index, true); });
-    connect(ui_->triangles_table_, &QAbstractItemView::clicked, [=](const QModelIndex& index) { this->SelectTriangleInBlasViewer(index, false); });
+    connect(ui_->triangles_table_, &QAbstractItemView::doubleClicked, [=, this](const QModelIndex& index) { this->SelectTriangleInBlasViewer(index, true); });
+    connect(ui_->triangles_table_, &QAbstractItemView::clicked, [=, this](const QModelIndex& index) { this->SelectTriangleInBlasViewer(index, false); });
     connect(&rra::MessageManager::Get(), &rra::MessageManager::BlasSelected, this, &BlasTrianglesPane::SetBlasIndex);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasSelected, this, &BlasTrianglesPane::SetTlasIndex);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TriangleViewerSelected, this, &BlasTrianglesPane::SelectTriangle);
@@ -166,9 +166,9 @@ void BlasTrianglesPane::SelectTriangleInBlasViewer(const QModelIndex& index, boo
 {
     if (index.isValid())
     {
-        uint32_t node_id = model_->GetNodeId(index.row());
+        uint64_t global_node_id = model_->GetNodeId(index.row());
 
-        emit rra::MessageManager::Get().TriangleTableSelected(node_id);
+        emit rra::MessageManager::Get().TriangleTableSelected(global_node_id);
 
         if (navigate_to_pane)
         {
@@ -196,7 +196,7 @@ void BlasTrianglesPane::SetTlasIndex(uint64_t tlas_index)
     }
 }
 
-void BlasTrianglesPane::SelectTriangle(uint32_t triangle_node_id)
+void BlasTrianglesPane::SelectTriangle(uint64_t triangle_node_id)
 {
     triangle_node_id_ = triangle_node_id;
     data_valid_       = false;
@@ -219,3 +219,4 @@ void BlasTrianglesPane::ScrollToSelectedTriangle()
     }
     ui_->triangles_table_->scrollToTop();
 }
+

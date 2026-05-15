@@ -122,7 +122,94 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="DriverOverridesNotificationConfigWidget" name="driver_overrides_notification_config_widget_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
            <height>30</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="log_label_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Log level</string>
+         </property>
+         <property name="scaledContents">
+          <bool>false</bool>
+         </property>
+         <property name="indent">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="ScaledLabel" name="log_description_label_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Select how much logging to output to the logfile.</string>
+         </property>
+         <property name="indent">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="ArrowIconComboBox" name="log_combo_push_button_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text" stdset="0">
+          <string>Info</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_2_">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -192,7 +279,7 @@
         </widget>
        </item>
        <item>
-        <spacer name="vertical_spacer_2_">
+        <spacer name="vertical_spacer_3_">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -202,7 +289,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>30</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -272,7 +359,7 @@
         </widget>
        </item>
        <item>
-        <spacer>
+        <spacer name="vertical_spacer_4_">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -282,7 +369,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>30</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -330,7 +417,20 @@
         </widget>
        </item>
        <item>
-        <spacer name="vertical_spacer_3_">
+        <widget class="ArrowIconComboBox" name="treeview_combo_push_button_" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text" stdset="0">
+          <string>Offset</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="vertical_spacer_5_">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -340,68 +440,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>2</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontal_layout_5_">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="ArrowIconComboBox" name="treeview_combo_push_button_" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text" stdset="0">
-            <string>Offset</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontal_spacer_3_">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <spacer name="vertical_spacer_4_">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>30</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -465,7 +504,7 @@
         </widget>
        </item>
        <item>
-        <spacer name="vertical_spacer_5_">
+        <spacer name="vertical_spacer_6_">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -475,7 +514,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>30</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -539,7 +578,7 @@
         </widget>
        </item>
        <item>
-        <spacer name="vertical_spacer_6_">
+        <spacer name="vertical_spacer_7_">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -549,7 +588,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>30</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -774,7 +813,7 @@
         </widget>
        </item>
        <item>
-        <spacer name="vertical_spacer_7_">
+        <spacer name="vertical_spacer_8_">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -784,7 +823,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>30</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -844,38 +883,6 @@
            <weight>50</weight>
            <bold>false</bold>
           </font>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>30</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="DriverOverridesNotificationConfigWidget" name="driver_overrides_notification_config_widget_" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>20</height>
-          </size>
          </property>
         </widget>
        </item>

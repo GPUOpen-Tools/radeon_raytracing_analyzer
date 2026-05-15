@@ -39,8 +39,6 @@ Supported graphics APIs, RDNA hardware, and operating systems
 
 \ **Supported Operating Systems**
 
--  Windows® 10
-
 -  Windows® 11
 
 -  Ubuntu® 24.04 LTS (Vulkan only)
@@ -71,5 +69,5 @@ Microsoft is a registered trademark of Microsoft Corporation in the US and other
 Windows is a registered trademark of Microsoft Corporation in the US and other jurisdictions.
 
 
-© 2022-2025 Advanced Micro Devices, Inc. All rights reserved.
+© 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
 

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the LogFileWriter.
@@ -20,16 +20,12 @@
 
 #include <QFile>
 
+#include "settings/settings.h"
 #include "util/file_util.h"
 
 namespace rra
 {
     LogFileWriter::LogFileWriter()
-#ifdef _DEBUG
-        : log_level_(kDebug)
-#else
-        : log_level_(kError)
-#endif
     {
         // Delete the log file from the previous instance.
         QFile::remove(GetLogFileLocation());
@@ -70,7 +66,7 @@ namespace rra
 
     void LogFileWriter::WriteLog(LogLevel log_level, const char* log_message, ...)
     {
-        if (log_level <= log_level_)
+        if (log_level <= Settings::Get().GetLogLevel())
         {
             static const int kBufferSize = 2048;
             char             buffer[kBufferSize];
@@ -91,8 +87,9 @@ namespace rra
         log_file = file_util::GetFileLocation();
 
         // Add the file name.
-        log_file.append("/RRALogFile.txt");
+        log_file.append("/rra_log_file.txt");
 
         return log_file;
     }
 }  // namespace rra
+

@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan swapchain object.
@@ -56,7 +56,8 @@ namespace rra
             surface_format.format     = format_pairs[0].format;
             surface_format.colorSpace = format_pairs[0].colorSpace;
 
-            RraPrint("Desired surface format not available, defaulting to first available: %d(format), %d(color space)",
+            RraPrint(kLogLevelInfo,
+                     "Desired surface format not available, defaulting to first available: %d(format), %d(color space)",
                      surface_format.format,
                      surface_format.colorSpace);
         }
@@ -97,7 +98,7 @@ namespace rra
             CheckResult(result, "Could not create XCB surface.");
 #endif
 
-            // Used to supress validation layer warnings about surface.
+            // Used to suppress validation layer warnings about surface.
             VkBool32 supports_present;
             vkGetPhysicalDeviceSurfaceSupportKHR(device->GetPhysicalDevice(), 0, surface_, &supports_present);
 
@@ -995,3 +996,4 @@ namespace rra
         }
     }  // namespace renderer
 }  // namespace rra
+

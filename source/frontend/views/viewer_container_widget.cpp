@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the viewer container widget class.
@@ -14,6 +14,7 @@
 #include "public/heatmap.h"
 #include "public/renderer_types.h"
 
+#include "managers/message_manager.h"
 #include "managers/pane_manager.h"
 #include "settings/settings.h"
 #include "views/widget_util.h"
@@ -70,8 +71,13 @@ void ViewerContainerWidget::ApplyUIStateFromSettings(rra::RRAPaneId pane)
     model_->SetBVHColoringMode(static_cast<int>(bvh_mode_value));
 
     ui_->content_geometry_coloring_mode_->SetSelectedRow(geometry_index);
+    geometry_index                                          = std::clamp(geometry_index, 0, static_cast<int>(filtered_color_modes_.size()) - 1);
     rra::renderer::GeometryColoringMode geometry_mode_value = filtered_color_modes_[geometry_index].value;
     model_->SetGeometryColoringMode(geometry_mode_value);
+    emit rra::MessageManager::Get().GeometryColoringModeChanged(pane,
+                                                                static_cast<int>(geometry_mode_value),
+                                                                QString::fromStdString(filtered_color_modes_[geometry_index].name),
+                                                                GetSceneMaxForMode(geometry_mode_value));
 
     ui_->content_heatmap_->SetSelectedRow(heatmap_index);
     model_->SetHeatmapData(heatmap_generators_[heatmap_index].generator_function());
@@ -108,14 +114,14 @@ void ViewerContainerWidget::SetupUI(QWidget* parent, rra::RRAPaneId pane)
     font.setCapitalization(QFont::AllUppercase);
     ui_->content_instance_mask_hex_input_->setFont(font);
 
-    connect(ui_->content_instance_mask_bit_7_, &BinaryCheckbox::Clicked, this, [=]() { ViewerContainerWidget::BinaryCheckboxClicked(0b10000000); });
-    connect(ui_->content_instance_mask_bit_6_, &BinaryCheckbox::Clicked, this, [=]() { ViewerContainerWidget::BinaryCheckboxClicked(0b01000000); });
-    connect(ui_->content_instance_mask_bit_5_, &BinaryCheckbox::Clicked, this, [=]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00100000); });
-    connect(ui_->content_instance_mask_bit_4_, &BinaryCheckbox::Clicked, this, [=]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00010000); });
-    connect(ui_->content_instance_mask_bit_3_, &BinaryCheckbox::Clicked, this, [=]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00001000); });
-    connect(ui_->content_instance_mask_bit_2_, &BinaryCheckbox::Clicked, this, [=]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00000100); });
-    connect(ui_->content_instance_mask_bit_1_, &BinaryCheckbox::Clicked, this, [=]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00000010); });
-    connect(ui_->content_instance_mask_bit_0_, &BinaryCheckbox::Clicked, this, [=]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00000001); });
+    connect(ui_->content_instance_mask_bit_7_, &BinaryCheckbox::Clicked, this, [=, this]() { ViewerContainerWidget::BinaryCheckboxClicked(0b10000000); });
+    connect(ui_->content_instance_mask_bit_6_, &BinaryCheckbox::Clicked, this, [=, this]() { ViewerContainerWidget::BinaryCheckboxClicked(0b01000000); });
+    connect(ui_->content_instance_mask_bit_5_, &BinaryCheckbox::Clicked, this, [=, this]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00100000); });
+    connect(ui_->content_instance_mask_bit_4_, &BinaryCheckbox::Clicked, this, [=, this]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00010000); });
+    connect(ui_->content_instance_mask_bit_3_, &BinaryCheckbox::Clicked, this, [=, this]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00001000); });
+    connect(ui_->content_instance_mask_bit_2_, &BinaryCheckbox::Clicked, this, [=, this]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00000100); });
+    connect(ui_->content_instance_mask_bit_1_, &BinaryCheckbox::Clicked, this, [=, this]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00000010); });
+    connect(ui_->content_instance_mask_bit_0_, &BinaryCheckbox::Clicked, this, [=, this]() { ViewerContainerWidget::BinaryCheckboxClicked(0b00000001); });
 
     connect(ui_->content_instance_mask_hex_input_, SIGNAL(valueChanged(int)), this, SLOT(InstanceMaskHexChanged(int)));
 
@@ -138,6 +144,7 @@ void ViewerContainerWidget::ShowColoringMode(bool geometry_mode_enabled)
 void ViewerContainerWidget::SetScene(rra::Scene* scene)
 {
     model_->SetScene(scene);
+    EmitGeometryColoringModeChanged();
 }
 
 void ViewerContainerWidget::BinaryCheckboxClicked(uint32_t mask)
@@ -217,6 +224,8 @@ void ViewerContainerWidget::SetGeometryColoringMode()
     rra::renderer::GeometryColoringMode mode_value = filtered_color_modes_[row].value;
     model_->SetGeometryColoringMode(mode_value);
     rra::Settings::Get().SetColoringMode(parent_pane_id_, kColoringModeGeometryColor, row);
+    emit rra::MessageManager::Get().GeometryColoringModeChanged(
+        parent_pane_id_, static_cast<int>(mode_value), QString::fromStdString(filtered_color_modes_[row].name), GetSceneMaxForMode(mode_value));
 }
 
 void ViewerContainerWidget::SetBVHColoringMode()
@@ -371,3 +380,44 @@ void ViewerContainerWidget::EvaluateInstanceMaskWarning(int mask)
     ui_->content_instance_mask_bit_1_->repaint();
     ui_->content_instance_mask_bit_0_->repaint();
 }
+
+int ViewerContainerWidget::GetSceneMaxForMode(rra::renderer::GeometryColoringMode mode) const
+{
+    using namespace rra::renderer;
+
+    rra::Scene* scene = model_->GetScene();
+    if (scene == nullptr)
+    {
+        return 0;
+    }
+
+    const auto& stats = scene->GetSceneStatistics();
+    switch (mode)
+    {
+    case GeometryColoringMode::kTreeLevel:
+        return stats.max_tree_depth;
+    case GeometryColoringMode::kBlasMaxDepth:
+    case GeometryColoringMode::kBlasAverageDepth:
+        return stats.max_tree_depth;
+    case GeometryColoringMode::kBlasInstanceCount:
+        return static_cast<int>(stats.max_instance_count);
+    case GeometryColoringMode::kBlasTriangleCount:
+        return static_cast<int>(stats.max_triangle_count);
+    default:
+        return 0;
+    }
+}
+
+void ViewerContainerWidget::EmitGeometryColoringModeChanged()
+{
+    if (filtered_color_modes_.empty())
+    {
+        return;
+    }
+
+    int row = std::clamp(ui_->content_geometry_coloring_mode_->CurrentRow(), 0, static_cast<int>(filtered_color_modes_.size()) - 1);
+    rra::renderer::GeometryColoringMode mode_value = filtered_color_modes_[row].value;
+    emit                                rra::MessageManager::Get().GeometryColoringModeChanged(
+        parent_pane_id_, static_cast<int>(mode_value), QString::fromStdString(filtered_color_modes_[row].name), GetSceneMaxForMode(mode_value));
+}
+

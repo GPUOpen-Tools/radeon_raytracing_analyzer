@@ -1,5 +1,5 @@
 //=============================================================================
-// Copyright (c) 2021-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test file chunks implementation.
@@ -7,7 +7,7 @@
 
 #include "rra_test_file_chunks.h"
 
-#include "rdf/rdf/inc/amdrdf.h"
+#include "amdrdf.h"
 
 #include "public/rra_macro.h"
 #include "public/rra_ray_history.h"
@@ -145,3 +145,4 @@ namespace backend_test
     }
 
 }  // namespace backend_test
+

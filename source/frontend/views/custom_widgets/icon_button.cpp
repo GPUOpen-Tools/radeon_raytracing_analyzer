@@ -1,5 +1,5 @@
 //=============================================================================
-/// Copyright (c) 2023-2025 Advanced Micro Devices, Inc. All rights reserved.
+/// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
 /// \author AMD Developer Tools Team
 /// \file
 /// \brief  Implementation of a QPushButton with vector based icons for various states.
@@ -84,3 +84,4 @@ void RraIconButton::leaveEvent(QEvent* event)
     QPushButton::leaveEvent(event);
     setAttribute(Qt::WA_UnderMouse, false);
 }
+

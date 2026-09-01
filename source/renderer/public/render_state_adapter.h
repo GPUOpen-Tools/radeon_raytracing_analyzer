@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Render State Adapter interface. This type can
@@ -263,6 +264,9 @@ namespace rra
 
             /// @brief Set accept first hit ray flag.
             void SetRayFlagAcceptFirstHit(bool accept_first_hit);
+
+            /// @brief Set max anyhit invocations ray flag.
+            void SetRayFlagMaxAnyhitInvocations(bool max_anyhit_invocations);
 
             /// @brief Set cull back facing triangles ray flag.
             void SetRayFlagCullBackFacingTriangles(bool cull_back_facing_tris);

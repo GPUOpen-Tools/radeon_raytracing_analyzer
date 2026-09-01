@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for ray history offscreen renderer type.
@@ -11,6 +12,8 @@
 #include <algorithm>
 #include <execution>
 #define emit
+
+#include "public/rra_assert.h"
 
 #include "vk/framework/device.h"
 #include "vk/vk_graphics_context.h"
@@ -60,7 +63,9 @@ namespace rra
 
         void RayHistoryOffscreenRenderer::CreateStatsBuffer(uint32_t dispatch_id, DispatchIdData* out_max_count)
         {
-            RraRayGetDispatchDimensions(dispatch_id, &width_, &height_, &depth_);
+            RraErrorCode error_code = RraRayGetDispatchDimensions(dispatch_id, &width_, &height_, &depth_);
+            RRA_ASSERT(error_code == kRraOk);
+            RRA_UNUSED(error_code);
 
             // The dims are 0 so no buffer can be created here.
             if (width_ * height_ * depth_ == 0)
@@ -83,7 +88,8 @@ namespace rra
                     for (uint32_t z{0}; z < depth_; ++z)
                     {
                         uint32_t ray_count{};
-                        RraRayGetRayCount(dispatch_id, {x, y, z}, &ray_count);
+                        error_code = RraRayGetRayCount(dispatch_id, {x, y, z}, &ray_count);
+                        RRA_ASSERT(error_code == kRraOk);
                         uint32_t data_idx{x + y * width_ + z * width_ * height_};
                         data[data_idx].ray_count       = ray_count;
                         data[data_idx].first_ray_index = ray_data_size;
@@ -106,20 +112,17 @@ namespace rra
                         uint32_t data_idx{x + y * width_ + z * width_ * height_};
                         uint32_t ray_count{data[data_idx].ray_count};
 
-                        if (ray_count > out_max_count->ray_count)
-                        {
-                            out_max_count->ray_count = ray_count;
-                        }
-
-                        uint32_t traversal_count{0};
-                        uint32_t instance_intersection_count{0};
-                        uint32_t total_any_hit_count{0};
-                        RraRayGetAnyHitInvocationCount(dispatch_id, {x, y, z}, &total_any_hit_count);
+                        uint32_t     traversal_count{0};
+                        uint32_t     instance_intersection_count{0};
+                        uint32_t     total_any_hit_count{0};
+                        RraErrorCode lambda_error_code = RraRayGetAnyHitInvocationCount(dispatch_id, {x, y, z}, &total_any_hit_count);
+                        RRA_ASSERT(lambda_error_code == kRraOk);
 
                         for (uint32_t i{0}; i < ray_count; ++i)
                         {
                             RraIntersectionResult intersection_result{};
-                            RraRayGetIntersectionResult(dispatch_id, {x, y, z}, i, &intersection_result);
+                            lambda_error_code = RraRayGetIntersectionResult(dispatch_id, {x, y, z}, i, &intersection_result);
+                            RRA_ASSERT(lambda_error_code == kRraOk);
                             traversal_count += intersection_result.num_iterations;
                             instance_intersection_count += intersection_result.num_instance_intersections;
                         }
@@ -127,22 +130,9 @@ namespace rra
                         data[data_idx].instance_intersection_count = instance_intersection_count;
                         data[data_idx].any_hit_invocation_count    = total_any_hit_count;
 
-                        if (traversal_count > out_max_count->traversal_count)
-                        {
-                            out_max_count->traversal_count = traversal_count;
-                        }
-
-                        if (instance_intersection_count > out_max_count->instance_intersection_count)
-                        {
-                            out_max_count->instance_intersection_count = instance_intersection_count;
-                        }
-
-                        if (total_any_hit_count > out_max_count->any_hit_invocation_count)
-                        {
-                            out_max_count->any_hit_invocation_count = total_any_hit_count;
-                        }
-
-                        RraRayGetRays(dispatch_id, {x, y, z}, rays.data());
+                        lambda_error_code = RraRayGetRays(dispatch_id, {x, y, z}, rays.data());
+                        RRA_ASSERT(lambda_error_code == kRraOk);
+                        RRA_UNUSED(lambda_error_code);
 
                         for (uint32_t ray_idx{0}; ray_idx < ray_count; ++ray_idx)
                         {
@@ -155,6 +145,15 @@ namespace rra
                     }
                 }
             });
+
+            // Compute max values with a serial reduction now that all parallel writes to data[] are complete.
+            out_max_count->ray_count = max_ray_count;
+            for (const auto& d : data)
+            {
+                out_max_count->traversal_count             = std::max(out_max_count->traversal_count, d.traversal_count);
+                out_max_count->instance_intersection_count = std::max(out_max_count->instance_intersection_count, d.instance_intersection_count);
+                out_max_count->any_hit_invocation_count    = std::max(out_max_count->any_hit_invocation_count, d.any_hit_invocation_count);
+            }
 
             if (ray_data.empty())
             {

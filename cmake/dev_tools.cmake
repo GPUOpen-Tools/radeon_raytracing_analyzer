@@ -3,7 +3,7 @@
 ### \author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.25)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     string(REPLACE " /W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -80,3 +80,5 @@ function(devtools_target_options name)
     endif ()
 
 endfunction()
+
+

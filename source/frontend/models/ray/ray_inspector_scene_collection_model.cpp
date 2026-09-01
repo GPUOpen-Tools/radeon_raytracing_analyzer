@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS scene model.
@@ -114,7 +115,9 @@ namespace rra
                 renderer::Instance* instance = node->GetInstance();
                 if (instance)
                 {
-                    hit_instances.push_back(instance->instance_node);
+                    {
+                        hit_instances.push_back(instance->instance_node);
+                    }
                 }
             }
 

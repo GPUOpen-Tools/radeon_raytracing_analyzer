@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Top level acceleration structure definition common to all rt ip levels.
@@ -23,11 +24,69 @@ namespace rta
         // Global identifier of tlas dump in chunk files.
         static constexpr const char* kChunkIdentifier = "GpuEncTlasDump";
 
+        /// @brief Sentinel partition index for an instance that is not assigned to any partition.
+        static constexpr uint32_t kInvalidPartition = 0x7FFFFFFF;
+
+        /// @brief Per-partition information parsed from the PTLAS metadata (PartitionInfo array).
+        ///
+        /// Fields 0-20 mirror the GPURT PartitionInfo struct; the bounds are derived by
+        /// aggregating the per-instance AABBs of the partition's member instances.
+        struct PartitionInfo
+        {
+            uint32_t internal_node_count = 0;              ///< Number of internal nodes in the partition.
+            uint32_t instance_count      = 0;              ///< Number of instances assigned to the partition.
+            uint32_t root_node_index     = 0;              ///< Root node index of the partition.
+            uint32_t leaf_index_offset   = 0;              ///< Leaf index offset of the partition.
+            uint32_t fat_leaf_count      = 0;              ///< Number of fat leaf nodes in the partition.
+            float    translation[3]      = {0, 0, 0};      ///< Translation applied to the partition.
+            float    bounds_min[3]       = {0, 0, 0};      ///< Aggregated min bound of member instances.
+            float    bounds_max[3]       = {0, 0, 0};      ///< Aggregated max bound of member instances.
+            bool     bounds_valid        = false;          ///< True if at least one member instance contributed bounds.
+        };
+
         /// @brief Default constructor.
         EncodedTopLevelBvh() = default;
 
         /// @brief Destructor.
         virtual ~EncodedTopLevelBvh();
+
+        /// @brief Is this a partitioned TLAS (PTLAS)?
+        ///
+        /// @return true if the TLAS is partitioned and partition data was parsed successfully.
+        bool IsPartitioned() const;
+
+        /// @brief Get the number of real partitions (excluding the trailing global-partition slot).
+        ///
+        /// @return The partition count.
+        uint32_t GetPartitionCount() const;
+
+        /// @brief Get the build-time maximum number of partition instances (0 if unset).
+        ///
+        /// @return The max partition instance capacity.
+        uint32_t GetMaxPartitionInstances() const;
+
+        /// @brief Get the build-time maximum number of global-partition instances (0 if unset).
+        ///
+        /// @return The max global instance capacity.
+        uint32_t GetMaxGlobalInstances() const;
+
+        /// @brief Get the partition info for a given partition index.
+        ///
+        /// Valid indices are [0, GetPartitionCount()]; index == GetPartitionCount() is the global partition.
+        ///
+        /// @param [in] partition_index The partition index.
+        ///
+        /// @return Pointer to the partition info, or nullptr if the index is out of range.
+        const PartitionInfo* GetPartitionInfo(uint32_t partition_index) const;
+
+        /// @brief Get the partition index assigned to a given instance.
+        ///
+        /// @param [in]  instance_index      The instance index.
+        /// @param [out] out_partition_index Receives the partition index (kInvalidPartition if unassigned).
+        /// @param [out] out_active          Receives whether the instance is active (may be nullptr).
+        ///
+        /// @return true if the instance index is valid, false otherwise.
+        bool GetInstancePartitionIndex(uint32_t instance_index, uint32_t* out_partition_index, bool* out_active) const;
 
         /// @brief Get the index of an instance node from an instance node pointer.
         ///
@@ -195,6 +254,19 @@ namespace rta
         ///
         /// @return true if the build succeeded, false if error.
         virtual bool BuildInstanceList() = 0;
+
+        /// @brief Parse the PTLAS partition arrays from the retained sideband data.
+        ///
+        /// A no-op for non-partitioned TLASes. Should be called from the derived PostLoad().
+        void ParsePartitionData();
+
+        bool                       is_partitioned_             = false;  ///< True if this TLAS is partitioned and partition data was parsed.
+        uint32_t                   partition_count_            = 0;      ///< Number of real partitions (excludes the global slot).
+        uint32_t                   max_partition_instances_    = 0;      ///< Build-time max partition instance capacity (0 if unset).
+        uint32_t                   max_global_instances_       = 0;      ///< Build-time max global instance capacity (0 if unset).
+        std::vector<PartitionInfo> partition_infos_            = {};     ///< Partition info array (partition_count_ + 1 entries; last = global).
+        std::vector<uint32_t>      instance_partition_indices_ = {};     ///< Per-instance partition index (kInvalidPartition if unassigned).
+        std::vector<uint8_t>       instance_partition_active_  = {};     ///< Per-instance active flag (1 = active, 0 = inactive).
 
     private:
         /// @brief Get the size of an instance node.

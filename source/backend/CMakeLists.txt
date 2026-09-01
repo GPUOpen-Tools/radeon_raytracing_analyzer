@@ -1,9 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.25)
 
 project(RraBackend)
 
@@ -148,20 +149,15 @@ set( SOURCES
     "ray_history/ray_history.cpp"
 )
 
-set( LINUX_SOURCES
-    "public/linux/safe_crt.h"
-    "linux/safe_crt.cpp"
-)
-
 
 # specify output library name
-IF(WIN32)
-    add_library(${PROJECT_NAME} ${SOURCES})
-ELSEIF(UNIX)
-    add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
-ENDIF(WIN32)
+add_library(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC rdf system_info)
+
+IF(LINUX)
+    target_link_libraries(${PROJECT_NAME} PUBLIC AMD::sdl_utils::safe_crt)
+ENDIF(LINUX)
 
 # Apply common developer tools target options and definitions
 devtools_target_options(${PROJECT_NAME})
@@ -184,5 +180,6 @@ foreach(source IN LISTS SOURCES)
     source_group("${source_path_msvc}" FILES "${source}")
 endforeach()
 ENDIF(WIN32)
+
 
 

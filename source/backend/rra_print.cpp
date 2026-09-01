@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of printing helper functions for RRA.
@@ -12,7 +13,7 @@
 #include <string.h>  // for strcat
 
 #ifndef _WIN32
-#include "public/linux/safe_crt.h"
+#include "linux/safe_crt.h"
 #else
 #include <Windows.h>
 #endif
@@ -42,9 +43,9 @@ void RraPrint(LogLevel log_level, const char* format, ...)
     if (printing_func == nullptr)
     {
         char buffer[RRA_STRING_BUFFER_SIZE];
-        vsnprintf(buffer, RRA_STRING_BUFFER_SIZE, format, args);
+        vsnprintf(buffer, RRA_STRING_BUFFER_SIZE - 1, format, args);
 #ifdef _WIN32
-        const size_t len = strlen(buffer);
+        const size_t len = strnlen(buffer, RRA_STRING_BUFFER_SIZE - 2);
         buffer[len]      = '\n';
         buffer[len + 1]  = '\0';
         OutputDebugString(buffer);

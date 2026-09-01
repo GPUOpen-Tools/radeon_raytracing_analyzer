@@ -182,6 +182,14 @@
             <string>Show a table of all instances of the selected TLAS.</string>
            </attribute>
           </widget>
+          <widget class="TlasPartitionsPane" name="tlas_partitions_tab_">
+           <attribute name="title">
+            <string>Partitions</string>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Show a table of all partitions of the selected TLAS (PTLAS only).</string>
+           </attribute>
+          </widget>
           <widget class="BlasListPane" name="tlas_blas_list_tab_">
            <attribute name="title">
             <string>BLAS list</string>
@@ -554,6 +562,12 @@
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>TlasPartitionsPane</class>
+   <extends>QWidget</extends>
+   <header>views/tlas/tlas_partitions_pane.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>BlasInstancesPane</class>
    <extends>QWidget</extends>
    <header>views/blas/blas_instances_pane.h</header>
@@ -607,4 +621,5 @@
  </resources>
  <connections/>
 </ui>
+
 

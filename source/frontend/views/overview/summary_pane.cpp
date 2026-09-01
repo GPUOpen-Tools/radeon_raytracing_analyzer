@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Summary pane.
@@ -63,10 +64,17 @@ void SummaryPane::UpdateTlasMap()
 
     for (uint64_t i = 0; i < tlas_count; i++)
     {
-        uint64_t address;
-        error_code = RraTlasGetBaseAddress(i, &address);
+        // Ray history records the acceleration-structure address the shader passed to TraceRay(). Depending on the
+        // capturing driver, that is either the raw allocation base or the post-metadata API handle, so map both.
+        uint64_t base_address = 0;
+        error_code            = RraTlasGetBaseAddress(i, &base_address);
         RRA_ASSERT(error_code == kRraOk);
-        tlas_address_to_index_[address] = i;
+        tlas_address_to_index_[base_address] = i;
+
+        uint64_t api_address = 0;
+        error_code           = RraTlasGetAPIAddress(i, &api_address);
+        RRA_ASSERT(error_code == kRraOk);
+        tlas_address_to_index_[api_address] = i;
     }
 }
 

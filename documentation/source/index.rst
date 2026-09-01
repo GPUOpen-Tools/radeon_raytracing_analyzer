@@ -1,7 +1,7 @@
 The Radeon™ Raytracing Analyzer (RRA)
 =====================================
 
-The Radeon Raytracing Analyzer is a tool designed to help developers improve the raytracing performance on AMD Radeon 6000 and 7000 series GPU's.
+The Radeon Raytracing Analyzer is a tool designed to help developers improve the raytracing performance on AMD Radeon 6000 and 7000 series GPUs.
 The tool focuses on the visualization of Acceleration Structures, which in our case consist of Bounding Volume Hierarchies. RRA allows the developer
 to visualize the bounding box hierarchies, and related scene geometries, to quickly identify issues with the bounding volume hierarchies, such as
 overlapping bounding volumes and sparse geometry layout within bounding volumes. Once identified, the developer can revisit their BVH generation
@@ -70,4 +70,5 @@ Windows is a registered trademark of Microsoft Corporation in the US and other j
 
 
 © 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
+
 

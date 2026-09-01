@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Shader to draw the BVH wireframe.
@@ -32,6 +33,7 @@ float4 heatmap_temp(float value)
 #define NODE_TYPE_INSTANCE (3)
 #define NODE_TYPE_PROCEDURAL (4)
 #define NODE_TYPE_TRIANGLE (5)
+#define NODE_TYPE_PARTITION (6)
 
 struct PSInput
 {
@@ -91,6 +93,10 @@ PSInput VSMain(VSInput input, uint currentInstance : SV_InstanceID)
             break;
         case NODE_TYPE_TRIANGLE:
             result.color = scene_ubo.triangle_node_color;
+            break;
+        case NODE_TYPE_PARTITION:
+            // PTLAS partition bounds use a fixed, high-visibility color independent of the node-type palette.
+            result.color = float4(1.0f, 0.85f, 0.0f, 1.0f);
             break;
         default:
             result.color = float4(0.0f, 0.0f, 0.0f, 1.0f);

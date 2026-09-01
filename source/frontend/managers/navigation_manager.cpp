@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for back/fwd navigation manager.
@@ -246,6 +247,9 @@ namespace rra
             break;
         case kPaneIdTlasInstances:
             out = "TLAS Instances";
+            break;
+        case kPaneIdTlasPartitions:
+            out = "TLAS Partitions";
             break;
         case kPaneIdTlasBlasList:
             out = "TLAS BLAS List";

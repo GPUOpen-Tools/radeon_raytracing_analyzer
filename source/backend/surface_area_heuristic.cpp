@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Surface area heuristic calculations.
@@ -167,40 +168,42 @@ namespace rra
     static void GetMinimumSurfaceAreaHeuristicImpl(const rta::IBvh* bvh, uint32_t root_node_id, uint32_t& global_child_id, bool tri_only, float* min_sah)
     {
         const auto& interior_nodes = bvh->GetInteriorNodesData();
-        dxr::amd::NodePointer root_node(root_node_id);
-        if (root_node.IsTriangleNode() || !tri_only)
         {
-            float sah = 0.0f;
-            if (RraBvhGetSurfaceAreaHeuristic(bvh, root_node_id, global_child_id, &sah) != kRraOk)
+            dxr::amd::NodePointer root_node(root_node_id);
+            if (root_node.IsTriangleNode() || !tri_only)
             {
-                return;
+                float sah = 0.0f;
+                if (RraBvhGetSurfaceAreaHeuristic(bvh, root_node_id, global_child_id, &sah) != kRraOk)
+                {
+                    return;
+                }
+
+                *min_sah = std::min(*min_sah, sah);
             }
 
-            *min_sah = std::min(*min_sah, sah);
-        }
+            if (root_node.IsBoxNode())
+            {
+                const auto node_offset = root_node.GetByteOffset() - bvh->GetHeader().GetBufferOffsets().interior_nodes;
+                RRA_ASSERT(node_offset < interior_nodes.size());
+                uint32_t child_count{};
+                if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+                {
+                    const auto node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[node_offset]);
+                    child_count     = node->ValidChildCount();
+                }
+                else
+                {
+                    const dxr::amd::Float32BoxNode* box_node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[node_offset]);
+                    child_count                              = box_node->GetValidChildCount();
+                }
 
-        if (root_node.IsBoxNode())
-        {
-            const auto node_offset = root_node.GetByteOffset() - bvh->GetHeader().GetBufferOffsets().interior_nodes;
-            RRA_ASSERT(node_offset < interior_nodes.size());
-            uint32_t child_count{};
-            if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
-            {
-                const auto node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[node_offset]);
-                child_count     = node->ValidChildCount();
-            }
-            else
-            {
-                const dxr::amd::Float32BoxNode* box_node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[node_offset]);
-                child_count                              = box_node->GetValidChildCount();
-            }
-
-            const auto& child_array = RraBvhGetChildNodeArray(bvh, root_node_id, node_offset);
-            for (uint32_t child_index = 0; child_index < child_count; child_index++)
-            {
-                // Find SAH for child nodes.
-                const auto& child_node = child_array[child_index];
-                GetMinimumSurfaceAreaHeuristicImpl(bvh, child_node, global_child_id, tri_only, min_sah);
+                const auto& child_array = RraBvhGetChildNodeArray(bvh, root_node_id, node_offset);
+                for (uint32_t child_index = 0; child_index < child_count; child_index++)
+                {
+                    // Find SAH for child nodes.
+                    const auto& child_node = child_array[child_index];
+                    GetMinimumSurfaceAreaHeuristicImpl(bvh, child_node, global_child_id, tri_only, min_sah);
+                }
             }
         }
     }
@@ -235,41 +238,43 @@ namespace rra
             traversal_stack.pop_back();
             ++global_child_index;
 
-            dxr::amd::NodePointer root_node(node_id);
-            if (root_node.IsTriangleNode() || !tri_only)
             {
-                float sah = 0.0f;
-                if (RraBvhGetSurfaceAreaHeuristic(bvh, node_id, global_child_index, &sah) != kRraOk)
+                dxr::amd::NodePointer root_node(node_id);
+                if (root_node.IsTriangleNode() || !tri_only)
                 {
-                    return;
+                    float sah = 0.0f;
+                    if (RraBvhGetSurfaceAreaHeuristic(bvh, node_id, global_child_index, &sah) != kRraOk)
+                    {
+                        return;
+                    }
+
+                    (*node_count)++;
+                    *total_sah += sah;
                 }
 
-                (*node_count)++;
-                *total_sah += sah;
-            }
+                if (root_node.IsBoxNode())
+                {
+                    const auto node_offset = root_node.GetByteOffset() - bvh->GetHeader().GetBufferOffsets().interior_nodes;
+                    RRA_ASSERT(node_offset < interior_nodes.size());
+                    uint32_t child_count{};
+                    if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
+                    {
+                        const auto node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[node_offset]);
+                        child_count     = node->ValidChildCount();
+                    }
+                    else
+                    {
+                        const dxr::amd::Float32BoxNode* box_node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[node_offset]);
+                        child_count                              = box_node->GetValidChildCount();
+                    }
 
-            if (root_node.IsBoxNode())
-            {
-                const auto node_offset = root_node.GetByteOffset() - bvh->GetHeader().GetBufferOffsets().interior_nodes;
-                RRA_ASSERT(node_offset < interior_nodes.size());
-                uint32_t child_count{};
-                if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1)
-                {
-                    const auto node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[node_offset]);
-                    child_count     = node->ValidChildCount();
-                }
-                else
-                {
-                    const dxr::amd::Float32BoxNode* box_node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[node_offset]);
-                    child_count                              = box_node->GetValidChildCount();
-                }
-
-                const auto& child_array = RraBvhGetChildNodeArray(bvh, node_id, node_offset);
-                for (uint32_t child_index = 0; child_index < child_count; child_index++)
-                {
-                    // Find SAH for child nodes.
-                    const auto& child_node = child_array[child_index];
-                    traversal_stack.push_back(child_node);
+                    const auto& child_array = RraBvhGetChildNodeArray(bvh, node_id, node_offset);
+                    for (uint32_t child_index = 0; child_index < child_count; child_index++)
+                    {
+                        // Find SAH for child nodes.
+                        const auto& child_node = child_array[child_index];
+                        traversal_stack.push_back(child_node);
+                    }
                 }
             }
         }
@@ -348,3 +353,4 @@ namespace rra
     }
 
 }  // namespace rra
+

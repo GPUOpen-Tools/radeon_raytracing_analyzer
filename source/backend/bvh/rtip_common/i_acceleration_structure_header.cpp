@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the RT IP 1.1 acceleration structure header class.
@@ -146,6 +147,11 @@ namespace rta
     bool IRtIpCommonAccelerationStructureHeader::IsValid() const
     {
         return IsValidImpl();
+    }
+
+    const AccelStructHeader& IRtIpCommonAccelerationStructureHeader::GetRawHeader() const
+    {
+        return GetRawHeaderImpl();
     }
 
 #ifdef __cplusplus

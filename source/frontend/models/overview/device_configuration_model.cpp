@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Device configuration model.
@@ -132,22 +133,29 @@ namespace rra
         // CPU/System information.
         SetModelData(kDeviceConfigurationCPUName, QString(RraSystemInfoGetCpuName()));
         uint32_t cpu_clock_speed = 0;
-        RraSystemInfoGetCpuClockSpeed(&cpu_clock_speed);
-        SetModelData(kDeviceConfigurationCPUSpeed, rra::string_util::LocalizedValue(cpu_clock_speed) + QString(" MHz"));
+        if (RraSystemInfoGetCpuClockSpeed(&cpu_clock_speed) == kRraOk)
+        {
+            SetModelData(kDeviceConfigurationCPUSpeed, rra::string_util::LocalizedValue(cpu_clock_speed) + QString(" MHz"));
+        }
 
         uint32_t num_physical_cores = 0;
-        RraSystemInfoGetCpuPhysicalCores(&num_physical_cores);
-        SetModelData(kDeviceConfigurationCPUPhysicalCores, QString::number(num_physical_cores));
+        if (RraSystemInfoGetCpuPhysicalCores(&num_physical_cores) == kRraOk)
+        {
+            SetModelData(kDeviceConfigurationCPUPhysicalCores, QString::number(num_physical_cores));
+        }
 
         uint32_t num_logical_cores = 0;
-        RraSystemInfoGetCpuLogicalCores(&num_logical_cores);
-        SetModelData(kDeviceConfigurationCPULogicalCores, QString::number(num_logical_cores));
+        if (RraSystemInfoGetCpuLogicalCores(&num_logical_cores) == kRraOk)
+        {
+            SetModelData(kDeviceConfigurationCPULogicalCores, QString::number(num_logical_cores));
+        }
 
         uint64_t physical_memory_size = 0;
-        RraSystemInfoGetSystemMemorySize(&physical_memory_size);
-
-        SetModelData(kDeviceConfigurationSystemMemorySize,
-                     rra::string_util::LocalizedValueMemory(physical_memory_size, false, true) + " " + RraSystemInfoGetSystemMemoryType());
+        if (RraSystemInfoGetSystemMemorySize(&physical_memory_size) == kRraOk)
+        {
+            SetModelData(kDeviceConfigurationSystemMemorySize,
+                         rra::string_util::LocalizedValueMemory(physical_memory_size, false, true) + " " + RraSystemInfoGetSystemMemoryType());
+        }
 
         // Driver information.
         SetModelData(kDeviceConfigurationDriverPackagingVersion, QString(RraSystemInfoGetDriverPackagingVersion()));

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific top level acceleration structure
@@ -226,6 +227,15 @@ namespace rta
         /// @return true if the build succeeded, false if error.
         virtual bool BuildInstanceList() override;
 
+        /// @brief Does this TLAS use RTIP3.1 node packing (>1 box slot of a parent sharing one child node)?
+        ///
+        /// Computed once during BuildInstanceList(). When false, node ids are unique per tree position and the frontend
+        /// can key its scene/tree items by bare node id; when true it must fold in the global child index to de-collide
+        /// the shared node's several slots (mirrors the BLAS behavior).
+        ///
+        /// @return true if any interior node reuses a child pointer across its slots, false otherwise.
+        bool HasNodePacking() const;
+
         /// @brief Replace all absolute references with relative references.
         ///
         /// This includes replacing absolute VA's with index values for quick lookup.
@@ -283,7 +293,25 @@ namespace rta
         /// @return The instance node, or null optional if instance node is invalid.
         std::optional<InstanceNodeDataRRA> GetHwInstanceNode(const dxr::amd::NodePointer* node_ptr) const;
 
+        /// @brief Resolve a decoded instance BLAS childBasePtr to a BLAS index, tolerating the GPURT pointer offset.
+        ///
+        /// Older captures point the childBasePtr straight at the traversal root that blas_map is keyed on, so an
+        /// exact lookup hits. Newer GPURT encodes it one BLAS-metadata page higher, so the exact lookup misses; in
+        /// that case retry one page lower. Version- and sideband-agnostic: traces that already resolve exactly never
+        /// take the fallback, so it cannot regress them.
+        ///
+        /// @param [in]  blas_address        The decoded (raw) BLAS address from the instance childBasePtr.
+        /// @param [in]  blas_metadata_size  The instance's BLAS-metadata page size (0 if unknown).
+        /// @param [out] out_index           A pointer to receive the BLAS index.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        RraErrorCode ResolveInstanceBlasAddress(GpuVirtualAddress blas_address, uint64_t blas_metadata_size, uint64_t* out_index) const;
+
         std::unordered_map<GpuVirtualAddress, uint64_t> blas_map_;
+        // BLAS-metadata page size per decoded instance address, recorded in BuildInstanceList() so
+        // ConvertBlasAddressesToIndices() can apply the version-tolerant fallback (see ResolveInstanceBlasAddress()).
+        std::unordered_map<GpuVirtualAddress, uint64_t> instance_blas_metadata_size_;
+        bool                                            has_node_packing_{false};  // Set by BuildInstanceList(); see HasNodePacking().
     };
 }  // namespace rta
 

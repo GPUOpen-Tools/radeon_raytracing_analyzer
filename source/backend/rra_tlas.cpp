@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the TLAS interface.
@@ -15,6 +16,7 @@
 #include "public/rra_rtip_info.h"
 
 #include "bvh/inode.h"
+#include "bvh/rtip31/encoded_rt_ip_31_top_level_bvh.h"
 #include "math_util.h"
 #include "rra_data_set.h"
 #include "surface_area_heuristic.h"
@@ -195,18 +197,23 @@ RraErrorCode RraTlasGetNodeNameToolTip(uint64_t tlas_index, uint32_t node_id, co
 
 RraErrorCode RraTlasGetNodeBaseAddress(uint64_t tlas_index, uint32_t node_id, uint64_t* out_address)
 {
+    if (out_address == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
     const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
     if (tlas == nullptr)
     {
         return kRraErrorInvalidPointer;
     }
-    const auto base_addr = tlas->GetVirtualAddress();
 
-    const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
-
-    *out_address = base_addr + tlas->GetHeader().GetMetaDataSize() + node->GetGpuVirtualAddress();
-
-    return kRraOk;
+    RRA_ASSERT(data_set_.bvh_bundle.get() != nullptr);
+    if (data_set_.bvh_bundle.get() == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+    const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
+    return bvh_node.GetBaseAddress(node_id, tlas, out_address);
 }
 
 RraErrorCode RraTlasGetNodeParent(uint64_t tlas_index, uint32_t node_ptr, uint32_t* out_parent_node_id)
@@ -830,5 +837,108 @@ bool RraTlasIsInstanceNode(uint64_t tlas_index, uint32_t node_id)
     }
     const auto& bvh_node = data_set_.bvh_bundle->GetBvhNode();
     return bvh_node.GetIsInstanceNode(node_id, tlas);
+}
+
+bool RraTlasIsPartitioned(uint64_t tlas_index)
+{
+    const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr)
+    {
+        return false;
+    }
+    return tlas->IsPartitioned();
+}
+
+bool RraTlasHasNodePacking(uint64_t tlas_index)
+{
+    const auto* tlas = dynamic_cast<const rta::EncodedRtIp31TopLevelBvh*>(RraTlasGetTlasFromTlasIndex(tlas_index));
+    if (tlas == nullptr)
+    {
+        return false;
+    }
+    return tlas->HasNodePacking();
+}
+
+RraErrorCode RraTlasGetPartitionCount(uint64_t tlas_index, uint32_t* out_count)
+{
+    RRA_ASSERT(out_count != nullptr);
+    const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr || out_count == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+    *out_count = tlas->GetPartitionCount();
+    return kRraOk;
+}
+
+RraErrorCode RraTlasGetMaxPartitionInstances(uint64_t tlas_index, uint32_t* out_max)
+{
+    RRA_ASSERT(out_max != nullptr);
+    const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr || out_max == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+    *out_max = tlas->GetMaxPartitionInstances();
+    return kRraOk;
+}
+
+RraErrorCode RraTlasGetMaxGlobalInstances(uint64_t tlas_index, uint32_t* out_max)
+{
+    RRA_ASSERT(out_max != nullptr);
+    const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr || out_max == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+    *out_max = tlas->GetMaxGlobalInstances();
+    return kRraOk;
+}
+
+RraErrorCode RraTlasGetPartitionInfo(uint64_t tlas_index, uint32_t partition_index, RraPartitionInfo* out_info)
+{
+    RRA_ASSERT(out_info != nullptr);
+    const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr || out_info == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    const rta::EncodedTopLevelBvh::PartitionInfo* info = tlas->GetPartitionInfo(partition_index);
+    if (info == nullptr)
+    {
+        return kRraErrorIndexOutOfRange;
+    }
+
+    out_info->partition_index     = partition_index;
+    out_info->instance_count      = info->instance_count;
+    out_info->internal_node_count = info->internal_node_count;
+    out_info->fat_leaf_count      = info->fat_leaf_count;
+    out_info->bounds_valid        = info->bounds_valid;
+    out_info->is_global           = (partition_index == tlas->GetPartitionCount());
+    for (int c = 0; c < 3; ++c)
+    {
+        out_info->translation[c] = info->translation[c];
+        out_info->bounds_min[c]  = info->bounds_min[c];
+        out_info->bounds_max[c]  = info->bounds_max[c];
+    }
+
+    return kRraOk;
+}
+
+RraErrorCode RraTlasGetInstancePartitionIndex(uint64_t tlas_index, uint32_t instance_index, uint32_t* out_partition_index, bool* out_active)
+{
+    RRA_ASSERT(out_partition_index != nullptr);
+    const rta::EncodedTopLevelBvh* tlas = RraTlasGetTlasFromTlasIndex(tlas_index);
+    if (tlas == nullptr || out_partition_index == nullptr)
+    {
+        return kRraErrorInvalidPointer;
+    }
+
+    if (!tlas->GetInstancePartitionIndex(instance_index, out_partition_index, out_active))
+    {
+        return kRraErrorIndexOutOfRange;
+    }
+    return kRraOk;
 }
 

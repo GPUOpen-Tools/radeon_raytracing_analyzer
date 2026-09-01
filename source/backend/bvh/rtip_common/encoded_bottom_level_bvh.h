@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Bottom level acceleration structure not specific to rt ip level.
@@ -196,6 +197,18 @@ namespace rta
         ///
         /// @returns kRraOk if successful or an RraErrorCode if an error occurred.
         RraErrorCode GetProceduralNodeCount(uint32_t* out_procedural_node_count) const;
+
+        /// @brief Get the total number of triangles in this BLAS.
+        ///
+        /// @return The total triangle count.
+        virtual uint32_t GetTriangleCount() const;
+
+        /// @brief Get the total number of triangles in a geometry.
+        ///
+        /// @param [in] geometry_index  The index of the geometry.
+        ///
+        /// @return The triangle count for the geometry.
+        virtual uint32_t GetGeometryTriangleCount(uint32_t geometry_index) const;
 
         /// @brief Traverse the tree for compute leaf node surface area heuristics.
         virtual void ComputeSurfaceAreaHeuristic() = 0;

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Bit manipulation helper functions.
@@ -10,11 +11,44 @@
 
 #include <cstdint>
 
+#ifdef _WIN32
+#pragma warning(disable : 4505)  // prevent warning caused by unreferenced functions
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
+//=====================================================================================================================
+static uint32_t LowPart(uint64_t value)
+{
+    return uint32_t(value);
+}
+
+//=====================================================================================================================
+static uint32_t HighPart(uint64_t value)
+{
+    return uint32_t(value >> 32);
+}
+
 //=====================================================================================================================
 // Helper function for producing a 32 bit mask of one bit
 inline uint32_t bit(uint32_t index)
 {
     return 1u << index;
+}
+
+//=====================================================================================================================
+// Helper function for producing a 16 bit mask of one bit
+inline uint16_t bit16(uint16_t index)
+{
+    return uint16_t(1u << index);
+}
+
+//=====================================================================================================================
+// Helper function for producing a 64 bit mask of one bit
+inline uint64_t bit64(uint32_t index)
+{
+    return 1ull << index;
 }
 
 //=====================================================================================================================
@@ -92,6 +126,16 @@ static uint32_t Pow2Align(uint32_t value,      ///< Value to align.
 {
     return ((value + alignment - 1) & ~(alignment - 1));
 }
+
+//=====================================================================================================================
+//inline uint32_t countbits64(uint64_t val)
+//{
+//    return countbits(LowPart(val)) + countbits(HighPart(val));
+//}
+
+#ifndef _WIN32
+#pragma GCC diagnostic pop
+#endif
 
 #endif  // RRA_BACKEND_BITS_H
 

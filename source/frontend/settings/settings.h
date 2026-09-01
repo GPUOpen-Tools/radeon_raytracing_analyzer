@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Define the settings and information about recently opened traces.
@@ -104,6 +105,7 @@ enum CheckboxSetting
     kCheckboxSettingShowInstanceTransform,
     kCheckboxSettingShowWireframe,
     kCheckboxSettingAcceptFirstHit,
+    kCheckboxSettingMaxAnyhitInvocations,
     kCheckboxSettingCullBackFacingTriangles,
     kCheckboxSettingCullFrontFacingTriangles,
 };
@@ -193,6 +195,7 @@ enum SettingID
     kSettingPersistenceTLASShowInstanceTransform,  // TLAS only.
     kSettingPersistenceTLASShowWireframe,
     kSettingPersistenceTLASAcceptFirstHit,
+    kSettingPersistenceTLASMaxAnyhitInvocations,
     kSettingPersistenceTLASCullBackFacingTriangles,
     kSettingPersistenceTLASCullFrontFacingTriangles,
     kSettingPersistenceTLASFieldOfView,
@@ -209,6 +212,7 @@ enum SettingID
     kSettingPersistenceBLASShowAxisAlignedLeafBVH,
     kSettingPersistenceBLASShowWireframe,
     kSettingPersistenceBLASAcceptFirstHit,
+    kSettingPersistenceBLASMaxAnyhitInvocations,
     kSettingPersistenceBLASCullBackFacingTriangles,
     kSettingPersistenceBLASCullFrontFacingTriangles,
     kSettingPersistenceBLASFieldOfView,
@@ -226,6 +230,7 @@ enum SettingID
     kSettingPersistenceInspectorShowAxisAlignedLeafBVH,
     kSettingPersistenceInspectorShowWireframe,
     kSettingPersistenceInspectorAcceptFirstHit,
+    kSettingPersistenceInspectorMaxAnyhitInvocations,
     kSettingPersistenceInspectorCullBackFacingTriangles,
     kSettingPersistenceInspectorCullFrontFacingTriangles,
     kSettingPersistenceInspectorFieldOfView,

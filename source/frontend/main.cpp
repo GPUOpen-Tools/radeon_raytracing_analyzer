@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Main entry point.
@@ -7,6 +8,15 @@
 
 #include <stdarg.h>
 #include <vector>
+
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
+#include "binary_security_check.h"
+#endif
 
 #include <QApplication>
 #include <QDir>
@@ -38,7 +48,7 @@ namespace rra
 /// @param [in] message Incoming message.
 void PrintCallback(LogLevel log_level, const char* message)
 {
-    DebugWindow::DbgMsg(log_level, message);
+    DebugWindow::DbgMsg(log_level, "%s", message);
 }
 
 /// @brief Detect RRA trace if any was specified as command line param.
@@ -66,6 +76,25 @@ static QString GetTracePath()
 /// @param [in] argv An array containing arguments.
 int main(int argc, char* argv[])
 {
+#ifdef _WIN32
+    // Harden the DLL search path before any other code runs to mitigate DLL planting attacks.
+    // Restrict module loading to the application directory and System32.
+    if (!SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32))
+    {
+        MessageBox(NULL,
+                   TEXT("Failed to configure a secure DLL search path.\nThe application will now exit."),
+                   TEXT("Security Warning"),
+                   MB_OK | MB_ICONERROR | MB_TOPMOST);
+        return -1;
+    }
+
+    // Verify the installation has not been tampered with.
+    if (!BinarySecurity::IsInstallationValid())
+    {
+        return -1;
+    }
+#endif
+
     RraSetPrintingCallback(PrintCallback, true);
 
 #ifdef _LINUX
@@ -81,9 +110,6 @@ int main(int argc, char* argv[])
     int         result = -1;
     if (window != nullptr)
     {
-#ifdef _WIN32
-        SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
-#endif
         window->show();
         rra::renderer::GraphicsContextSceneInfo* info = new rra::renderer::GraphicsContextSceneInfo{};
 

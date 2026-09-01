@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the TLAS properties model.
@@ -44,6 +45,11 @@ namespace rra
 
         SetModelData(kTlasPropertiesMemoryTlas, "-");
         SetModelData(kTlasPropertiesMemoryTotal, "-");
+
+        SetModelData(kTlasPropertiesNumPartitions, "-");
+        SetModelData(kTlasPropertiesMaxPartitionInstances, "-");
+        SetModelData(kTlasPropertiesMaxGlobalInstances, "-");
+        SetModelData(kTlasPropertiesGlobalPartitionInstances, "-");
     }
 
     void TlasPropertiesModel::Update(uint64_t tlas_index)
@@ -122,6 +128,34 @@ namespace rra
         if (RraTlasGetEffectiveSizeInBytes(tlas_index, &total_memory) == kRraOk)
         {
             SetModelData(kTlasPropertiesMemoryTotal, rra::string_util::LocalizedValueMemory(static_cast<double>(total_memory), false, true));
+        }
+
+        if (RraTlasIsPartitioned(tlas_index))
+        {
+            uint32_t partition_count = 0;
+            if (RraTlasGetPartitionCount(tlas_index, &partition_count) == kRraOk)
+            {
+                SetModelData(kTlasPropertiesNumPartitions, rra::string_util::LocalizedValue(partition_count));
+            }
+
+            uint32_t max_partition_instances = 0;
+            if (RraTlasGetMaxPartitionInstances(tlas_index, &max_partition_instances) == kRraOk)
+            {
+                SetModelData(kTlasPropertiesMaxPartitionInstances, rra::string_util::LocalizedValue(max_partition_instances));
+            }
+
+            uint32_t max_global_instances = 0;
+            if (RraTlasGetMaxGlobalInstances(tlas_index, &max_global_instances) == kRraOk)
+            {
+                SetModelData(kTlasPropertiesMaxGlobalInstances, rra::string_util::LocalizedValue(max_global_instances));
+            }
+
+            // The global partition occupies the slot at index == partition_count.
+            RraPartitionInfo global_info = {};
+            if (RraTlasGetPartitionInfo(tlas_index, partition_count, &global_info) == kRraOk)
+            {
+                SetModelData(kTlasPropertiesGlobalPartitionInstances, rra::string_util::LocalizedValue(global_info.instance_count));
+            }
         }
     }
 

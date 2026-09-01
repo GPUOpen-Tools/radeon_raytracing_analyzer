@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Intended to hold globally-known definitions.
@@ -94,8 +95,8 @@ namespace rra
         static const QString kHelpFile            = "/help/rra/index.html";
         static const QString kLicenseFile         = "/LICENSE.txt";
         static const QString kSampleTraceLocation = "/samples/sample_trace" + kRRATraceFileExtension;
-        static const QString kFileOpenFileTypes = "RRA scene files (*" + kRRATraceFileExtension + ")";
-        static const QString kMissingHelpFile = "Missing RRA help file: ";
+        static const QString kFileOpenFileTypes   = "RRA scene files (*" + kRRATraceFileExtension + ")";
+        static const QString kMissingHelpFile     = "Missing RRA help file: ";
 
         /// @brief External links.
         static const QUrl kGpuOpenUrl                = QUrl("https://gpuopen.com");

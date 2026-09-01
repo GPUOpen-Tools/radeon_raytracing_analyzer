@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the RTIP11 node class.
@@ -85,6 +86,247 @@ namespace rta
 
             return children_padded;
         }
+    }
+
+    RraErrorCode Rtip11Node::GetChildNodeCount(const rta::IBvh* bvh, uint32_t parent_node, uint32_t* out_child_count) const
+    {
+        const auto& interior_nodes = bvh->GetInteriorNodesData();
+
+        const auto&            header_offsets = bvh->GetHeader().GetBufferOffsets();
+        dxr::amd::NodePointer* node_ptr       = reinterpret_cast<dxr::amd::NodePointer*>(&parent_node);
+        auto                   byte_offset    = node_ptr->GetByteOffset() - header_offsets.interior_nodes;
+
+        if (interior_nodes.size() > byte_offset)
+        {
+            if (node_ptr->IsFp32BoxNode())
+            {
+                const auto node  = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[byte_offset]);
+                *out_child_count = node->GetValidChildCount();
+            }
+            else if (node_ptr->IsFp16BoxNode())
+            {
+                const auto node  = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[byte_offset]);
+                *out_child_count = node->GetValidChildCount();
+            }
+            else
+            {
+                *out_child_count = 0;
+            }
+        }
+        else
+        {
+            *out_child_count = 0;
+        }
+        return kRraOk;
+    }
+
+    RraErrorCode Rtip11Node::GetChildNodes(const rta::IBvh* bvh, uint32_t parent_node, uint32_t* out_child_nodes) const
+    {
+        const auto& interior_nodes = bvh->GetInteriorNodesData();
+
+        const auto&            header_offsets = bvh->GetHeader().GetBufferOffsets();
+        dxr::amd::NodePointer* node_ptr       = reinterpret_cast<dxr::amd::NodePointer*>(&parent_node);
+        auto                   byte_offset    = node_ptr->GetByteOffset() - header_offsets.interior_nodes;
+
+        if (interior_nodes.size() > byte_offset)
+        {
+            if (node_ptr->IsFp32BoxNode())
+            {
+                const auto node     = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[byte_offset]);
+                const auto children = node->GetChildren();
+                for (size_t i = 0; i < children.size(); i++)
+                {
+                    if (!children[i].IsInvalid())
+                    {
+                        *out_child_nodes = children[i].GetRawPointer();
+                        out_child_nodes++;
+                    }
+                }
+            }
+            else if (node_ptr->IsFp16BoxNode())
+            {
+                const auto node     = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[byte_offset]);
+                const auto children = node->GetChildren();
+                for (size_t i = 0; i < children.size(); i++)
+                {
+                    if (!children[i].IsInvalid())
+                    {
+                        *out_child_nodes = children[i].GetRawPointer();
+                        out_child_nodes++;
+                    }
+                }
+            }
+        }
+        return kRraOk;
+    }
+
+    RraErrorCode Rtip11Node::GetChildIndices(const rta::IBvh* bvh, uint32_t parent_node, uint32_t* out_child_indices) const
+    {
+        const auto& interior_nodes = bvh->GetInteriorNodesData();
+
+        const auto&            header_offsets = bvh->GetHeader().GetBufferOffsets();
+        dxr::amd::NodePointer* node_ptr       = reinterpret_cast<dxr::amd::NodePointer*>(&parent_node);
+        auto                   byte_offset    = node_ptr->GetByteOffset() - header_offsets.interior_nodes;
+
+        if (interior_nodes.size() > byte_offset)
+        {
+            if (node_ptr->IsFp32BoxNode())
+            {
+                const auto node     = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[byte_offset]);
+                const auto children = node->GetChildren();
+                for (size_t i = 0; i < children.size(); i++)
+                {
+                    if (!children[i].IsInvalid())
+                    {
+                        out_child_indices[i] = (uint32_t)i;
+                    }
+                }
+            }
+            else if (node_ptr->IsFp16BoxNode())
+            {
+                const auto node     = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[byte_offset]);
+                const auto children = node->GetChildren();
+                for (size_t i = 0; i < children.size(); i++)
+                {
+                    if (!children[i].IsInvalid())
+                    {
+                        out_child_indices[i] = (uint32_t)i;
+                    }
+                }
+            }
+        }
+        return kRraOk;
+    }
+
+    RraErrorCode Rtip11Node::GetChildNodePtr(const rta::IBvh* bvh, uint32_t parent_node, uint32_t child_index, uint32_t* out_node_id) const
+    {
+        const auto& interior_nodes = bvh->GetInteriorNodesData();
+
+        const auto&            header_offsets = bvh->GetHeader().GetBufferOffsets();
+        dxr::amd::NodePointer* node_ptr       = reinterpret_cast<dxr::amd::NodePointer*>(&parent_node);
+        auto                   byte_offset    = node_ptr->GetByteOffset() - header_offsets.interior_nodes;
+
+        if (interior_nodes.size() > byte_offset)
+        {
+            if (node_ptr->IsFp32BoxNode())
+            {
+                const auto node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[byte_offset]);
+                if (node->GetChildren().size() <= child_index)
+                {
+                    return kRraErrorIndexOutOfRange;
+                }
+
+                const auto& ptr = node->GetChildren()[child_index];
+                if (!ptr.IsInvalid())
+                {
+                    *out_node_id = ptr.GetRawPointer();
+                    return kRraOk;
+                }
+                else
+                {
+                    return kRraErrorInvalidChildNode;
+                }
+            }
+            else if (node_ptr->IsFp16BoxNode())
+            {
+                const auto node = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[byte_offset]);
+                if (node->GetChildren().size() <= child_index)
+                {
+                    return kRraErrorIndexOutOfRange;
+                }
+
+                const auto& ptr = node->GetChildren()[child_index];
+                if (!ptr.IsInvalid())
+                {
+                    *out_node_id = ptr.GetRawPointer();
+                    return kRraOk;
+                }
+                else
+                {
+                    return kRraErrorInvalidChildNode;
+                }
+            }
+        }
+        return kRraErrorIndexOutOfRange;
+    }
+
+    RraErrorCode Rtip11Node::GetNodeBoundingVolume(const rta::IBvh*                  bvh,
+                                                   uint32_t                          node_id,
+                                                   uint32_t                          child_index,
+                                                   uint32_t                          global_child_index,
+                                                   dxr::amd::AxisAlignedBoundingBox& out_bounding_box) const
+    {
+        RRA_UNUSED(child_index);
+        const auto& interior_nodes = bvh->GetInteriorNodesData();
+
+        dxr::amd::NodePointer* node_ptr = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+
+        if (node_ptr->IsInvalid())
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        if (interior_nodes.size() == 0)
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        if (bvh->IsEmpty())
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        dxr::amd::NodePointer parent_node = bvh->GetParentNode(node_ptr->GetRawPointer(), global_child_index);
+
+        // Need to get the node parent, and look for the node in the children of the parent, since that's where
+        // the bounding box info is stored.
+        if (parent_node.IsInvalid())
+        {
+            out_bounding_box = ComputeRootNodeBoundingBox(bvh);
+            return kRraOk;
+        }
+        else
+        {
+            uint64_t parent_index;
+            if (parent_node.IsBoxNode())
+            {
+                parent_index = parent_node.GetByteOffset() - bvh->GetHeader().GetBufferOffsets().interior_nodes;
+            }
+            else
+            {
+                parent_index = parent_node.GetByteOffset() - bvh->GetHeader().GetBufferOffsets().leaf_nodes;
+            }
+
+            if (parent_node.IsFp16BoxNode())
+            {
+                const dxr::amd::Float16BoxNode* box_node    = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[parent_index]);
+                const auto&                     child_array = box_node->GetChildren();
+                const auto&                     bbox_array  = box_node->GetBoundingBoxes();
+                for (auto i = 0; i < 4; i++)
+                {
+                    if (child_array[i].GetRawPointer() == node_ptr->GetRawPointer())
+                    {
+                        out_bounding_box = bbox_array[i];
+                        return kRraOk;
+                    }
+                }
+            }
+            else if (parent_node.IsFp32BoxNode())
+            {
+                const auto  box_node    = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[parent_index]);
+                const auto& child_array = box_node->GetChildren();
+                const auto& bbox_array  = box_node->GetBoundingBoxes();
+                for (auto i = 0; i < 4; i++)
+                {
+                    if (child_array[i].GetRawPointer() == node_ptr->GetRawPointer())
+                    {
+                        out_bounding_box = bbox_array[i];
+                        return kRraOk;
+                    }
+                }
+            }
+        }
+        return kRraErrorInvalidPointer;
     }
 
 }  // namespace rta

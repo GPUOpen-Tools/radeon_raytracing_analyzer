@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific bottom level acceleration structure
@@ -219,6 +220,15 @@ namespace rta
         /// @brief Count the number of interior and leaf nodes. Needs to only be called once before calling GetNodeCount.
         void CountNodes();
 
+        /// @brief Does this BLAS use RTIP3.1 node packing (>1 box slot of a parent sharing one child node)?
+        ///
+        /// Computed once during CountNodes(). When false, node ids are unique per tree position and the frontend can
+        /// key its scene/tree items by bare node id (as on non-packing hardware); when true it must fold in the global
+        /// child index to de-collide the shared node's several slots.
+        ///
+        /// @return true if any interior node reuses a child pointer across its slots, false otherwise.
+        bool HasNodePacking() const;
+
         /// @brief Traverse the tree for compute leaf node surface area heuristics.
         virtual void ComputeSurfaceAreaHeuristic() override;
 
@@ -248,7 +258,84 @@ namespace rta
         /// @param [in] surface_area_heuristic The surface area heuristic value to be set.
         void SetLeafNodeSurfaceAreaHeuristic(uint32_t node_ptr, float surface_area_heuristic);
 
+        /// @brief Is this a Cluster BLAS (CBLAS)?
+        ///
+        /// A CBLAS is a bottom-level structure whose leaves are hardware instance nodes referencing
+        /// CLAS headers (geometryType == Instances). It is the middle tier of the CLAS hierarchy
+        /// (TLAS -> CBLAS -> CLAS -> triangles).
+        ///
+        /// @return true if this is a Cluster BLAS, false otherwise.
+        bool IsClusterBlas() const;
+
+        /// @brief Is this a CLAS (Cluster Level Acceleration Structure)?
+        ///
+        /// A CLAS is the leaf tier of the CLAS hierarchy (TLAS -> CBLAS -> CLAS -> triangles): a
+        /// ClusterLevel structure that stores triangles directly in its cluster leaf nodes.
+        ///
+        /// @return true if this is a CLAS, false otherwise.
+        bool IsCluster() const;
+
+        /// @brief Get the number of triangles in this BVH.
+        ///
+        /// A CLAS (ClusterLevel) stores its triangles directly in cluster leaf nodes and leaves the
+        /// geometry-info primitive count at 0, so the base geometry-info sum reports 0. Override to
+        /// return the header's active primitive count for a CLAS so vertex-buffer sizing is correct.
+        ///
+        /// @return The triangle count.
+        uint32_t GetTriangleCount() const override;
+
+        /// @brief Is the given node a cluster reference (a CBLAS instance-leaf pointing at a CLAS)?
+        ///
+        /// @param [in] node_id The node pointer.
+        ///
+        /// @return true if the node is a cluster reference, false otherwise.
+        bool IsClusterRefNode(uint32_t node_id) const;
+
+        /// @brief Resolve the CLAS referenced by a cluster-reference leaf to its BLAS index.
+        ///
+        /// @param [in]  node_id              The cluster-reference node pointer.
+        /// @param [out] out_clas_blas_index  The BLAS index of the referenced CLAS.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        RraErrorCode GetClasIndexFromClusterRefNode(uint32_t node_id, uint64_t* out_clas_blas_index) const;
+
+        /// @brief Get the (world-to-object) transform of a cluster-reference leaf.
+        ///
+        /// @param [in]  node_id       The cluster-reference node pointer.
+        /// @param [out] out_transform A pointer to receive 12 floats of transform data.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        RraErrorCode GetClusterRefNodeTransform(uint32_t node_id, float* out_transform) const;
+
+        /// @brief Get the instance ID stored in a cluster-reference leaf (used to label "CLAS [id]").
+        ///
+        /// @param [in]  node_id The cluster-reference node pointer.
+        /// @param [out] out_id  A pointer to receive the instance ID.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        RraErrorCode GetClusterRefNodeId(uint32_t node_id, uint32_t* out_id) const;
+
+        /// @brief Get the instance mask stored in a cluster-reference leaf.
+        ///
+        /// @param [in]  node_id  The cluster-reference node pointer.
+        /// @param [out] out_mask A pointer to receive the 8-bit instance mask.
+        ///
+        /// @return kRraOk if successful or an RraErrorCode if an error occurred.
+        RraErrorCode GetClusterRefNodeMask(uint32_t node_id, uint32_t* out_mask) const;
+
+        /// @brief Store the BLAS address->index map so a CBLAS can resolve its leaves to CLAS indices.
+        ///
+        /// @param [in] blas_map A map of (blas_address, blas_index).
+        void ConvertBlasAddressesToIndices(const std::unordered_map<GpuVirtualAddress, uint64_t>& blas_map) override;
+
     private:
+        /// @brief Read the hardware instance node backing a CBLAS cluster-reference leaf.
+        ///
+        /// @param [in] node_id The cluster-reference node pointer.
+        ///
+        /// @return A pointer to the instance node within interior_nodes_, or nullptr if out of range.
+        const HwInstanceNodeRRA* GetClusterRefInstanceNode(uint32_t node_id) const;
+
         /// @brief Obtain the byte size of the encoded buffer.
         ///
         /// @param [in] import_option Flag indicating which sections of the chunk to load/discard.
@@ -263,7 +350,12 @@ namespace rta
 
         uint32_t                               interior_node_count_{};
         uint32_t                               leaf_node_count_{};
+        bool                                   has_node_packing_{false};  // Set by CountNodes(); see HasNodePacking().
         std::unordered_map<uint32_t, uint32_t> triangle_node_parents_{};  // Pairs of (triangle_node_pointer, parent_pointer).
+
+        // Populated only for a Cluster BLAS: maps a CLAS header address to its BLAS index so cluster-reference
+        // leaves resolve their referenced CLAS via an exact lookup (mirrors the TLAS blas_map_).
+        std::unordered_map<GpuVirtualAddress, uint64_t> blas_map_{};
     };
 
 }  // namespace rta

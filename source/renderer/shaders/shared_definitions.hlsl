@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2022 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Decleration for shared shader functions.
@@ -90,6 +91,8 @@ struct SceneUBO
     int  traversal_accept_first_hit;
     int  traversal_cull_back_facing_triangles;
     int  traversal_cull_front_facing_triangles;
+
+    int traversal_max_anyhit_invocations;
 
     int count_as_fused_instances;
 

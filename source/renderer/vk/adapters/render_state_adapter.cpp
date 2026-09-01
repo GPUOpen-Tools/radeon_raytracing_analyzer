@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Render State Adapter type.
@@ -100,6 +101,8 @@ namespace rra
         static const char* kGeometryColoringModeDescription_BlasInstanceId            = "A color for each unique BLAS.";
         static const char* kGeometryColoringModeName_InstanceIndex                    = "Color geometry by unique color (Instance)";
         static const char* kGeometryColoringModeDescription_InstanceIndex             = "Each instance is assigned a unique color.";
+        static const char* kGeometryColoringModeName_PartitionIndex                   = "Color geometry by partition (PTLAS)";
+        static const char* kGeometryColoringModeDescription_PartitionIndex            = "Each PTLAS partition is assigned a unique color.";
         static const char* kGeometryColoringModeName_BlasInstanceCount                = "Color geometry by instance count (BLAS)";
         static const char* kGeometryColoringModeDescription_BlasInstanceCount         = "A heatmap showing which BLAS are most commonly instanced.";
         static const char* kGeometryColoringModeName_BlasTriangleCount                = "Color geometry by triangle count (BLAS)";
@@ -177,6 +180,10 @@ namespace rra
              BvhTypeFlags::TopLevel,
              kGeometryColoringModeName_InstanceIndex,
              kGeometryColoringModeDescription_InstanceIndex},
+            {GeometryColoringMode::kPartitionIndex,
+             BvhTypeFlags::TopLevel,
+             kGeometryColoringModeName_PartitionIndex,
+             kGeometryColoringModeDescription_PartitionIndex},
             {GeometryColoringMode::kBlasInstanceCount,
              BvhTypeFlags::TopLevel,
              kGeometryColoringModeName_BlasInstanceCount,
@@ -609,6 +616,12 @@ namespace rra
         {
             vulkan_renderer_->GetSceneUbo().traversal_accept_first_hit = accept_first_hit ? 1 : 0;
             UpdateRayParameters();
+        }
+
+        void RenderStateAdapter::SetRayFlagMaxAnyhitInvocations(bool max_anyhit_invocations)
+        {
+            vulkan_renderer_->GetSceneUbo().traversal_max_anyhit_invocations = max_anyhit_invocations ? 1 : 0;
+            vulkan_renderer_->MarkAsDirty();
         }
 
         void RenderStateAdapter::SetRayFlagCullBackFacingTriangles(bool cull_back_facing_tris)

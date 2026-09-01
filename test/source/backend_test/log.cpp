@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test log file implementation
@@ -12,7 +13,7 @@
 #include <string>
 
 #ifdef _LINUX
-#include "public/linux/safe_crt.h"
+#include "linux/safe_crt.h"
 #endif
 
 namespace backend_test

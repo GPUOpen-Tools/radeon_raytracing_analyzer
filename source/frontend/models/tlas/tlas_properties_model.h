@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the TLAS properties model.
@@ -35,6 +36,11 @@ namespace rra
 
         kTlasPropertiesMemoryTlas,
         kTlasPropertiesMemoryTotal,
+
+        kTlasPropertiesNumPartitions,
+        kTlasPropertiesMaxPartitionInstances,
+        kTlasPropertiesMaxGlobalInstances,
+        kTlasPropertiesGlobalPartitionInstances,
 
         kTlasPropertiesNumWidgets,
     };

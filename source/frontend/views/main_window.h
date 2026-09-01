@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the main window.
@@ -117,6 +118,13 @@ private slots:
     ///
     /// @param [in] pane The pane to jump to.
     void ViewPane(int pane);
+
+    /// @brief Handle a Back navigation request.
+    ///
+    /// Lets the BLAS pane unwind one level of CLAS drill-down (CLAS -> CBLAS) before falling through to the
+    /// global pane-based navigation manager, so the back-stack walks CLAS -> CBLAS -> TLAS. Non-CLAS traces
+    /// always fall straight through to the navigation manager.
+    void NavigateBack();
 
     /// @brief Update the UI reset buttons.
     ///

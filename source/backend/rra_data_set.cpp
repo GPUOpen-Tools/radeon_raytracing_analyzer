@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of functions for working with a data set.
@@ -17,7 +18,7 @@
 
 #ifndef _WIN32
 #include <stddef.h>  // for offsetof macro.
-#include "public/linux/safe_crt.h"
+#include "linux/safe_crt.h"
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -220,7 +221,9 @@ RraErrorCode RraDataSetInitialize(const char* path, RraDataSet* data_set)
 
     // Copy the path
     const size_t path_length = strlen(path);
-    memcpy(data_set->file_path, path, RRA_MINIMUM(RRA_MAXIMUM_FILE_PATH, path_length));
+    const size_t copy_length = RRA_MINIMUM(RRA_MAXIMUM_FILE_PATH - 1, path_length);
+    memcpy(data_set->file_path, path, copy_length);
+    data_set->file_path[copy_length] = '\0';
 
     data_set->driver_overrides_json_text = nullptr;
     data_set->file_loaded                = false;

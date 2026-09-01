@@ -1,6 +1,7 @@
 //{{NO_DEPENDENCIES}}
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief Microsoft Visual C++ generated include file used by RRA.rc.

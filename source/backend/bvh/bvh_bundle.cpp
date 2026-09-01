@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH bundle implementation.
@@ -312,6 +313,25 @@ namespace rta
             }
         }
 
+        // A TLAS instance encodes the address of the BLAS root node, which sits one metadataSize above
+        // the metadata-base address that blas_map is keyed on (root = base_key + metadataSize; the
+        // AccelStructHeader is the first thing after the metadata). Older captures happened to encode the
+        // base address directly, so the primary key still matches those. Register the root-node address as
+        // an additional key for each BLAS so PTLAS instances resolve via an exact lookup instead of a
+        // fuzzy nearest-address match. Primary keys are inserted above first, so insert() here never
+        // overrides them on collision.
+        for (std::size_t b = 0; b < bottom_level_bvhs.size(); ++b)
+        {
+            const auto& as        = bottom_level_bvhs[b];
+            const auto  base_key  = as->GetVirtualAddress() + as->GetHeaderOffset();
+            const auto  meta_size = as->GetHeader().GetMetaDataSize();
+            if (base_key == 0 || meta_size == 0)
+            {
+                continue;
+            }
+            blas_map.insert(std::make_pair(base_key + meta_size, b));
+        }
+
         // Replace absolute addresses in the TLAS with indices. Additionally, the instance nodes
         // in the TLAS refer to BLAS instances, and these addresses also need converting to indices.
         std::unordered_set<GpuVirtualAddress> missing_tlas_set;
@@ -345,6 +365,9 @@ namespace rta
                 *io_error_code = kRraErrorMalformedData;
                 return nullptr;
             }
+            // A Cluster BLAS stores the map so its instance-leaves can resolve to their referenced CLAS index.
+            // This is a no-op for ordinary BLASes.
+            bottom_level_bvh->ConvertBlasAddressesToIndices(blas_map);
         }
 
         for (std::unique_ptr<IBvh>& bvh : bottom_level_bvhs)

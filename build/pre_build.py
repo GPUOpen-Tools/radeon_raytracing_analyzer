@@ -1,6 +1,7 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright Advanced Micro Devices, Inc.
+## SPDX-License-Identifier: MIT
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief Script to perform all necessary pre build steps. This includes:
@@ -80,6 +81,7 @@ parser.add_argument("--vscode", action="store_true", help="generate CMake option
 if support_32_bit_build:
     parser.add_argument("--platform", default="x64", choices=["x64", "x86"], help="specify the platform (32 or 64 bit)")
 args = parser.parse_args()
+
 
 # Define the build configurations that will be generated
 configs = ["debug", "release"]
@@ -423,4 +425,5 @@ if (args.build):
 minutes, seconds = divmod(time.time() - start_time, 60)
 log_print("Successfully completed in {0:.0f} minutes, {1:.1f} seconds".format(minutes,seconds))
 sys.exit(0)
+
 

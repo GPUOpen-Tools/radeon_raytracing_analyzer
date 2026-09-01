@@ -1,11 +1,13 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the trace loader interface.
 //=============================================================================
 
 #include "public/rra_trace_loader.h"
+#include "public/rra_assert.h"
 
 #include <string.h>
 
@@ -30,7 +32,9 @@ void RraTraceLoaderUnload()
 {
     if (RraTraceLoaderValid())
     {
-        RraDataSetDestroy(&data_set_);
+        RraErrorCode error_code = RraDataSetDestroy(&data_set_);
+        RRA_ASSERT(error_code == kRraOk);
+        RRA_UNUSED(error_code);
     }
     data_set_ = {};
 }

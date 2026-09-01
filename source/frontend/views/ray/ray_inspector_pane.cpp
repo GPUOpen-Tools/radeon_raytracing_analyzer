@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Ray inspector pane.
@@ -1220,5 +1221,4 @@ void RayInspectorPane::OnColorThemeUpdated()
         ui_->selected_ray_focus_->SetNormalIcon(QIcon(":/Resources/assets/third_party/ionicons/scan-outline-clickable.svg"));
     }
 }
-
 

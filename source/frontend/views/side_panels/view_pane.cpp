@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the View side pane.
@@ -67,7 +68,11 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_render_internal_bvh_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_render_leaf_bvh_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_render_instance_transform_->Initialize(false, rra::kCheckboxEnableColor);
+    ui_->content_render_partition_bounds_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_wireframe_overlay_->Initialize(false, rra::kCheckboxEnableColor);
+
+    // Only shown for partitioned (PTLAS) traces; the TLAS viewer pane toggles availability per selected TLAS.
+    ui_->content_render_partition_bounds_->hide();
 
     // Initialize any combo boxes.
     rra::widget_util::InitializeComboBox(this, ui_->content_culling_mode_, model_->GetViewportCullingModes());
@@ -89,6 +94,7 @@ ViewPane::ViewPane(QWidget* parent)
     ui_->content_architecture_navi_2_->Initialize(true, rra::kCheckboxEnableColor);
     ui_->content_architecture_navi_3_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_ray_flags_accept_first_hit_->Initialize(false, rra::kCheckboxEnableColor);
+    ui_->content_ray_flags_max_anyhit_invocations_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_ray_flags_cull_back_facing_triangles_->Initialize(false, rra::kCheckboxEnableColor);
     ui_->content_ray_flags_cull_front_facing_triangles_->Initialize(false, rra::kCheckboxEnableColor);
 
@@ -207,6 +213,9 @@ ViewPane::ViewPane(QWidget* parent)
     connect(ui_->content_render_internal_bvh_, &ColoredCheckbox::Clicked, [=, this]() { this->SetRenderBVH(true); });
     connect(ui_->content_render_leaf_bvh_, &ColoredCheckbox::Clicked, [=, this]() { this->SetRenderBVH(true); });
     connect(ui_->content_render_instance_transform_, &ColoredCheckbox::Clicked, [=, this]() { this->SetRenderInstancePretransform(true); });
+    connect(ui_->content_render_partition_bounds_, &ColoredCheckbox::Clicked, [=, this]() {
+        emit ShowPartitionBoundsChanged(ui_->content_render_partition_bounds_->isChecked());
+    });
     connect(ui_->content_wireframe_overlay_, &ColoredCheckbox::Clicked, this, &ViewPane::SetWireframeOverlay);
     connect(ui_->content_culling_mode_, &ArrowIconComboBox::SelectionChanged, this, &ViewPane::SetCullingMode);
     connect(ui_->traversal_counter_slider_, &DoubleSliderHeatmapWidget::SpanChanged, this, &ViewPane::SetTraversalCounterRange);
@@ -216,6 +225,7 @@ ViewPane::ViewPane(QWidget* parent)
     connect(ui_->traversal_continuous_update_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleTraversalCounterContinuousUpdate);
 
     connect(ui_->content_ray_flags_accept_first_hit_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsAcceptFirstHit);
+    connect(ui_->content_ray_flags_max_anyhit_invocations_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsMaxAnyhitInvocations);
     connect(ui_->content_ray_flags_cull_back_facing_triangles_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsCullBackFacingTriangles);
     connect(ui_->content_ray_flags_cull_front_facing_triangles_, &ColoredCheckbox::Clicked, this, &ViewPane::ToggleRayFlagsCullFrontFacingTriangles);
 
@@ -345,6 +355,7 @@ void ViewPane::OnTraceOpen()
     // Reset the UI when a trace is loaded.
 
     bool is_navi_3 = false;
+    // Some captures (e.g. raw PTLAS dumps) carry no AsicInfo chunk; fall back to Navi2 rather than failing to open.
     RraAsicInfoIsDeviceNavi3(&is_navi_3);
     if (is_navi_3)
     {
@@ -362,6 +373,9 @@ void ViewPane::OnTraceOpen()
     ui_->traversal_adapt_to_view_->setEnabled(true);
     ui_->traversal_continuous_update_->setChecked(false);
     ui_->content_ray_flags_accept_first_hit_->setChecked(false);
+    ui_->content_ray_flags_max_anyhit_invocations_->setChecked(false);
+    ui_->content_ray_flags_max_anyhit_invocations_->setEnabled(true);
+    ui_->content_ray_flags_accept_first_hit_->setEnabled(true);
     ui_->content_ray_flags_cull_back_facing_triangles_->setChecked(false);
     ui_->content_ray_flags_cull_front_facing_triangles_->setChecked(false);
     UpdateBoxSortHeuristicLabel();
@@ -449,6 +463,7 @@ void ViewPane::ApplyUIStateFromSettings(rra::RRAPaneId pane)
 
     // Ray flags.
     bool accept_first_hit            = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingAcceptFirstHit);
+    bool max_anyhit_invocations      = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingMaxAnyhitInvocations);
     bool cull_back_facing_triangles  = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingCullBackFacingTriangles);
     bool cull_front_facing_triangles = rra::Settings::Get().GetCheckboxSetting(pane, kCheckboxSettingCullFrontFacingTriangles);
 
@@ -479,6 +494,8 @@ void ViewPane::ApplyUIStateFromSettings(rra::RRAPaneId pane)
 
     ui_->content_ray_flags_accept_first_hit_->setChecked(accept_first_hit);
     ToggleRayFlagsAcceptFirstHit();
+    ui_->content_ray_flags_max_anyhit_invocations_->setChecked(max_anyhit_invocations);
+    ToggleRayFlagsMaxAnyhitInvocations();
     ui_->content_ray_flags_cull_back_facing_triangles_->setChecked(cull_back_facing_triangles);
     ToggleRayFlagsCullBackFacingTriangles();
     ui_->content_ray_flags_cull_front_facing_triangles_->setChecked(cull_front_facing_triangles);
@@ -647,6 +664,20 @@ void ViewPane::ToggleRayFlagsAcceptFirstHit()
     }
     UpdateBoxSortHeuristicLabel();
     rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingAcceptFirstHit, ui_->content_ray_flags_accept_first_hit_->isChecked());
+    emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
+}
+
+void ViewPane::ToggleRayFlagsMaxAnyhitInvocations()
+{
+    if (ui_->content_ray_flags_max_anyhit_invocations_->isChecked())
+    {
+        model_->EnableRayFlagsMaxAnyhitInvocations();
+    }
+    else
+    {
+        model_->DisableRayFlagsMaxAnyhitInvocations();
+    }
+    rra::Settings::Get().SetCheckboxSetting(parent_pane_id_, kCheckboxSettingMaxAnyhitInvocations, ui_->content_ray_flags_max_anyhit_invocations_->isChecked());
     emit signal_handler.CameraParametersChanged(false, parent_pane_id_);
 }
 
@@ -1026,6 +1057,19 @@ void ViewPane::ToggleHotkeyLayout()
 void ViewPane::HideTLASWidgets()
 {
     ui_->content_render_instance_transform_->hide();
+    ui_->content_render_partition_bounds_->hide();
+}
+
+void ViewPane::SetPartitionBoundsAvailable(bool available)
+{
+    ui_->content_render_partition_bounds_->setVisible(available);
+
+    // When the overlay is no longer available, clear it so a stale toggle doesn't linger on the next partitioned trace.
+    if (!available && ui_->content_render_partition_bounds_->isChecked())
+    {
+        ui_->content_render_partition_bounds_->setChecked(false);
+        emit ShowPartitionBoundsChanged(false);
+    }
 }
 
 void ViewPane::HideRAYWidgets()

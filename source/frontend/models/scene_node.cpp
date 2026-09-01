@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the SceneNode class.
@@ -10,6 +11,9 @@
 #include <algorithm>
 #include <array>
 #include <deque>
+#include <limits>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <iomanip>
 #include <sstream>
@@ -241,6 +245,111 @@ namespace rra
         return "0x" + ss.str();
     }
 
+    uint32_t SceneNode::CountBlasEmittedTriangles(uint64_t blas_index)
+    {
+        uint32_t root_id = UINT32_MAX;
+        if (RraBvhGetRootNodePtr(&root_id) != kRraOk)
+        {
+            return 0;
+        }
+        if (RraBlasIsEmpty(blas_index))
+        {
+            return 0;
+        }
+
+        struct WalkNode
+        {
+            uint32_t node_id;
+            uint32_t child_index;
+            bool     is_packed_ref;
+        };
+
+        std::deque<WalkNode> traversal_stack;
+        traversal_stack.push_back({root_id, 0, false});
+
+        uint32_t total_triangles   = 0;
+        uint32_t global_child_index = UINT32_MAX;
+
+        while (!traversal_stack.empty())
+        {
+            WalkNode current{traversal_stack.back()};
+            traversal_stack.pop_back();
+            ++global_child_index;
+
+            // Node packing (RTIP3.1): a packed-ref slot shares the primary sibling's subtree. It still consumes a
+            // global_child_index (to keep this walk aligned with ConstructFromBlasNode and the backend parent map) but
+            // emits no geometry and does not descend, so the shared subtree is counted exactly once.
+            if (current.is_packed_ref)
+            {
+                continue;
+            }
+
+            // Cluster-ref leaves render via ConstructClusterRefInstance, not the vertex buffer, so they emit nothing.
+            if (RraBlasIsClusterRefNode(blas_index, current.node_id))
+            {
+                continue;
+            }
+
+            if (RraBlasIsTriangleNode(blas_index, current.node_id))
+            {
+                uint32_t triangle_count = 0;
+                RraBlasGetNodeTriangleCount(blas_index, current.node_id, current.child_index, global_child_index, &triangle_count);
+                total_triangles += triangle_count;
+            }
+
+            if (!RraBlasHasChildren(blas_index, current.node_id))
+            {
+                continue;
+            }
+
+            uint32_t child_node_count = 0;
+            RraBlasGetChildNodeCount(blas_index, current.node_id, &child_node_count);
+
+            std::array<uint32_t, MAX_CHILD_NODES> child_nodes{};
+            RraBlasGetChildNodes(blas_index, current.node_id, child_nodes.data());
+
+            std::array<uint32_t, MAX_CHILD_NODES> child_indices{};
+            RraBlasGetChildIndices(blas_index, current.node_id, child_indices.data());
+
+            std::array<uint32_t, MAX_CHILD_NODES> box_primaries{};
+            uint32_t                              box_primaries_count{0};
+
+            for (uint32_t i{0}; i < child_node_count; ++i)
+            {
+                if (child_nodes[i] == current.node_id)
+                {
+                    continue;  // Self-reference: skip (matches ConstructFromBlasNode; neither pushes it).
+                }
+
+                bool is_packed_ref{false};
+                if (RraBlasIsBoxNode(blas_index, child_nodes[i]))
+                {
+                    bool seen{false};
+                    for (uint32_t p{0}; p < box_primaries_count; ++p)
+                    {
+                        if (box_primaries[p] == child_nodes[i])
+                        {
+                            seen = true;
+                            break;
+                        }
+                    }
+                    if (seen)
+                    {
+                        is_packed_ref = true;
+                    }
+                    else
+                    {
+                        box_primaries[box_primaries_count++] = child_nodes[i];
+                    }
+                }
+
+                traversal_stack.push_back({child_nodes[i], child_indices[i], is_packed_ref});
+            }
+        }
+
+        return total_triangles;
+    }
+
     SceneNode* SceneNode::ConstructFromBlasNode(uint64_t blas_index, uint32_t root_id, renderer::RraVertex* vertex_buffer, std::byte* child_buffer)
     {
         uint32_t current_child_buffer_offset{0};
@@ -265,6 +374,15 @@ namespace rra
         uint32_t global_child_index{UINT32_MAX};
 
         RraErrorCode error_code = kRraOk;
+        uint64_t     total_node_count{};
+        error_code = RraBlasGetTotalNodeCount(blas_index, &total_node_count);
+        RRA_ASSERT(error_code == kRraOk);
+        const size_t node_buffer_capacity_bytes = (total_node_count + 1) * sizeof(SceneNode);
+
+        // Size against the triangles the traversal actually emits, not the header's unique-triangle count, which can
+        // under-count (and cause a vertex-buffer overflow) when triangle nodes share prim-ranges.
+        uint32_t vertex_buffer_capacity = CountBlasEmittedTriangles(blas_index) * 3;
+
         while (!traversal_stack.empty())
         {
             SceneNode* node{traversal_stack.back()};
@@ -274,6 +392,24 @@ namespace rra
 
             error_code = RraBlasGetBoundingVolumeExtents(blas_index, node->node_id_, node->child_index_, node->global_child_index_, &node->bounding_volume_);
             RRA_ASSERT(error_code == kRraOk);
+
+            // Node packing (RTIP3.1): a packed-ref slot draws its own bounding box (resolved above via its child_index)
+            // but shares the primary sibling's subtree, so it must not descend children or emit geometry here.
+            if (node->IsPackedRef())
+            {
+                node->obb_index_ = kObbDisabled;
+                node->rotation_  = glm::mat3(1.0f);
+                continue;
+            }
+
+            // A Cluster BLAS (CBLAS) has hardware instance-node leaves that reference CLASes (nested instancing).
+            // Build a renderer::Instance for each such leaf so the BLAS pane renders the referenced CLAS geometry
+            // (flattened by the leaf transform), reusing the TLAS instance-render path.
+            if (RraBlasIsClusterRefNode(blas_index, node->node_id_))
+            {
+                ConstructClusterRefInstance(blas_index, node);
+                continue;
+            }
 
             bool is_triangle_node = RraBlasIsTriangleNode(blas_index, node->node_id_);
             bool is_box_node      = RraBlasIsBoxNode(blas_index, node->node_id_);
@@ -285,6 +421,8 @@ namespace rra
                 uint32_t triangle_count;
                 error_code = RraBlasGetNodeTriangleCount(blas_index, node->node_id_, node->child_index_, node->global_child_index_, &triangle_count);
                 RRA_ASSERT(error_code == kRraOk);
+
+                RRA_ASSERT(vertex_buffer_idx + (triangle_count * 3) <= vertex_buffer_capacity);
 
                 // Make vertices_ a subset of the BLAS's vertex buffer.
                 node->vertices_ = vertex_buffer + vertex_buffer_idx;
@@ -386,6 +524,13 @@ namespace rra
             error_code = RraBlasGetChildIndices(blas_index, node->node_id_, child_indices.data());
             RRA_ASSERT(error_code == kRraOk);
 
+            // Node packing (RTIP3.1): up to 4 sibling slots of this box node may point to the same child node, each
+            // with its own bounding box. Sharing is always within a single parent, so dedup locally over this parent's
+            // child list: create one SceneNode per slot (so every slot's distinct box and tree row survives), but only
+            // the first (primary) slot for a given node id expands the shared subtree. Later slots become packed-refs.
+            std::array<std::pair<uint32_t, SceneNode*>, MAX_CHILD_NODES> primaries_by_node_id{};
+            uint32_t                                                     primaries_count{0};
+
             for (uint32_t i{0}; i < child_node_count; ++i)
             {
                 if (child_nodes[i] == node->node_id_)
@@ -396,6 +541,8 @@ namespace rra
 
                 // Use placement new operator to allocate child in child_nodes_buffer_.
                 // Global child index is set at beginning of traversal loop.
+                RRA_ASSERT(current_child_buffer_offset + sizeof(SceneNode) <= node_buffer_capacity_bytes);
+
                 SceneNode* new_node = new (child_buffer + current_child_buffer_offset) SceneNode();
                 current_child_buffer_offset += sizeof(SceneNode);
                 new_node->node_id_     = child_nodes[i];
@@ -405,6 +552,35 @@ namespace rra
                 new_node->parent_      = node;
                 new_node->child_index_ = child_indices[i];
                 node->child_nodes_.PushBack(new_node);
+
+                SceneNode* primary{nullptr};
+                if (RraBlasIsBoxNode(blas_index, child_nodes[i]))
+                {
+                    for (uint32_t p{0}; p < primaries_count; ++p)
+                    {
+                        if (primaries_by_node_id[p].first == child_nodes[i])
+                        {
+                            primary = primaries_by_node_id[p].second;
+                            break;
+                        }
+                    }
+
+                    if (primary == nullptr)
+                    {
+                        primaries_by_node_id[primaries_count++] = {child_nodes[i], new_node};
+                    }
+                }
+
+                if (primary != nullptr)
+                {
+                    // Packed-ref duplicate: keep the SceneNode (for its own box / tree row) but flag it so that when it
+                    // is popped it only resolves its own bounding box and global index; it does not re-expand the shared
+                    // subtree or re-emit geometry, which the primary sibling handles exactly once.
+                    new_node->packed_primary_ = primary;
+                }
+
+                // Push every slot (primary and packed-ref) so each gets its per-slot bounding volume and a unique
+                // global_child_index_ assigned in the pop step; packed-refs early-out there before descending.
                 traversal_stack.push_back(new_node);
             }
 
@@ -420,6 +596,174 @@ namespace rra
         return root_node;
     }
 
+    void SceneNode::ConstructClusterRefInstance(uint64_t blas_index, SceneNode* node)
+    {
+        renderer::Instance instance = {};
+        instance.selected           = false;
+        instance.instance_node      = node->node_id_;
+        instance.depth              = node->depth_;
+
+        // Resolve the CLAS referenced by this cluster-ref leaf. If it can't be resolved, leave the node
+        // without an instance (it will simply not render).
+        RraErrorCode error_code = RraBlasGetClasIndexFromClusterRefNode(blas_index, node->node_id_, &instance.blas_index);
+        if (error_code != kRraOk)
+        {
+            node->obb_index_ = kObbDisabled;
+            node->rotation_  = glm::mat3(1.0f);
+            return;
+        }
+
+        // The cluster-ref leaf stores a world-to-object transform in the same HW instance-node layout as a TLAS
+        // instance, so apply the same inverse to get the object-to-world transform used for rendering.
+        instance.transform = glm::mat4(0.0f);
+        error_code         = RraBlasGetClusterRefNodeTransform(blas_index, node->node_id_, reinterpret_cast<float*>(&instance.transform));
+        RRA_ASSERT(error_code == kRraOk);
+        instance.transform[3][3] = 1.0f;
+        instance.transform       = glm::inverse(instance.transform);
+
+        instance.bounding_volume = node->bounding_volume_;
+
+        // The CLAS id (0..N) doubles as the instance index. It is unique per cluster-ref leaf within the CBLAS,
+        // which is what the scene's rebraid/instance-node maps require.
+        uint32_t clas_id = 0;
+        error_code       = RraBlasGetClusterRefNodeId(blas_index, node->node_id_, &clas_id);
+        RRA_ASSERT(error_code == kRraOk);
+        instance.instance_index        = clas_id;
+        instance.instance_unique_index = clas_id;
+
+        // Query per-instance stats from the referenced CLAS (a normal triangle BLAS).
+        uint32_t root_node = UINT32_MAX;
+        error_code         = RraBvhGetRootNodePtr(&root_node);
+        RRA_ASSERT(error_code == kRraOk);
+
+        RraBlasGetMaxTreeDepth(instance.blas_index, &instance.max_depth);
+        RraBlasGetAvgTreeDepth(instance.blas_index, &instance.average_depth);
+        RraBlasGetTriangleNodeCount(instance.blas_index, &instance.triangle_count);
+        RraBlasGetAverageSurfaceAreaHeuristic(instance.blas_index, root_node, 0, true, &instance.average_triangle_sah);
+        RraBlasGetMinimumSurfaceAreaHeuristic(instance.blas_index, root_node, 0, true, &instance.min_triangle_sah);
+        RraBlasGetBuildFlags(instance.blas_index, reinterpret_cast<VkBuildAccelerationStructureFlagBitsKHR*>(&instance.build_flags));
+
+        // A degenerate leaf AABB means the CBLAS did not provide usable extents; reconstruct the world-space AABB
+        // from the CLAS root bounds transformed by the leaf transform (same approach as the TLAS instance path).
+        const BoundingVolumeExtents& iv = instance.bounding_volume;
+        if (iv.min_x == iv.max_x && iv.min_y == iv.max_y && iv.min_z == iv.max_z)
+        {
+            BoundingVolumeExtents blas_extents{};
+            if (RraBlasGetBoundingVolumeExtents(instance.blas_index, root_node, 0, 0, &blas_extents) == kRraOk)
+            {
+                const glm::vec3 corners[8] = {
+                    {blas_extents.min_x, blas_extents.min_y, blas_extents.min_z},
+                    {blas_extents.max_x, blas_extents.min_y, blas_extents.min_z},
+                    {blas_extents.min_x, blas_extents.max_y, blas_extents.min_z},
+                    {blas_extents.min_x, blas_extents.min_y, blas_extents.max_z},
+                    {blas_extents.max_x, blas_extents.max_y, blas_extents.min_z},
+                    {blas_extents.max_x, blas_extents.min_y, blas_extents.max_z},
+                    {blas_extents.min_x, blas_extents.max_y, blas_extents.max_z},
+                    {blas_extents.max_x, blas_extents.max_y, blas_extents.max_z},
+                };
+
+                const glm::mat4 world_transform = glm::transpose(instance.transform);
+
+                glm::vec3 world_min(std::numeric_limits<float>::max());
+                glm::vec3 world_max(std::numeric_limits<float>::lowest());
+                for (const glm::vec3& corner : corners)
+                {
+                    glm::vec3 world_corner = glm::vec3(world_transform * glm::vec4(corner, 1.0f));
+                    world_min              = glm::min(world_min, world_corner);
+                    world_max              = glm::max(world_max, world_corner);
+                }
+
+                instance.bounding_volume.min_x = world_min.x;
+                instance.bounding_volume.min_y = world_min.y;
+                instance.bounding_volume.min_z = world_min.z;
+                instance.bounding_volume.max_x = world_max.x;
+                instance.bounding_volume.max_y = world_max.y;
+                instance.bounding_volume.max_z = world_max.z;
+                node->bounding_volume_         = instance.bounding_volume;
+            }
+        }
+
+        node->instance_  = instance;
+        node->obb_index_ = kObbDisabled;
+        node->rotation_  = glm::mat3(1.0f);
+    }
+
+    void SceneNode::BuildClusterSubInstances(SceneNode* node, const renderer::Instance& cblas_instance)
+    {
+        const uint64_t cblas_index = cblas_instance.blas_index;
+        if (!RraBlasIsClusterBlas(cblas_index))
+        {
+            return;
+        }
+
+        uint32_t root_node = UINT32_MAX;
+        if (RraBvhGetRootNodePtr(&root_node) != kRraOk)
+        {
+            return;
+        }
+
+        // Traverse the CBLAS collecting its cluster-reference leaves (each references one CLAS).
+        std::deque<uint32_t> traversal_stack;
+        traversal_stack.push_back(root_node);
+        while (!traversal_stack.empty())
+        {
+            const uint32_t current = traversal_stack.back();
+            traversal_stack.pop_back();
+
+            if (RraBlasIsClusterRefNode(cblas_index, current))
+            {
+                uint64_t clas_index = 0;
+                if (RraBlasGetClasIndexFromClusterRefNode(cblas_index, current, &clas_index) != kRraOk)
+                {
+                    continue;
+                }
+
+                // The cluster-ref leaf transform maps CLAS-object -> CBLAS-object in the same (inverted, row-major)
+                // convention as a TLAS instance transform. Compose it with the CBLAS instance transform to place the
+                // CLAS in world space. In storage (transposed) convention this composition is cref * cblas.
+                glm::mat4 cref_transform = glm::mat4(0.0f);
+                if (RraBlasGetClusterRefNodeTransform(cblas_index, current, reinterpret_cast<float*>(&cref_transform)) != kRraOk)
+                {
+                    continue;
+                }
+                cref_transform[3][3] = 1.0f;
+                cref_transform       = glm::inverse(cref_transform);
+
+                // Inherit the CBLAS instance's shared metadata (instance_index for selection, flags, mask, depth),
+                // and point the sub-instance at the CLAS geometry with the composed transform.
+                renderer::Instance sub_instance = cblas_instance;
+                sub_instance.blas_index         = clas_index;
+                sub_instance.transform          = cref_transform * cblas_instance.transform;
+
+                RraBlasGetTriangleNodeCount(clas_index, &sub_instance.triangle_count);
+
+                node->cluster_sub_instances_.push_back(sub_instance);
+                continue;
+            }
+
+            if (RraBlasHasChildren(cblas_index, current))
+            {
+                uint32_t child_count = 0;
+                if (RraBlasGetChildNodeCount(cblas_index, current, &child_count) != kRraOk)
+                {
+                    continue;
+                }
+                std::vector<uint32_t> children(child_count);
+                if (RraBlasGetChildNodes(cblas_index, current, children.data()) != kRraOk)
+                {
+                    continue;
+                }
+                for (uint32_t i = 0; i < child_count; ++i)
+                {
+                    if (children[i] != current)
+                    {
+                        traversal_stack.push_back(children[i]);
+                    }
+                }
+            }
+        }
+    }
+
     void SceneNode::AppendMergedInstanceToInstanceMap(renderer::Instance instance, renderer::InstanceMap& instance_map, const Scene* scene) const
     {
         auto sibling_nodes = scene->GetRebraidedInstances(instance.instance_index);
@@ -430,11 +774,32 @@ namespace rra
             selected |= sibling_node->selected_;
         }
         instance.selected = selected;
+
+        // A CBLAS instance has no geometry of its own; emit its precomputed flattened CLAS sub-instances instead so
+        // the nested cluster geometry is drawn (each keyed by its own CLAS blas_index). The selection state is
+        // inherited so selecting the CBLAS instance highlights all of its CLAS geometry.
+        if (!cluster_sub_instances_.empty())
+        {
+            for (renderer::Instance sub_instance : cluster_sub_instances_)
+            {
+                sub_instance.selected = selected;
+                instance_map[sub_instance.blas_index].push_back(sub_instance);
+            }
+            return;
+        }
+
         instance_map[instance.blas_index].push_back(instance);
     }
 
     uint64_t SceneNode::GetChildIdHash() const
     {
+        const rta::RayTracingIpLevel rtip = (rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel();
+        // Packing can occur in both BLAS and TLAS QuantizedBVH8 box nodes; query the matching structure.
+        const bool has_packing = is_tlas_ ? RraTlasHasNodePacking(bvh_index_) : RraBlasHasNodePacking(bvh_index_);
+        if (rtip == rta::RayTracingIpLevel::RtIp3_1 && has_packing)
+        {
+            return ((uint64_t)global_child_index_ << 32) | node_id_;
+        }
         return node_id_;
     }
 
@@ -443,6 +808,7 @@ namespace rra
         uint32_t     root_node_index = UINT32_MAX;
         RraErrorCode error_code      = RraBvhGetRootNodePtr(&root_node_index);
         RRA_ASSERT(error_code == kRraOk);
+
         auto node = ConstructFromBlasNode(blas_index, root_node_index, vertex_buffer, child_buffer);
 
         uint32_t geometry_count{};
@@ -471,7 +837,12 @@ namespace rra
         return (static_cast<uint64_t>(geometry_index) << 32) | static_cast<uint64_t>(primitive_index);
     }
 
-    SceneNode* SceneNode::ConstructFromTlasBoxNode(uint64_t tlas_index, uint32_t node_id, uint32_t child_index, uint32_t depth)
+    SceneNode* SceneNode::ConstructFromTlasBoxNode(uint64_t                                         tlas_index,
+                                                   uint32_t                                         node_id,
+                                                   uint32_t                                         child_index,
+                                                   uint32_t                                         depth,
+                                                   std::unordered_map<uint64_t, BlasIntrinsicInfo>* blas_cache,
+                                                   bool                                             is_packed_ref)
     {
         SceneNode* node    = new SceneNode();
         node->node_id_     = node_id;
@@ -482,6 +853,16 @@ namespace rra
 
         RraErrorCode error_code = RraTlasGetBoundingVolumeExtents(tlas_index, node_id, child_index, &node->bounding_volume_);
         RRA_ASSERT(error_code == kRraOk);
+
+        // Node packing (RTIP3.1): a packed-ref slot draws its own per-slot bounding box (resolved above via its
+        // child_index) but shares the primary sibling's subtree, so it must not build an instance or recurse. The
+        // caller wires up packed_primary_ afterwards. Mirrors the BLAS packed-ref handling.
+        if (is_packed_ref)
+        {
+            node->obb_index_ = kObbDisabled;
+            node->rotation_  = glm::mat3(1.0f);
+            return node;
+        }
 
         bool is_instance_node = RraTlasIsInstanceNode(tlas_index, node_id);
         if (is_instance_node)
@@ -508,21 +889,50 @@ namespace rra
             {
                 return node;
             }
-            error_code = RraBlasGetMaxTreeDepth(instance.blas_index, &instance.max_depth);
-            RRA_ASSERT(error_code == kRraOk);
-            error_code = RraBlasGetAvgTreeDepth(instance.blas_index, &instance.average_depth);
-            RRA_ASSERT(error_code == kRraOk);
-            error_code = RraBlasGetTriangleNodeCount(instance.blas_index, &instance.triangle_count);
-            RRA_ASSERT(error_code == kRraOk);
 
             uint32_t root_node = UINT32_MAX;
             error_code         = RraBvhGetRootNodePtr(&root_node);
             RRA_ASSERT(error_code == kRraOk);
 
-            error_code = RraBlasGetAverageSurfaceAreaHeuristic(instance.blas_index, root_node, 0, true, &instance.average_triangle_sah);
-            RRA_ASSERT(error_code == kRraOk);
-            error_code = RraBlasGetMinimumSurfaceAreaHeuristic(instance.blas_index, root_node, 0, true, &instance.min_triangle_sah);
-            RRA_ASSERT(error_code == kRraOk);
+            // The following values depend only on the referenced BLAS, not on this instance. Traversing the BLAS to
+            // recompute them for every instance is O(instances * BLAS-nodes); cache per BLAS so instances that share a
+            // BLAS reuse the result.
+            auto compute_blas_info = [root_node](uint64_t blas_index) {
+                BlasIntrinsicInfo info{};
+                RraErrorCode      ec = RraBlasGetMaxTreeDepth(blas_index, &info.max_depth);
+                RRA_ASSERT(ec == kRraOk);
+                ec = RraBlasGetAvgTreeDepth(blas_index, &info.average_depth);
+                RRA_ASSERT(ec == kRraOk);
+                ec = RraBlasGetTriangleNodeCount(blas_index, &info.triangle_count);
+                RRA_ASSERT(ec == kRraOk);
+                ec = RraBlasGetAverageSurfaceAreaHeuristic(blas_index, root_node, 0, true, &info.average_triangle_sah);
+                RRA_ASSERT(ec == kRraOk);
+                ec = RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, root_node, 0, true, &info.min_triangle_sah);
+                RRA_ASSERT(ec == kRraOk);
+                RRA_UNUSED(ec);
+                return info;
+            };
+
+            BlasIntrinsicInfo blas_info{};
+            if (blas_cache != nullptr)
+            {
+                auto it = blas_cache->find(instance.blas_index);
+                if (it == blas_cache->end())
+                {
+                    it = blas_cache->emplace(instance.blas_index, compute_blas_info(instance.blas_index)).first;
+                }
+                blas_info = it->second;
+            }
+            else
+            {
+                blas_info = compute_blas_info(instance.blas_index);
+            }
+
+            instance.max_depth            = blas_info.max_depth;
+            instance.average_depth        = blas_info.average_depth;
+            instance.triangle_count       = blas_info.triangle_count;
+            instance.average_triangle_sah = blas_info.average_triangle_sah;
+            instance.min_triangle_sah     = blas_info.min_triangle_sah;
 
             error_code = RraTlasGetUniqueInstanceIndexFromInstanceNode(tlas_index, node_id, &instance.instance_unique_index);
             RRA_ASSERT(error_code == kRraOk);
@@ -539,7 +949,67 @@ namespace rra
             error_code = RraTlasGetInstanceFlags(tlas_index, node_id, &instance.flags);
             RRA_ASSERT(error_code == kRraOk);
 
+            // Partition index is only meaningful for PTLAS traces; leave it at 0 otherwise.
+            if (RraTlasIsPartitioned(tlas_index))
+            {
+                uint32_t partition_index = 0;
+                bool     partition_active = false;
+                if (RraTlasGetInstancePartitionIndex(tlas_index, instance.instance_index, &partition_index, &partition_active) == kRraOk)
+                {
+                    instance.partition_index = partition_index;
+                }
+            }
+
+            // PTLAS dumps do not populate the parent pointers that the TLAS uses to derive an instance node's
+            // bounding volume, so RraTlasGetBoundingVolumeExtents returns a degenerate (zero) AABB for them. When
+            // that happens, reconstruct the instance's world-space AABB from the BLAS root bounds transformed by the
+            // instance transform (the same authoritative data the renderer uses), so broad-phase picking works.
+            const BoundingVolumeExtents& iv = instance.bounding_volume;
+            if (iv.min_x == iv.max_x && iv.min_y == iv.max_y && iv.min_z == iv.max_z)
+            {
+                BoundingVolumeExtents blas_extents{};
+                if (RraBlasGetBoundingVolumeExtents(instance.blas_index, root_node, 0, 0, &blas_extents) == kRraOk)
+                {
+                    const glm::vec3 corners[8] = {
+                        {blas_extents.min_x, blas_extents.min_y, blas_extents.min_z},
+                        {blas_extents.max_x, blas_extents.min_y, blas_extents.min_z},
+                        {blas_extents.min_x, blas_extents.max_y, blas_extents.min_z},
+                        {blas_extents.min_x, blas_extents.min_y, blas_extents.max_z},
+                        {blas_extents.max_x, blas_extents.max_y, blas_extents.min_z},
+                        {blas_extents.max_x, blas_extents.min_y, blas_extents.max_z},
+                        {blas_extents.min_x, blas_extents.max_y, blas_extents.max_z},
+                        {blas_extents.max_x, blas_extents.max_y, blas_extents.max_z},
+                    };
+
+                    // The backend returns the instance transform in row-major 3x4 layout, so instance.transform
+                    // ends up as the transpose of the forward (local->world) transform (its translation lives in the
+                    // 4th row, not the 4th column). Transpose it back before applying it to the BLAS corners.
+                    const glm::mat4 world_transform = glm::transpose(instance.transform);
+
+                    glm::vec3 world_min(std::numeric_limits<float>::max());
+                    glm::vec3 world_max(std::numeric_limits<float>::lowest());
+                    for (const glm::vec3& corner : corners)
+                    {
+                        glm::vec3 world_corner = glm::vec3(world_transform * glm::vec4(corner, 1.0f));
+                        world_min              = glm::min(world_min, world_corner);
+                        world_max              = glm::max(world_max, world_corner);
+                    }
+
+                    instance.bounding_volume.min_x = world_min.x;
+                    instance.bounding_volume.min_y = world_min.y;
+                    instance.bounding_volume.min_z = world_min.z;
+                    instance.bounding_volume.max_x = world_max.x;
+                    instance.bounding_volume.max_y = world_max.y;
+                    instance.bounding_volume.max_z = world_max.z;
+                    node->bounding_volume_         = instance.bounding_volume;
+                }
+            }
+
             node->instance_ = instance;
+
+            // If this instance references a Cluster BLAS (CBLAS), precompute its flattened CLAS instances so the
+            // TLAS view renders the nested geometry instead of just the CBLAS bounding box.
+            BuildClusterSubInstances(node, instance);
 
             node->obb_index_ = kObbDisabled;
             node->rotation_  = glm::mat3(1.0f);
@@ -563,10 +1033,43 @@ namespace rra
         error_code = RraTlasGetChildIndices(tlas_index, node_id, child_node_indices.data());
         RRA_ASSERT(error_code == kRraOk);
 
+        // Node packing (RTIP3.1): up to 4 sibling slots of this box node may point to the same child node, each with its
+        // own bounding box. Sharing is always within a single parent, so dedup locally over this parent's child list:
+        // build one SceneNode per slot (so every slot's distinct box and tree row survives), but only the first (primary)
+        // slot for a given node id expands the shared subtree. Later slots become shallow packed-refs pointing at it.
+        std::array<std::pair<uint32_t, SceneNode*>, MAX_CHILD_NODES> primaries_by_node_id{};
+        uint32_t                                                     primaries_count{0};
+
         for (uint32_t i = 0; i < child_node_count; ++i)
         {
-            auto child_node_ptr     = SceneNode::ConstructFromTlasBoxNode(tlas_index, child_nodes[i], child_node_indices[i], depth + 1);
+            // Only box (internal) nodes are packed; a shared instance-node/leaf pointer is never a packed-ref.
+            SceneNode* primary{nullptr};
+            if (RraTlasIsBoxNode(tlas_index, child_nodes[i]))
+            {
+                for (uint32_t p{0}; p < primaries_count; ++p)
+                {
+                    if (primaries_by_node_id[p].first == child_nodes[i])
+                    {
+                        primary = primaries_by_node_id[p].second;
+                        break;
+                    }
+                }
+            }
+
+            const bool child_is_packed_ref = (primary != nullptr);
+            auto       child_node_ptr =
+                SceneNode::ConstructFromTlasBoxNode(tlas_index, child_nodes[i], child_node_indices[i], depth + 1, blas_cache, child_is_packed_ref);
             child_node_ptr->parent_ = node;
+
+            if (child_is_packed_ref)
+            {
+                child_node_ptr->packed_primary_ = primary;
+            }
+            else if (RraTlasIsBoxNode(tlas_index, child_nodes[i]))
+            {
+                primaries_by_node_id[primaries_count++] = {child_nodes[i], child_node_ptr};
+            }
+
             node->child_nodes_.PushBack(child_node_ptr);
         }
 
@@ -578,7 +1081,31 @@ namespace rra
         uint32_t     root_node_index = UINT32_MAX;
         RraErrorCode error_code      = RraBvhGetRootNodePtr(&root_node_index);
         RRA_ASSERT(error_code == kRraOk);
-        return ConstructFromTlasBoxNode(tlas_index, root_node_index, 0, 0);
+        std::unordered_map<uint64_t, BlasIntrinsicInfo> blas_cache;
+        SceneNode*                                      root = ConstructFromTlasBoxNode(tlas_index, root_node_index, 0, 0, &blas_cache);
+
+        // Assign global_child_index_ in the exact order the tree view's TraverseTree numbers nodes, so composite keys
+        // ((global_child_index << 32) | node_id) agree between the scene and the tree browser for RTIP3.1 TLAS node
+        // packing. TraverseTree uses a LIFO stack that pushes child slots 0..N and pops back(); mirror that here.
+        const rta::RayTracingIpLevel rtip = (rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel();
+        if (rtip == rta::RayTracingIpLevel::RtIp3_1 && RraTlasHasNodePacking(tlas_index))
+        {
+            std::deque<SceneNode*> index_stack;
+            index_stack.push_back(root);
+            uint32_t global_child_index{UINT32_MAX};
+            while (!index_stack.empty())
+            {
+                SceneNode* current = index_stack.back();
+                index_stack.pop_back();
+                current->global_child_index_ = ++global_child_index;
+                for (SceneNode* child : current->child_nodes_)
+                {
+                    index_stack.push_back(child);
+                }
+            }
+        }
+
+        return root;
     }
 
     void SceneNode::ResetSelection(std::unordered_set<uint64_t>& selected_node_ids)
@@ -586,7 +1113,10 @@ namespace rra
         selected_ = false;
         selected_node_ids.erase(GetChildIdHash());
 
-        for (auto child_node : child_nodes_)
+        // A packed-ref has no subtree of its own; its geometry lives under the primary sibling that shares its node id.
+        // Recurse into the primary's children so the shared subtree's highlight is cleared (mirrors ApplyNodeSelection).
+        auto& reset_children = (IsPackedRef() && packed_primary_ != nullptr) ? packed_primary_->child_nodes_ : child_nodes_;
+        for (auto child_node : reset_children)
         {
             child_node->ResetSelection(selected_node_ids);
         }
@@ -629,7 +1159,11 @@ namespace rra
         selected_ = true;
         selected_node_ids.insert(GetChildIdHash());
 
-        for (auto child_node : child_nodes_)
+        // A packed-ref has no subtree of its own; its geometry lives under the primary sibling that shares its node id.
+        // Recurse into the primary's children so selecting a packed box highlights the shared subtree (gray triangles)
+        // without duplicating geometry (no over-draw).
+        auto& select_children = (IsPackedRef() && packed_primary_ != nullptr) ? packed_primary_->child_nodes_ : child_nodes_;
+        for (auto child_node : select_children)
         {
             child_node->ApplyNodeSelection(selected_node_ids);
         }
@@ -855,7 +1389,13 @@ namespace rra
                                     closest))
         {
             intersected_nodes.push_back(this);
-            for (auto child : child_nodes_)
+
+            // A packed-ref (RTIP3.1 node packing) has its own per-slot box but no subtree of its own; the shared
+            // geometry lives under the primary sibling. A ray can hit the packed-ref's box without hitting the
+            // primary's (distinct) box, so descend into the primary's children to collect the shared subtree's
+            // instance descendants for hit-testing (mirrors ApplyNodeSelection/ResetSelection).
+            auto& collect_children = (IsPackedRef() && packed_primary_ != nullptr) ? packed_primary_->child_nodes_ : child_nodes_;
+            for (auto child : collect_children)
             {
                 child->CastRayCollectNodes(ray_origin, ray_direction, intersected_nodes);
             }
@@ -872,9 +1412,15 @@ namespace rra
         return &instance_.value();
     }
 
+    const std::vector<renderer::Instance>& SceneNode::GetClusterSubInstances() const
+    {
+        return cluster_sub_instances_;
+    }
+
     StackVector<SceneTriangle, MAX_CHILD_NODES> SceneNode::GetTriangles() const
     {
         RRA_ASSERT(vertex_count_ % 3 == 0);
+        RRA_ASSERT(vertex_count_ == 0 || vertices_ != nullptr);
         StackVector<SceneTriangle, MAX_CHILD_NODES> triangles;
         for (size_t i = 0; i < vertex_count_; i += 3)
         {
@@ -899,7 +1445,16 @@ namespace rra
 
     uint64_t SceneNode::GetId() const
     {
-        return is_tlas_ ? node_id_ : GetChildIdHash();
+        if (!is_tlas_)
+        {
+            return GetChildIdHash();
+        }
+        const rta::RayTracingIpLevel rtip = (rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel();
+        if (rtip == rta::RayTracingIpLevel::RtIp3_1 && RraTlasHasNodePacking(bvh_index_))
+        {
+            return ((uint64_t)global_child_index_ << 32) | node_id_;
+        }
+        return node_id_;
     }
 
     void SceneNode::AppendBoundingVolumesTo(renderer::BoundingVolumeList& volume_list,
@@ -980,7 +1535,10 @@ namespace rra
                     bvi.metadata.x = 0.0f;
                 }
 
-                bvi.rotation = parent_ ? parent_->rotation_ : glm::mat3(1.0f);
+                // A node's extents are decoded in its parent's OBB frame, so draw with the
+                // parent's rotation. The root has no parent and its extents are computed in its
+                // own OBB frame (union of its children), so draw the root with its own rotation.
+                bvi.rotation = parent_ ? parent_->rotation_ : rotation_;
 
                 if ((is_internal && show_internal_bounds) || (is_leaf && show_leaf_bounds))
                 {
@@ -1051,6 +1609,35 @@ namespace rra
             traversal_volume.max       = glm::vec4(node->bounding_volume_.max_x, node->bounding_volume_.max_y, node->bounding_volume_.max_z, 1.0f);
             traversal_volume.obb_index = node->obb_index_;
 
+            // RTIP3.1 node packing: the shared subtree hangs off the primary sibling alone, so the traversal descends it
+            // exactly once (via the primary). But each packed-ref sibling carries its own distinct per-slot box, and a ray
+            // can hit a packed-ref's box while missing the primary's. With the subtree living only under the primary, that
+            // ray would leave the subtree undescended and its triangles absent from the heatmap (the "holes"). The driver
+            // resolves and de-duplicates the group's box hits before a single subtree descent, so mirror that here by
+            // growing the primary's traversal box to the union of the group's per-slot boxes: the subtree then descends
+            // whenever any slot in the group is hit, still exactly once. The packed-ref volumes keep their own boxes
+            // unchanged, so every slot is still box-tested (N tests) and drawn as its own distinct box.
+            //
+            // A stackless descent redirect (the kBoxPackedRef idea) was rejected: this shader backtracks via a single
+            // parent pointer per volume, so a shared child descended through a packed-ref would rise back into the primary
+            // and the group would be re-descended on the next sibling scan, double-counting. Unioning keeps the subtree
+            // uniquely under the primary and needs no shader change.
+            if (node->parent_ != nullptr && !node->IsPackedRef())
+            {
+                for (SceneNode* sibling : node->parent_->child_nodes_)
+                {
+                    if (sibling->packed_primary_ == node)
+                    {
+                        traversal_volume.min = glm::min(
+                            traversal_volume.min,
+                            glm::vec3(sibling->bounding_volume_.min_x, sibling->bounding_volume_.min_y, sibling->bounding_volume_.min_z));
+                        traversal_volume.max = glm::max(
+                            traversal_volume.max,
+                            glm::vec3(sibling->bounding_volume_.max_x, sibling->bounding_volume_.max_y, sibling->bounding_volume_.max_z));
+                    }
+                }
+            }
+
             bool is_instance_node = is_tlas && is_leaf_node;
             bool is_triangle_node = !is_tlas && is_leaf_node;
 
@@ -1094,27 +1681,51 @@ namespace rra
             {
                 traversal_volume.volume_type = renderer::TraversalVolumeType::kBox;
 
-                // Separate for loops needed to preserve alignment.
+                // RTIP3.1 node packing: a packed-ref sibling shares its child pointer with an earlier slot, so
+                // ConstructFromBlasNode gives it an empty child_nodes_ and it lands here as a dead-end box. Its parent still
+                // sets the child_mask bit below, so the ray box-tests every packed slot's own AABB (N box tests), but the
+                // shared subtree is descended exactly once — via the primary sibling, which alone carries the children.
+                // Do NOT populate children here from the shared node: that would re-descend the subtree once per slot (the
+                // original over-count bug). A ray that hits a packed slot but misses the primary's AABB is handled above by
+                // unioning the group's per-slot boxes into the primary's traversal box, so the shared subtree still descends
+                // (once) rather than leaving heatmap holes — matching the driver's resolve-and-dedup-before-descent behavior.
+                RRA_ASSERT(node->child_nodes_.Size() <= MAX_CHILD_NODES);
 
-                uint32_t child_index = 0;
+                // First pass: reserve child slots in volumes and record their addresses.
+                // emplace_back may reallocate, so all mutations to volumes must complete
+                // before re-taking a reference into the vector for the current node.
+                std::vector<uint32_t> child_addrs(node->child_nodes_.Size());
+                uint32_t              child_index = 0;
                 for (auto child : node->child_nodes_)
                 {
-                    uint32_t child_addr = static_cast<uint32_t>(traversal_tree.volumes.size());
+                    uint32_t child_addr      = static_cast<uint32_t>(traversal_tree.volumes.size());
+                    child_addrs[child_index] = child_addr;
                     traversal_stack.push_back({child, child_addr});
                     traversal_tree.volumes.emplace_back();
+                    traversal_tree.volumes[child_addr].parent          = current_index;
+                    traversal_tree.volumes[child_addr].index_at_parent = child_index;
+                    child_index++;
+                }
+
+                // Second pass: write child data into the current volume. Re-fetch the
+                // reference by index because emplace_back above may have reallocated.
+                renderer::TraversalVolume& current_volume = traversal_tree.volumes[current_index];
+                child_index                               = 0;
+                for (auto child : node->child_nodes_)
+                {
+                    RRA_ASSERT(child_index < std::size(current_volume.child_nodes));
+                    uint32_t child_addr = child_addrs[child_index];
 
                     if (child->IsEnabled() && child->IsVisible())
                     {
-                        traversal_volume.child_mask = traversal_volume.child_mask | (0x1 << child_index);
+                        current_volume.child_mask = current_volume.child_mask | (0x1 << child_index);
                     }
 
                     auto child_bounds = child->GetBoundingVolume();
 
-                    traversal_volume.child_nodes[child_index]          = child_addr;
-                    traversal_volume.child_nodes_min[child_index]      = {child_bounds.min_x, child_bounds.min_y, child_bounds.min_z, 0.0f};
-                    traversal_volume.child_nodes_max[child_index]      = {child_bounds.max_x, child_bounds.max_y, child_bounds.max_z, 0.0f};
-                    traversal_tree.volumes[child_addr].parent          = current_index;
-                    traversal_tree.volumes[child_addr].index_at_parent = child_index;
+                    current_volume.child_nodes[child_index]     = child_addr;
+                    current_volume.child_nodes_min[child_index] = {child_bounds.min_x, child_bounds.min_y, child_bounds.min_z, 0.0f};
+                    current_volume.child_nodes_max[child_index] = {child_bounds.max_x, child_bounds.max_y, child_bounds.max_z, 0.0f};
 
                     child_index++;
                 }
@@ -1134,8 +1745,17 @@ namespace rra
     {
         if (vertex_count_)
         {
-            uint32_t geo_offset{geometry_offsets[geometry_index_]};
-            if (++primitive_counts[(size_t)geo_offset + primitive_index_] > 1)
+            if (geometry_index_ >= geometry_offsets.size())
+            {
+                return;
+            }
+            uint32_t     geo_offset{geometry_offsets[geometry_index_]};
+            const size_t index = (size_t)geo_offset + primitive_index_;
+            if (index >= primitive_counts.size())
+            {
+                primitive_counts.resize(index + 1);
+            }
+            if (++primitive_counts[index] > 1)
             {
                 for (size_t i = 0; i < vertex_count_; i += 3)
                 {
@@ -1165,6 +1785,11 @@ namespace rra
         return global_child_index_;
     }
 
+    SceneNode* SceneNode::GetPackedPrimary() const
+    {
+        return packed_primary_;
+    }
+
     size_t SceneNode::GetChildCount() const
     {
         return child_nodes_.Size();
@@ -1172,6 +1797,7 @@ namespace rra
 
     SceneNode* SceneNode::GetChild(uint32_t child_index)
     {
+        RRA_ASSERT(child_index < child_nodes_.Size());
         return child_nodes_[child_index];
     }
 
@@ -1186,4 +1812,5 @@ namespace rra
     }
 
 }  // namespace rra
+
 

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the BLAS triangles model.
@@ -148,7 +149,10 @@ namespace rra
                     if ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() <= rta::RayTracingIpLevel::RtIp2_0)
                     {
                         uint32_t vertex_count{};
-                        RraBlasGetNodeVertexCount(blas_index, node_addr, child_index, global_child_index, &vertex_count);
+                        if (RraBlasGetNodeVertexCount(blas_index, node_addr, child_index, global_child_index, &vertex_count) != kRraOk)
+                        {
+                            continue;
+                        }
                         verts.Resize(vertex_count);
 
                         if (RraBlasGetNodeVertices(blas_index, node_addr, child_index, global_child_index, verts.Data()) != kRraOk)

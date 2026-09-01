@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the View side pane.
@@ -77,6 +78,13 @@ public:
     /// @brief Hides the tlas specific widgets.
     void HideTLASWidgets();
 
+    /// @brief Show or hide the per-partition bounding box overlay checkbox.
+    ///
+    /// Only partitioned (PTLAS) traces expose this control; hiding it also clears any active toggle.
+    ///
+    /// @param [in] available  Whether the currently selected TLAS is partitioned.
+    void SetPartitionBoundsAvailable(bool available);
+
     /// @brief Hides the ray specific widgets.
     void HideRAYWidgets();
 
@@ -99,6 +107,11 @@ signals:
 
     /// @brief A signal to notify that one of the 'Show bounding volumes' checkboxes state has changed.
     void ShowBoundsChanged(bool show_internal_bounds, bool show_leaf_bounds);
+
+    /// @brief A signal to notify that the 'Show partition bounding volumes' checkbox state has changed.
+    ///
+    /// @param [in] show_partition_bounds  Whether the per-partition bounding box overlay should be shown.
+    void ShowPartitionBoundsChanged(bool show_partition_bounds);
 
 public slots:
     /// @brief Set the control style for the camera.
@@ -160,6 +173,9 @@ private slots:
 
     /// @brief Toggle the accept first hit flag.
     void ToggleRayFlagsAcceptFirstHit();
+
+    /// @brief Toggle the max anyhit invocations flag.
+    void ToggleRayFlagsMaxAnyhitInvocations();
 
     /// @brief Toggle the cull back facing triangles flag.
     void ToggleRayFlagsCullBackFacingTriangles();
@@ -255,7 +271,6 @@ private slots:
     void SetMovementSpeed(int value);
 
 private:
-
     /// @brief An even filter to catch and discard some UI events.
     ///
     /// @param obj The object that the event came from.

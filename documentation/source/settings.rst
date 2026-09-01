@@ -189,3 +189,4 @@ on all panes in the top left below the file menu.
 Currently, back and forward navigation is restricted to pane switches.
 
 
+

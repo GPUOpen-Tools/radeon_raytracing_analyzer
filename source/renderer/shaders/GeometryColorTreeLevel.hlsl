@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Shader for coloring by tree depth.

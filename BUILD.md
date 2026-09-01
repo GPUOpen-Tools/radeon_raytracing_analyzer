@@ -16,7 +16,7 @@ Packages for Windows and Linux are provided.
 
 ### Building on Windows
 As a preliminary step, make sure that you have the following installed on your system:
-* CMake 3.11 or above.
+* CMake 3.25 or above (required for all platforms).
 * Python 3.7 or above.
 * Qt® 6 or above (6.7.0 is the default and recommended).
 * Visual Studio® 2019 or above (2022 is the default).
@@ -74,7 +74,7 @@ Qt6 can be installed from the package manager using:
 sudo apt-get install qt6-base-dev
 sudo apt-get install qt6-base-private-dev
 ```
-As of this writing, this package on Ubuntu 2204 is 6.2.4
+As of this writing, this package on Ubuntu 22.04 is 6.2.4
 
 XCB libraries are required for Qt v5 and above. These can be installed by using:
 ```bash
@@ -110,8 +110,8 @@ and setting up symbolic links to point to the system Qt lib and include director
 mkdir -p ~/Qt/Qt6.7.0/6.7.0/gcc_64
 sudo ln -s /usr/lib/x86_64-linux-gnu ~/Qt/Qt6.7.0/6.7.0/gcc_64/lib
 sudo ln -s /usr/include/x86_64-linux-gnu/qt6 ~/Qt/Qt6.7.0/6.7.0/gcc_64/include
-```
 python3 pre_build.py --qt 6.7.0 --build
+```
 
 [qt-online]: https://www.qt.io/blog/qt-6.7-released
 [qt-offline]: https://download.qt.io/archive/qt/6.7/6.7.0

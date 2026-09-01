@@ -32,9 +32,19 @@ On the left will be information for the bottom level acceleration structure:
    the topmost level contains a Box32 structure. This Box32 contains 4 more Box32
    structures. The currently opened box shows a list of triangles inside this box.
 
+   Some BLASes may use node packing, where multiple bounding boxes reference
+   one shared subtree. Packed nodes are marked ``(packed)`` in the tree view.
+   Additional references contain a ``Referenced subtree`` entry that navigates
+   to the primary occurrence. Selecting a packed node highlights its shared
+   subtree and the other references. See :ref:`node-packing-label` for details.
+
 #. The section below the treeview gives details about the currently selected node,
    including the surface area heuristic, and extents.
-   
+
+   For a node that uses node packing, the details section also displays
+   **Referenced by**. This reports how many parent bounding-box slots reference
+   the shared node.
+
 #. If the selected node is a Bvh8 node, the bounding box orientation matrix will be shown.
    Bounding boxes may be rotated to fit the geometry more compactly.
 
@@ -94,6 +104,44 @@ A list of the split triangle siblings is also shown, allowing easy selection.
 .. image:: media/blas/split_triangles_stats_1.png
 
 
+Cluster acceleration structures (CBLAS and CLAS)
+------------------------------------------------
+
+Some traces use clustered geometry, which introduces two additional kinds of
+bottom-level acceleration structure that are also inspected in this pane:
+
+* A **CBLAS** (cluster bottom-level acceleration structure) does not contain
+  triangles directly. Instead, its leaf nodes are **instances** that each reference
+  a CLAS. In this respect a CBLAS behaves like a small TLAS that lives one level
+  below the TLAS.
+* A **CLAS** (cluster-level acceleration structure) contains the actual triangle
+  geometry, in the same way as an ordinary BLAS.
+
+This forms a three-level hierarchy: the TLAS instances a CBLAS, the CBLAS instances
+one or more CLASes, and each CLAS contains triangles.
+
+Because a CBLAS and a CLAS are both inspected using the BLAS Viewer, a label to the
+left of the acceleration-structure dropdown at the top of the pane indicates which
+kind of structure is currently being viewed. It reads **BLAS:**, **CBLAS:**, or
+**CLAS:** accordingly. For an ordinary trace with no clustered geometry, this label
+always reads **BLAS:**.
+
+When a CBLAS is being viewed, the leaf nodes of the tree are cluster references
+rather than triangles. Each cluster-reference leaf is labelled ``CLAS [id]`` and
+shows the address of the referenced CLAS and its triangle count. Selecting a
+cluster-reference leaf shows the instance mask and the world-to-object transform of
+that CLAS reference in the panel below the tree, in place of the surface area
+heuristic and triangle information shown for triangle nodes.
+
+Double-clicking a cluster-reference leaf (or its geometry in the scene) descends into
+the referenced CLAS, which is then inspected in the same pane. A CLAS contains
+ordinary triangle geometry, so its tree ends in triangle leaves just like a regular
+BLAS. Navigation moves through the hierarchy one level at a time: double-clicking a
+CBLAS instance in the TLAS Viewer opens the CBLAS first, and from there a
+cluster-reference leaf opens the CLAS, so the full TLAS → CBLAS → CLAS path is walked
+step by step.
+
+
 The BLAS Instances Tab
 ----------------------
 
@@ -118,7 +166,7 @@ The following fields are displayed:
 
 * Cull disable - Instance flag specifying if the cull mode is disabled.
 
-* Flip facing - Instance flag specifying whether triangles front face should be inverted.
+* Flip facing - Instance flag specifying whether the triangle front face should be inverted.
 
 * Force opaque - Instance flag specifying if this instance should be opaque regardless of geometry flags.
 
@@ -218,4 +266,5 @@ The Properties tab displays a read-only table of properties and statistics for
 the selected BLAS.
 
 .. image:: media/blas/blas_properties_1.png
+
 

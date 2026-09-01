@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ray inspector model.
@@ -76,22 +77,27 @@ namespace rra
 
         ClearKey();
 
-        uint32_t ray_count{};
-        RraRayGetRayCount(key.dispatch_id, key.invocation_id, &ray_count);
+        uint32_t     ray_count{};
+        RraErrorCode error_code = RraRayGetRayCount(key.dispatch_id, key.invocation_id, &ray_count);
+        RRA_ASSERT(error_code == kRraOk);
+        RRA_UNUSED(error_code);
 
         rays_.resize(ray_count);
-        RraRayGetRays(key.dispatch_id, key.invocation_id, rays_.data());
+        error_code = RraRayGetRays(key.dispatch_id, key.invocation_id, rays_.data());
+        RRA_ASSERT(error_code == kRraOk);
 
         std::unordered_map<uint32_t, std::shared_ptr<RayInspectorRayTreeItemData>> dynamic_id_to_ray_data;
 
         for (uint32_t i = 0; i < ray_count; ++i)
         {
             RraIntersectionResult intersection_result{};
-            RraRayGetIntersectionResult(key.dispatch_id, key.invocation_id, i, &intersection_result);
+            error_code = RraRayGetIntersectionResult(key.dispatch_id, key.invocation_id, i, &intersection_result);
+            RRA_ASSERT(error_code == kRraOk);
 
             uint32_t        any_hit_count{};
             AnyHitRayResult any_hit_result{};
-            RraRayGetAnyHitInvocationData(key.dispatch_id, key.invocation_id, i, &any_hit_count, &any_hit_result);
+            error_code = RraRayGetAnyHitInvocationData(key.dispatch_id, key.invocation_id, i, &any_hit_count, &any_hit_result);
+            RRA_ASSERT(error_code == kRraOk);
 
             auto item_data                        = std::make_shared<RayInspectorRayTreeItemData>();
             item_data->row_index                  = i;
@@ -281,13 +287,15 @@ namespace rra
     {
         tlas_address_to_index_.clear();
 
-        uint64_t tlas_count = 0;
-        RraBvhGetTlasCount(&tlas_count);
+        uint64_t     tlas_count = 0;
+        RraErrorCode error_code = RraBvhGetTlasCount(&tlas_count);
+        RRA_ASSERT(error_code == kRraOk);
+        RRA_UNUSED(error_code);
 
         for (uint64_t i = 0; i < tlas_count; i++)
         {
-            uint64_t     address;
-            RraErrorCode error_code = RraTlasGetBaseAddress(i, &address);
+            uint64_t address;
+            error_code = RraTlasGetBaseAddress(i, &address);
             RRA_ASSERT(error_code == kRraOk);
             tlas_address_to_index_[address] = i;
         }
@@ -512,7 +520,9 @@ namespace rra
         {
             const auto&           ray                 = rays_[i];
             RraIntersectionResult intersection_result = {};
-            RraRayGetIntersectionResult(key_.dispatch_id, key_.invocation_id, static_cast<uint32_t>(i), &intersection_result);
+            RraErrorCode error_code = RraRayGetIntersectionResult(key_.dispatch_id, key_.invocation_id, static_cast<uint32_t>(i), &intersection_result);
+            RRA_ASSERT(error_code == kRraOk);
+            RRA_UNUSED(error_code);
 
             renderer::RayInspectorRay iray = {};
             iray.tlas_address              = ray.tlas_address;

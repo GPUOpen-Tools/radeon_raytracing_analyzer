@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS viewer model.
@@ -179,7 +180,43 @@ namespace rra
             node_name += " (split)";
         }
 
-        SetModelData(kBlasStatsType, node_name.c_str());
+        // Annotate the node type with its place in the CLAS hierarchy (TLAS -> CBLAS -> CLAS -> triangles).
+        const bool node_is_cluster_ref = RraBlasIsClusterRefNode(blas_index, node_id);
+        if (node_is_cluster_ref)
+        {
+            // A cluster-ref leaf is a hardware instance node referencing a CLAS, so show instance-style info:
+            // the CLAS id, the referenced CLAS base address, and its triangle count (SAH does not apply).
+            uint32_t clas_id = 0;
+            RraBlasGetClusterRefNodeId(blas_index, node_id, &clas_id);
+            node_name = "CLAS [" + std::to_string(clas_id) + "]";
+
+            uint64_t clas_blas_index = 0;
+            if (RraBlasGetClasIndexFromClusterRefNode(blas_index, node_id, &clas_blas_index) == kRraOk)
+            {
+                uint64_t clas_address = 0;
+                if (RraBlasGetBaseAddress(clas_blas_index, &clas_address) == kRraOk)
+                {
+                    node_name += " -> 0x" + QString("%1").arg(clas_address, 0, 16).toStdString();
+                }
+
+                uint32_t clas_triangle_count = 0;
+                if (RraBlasGetActivePrimitiveCount(clas_blas_index, &clas_triangle_count) == kRraOk)
+                {
+                    node_name += " (" + std::to_string(clas_triangle_count) + " triangles)";
+                }
+            }
+        }
+        else if (RraBlasIsCluster(blas_index))
+        {
+            node_name += " (Cluster)";
+        }
+        else if (RraBlasIsClusterBlas(blas_index))
+        {
+            node_name += " (Cluster BLAS)";
+        }
+
+        // The type label (e.g. "Bvh8") is set below, after the packed-ref count is known, so a packed node can be
+        // annotated "(packed)" inline with its type.
 
         // Show the focus button.
         SetModelData(kBlasStatsFocus, true);
@@ -202,6 +239,45 @@ namespace rra
             SetModelData(kBlasStatsParent, AddressString(blas_index, parent_id));
         }
 
+        // RTIP3.1 node packing: count how many of the parent's box slots reference this same node. Packing makes
+        // RraBlasGetChildNodes report the shared node id in more than one slot, so a duplicate count > 1 means the node
+        // is packed (each slot has its own bounding box but they descend into one shared subtree). Non-packed data never
+        // duplicates a child id, so the row stays hidden.
+        last_selected_packed_ref_count_ = 1;
+        if (parent_valid)
+        {
+            uint32_t parent_child_count = 0;
+            if (RraBlasGetChildNodeCount(blas_index, parent_id, &parent_child_count) == kRraOk)
+            {
+                std::array<uint32_t, MAX_CHILD_NODES> parent_children{};
+                RRA_ASSERT(parent_child_count <= MAX_CHILD_NODES);
+                if (RraBlasGetChildNodes(blas_index, parent_id, parent_children.data()) == kRraOk)
+                {
+                    uint32_t refs = 0;
+                    for (uint32_t i = 0; i < parent_child_count; ++i)
+                    {
+                        if (parent_children[i] == node_id)
+                        {
+                            ++refs;
+                        }
+                    }
+                    if (refs > 1)
+                    {
+                        last_selected_packed_ref_count_ = refs;
+                    }
+                }
+            }
+        }
+        SetModelData(kBlasStatsPackedRefCount, QString::number(last_selected_packed_ref_count_) + " boxes");
+
+        // Annotate the type label with "(packed)" when this node is shared by multiple parent slots (RTIP3.1 node
+        // packing), so the bold node title reads e.g. "Bvh8 (packed)".
+        if (last_selected_packed_ref_count_ > 1)
+        {
+            node_name += " (packed)";
+        }
+        SetModelData(kBlasStatsType, node_name.c_str());
+
         // Show vertex data.
         if (SelectedNodeIsLeaf())
         {
@@ -218,13 +294,15 @@ namespace rra
             for (uint32_t tri_idx{0}; tri_idx < tri_count; ++tri_idx)
             {
                 TriangleVertices& verts = tri_verts[tri_idx];
-                SetTriTableLabels(vertex_table_models_triangle_[tri_idx]);
-                SetModelData(kBlasStatsPrimitiveIndexLabel1 + tri_idx, QString("Primitive index"));
-
-                uint32_t primitive_index{};
-                if (RraBlasGetPrimitiveIndex(blas_index, node_id, child_index, global_child_index, tri_idx, &primitive_index) == kRraOk)
                 {
-                    SetModelData(kBlasStatsPrimitiveIndexTriangle1 + tri_idx, QString::number(primitive_index));
+                    SetTriTableLabels(vertex_table_models_triangle_[tri_idx]);
+                    SetModelData(kBlasStatsPrimitiveIndexLabel1 + tri_idx, QString("Primitive index"));
+
+                    uint32_t primitive_index{};
+                    if (RraBlasGetPrimitiveIndex(blas_index, node_id, child_index, global_child_index, tri_idx, &primitive_index) == kRraOk)
+                    {
+                        SetModelData(kBlasStatsPrimitiveIndexTriangle1 + tri_idx, QString::number(primitive_index));
+                    }
                 }
 
                 widget_util::SetTableModelDecimalData(vertex_table_models_triangle_[tri_idx], verts.a.x, 0, 1, Qt::AlignRight);
@@ -252,7 +330,9 @@ namespace rra
             }
         }
 
-        if (RraRtipInfoGetOBBSupported())
+        // Only box nodes carry an OBB orientation (it describes the rotation of their child bounds). Leaf/other nodes
+        // have none, so guard the query the same way scene construction does; the backend asserts on a non-box node.
+        if (RraRtipInfoGetOBBSupported() && RraBlasIsBoxNode(blas_index, node_id))
         {
             glm::mat3 rotation(1.0f);
             if (parent_valid)
@@ -261,6 +341,31 @@ namespace rra
                 RRA_ASSERT(result == kRraOk);
             }
             PopulateRotationTable(rotation);
+        }
+
+        // A cluster-ref leaf is a hardware instance node: it has no surface-area heuristic, but it does carry
+        // instance data (mask + world-to-object transform). Show that instead of NaN SAH. The SAH rows are
+        // repurposed/hidden and the transform is shown in the bottom matrix table by BlasViewerPane::UpdateWidgets.
+        if (node_is_cluster_ref)
+        {
+            uint32_t instance_mask = 0;
+            if (RraBlasGetClusterRefNodeMask(blas_index, node_id, &instance_mask) == kRraOk)
+            {
+                SetModelData(kBlasStatsCurrentSAH, QString("0x%1%2").arg((instance_mask & 0xF0) >> 4, 0, 16).arg(instance_mask & 0x0F, 0, 16));
+            }
+            else
+            {
+                SetModelData(kBlasStatsCurrentSAH, "-");
+            }
+            SetModelData(kBlasStatsSAHSubTreeMax, "-");
+            SetModelData(kBlasStatsSAHSubTreeMean, "-");
+
+            float transform[12] = {};
+            if (RraBlasGetClusterRefNodeTransform(blas_index, node_id, transform) == kRraOk)
+            {
+                PopulateInstanceTransformTable(transform);
+            }
+            return;
         }
 
         // Show surface area heuristic.
@@ -385,16 +490,23 @@ namespace rra
         return last_selected_node_is_tri_;
     }
 
+    bool BlasViewerModel::SelectedNodeIsClusterRef() const
+    {
+        return last_selected_node_is_cluster_ref_;
+    }
+
     void BlasViewerModel::UpdateLastSelectedNodeIsLeaf(const QModelIndex& model_index, uint64_t index)
     {
         if (model_index.isValid())
         {
-            uint32_t node_id           = GetNodeIdFromModelIndex(model_index, index, kIsTlasModel);
-            last_selected_node_is_tri_ = RraBlasIsTriangleNode(index, node_id);
+            uint32_t node_id                   = GetNodeIdFromModelIndex(model_index, index, kIsTlasModel);
+            last_selected_node_is_tri_         = RraBlasIsTriangleNode(index, node_id);
+            last_selected_node_is_cluster_ref_ = RraBlasIsClusterRefNode(index, node_id);
         }
         else
         {
-            last_selected_node_is_tri_ = false;
+            last_selected_node_is_tri_         = false;
+            last_selected_node_is_cluster_ref_ = false;
         }
     }
 

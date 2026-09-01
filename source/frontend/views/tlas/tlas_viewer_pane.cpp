@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS viewer pane.
@@ -7,10 +8,13 @@
 
 #include "views/tlas/tlas_viewer_pane.h"
 
+#include <QTimer>
+
 #include "qt_common/utils/qt_util.h"
 
 #include "public/rra_api_info.h"
 #include "public/rra_rtip_info.h"
+#include "public/rra_tlas.h"
 
 #include "constants.h"
 #include "managers/message_manager.h"
@@ -82,16 +86,21 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     model_->InitializeModel(ui_->content_focus_selected_volume_, rra::kTlasStatsFocus, "visible");
     model_->InitializeModel(ui_->content_blas_address_, rra::kTlasStatsBlasAddress, "text");
     model_->InitializeModel(ui_->content_parent_, rra::kTlasStatsParent, "text");
+    model_->InitializeModel(ui_->content_packed_ref_count_, rra::kTlasStatsPackedRefCount, "text");
     model_->InitializeModel(ui_->content_instance_index_, rra::kTlasStatsInstanceIndex, "text");
     model_->InitializeModel(ui_->content_instance_id_, rra::kTlasStatsInstanceId, "text");
     model_->InitializeModel(ui_->content_instance_mask_, rra::kTlasStatsInstanceMask, "text");
     model_->InitializeModel(ui_->content_instance_hit_group_index_, rra::kTlasStatsInstanceHitGroupIndex, "text");
+
+    // Hidden until a packed (multi-referenced) node is selected; toggled in UpdateWidgets.
+    ui_->packed_ref_group_->hide();
 
     connect(ui_->tlas_tree_, &QAbstractItemView::clicked, [=, this](const QModelIndex& index) { this->SelectBlasFromTree(index, false); });
     connect(ui_->tlas_tree_, &QAbstractItemView::doubleClicked, [=, this](const QModelIndex& index) { this->SelectBlasFromTree(index, true); });
     connect(ui_->tlas_tree_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TlasViewerPane::TreeNodeChanged);
     connect(acceleration_structure_combo_box_, &ArrowIconComboBox::SelectionChanged, this, &TlasViewerPane::UpdateSelectedTlas);
     connect(&rra::MessageManager::Get(), &rra::MessageManager::InstancesTableDoubleClicked, this, &TlasViewerPane::SetBlasInstanceSelection);
+    connect(&rra::MessageManager::Get(), &rra::MessageManager::PartitionsTableDoubleClicked, this, &TlasViewerPane::FocusOnPartition);
     connect(model_, &rra::AccelerationStructureViewerModel::SceneSelectionChanged, [=, this]() { HandleSceneSelectionChanged(); });
     connect(ui_->expand_collapse_tree_, &ScaledCycleButton::Clicked, model_, &rra::AccelerationStructureViewerModel::ExpandCollapseTreeView);
     connect(ui_->search_box_, &TextSearchWidget::textChanged, model_, &rra::AccelerationStructureViewerModel::SearchTextChanged);
@@ -108,6 +117,7 @@ TlasViewerPane::TlasViewerPane(QWidget* parent)
     connect(ui_->tree_depth_slider_, &DepthSliderWidget::SpanChanged, this, &TlasViewerPane::UpdateTreeDepths);
 
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ShowBoundsChanged, this, &AccelerationStructureViewerPane::UpdateShowBoundingVolumes);
+    connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ShowPartitionBoundsChanged, this, &TlasViewerPane::UpdateShowPartitionBounds);
 
     connect(ui_->side_panel_container_->GetViewPane(), &ViewPane::ControlStyleChanged, this, &TlasViewerPane::UpdateCameraController);
     // Save selected control style to settings.
@@ -365,7 +375,38 @@ void TlasViewerPane::TreeNodeChanged(const QItemSelection& selected, const QItem
     if (selected_indices.size() > 0)
     {
         const QModelIndex& model_index = selected_indices[0];
-        bool               is_root     = !model_index.parent().isValid();
+
+        // RTIP3.1 node packing: a "Referenced subtree" placeholder redirects to the canonical (primary) node that owns
+        // the shared subtree. Selecting it jumps the tree to that canonical node, which then drives the normal
+        // selection/highlight path via the re-fired selection change. (Mirrors BlasViewerPane::TreeNodeChanged.)
+        if (model_ != nullptr && model_->IsModelIndexReferencePlaceholder(model_index))
+        {
+            // The tree model's data() only exposes DisplayRole/ToolTipRole, so read the canonical key from the display
+            // payload (node_child_id) rather than UserRole, which the model returns empty.
+            const auto        item_data       = qvariant_cast<rra::AccelerationStructureTreeViewItemData>(model_index.data(Qt::DisplayRole));
+            const uint64_t    canonical_id    = item_data.node_child_id;
+            const QModelIndex canonical_index = model_->GetModelIndexForNode(canonical_id);
+            if (canonical_index.isValid())
+            {
+                // Defer the jump to the next event-loop tick: changing the selection synchronously inside this
+                // selectionChanged handler gets clobbered when the in-flight click finishes, leaving the placeholder as
+                // the active (blue) row. setCurrentIndex moves both the current row and the selection so the tree
+                // scrolls to and focuses the canonical node, which then drives the normal highlight path.
+                QTreeView*                  tree = ui_->tlas_tree_;
+                const QPersistentModelIndex target(canonical_index);
+                QTimer::singleShot(0, this, [this, tree, target]() {
+                    if (target.isValid())
+                    {
+                        QModelIndex idx(target);
+                        SelectTreeItem(tree, idx);
+                        tree->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+                    }
+                });
+                return;
+            }
+        }
+
+        bool is_root = !model_index.parent().isValid();
 
         // We only show the parent address if the selected node is not the root node.
         ui_->label_parent_->setVisible(!is_root);
@@ -451,6 +492,9 @@ void TlasViewerPane::UpdateWidgets(const QModelIndex& index)
     {
         ui_->rebraid_group_->setVisible(model_->IsRebraidedNode(last_selected_as_id_));
         UpdateRebraidUI();
+
+        rra::TlasViewerModel* tlas_model = dynamic_cast<rra::TlasViewerModel*>(model_);
+        ui_->packed_ref_group_->setVisible(common_valid && tlas_model != nullptr && tlas_model->SelectedNodePackedRefCount() > 1);
     }
 }
 
@@ -466,6 +510,9 @@ void TlasViewerPane::UpdateSelectedTlas()
     ui_->tlas_tree_->SetViewerModel(model_, last_selected_as_id_);
     ui_->viewer_container_widget_->SetScene(scene);
     ui_->expand_collapse_tree_->SetCurrentItemIndex(rra::AccelerationStructureViewerModel::TreeViewExpandMode::kCollapsed);
+
+    // The per-partition bounding box overlay is only meaningful for partitioned (PTLAS) traces.
+    ui_->side_panel_container_->GetViewPane()->SetPartitionBoundsAvailable(RraTlasIsPartitioned(last_selected_as_id_));
 
     emit rra::MessageManager::Get().TlasSelected(last_selected_as_id_);
 }
@@ -503,6 +550,49 @@ void TlasViewerPane::SetBlasInstanceSelection(uint64_t tlas_index, uint64_t blas
                 emit rra::MessageManager::Get().BlasSelected(instance_info.blas_index);
             }
         }
+    }
+}
+
+void TlasViewerPane::FocusOnPartition(uint64_t tlas_index, uint32_t partition_index)
+{
+    if (tlas_index != last_selected_as_id_)
+    {
+        return;
+    }
+
+    RraPartitionInfo partition_info = {};
+    if (RraTlasGetPartitionInfo(tlas_index, partition_index, &partition_info) != kRraOk)
+    {
+        return;
+    }
+
+    if (!partition_info.bounds_valid)
+    {
+        return;
+    }
+
+    rra::renderer::Camera& scene_camera      = renderer_interface_->GetCamera();
+    rra::ViewerIO*         camera_controller = static_cast<rra::ViewerIO*>(scene_camera.GetCameraController());
+    if (camera_controller)
+    {
+        BoundingVolumeExtents extents = {};
+        extents.min_x                 = partition_info.bounds_min[0];
+        extents.min_y                 = partition_info.bounds_min[1];
+        extents.min_z                 = partition_info.bounds_min[2];
+        extents.max_x                 = partition_info.bounds_max[0];
+        extents.max_y                 = partition_info.bounds_max[1];
+        extents.max_z                 = partition_info.bounds_max[2];
+
+        camera_controller->FocusCameraOnVolume(&renderer_interface_->GetCamera(), extents);
+    }
+}
+
+void TlasViewerPane::UpdateShowPartitionBounds(bool show_partition_bounds)
+{
+    rra::Scene* scene = model_->GetSceneCollectionModel()->GetSceneByIndex(last_selected_as_id_);
+    if (scene)
+    {
+        scene->SetShowPartitionBounds(show_partition_bounds);
     }
 }
 

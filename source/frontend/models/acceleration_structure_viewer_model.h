@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure viewer model base class.
@@ -71,6 +72,13 @@ namespace rra
         ///
         /// @param [in] rotation The node rotation.
         void PopulateRotationTable(const glm::mat3& rotation);
+
+        /// @brief Populate the bottom matrix table with a 3x4 (row-major) instance transform.
+        ///
+        /// Reuses the rotation table's model/view but shows all four columns (rotation + translation).
+        ///
+        /// @param [in] transform The 12-float row-major world-to-object matrix.
+        void PopulateInstanceTransformTable(const float* transform);
 
         /// @brief Connect the incoming map of RendererAdapter instances with the model.
         ///
@@ -235,6 +243,16 @@ namespace rra
         ///
         /// @returns The tree model index for the given node and its triangle.
         QModelIndex GetModelIndexForNodeAndTriangle(uint32_t node_id, uint32_t triangle_index) const;
+
+        /// @brief Check if the given model index is a "Referenced subtree" placeholder (RTIP3.1 node packing).
+        ///
+        /// Such a placeholder sits under a packed-ref row and redirects to the canonical (primary) node that owns the
+        /// shared subtree. Its UserRole carries the primary's composite key.
+        ///
+        /// @param [in] model_index The model index of the item selected in the tree view.
+        ///
+        /// @returns True if the model index is a referenced-subtree placeholder.
+        bool IsModelIndexReferencePlaceholder(const QModelIndex& model_index) const;
 
         /// @brief Get the all-scenes model.
         ///

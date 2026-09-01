@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS scene model.
@@ -99,6 +100,7 @@ namespace rra
         scene_model_closest_hit.distance = -1.0f;
         std::vector<uint64_t>            hit_instances;
         std::vector<renderer::Instance*> hit_instance_data;
+        std::vector<rra::SceneNode*>     hit_instance_nodes;
 
         auto scene = GetSceneByIndex(bvh_index);
         if (scene)
@@ -106,11 +108,31 @@ namespace rra
             auto scene_nodes = scene->CastRayCollectNodes(origin, direction);
             for (auto node : scene_nodes)
             {
+                // Under RTIP3.1 node packing, a packed-ref slot carries its own per-slot bounding box but no
+                // geometry/instance of its own; the shared subtree lives on the primary sibling. A ray can hit a
+                // packed-ref box without hitting the primary's (distinct) box, so redirect the hit to the primary.
+                // This makes a 3D click on a packed-ref select the same instance the "referenced subtree" tree row
+                // resolves to, instead of falling through to the object behind it.
+                if (SceneNode* primary = node->GetPackedPrimary())
+                {
+                    node = primary;
+                }
+
                 renderer::Instance* instance = node->GetInstance();
                 if (instance)
                 {
-                    hit_instances.push_back(instance->instance_node);
+                    const rta::RayTracingIpLevel rtip = (rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel();
+                    bool                         use_composite_key = (rtip == rta::RayTracingIpLevel::RtIp3_1 && RraTlasHasNodePacking(bvh_index));
+                    if (use_composite_key)
+                    {
+                        hit_instances.push_back(((uint64_t)node->GetGlobalChildIndex() << 32) | instance->instance_node);
+                    }
+                    else
+                    {
+                        hit_instances.push_back(instance->instance_node);
+                    }
                     hit_instance_data.push_back(instance);
+                    hit_instance_nodes.push_back(node);
                 }
             }
 
@@ -131,6 +153,31 @@ namespace rra
                 // Check per-BLAS geometry filter before descending into the BLAS.
                 if (scene->ShouldFilterBlasInstance(geometry_filter_state_, hit_instance_data[i], blas_index))
                 {
+                    continue;
+                }
+
+                // A Cluster BLAS (CBLAS) has no triangles of its own; its geometry is the CLASes it references,
+                // pre-flattened into world->CLAS-object sub-instances. Trace each CLAS so a CBLAS instance is
+                // pickable. The hit still reports the TLAS instance node, so selection lands on the TLAS instance.
+                const std::vector<renderer::Instance>& sub_instances = hit_instance_nodes[i]->GetClusterSubInstances();
+                if (!sub_instances.empty())
+                {
+                    // Remember the winning distance before tracing this CBLAS's CLASes. If one of them wins,
+                    // CastClosestHitRayOnBlas will have overwritten blas_index with the inner CLAS index; but a
+                    // pick on a CBLAS instance should drill to the CBLAS, so restore the CBLAS index afterward.
+                    const float distance_before = scene_model_closest_hit.distance;
+                    for (const renderer::Instance& sub_instance : sub_instances)
+                    {
+                        const glm::mat4 world_to_object = glm::transpose(glm::inverse(sub_instance.transform));
+                        glm::vec3       clas_origin     = world_to_object * glm::vec4(origin, 1.0f);
+                        glm::vec3       clas_direction  = glm::mat3(world_to_object) * direction;
+                        CastClosestHitRayOnBlas(
+                            (*blas_root_nodes)[sub_instance.blas_index], hit_instances[i], clas_origin, clas_direction, scene_model_closest_hit);
+                    }
+                    if (scene_model_closest_hit.distance != distance_before)
+                    {
+                        scene_model_closest_hit.blas_index = blas_index;
+                    }
                     continue;
                 }
 
@@ -164,4 +211,5 @@ namespace rra
     }
 
 }  // namespace rra
+
 

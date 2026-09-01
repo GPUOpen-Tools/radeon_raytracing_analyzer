@@ -1,12 +1,11 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright Advanced Micro Devices, Inc.
+## SPDX-License-Identifier: MIT
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief Script to fetch all external git and/or downloadable dependencies
 ##        needed to build the project.
-##
-##   fetch_dependencies.py
 ##
 ## Each git repo will be updated to the commit specified in the "gitMapping" table.
 ##=============================================================================
@@ -51,7 +50,6 @@ from dependency_map import url_mapping_linux
 # Download a zip or tgz file from the specified URL and unzip into the directory defined by destination.
 # The destination directory will be created if it doesn't exist
 # if the 'update' parameter is true then the existing file and output directory will be deleted and re-created
-# TODO - this function needs to handle errors gracefully when URL is incorrect or inaccessible
 def download_url_dependencies(url_mapping, update, retry_count = 10):
     for url in url_mapping:
         # convert targetPath to OS specific format

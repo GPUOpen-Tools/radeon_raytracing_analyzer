@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the TLAS viewer pane.
@@ -126,6 +127,17 @@ private:
     /// @param [in] blas_index The index of the selected BLAS.
     /// @param [in] instance_index The index of the selected BLAS instance.
     void SetBlasInstanceSelection(uint64_t tlas_index, uint64_t blas_index, uint64_t instance_index);
+
+    /// @brief Focus the camera on a PTLAS partition's bounding volume.
+    ///
+    /// @param [in] tlas_index      The index of the selected TLAS.
+    /// @param [in] partition_index The index of the partition to focus on.
+    void FocusOnPartition(uint64_t tlas_index, uint32_t partition_index);
+
+    /// @brief Enable or disable the per-partition bounding box overlay for the current scene.
+    ///
+    /// @param [in] show_partition_bounds  Whether the per-partition bounding boxes should be shown.
+    void UpdateShowPartitionBounds(bool show_partition_bounds);
 
     /// @brief A BLAS has been selected in the tree view.
     ///

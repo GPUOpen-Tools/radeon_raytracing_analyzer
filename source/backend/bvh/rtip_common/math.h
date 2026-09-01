@@ -1,5 +1,6 @@
 //=============================================================================
-//  Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+//  Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Math functions used in some RT IP 3.1 (Navi4x) specific code.
@@ -125,6 +126,14 @@ static BoundingBox CombineAABB(BoundingBox b0, BoundingBox b1)
 
     return bbox;
 }
+
+//=====================================================================================================================
+/* Temporarily comment out since some things in this function are undefined.
+inline uint32_t countbits64(uint64_t val)
+{
+    return countbits(LowPart(val)) + countbits(HighPart(val));
+}
+*/
 
 //=====================================================================================================================
 // Search the mask data from least significant bit (LSB) / Lowest Order bit
@@ -282,6 +291,24 @@ static glm::vec3 ComputeFastExpReciprocal(glm::uvec3 exponents)
     rcpExponentsUint.y <<= 23;
     rcpExponentsUint.z <<= 23;
     const glm::vec3 rcpExponents = asfloat(rcpExponentsUint);
+
+    // Note that this optimization results in this function being ill-defined for inputs with exponent == 254.
+    // It is unlikely any app will use geometry with enormous bounds like this. This could be handled with a special
+    // case or by falling back to infinitely large boxes and accepting all hits and pushing the problem down the BVH.
+    return rcpExponents;
+}
+
+//=====================================================================================================================
+// Compute 8-bit integer reciprocal.
+static glm::vec3 ComputeFastExpReciprocal(glm::uvec3 exponents, uint32_t numQuantBits)
+{
+    // Computing rcpExponents guarantees that the compiler will not emit
+    // transcendental ops for the plane quantization.
+    // When numQuantBits=12 for example, the + 12 comes from the fact that 2 ** 12 = 4096 which is the
+    // encoding granularity.
+    glm::uvec3 t                 = (glm::uvec3(254, 254, 254) - exponents + numQuantBits);
+    t                            = {t.x << 23, t.y << 23, t.z << 23};
+    const glm::vec3 rcpExponents = asfloat(t);
 
     // Note that this optimization results in this function being ill-defined for inputs with exponent == 254.
     // It is unlikely any app will use geometry with enormous bounds like this. This could be handled with a special

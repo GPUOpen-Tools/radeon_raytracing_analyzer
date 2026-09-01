@@ -3,7 +3,7 @@
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.25)
 
 # Attempt to automatically find Qt on the local machine
 if (LINUX)
@@ -83,3 +83,5 @@ if (Qt6_DIR)
         install(SCRIPT ${deploy_script} COMPONENT ${component})
     endfunction()
 endif ()
+
+

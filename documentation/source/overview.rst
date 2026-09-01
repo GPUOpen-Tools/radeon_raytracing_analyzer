@@ -6,7 +6,7 @@ These panes show the overview of the scene and the system.
 Summary
 -------
 The summary pane presents a high-level view of the acceleration structures in
-a scene. If dispatches was specified when taking a capture, the dispatches
+a scene. If dispatches were specified when taking a capture, the dispatches
 that shot rays will also be shown.
 
 At the top, a small table will show the number of acceleration structures by type
@@ -40,7 +40,7 @@ the scene. It is split into several sections:
   it references. TLASes can, and do, share BLASes so the totals for all the TLASes can
   sometimes be larger than the total memory displayed above.
 
-* The right section displays some useful statistics for each TLAS are shown so each
+* The right section displays some useful statistics for each TLAS so each
   can be easily identified.
 
 .. image:: media/overview/summary_1.png
@@ -48,7 +48,7 @@ the scene. It is split into several sections:
 Clicking on the TLAS name or address (text in blue) will navigate to the TLAS
 Viewer pane.
 
-If dispatches was enabled from the Radeon Developer Panel, the **Dispatch list** shows
+If dispatches were enabled from the Radeon Developer Panel, the **Dispatch list** shows
 a list of all ray dispatches that were executed during the captured frame.
 
 A splitter between the TLAS list and the Dispatch list, indicated by a horizontal
@@ -93,4 +93,5 @@ be displayed here under the section labeled **Driver experiments**. Hovering ove
 experiment name or value with the mouse pointer displays a tooltip describing that item.
 
 .. image:: media/overview/system_info_1.png
+
 

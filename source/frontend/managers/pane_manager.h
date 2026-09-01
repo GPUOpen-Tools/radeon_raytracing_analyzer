@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the pane manager.
@@ -55,6 +56,7 @@ namespace rra
     {
         kTlasPaneViewer,
         kTlasPaneInstances,
+        kTlasPanePartitions,
         kTlasPaneBlasList,
         kTlasPaneProperties,
 
@@ -117,6 +119,7 @@ namespace rra
         kPaneIdOverviewDeviceConfig      = (kMainPaneOverview << kPaneShift) | kOverviewPaneDeviceConfig,
         kPaneIdTlasViewer                = (kMainPaneTlas << kPaneShift) | kTlasPaneViewer,
         kPaneIdTlasInstances             = (kMainPaneTlas << kPaneShift) | kTlasPaneInstances,
+        kPaneIdTlasPartitions            = (kMainPaneTlas << kPaneShift) | kTlasPanePartitions,
         kPaneIdTlasBlasList              = (kMainPaneTlas << kPaneShift) | kTlasPaneBlasList,
         kPaneIdTlasProperties            = (kMainPaneTlas << kPaneShift) | kTlasPaneProperties,
         kPaneIdBlasViewer                = (kMainPaneBlas << kPaneShift) | kBlasPaneViewer,
@@ -138,16 +141,17 @@ namespace rra
 
     static const int kGotoTlasViewerPane     = Qt::Key_Q;
     static const int kGotoTlasInstancesPane  = Qt::Key_W;
-    static const int kGotoTlasBlasListPane   = Qt::Key_E;
-    static const int kGotoTlasPropertiesPane = Qt::Key_T;
+    static const int kGotoTlasPartitionsPane = Qt::Key_E;
+    static const int kGotoTlasBlasListPane   = Qt::Key_T;
+    static const int kGotoTlasPropertiesPane = Qt::Key_Y;
 
     static const int kGotoBlasViewerPane     = Qt::Key_A;
     static const int kGotoBlasInstancesPane  = Qt::Key_S;
     static const int kGotoBlasTrianglesPane  = Qt::Key_D;
     static const int kGotoBlasGeometriesPane = Qt::Key_F;
     static const int kGotoBlasPropertiesPane = Qt::Key_G;
-    static const int kGotoRayHistoryPane   = Qt::Key_H;
-    static const int kGotoRayInspectorPane = Qt::Key_J;
+    static const int kGotoRayHistoryPane     = Qt::Key_H;
+    static const int kGotoRayInspectorPane   = Qt::Key_J;
 
     static const int kGotoWelcomePane           = Qt::Key_X;
     static const int kGotoRecentTracesPane      = Qt::Key_C;

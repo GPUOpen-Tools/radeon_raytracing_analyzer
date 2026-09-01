@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the settings.
@@ -66,6 +67,7 @@ namespace rra
           {kCheckboxSettingShowInstanceTransform, kSettingPersistenceTLASShowInstanceTransform},
           {kCheckboxSettingShowWireframe, kSettingPersistenceTLASShowWireframe},
           {kCheckboxSettingAcceptFirstHit, kSettingPersistenceTLASAcceptFirstHit},
+          {kCheckboxSettingMaxAnyhitInvocations, kSettingPersistenceTLASMaxAnyhitInvocations},
           {kCheckboxSettingCullBackFacingTriangles, kSettingPersistenceTLASCullBackFacingTriangles},
           {kCheckboxSettingCullFrontFacingTriangles, kSettingPersistenceTLASCullFrontFacingTriangles}}},
 
@@ -75,6 +77,7 @@ namespace rra
           {kCheckboxSettingShowAxisAlignedLeafBVH, kSettingPersistenceBLASShowAxisAlignedLeafBVH},
           {kCheckboxSettingShowWireframe, kSettingPersistenceBLASShowWireframe},
           {kCheckboxSettingAcceptFirstHit, kSettingPersistenceBLASAcceptFirstHit},
+          {kCheckboxSettingMaxAnyhitInvocations, kSettingPersistenceBLASMaxAnyhitInvocations},
           {kCheckboxSettingCullBackFacingTriangles, kSettingPersistenceBLASCullBackFacingTriangles},
           {kCheckboxSettingCullFrontFacingTriangles, kSettingPersistenceBLASCullFrontFacingTriangles}}},
 
@@ -85,6 +88,7 @@ namespace rra
           {kCheckboxSettingShowAxisAlignedLeafBVH, kSettingPersistenceInspectorShowAxisAlignedLeafBVH},
           {kCheckboxSettingShowWireframe, kSettingPersistenceInspectorShowWireframe},
           {kCheckboxSettingAcceptFirstHit, kSettingPersistenceInspectorAcceptFirstHit},
+          {kCheckboxSettingMaxAnyhitInvocations, kSettingPersistenceInspectorMaxAnyhitInvocations},
           {kCheckboxSettingCullBackFacingTriangles, kSettingPersistenceInspectorCullBackFacingTriangles},
           {kCheckboxSettingCullFrontFacingTriangles, kSettingPersistenceInspectorCullFrontFacingTriangles}}},
     };
@@ -393,6 +397,7 @@ namespace rra
         default_settings_[kSettingPersistenceTLASShowInstanceTransform]      = {"TLASShowInstanceTransform", "True"};
         default_settings_[kSettingPersistenceTLASShowWireframe]              = {"TLASShowWireframe", "True"};
         default_settings_[kSettingPersistenceTLASAcceptFirstHit]             = {"TLASAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceTLASMaxAnyhitInvocations]       = {"TLASMaxAnyhitInvocations", "False"};
         default_settings_[kSettingPersistenceTLASCullBackFacingTriangles]    = {"TLASCullBackFacingTriangles", "False"};
         default_settings_[kSettingPersistenceTLASCullFrontFacingTriangles]   = {"TLASCullFrontFacingTriangles", "False"};
         default_settings_[kSettingPersistenceTLASFieldOfView]                = {"TLASFieldOfView", "75"};
@@ -409,6 +414,7 @@ namespace rra
         default_settings_[kSettingPersistenceBLASShowAxisAlignedLeafBVH]     = {"BLASShowAxisAlignedLeafBVH", "True"};
         default_settings_[kSettingPersistenceBLASShowWireframe]              = {"BLASShowWireframe", "True"};
         default_settings_[kSettingPersistenceBLASAcceptFirstHit]             = {"BLASAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceBLASMaxAnyhitInvocations]       = {"BLASMaxAnyhitInvocations", "False"};
         default_settings_[kSettingPersistenceBLASCullBackFacingTriangles]    = {"BLASCullBackFacingTriangles", "False"};
         default_settings_[kSettingPersistenceBLASCullFrontFacingTriangles]   = {"BLASCullFrontFacingTriangles", "False"};
         default_settings_[kSettingPersistenceBLASFieldOfView]                = {"BLASFieldOfView", "75"};
@@ -426,6 +432,7 @@ namespace rra
         default_settings_[kSettingPersistenceInspectorShowAxisAlignedLeafBVH]     = {"InspectorShowAxisAlignedLeafBVH", "True"};
         default_settings_[kSettingPersistenceInspectorShowWireframe]              = {"InspectorShowWireframe", "True"};
         default_settings_[kSettingPersistenceInspectorAcceptFirstHit]             = {"InspectorAcceptFirstHit", "False"};
+        default_settings_[kSettingPersistenceInspectorMaxAnyhitInvocations]       = {"InspectorMaxAnyhitInvocations", "False"};
         default_settings_[kSettingPersistenceInspectorCullBackFacingTriangles]    = {"InspectorCullBackFacingTriangles", "False"};
         default_settings_[kSettingPersistenceInspectorCullFrontFacingTriangles]   = {"InspectorCullFrontFacingTriangles", "False"};
         default_settings_[kSettingPersistenceInspectorFieldOfView]                = {"InspectorFieldOfView", "75"};
@@ -502,6 +509,7 @@ namespace rra
             SetToDefaultValue(kSettingPersistenceTLASShowWireframe);
 
             SetToDefaultValue(kSettingPersistenceTLASAcceptFirstHit);
+            SetToDefaultValue(kSettingPersistenceTLASMaxAnyhitInvocations);
             SetToDefaultValue(kSettingPersistenceTLASCullBackFacingTriangles);
             SetToDefaultValue(kSettingPersistenceTLASCullFrontFacingTriangles);
 
@@ -523,6 +531,7 @@ namespace rra
             SetToDefaultValue(kSettingPersistenceBLASShowWireframe);
 
             SetToDefaultValue(kSettingPersistenceBLASAcceptFirstHit);
+            SetToDefaultValue(kSettingPersistenceBLASMaxAnyhitInvocations);
             SetToDefaultValue(kSettingPersistenceBLASCullBackFacingTriangles);
             SetToDefaultValue(kSettingPersistenceBLASCullFrontFacingTriangles);
 
@@ -545,6 +554,7 @@ namespace rra
             SetToDefaultValue(kSettingPersistenceInspectorShowWireframe);
 
             SetToDefaultValue(kSettingPersistenceInspectorAcceptFirstHit);
+            SetToDefaultValue(kSettingPersistenceInspectorMaxAnyhitInvocations);
             SetToDefaultValue(kSettingPersistenceInspectorCullBackFacingTriangles);
             SetToDefaultValue(kSettingPersistenceInspectorCullFrontFacingTriangles);
 

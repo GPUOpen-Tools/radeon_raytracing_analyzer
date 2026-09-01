@@ -1,5 +1,6 @@
 //=============================================================================
-//  Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+//  Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific ray tracing definitions.
@@ -22,7 +23,6 @@
 #include <cstring>
 
 #include "glm/glm/glm.hpp"
-
 
 //=====================================================================================================================
 ///@note Enum is a reserved keyword in glslang. To workaround this limitation, define static constants to replace the
@@ -1577,9 +1577,7 @@ struct RayQueryInternal
     uint32_t             clocks;
     uint32_t             numCandidateHits;
     uint32_t             instanceIntersections;
-#ifdef AMD_VULKAN
     uint32_t             rayQueryObjId;
-#endif
 };
 */
 

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for a triangle node class.
@@ -146,7 +147,7 @@ namespace dxr
                                                      const std::uint32_t      rotation = 0);
 
             std::array<Float3, 5> vertices_ = {};  ///< 5 Vertices to store quads (as triangle fans)
-            std::uint32_t triangle_id_;  ///< ID of the triangle (defines rotation for compression mode)
+            std::uint32_t         triangle_id_;    ///< ID of the triangle (defines rotation for compression mode)
         };
     }  // namespace amd
 }  // namespace dxr

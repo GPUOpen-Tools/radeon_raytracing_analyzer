@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for UserMarkerHistory class (a RDF chunk type).

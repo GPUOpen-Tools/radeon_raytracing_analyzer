@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Scene class.
@@ -18,6 +19,7 @@
 
 #include "public/intersect.h"
 #include "public/rra_blas.h"
+#include "public/rra_rtip_info.h"
 #include "public/rra_tlas.h"
 
 #include "util/stack_vector.h"
@@ -49,6 +51,9 @@ namespace rra
         root_node_ = root_node;
         bvh_index_ = bvh_index;
         is_tlas_   = is_tlas;
+
+        tlas_has_node_packing_ =
+            is_tlas_ && ((rta::RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == rta::RayTracingIpLevel::RtIp3_1) && RraTlasHasNodePacking(bvh_index_);
 
         nodes_.clear();
         root_node->CollectNodes(nodes_);
@@ -195,9 +200,9 @@ namespace rra
 
     renderer::RraVertex* Scene::AllocateVertexBuffer(uint32_t blas_index)
     {
-        uint32_t     total_tri_count{};
-        RraErrorCode error_code = RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
-        RRA_ASSERT(error_code == kRraOk);
+        // Size against the triangles the traversal actually emits. For RTIP3.1 that can exceed the header's unique count
+        // (node packing / shared prim-ranges); CountBlasEmittedTriangles falls back to the header count on other RTIPs.
+        const uint32_t total_tri_count = SceneNode::CountBlasEmittedTriangles(blas_index);
         vertices_.resize((size_t)total_tri_count * 3);
         return vertices_.data();
     }
@@ -207,7 +212,7 @@ namespace rra
         uint64_t     total_node_count{};
         RraErrorCode error_code = RraBlasGetTotalNodeCount(blas_index, &total_node_count);
         RRA_ASSERT(error_code == kRraOk);
-        child_nodes_buffer_.resize(total_node_count * sizeof(SceneNode));
+        child_nodes_buffer_.resize((total_node_count + 1) * sizeof(SceneNode));
         return child_nodes_buffer_.data();
     }
 
@@ -239,12 +244,15 @@ namespace rra
             // For BLAS scenes, query stats directly for this single BLAS.
             scene_stats_.max_instance_count = 0;
 
-            uint32_t triangle_count = 0;
-            RraBlasGetTriangleNodeCount(bvh_index_, &triangle_count);
+            uint32_t     triangle_count = 0;
+            RraErrorCode error_code     = RraBlasGetTriangleNodeCount(bvh_index_, &triangle_count);
+            RRA_ASSERT(error_code == kRraOk);
             scene_stats_.max_triangle_count = triangle_count;
 
             uint32_t depth = 0;
-            RraBlasGetMaxTreeDepth(bvh_index_, &depth);
+            error_code     = RraBlasGetMaxTreeDepth(bvh_index_, &depth);
+            RRA_ASSERT(error_code == kRraOk);
+            RRA_UNUSED(error_code);
             scene_stats_.max_tree_depth = depth;
         }
         PopulateRebraidMap();
@@ -314,6 +322,41 @@ namespace rra
         bounding_volume_list_.clear();
         root_node_->AppendBoundingVolumesTo(
             bounding_volume_list_, depth_range_lower_bound_, depth_range_upper_bound_, show_internal_bounds_, show_leaf_bounds_);
+
+        AppendPartitionBoundingVolumes();
+    }
+
+    void Scene::AppendPartitionBoundingVolumes()
+    {
+        if (!show_partition_bounds_ || !is_tlas_ || !RraTlasIsPartitioned(bvh_index_))
+        {
+            return;
+        }
+
+        uint32_t partition_count = 0;
+        if (RraTlasGetPartitionCount(bvh_index_, &partition_count) != kRraOk)
+        {
+            return;
+        }
+
+        // Iterate through every partition slot including the global partition (index == partition_count).
+        for (uint32_t partition_index = 0; partition_index <= partition_count; ++partition_index)
+        {
+            RraPartitionInfo info = {};
+            if (RraTlasGetPartitionInfo(bvh_index_, partition_index, &info) != kRraOk || !info.bounds_valid)
+            {
+                continue;
+            }
+
+            renderer::BoundingVolumeInstance bvi;
+            // Encode the partition box at the current lower depth bound so it always passes the shader's depth-range gate.
+            bvi.min      = {info.bounds_min[0], info.bounds_min[1], info.bounds_min[2], static_cast<float>(depth_range_lower_bound_)};
+            bvi.max      = {info.bounds_max[0], info.bounds_max[1], info.bounds_max[2]};
+            bvi.metadata = glm::vec4(6.0f, 0.0f, 0.0f, 1.0f);  // 6 == NODE_TYPE_PARTITION in BoundingVolumeHierarchyWire.hlsl.
+            bvi.rotation = glm::mat3(1.0f);
+
+            bounding_volume_list_.push_back(bvi);
+        }
     }
 
     uint32_t Scene::ComputeMaxTriangleCount() const
@@ -400,7 +443,17 @@ namespace rra
                     selected_volume.min          = {selection_extents.min_x, selection_extents.min_y, selection_extents.min_z};
                     selected_volume.max          = {selection_extents.max_x, selection_extents.max_y, selection_extents.max_z};
                     selected_volume.is_transform = true;
-                    selected_volume.transform    = instance->transform;
+
+                    // The root BLAS extents are decoded in the root node's own OBB frame, so the
+                    // selection box corners must be rotated by that frame before the instance
+                    // transform places them in world space. The wire shader maps OBB corners to
+                    // BLAS space via (R * corner); the selection shader applies transpose(T) * corner,
+                    // so the glm transform must be transpose(R) * instance_transform to reproduce
+                    // apply_instance(R * corner). Matches the root-box rotation drawn in the BLAS view.
+                    glm::mat3 root_rotation(1.0f);
+                    error_code = RraBlasGetNodeBoundingVolumeOrientation(instance->blas_index, root_node, &root_rotation[0][0]);
+                    RRA_ASSERT(error_code == kRraOk);
+                    selected_volume.transform = glm::transpose(glm::mat4(root_rotation)) * instance->transform;
 
                     substrate_instances.push_back(selected_volume);
                 }
@@ -426,6 +479,7 @@ namespace rra
             {
                 max_index = instance->instance_index;
             }
+            RRA_ASSERT(max_index < nodes_.size());
         }
 
         rebraid_siblings_.resize((size_t)max_index + 1);
@@ -727,7 +781,10 @@ namespace rra
 
     SceneNode* Scene::GetNodeById(uint64_t node_child_id) const
     {
-        uint64_t node_id = is_tlas_ ? (uint32_t)node_child_id : node_child_id;
+        // TLAS keys are normally bare node ids, so mask to 32 bits — except under RTIP3.1 TLAS node packing, where the
+        // composite (global_child_index << 32 | node_id) is the real key (matching CollectNodes / GetChildIdHash) and
+        // must be looked up whole so packed siblings stay distinct.
+        uint64_t node_id = (is_tlas_ && !tlas_has_node_packing_) ? (uint32_t)node_child_id : node_child_id;
 
         auto iter = nodes_.find(node_id);
         if (iter != nodes_.end())
@@ -748,6 +805,12 @@ namespace rra
     {
         show_internal_bounds_ = show_internal_bounds;
         show_leaf_bounds_     = show_leaf_bounds;
+        IncrementSceneIteration();
+    }
+
+    void Scene::SetShowPartitionBounds(bool show_partition_bounds)
+    {
+        show_partition_bounds_ = show_partition_bounds;
         IncrementSceneIteration();
     }
 
@@ -880,8 +943,21 @@ namespace rra
 
                 float closest = std::numeric_limits<float>::infinity();
 
-                if (renderer::IntersectAABB(
-                        origin, direction, glm::vec3(extent.min_x, extent.min_y, extent.min_z), glm::vec3(extent.max_x, extent.max_y, extent.max_z), closest))
+                // A node's extents are decoded in its parent's OBB frame (the root in its own
+                // frame). Box corners map to BLAS space via (R * corner), so a BLAS-space point
+                // maps into the OBB frame via transpose(R) * p (R orthonormal). Rotate the ray
+                // into that frame so the axis-aligned test matches the box as drawn in the BLAS
+                // view; otherwise OBB-rotated boxes reject valid rays.
+                glm::mat3 box_rotation    = blas_node->GetParent() ? blas_node->GetParent()->GetRotation() : blas_node->GetRotation();
+                glm::mat3 to_obb          = glm::transpose(box_rotation);
+                glm::vec3 local_origin    = to_obb * origin;
+                glm::vec3 local_direction = to_obb * direction;
+
+                if (renderer::IntersectAABB(local_origin,
+                                            local_direction,
+                                            glm::vec3(extent.min_x, extent.min_y, extent.min_z),
+                                            glm::vec3(extent.max_x, extent.max_y, extent.max_z),
+                                            closest))
                 {
                     if (closest >= 0.0 && (scene_closest_hit.distance <= 0.0f || closest <= scene_closest_hit.distance))
                     {
@@ -1224,4 +1300,5 @@ namespace rra
     }
 
 }  // namespace rra
+
 

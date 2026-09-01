@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ray history model.
@@ -114,7 +115,11 @@ namespace rra
 
                     DispatchCoordinateStats dispatch_coord_stats;
 
-                    RraRayGetDispatchCoordinateStats(dispatch_id, stats.invocation_id, &dispatch_coord_stats);
+                    RraErrorCode error_code = RraRayGetDispatchCoordinateStats(dispatch_id, stats.invocation_id, &dispatch_coord_stats);
+                    if (error_code != kRraOk)
+                    {
+                        continue;
+                    }
 
                     if (dispatch_coord_stats.ray_count == 0)
                     {
@@ -249,10 +254,12 @@ namespace rra
 
             if (x_proxy_model_index.isValid() && y_proxy_model_index.isValid() && z_proxy_model_index.isValid())
             {
-                *x = x_column_index.data(Qt::UserRole).toULongLong();
-                *y = y_column_index.data(Qt::UserRole).toULongLong();
-                *z = z_column_index.data(Qt::UserRole).toULongLong();
-                RraRayGetRayCount(current_dispatch_id_, {*x, *y, *z}, total_rays_at_coordinate);
+                *x                      = x_column_index.data(Qt::UserRole).toULongLong();
+                *y                      = y_column_index.data(Qt::UserRole).toULongLong();
+                *z                      = z_column_index.data(Qt::UserRole).toULongLong();
+                RraErrorCode error_code = RraRayGetRayCount(current_dispatch_id_, {*x, *y, *z}, total_rays_at_coordinate);
+                RRA_ASSERT(error_code == kRraOk);
+                RRA_UNUSED(error_code);
             }
         }
     }
@@ -297,10 +304,12 @@ namespace rra
         uint32_t pixel_count = (filter_max.x - filter_min.x + 1) * (filter_max.y - filter_min.y + 1);
         if (!pixel_count)
         {
-            uint32_t width{};
-            uint32_t height{};
-            uint32_t depth{};
-            RraRayGetDispatchDimensions(current_dispatch_id_, &width, &height, &depth);
+            uint32_t     width{};
+            uint32_t     height{};
+            uint32_t     depth{};
+            RraErrorCode error_code = RraRayGetDispatchDimensions(current_dispatch_id_, &width, &height, &depth);
+            RRA_ASSERT(error_code == kRraOk);
+            RRA_UNUSED(error_code);
             pixel_count = width * height;
         }
 

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BVH scene model.
@@ -87,13 +88,19 @@ namespace rra
 
                 float closest = 0.0f;
                 bool  intersected{};
-                if (RraRtipInfoGetOBBSupported() && blas_node != blas_root)
+                if (RraRtipInfoGetOBBSupported())
                 {
-                    intersected = renderer::IntersectOBB(origin,
+                    // A node's extents are decoded in its parent's OBB frame; the root has no parent
+                    // and its extents are in its own OBB frame (the union of its children). Use the
+                    // matching frame so the test agrees with the rendered box. Previously the root
+                    // fell through to an axis-aligned test, which pruned the whole BLAS for many ray
+                    // directions when the root had a non-identity OBB.
+                    glm::mat3 obb_rotation = (blas_node == blas_root) ? blas_node->GetRotation() : blas_node->GetParent()->GetRotation();
+                    intersected            = renderer::IntersectOBB(origin,
                                                          direction,
                                                          glm::vec3(extent.min_x, extent.min_y, extent.min_z),
                                                          glm::vec3(extent.max_x, extent.max_y, extent.max_z),
-                                                         blas_node->GetParent()->GetRotation(),
+                                                         obb_rotation,
                                                          closest);
                 }
                 else
@@ -104,14 +111,21 @@ namespace rra
 
                 if (intersected)
                 {
-                    // Get the child nodes. If this is not a box node, the child count is 0.
-                    uint32_t                  child_node_count = (uint32_t)blas_node->GetChildCount();
-                    StackVector<uint32_t, 16> child_nodes{};
-                    child_nodes.Resize(child_node_count);
-
-                    for (uint32_t child_idx = 0; child_idx < child_nodes.Size(); ++child_idx)
+                    // Descend into child nodes. If this is not a box node, the child count is 0.
+                    // RTIP3.1 node packing: a packed-ref slot has its own per-slot box but no children of its own; the
+                    // shared subtree lives under the primary sibling. A ray can hit the packed-ref's box without hitting
+                    // the primary's (distinct) box, so descend into the primary's children here -- otherwise the shared
+                    // triangles are never tested and become unselectable (mirrors CastRayCollectNodes/ApplyNodeSelection).
+                    SceneNode* child_owner = blas_node->GetPackedPrimary();
+                    if (child_owner == nullptr)
                     {
-                        swap_nodes_ptr->PushBack(blas_node->GetChild(child_idx));
+                        child_owner = blas_node;
+                    }
+
+                    uint32_t child_node_count = (uint32_t)child_owner->GetChildCount();
+                    for (uint32_t child_idx = 0; child_idx < child_node_count; ++child_idx)
+                    {
+                        swap_nodes_ptr->PushBack(child_owner->GetChild(child_idx));
                     }
                 }
 

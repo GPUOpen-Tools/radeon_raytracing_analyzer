@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the RT IP 1.1 acceleration structure header class.
@@ -204,6 +205,14 @@ namespace rta
         /// @return true if the header is valid, false if not.
         bool IsValid() const;
 
+        /// @brief Get read-only access to the raw GPURT acceleration structure header.
+        ///
+        /// Exposes fields not surfaced by the dedicated accessors above, e.g. the acceleration
+        /// structure type (VersionedType) and PTLAS partition data.
+        ///
+        /// @return The raw header.
+        const AccelStructHeader& GetRawHeader() const;
+
     private:
         virtual const IRtIpCommonAccelerationStructurePostBuildInfo& GetPostBuildInfoImpl() const = 0;
 
@@ -256,6 +265,8 @@ namespace rta
                                         const RayTracingBinaryVersion& rt_binary_header_version = kSupportedRayTracingBinaryHeaderVersion) = 0;
 
         virtual bool IsValidImpl() const = 0;
+
+        virtual const AccelStructHeader& GetRawHeaderImpl() const = 0;
     };
 }  // namespace rta
 

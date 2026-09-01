@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the Ray history pane.
@@ -28,10 +29,12 @@
 /// @return The slice plane.
 static rra::renderer::SlicePlane GetSlicePlaneFor2DDispatch(uint64_t dispatch_id)
 {
-    uint32_t x{};
-    uint32_t y{};
-    uint32_t z{};
-    RraRayGetDispatchDimensions(dispatch_id, &x, &y, &z);
+    uint32_t     x{};
+    uint32_t     y{};
+    uint32_t     z{};
+    RraErrorCode error_code = RraRayGetDispatchDimensions(dispatch_id, &x, &y, &z);
+    RRA_ASSERT(error_code == kRraOk);
+    RRA_UNUSED(error_code);
 
     if (x == 1)
     {
@@ -57,10 +60,12 @@ static rra::renderer::SlicePlane GetSlicePlaneFor2DDispatch(uint64_t dispatch_id
 /// @return The index of the dimension with the RH data.
 static uint32_t GetDimensionIndexOf1DDispatch(uint64_t dispatch_id)
 {
-    uint32_t x{};
-    uint32_t y{};
-    uint32_t z{};
-    RraRayGetDispatchDimensions(dispatch_id, &x, &y, &z);
+    uint32_t     x{};
+    uint32_t     y{};
+    uint32_t     z{};
+    RraErrorCode error_code = RraRayGetDispatchDimensions(dispatch_id, &x, &y, &z);
+    RRA_ASSERT(error_code == kRraOk);
+    RRA_UNUSED(error_code);
 
     if (x > 1)
     {
@@ -81,10 +86,12 @@ static uint32_t GetDimensionIndexOf1DDispatch(uint64_t dispatch_id)
 /// @return The dimension.
 static uint32_t GetDispatchDimension(uint64_t dispatch_id)
 {
-    uint32_t x{};
-    uint32_t y{};
-    uint32_t z{};
-    RraRayGetDispatchDimensions(dispatch_id, &x, &y, &z);
+    uint32_t     x{};
+    uint32_t     y{};
+    uint32_t     z{};
+    RraErrorCode error_code = RraRayGetDispatchDimensions(dispatch_id, &x, &y, &z);
+    RRA_ASSERT(error_code == kRraOk);
+    RRA_UNUSED(error_code);
 
     // Empty dimensions will have value of 1, since for example a 2d dispatch could be (1920, 1080, 1).
     uint32_t empty_dimensions = (x == 1 ? 1 : 0) + (y == 1 ? 1 : 0) + (z == 1 ? 1 : 0);
@@ -344,8 +351,10 @@ void RayHistoryPane::OnTraceOpen()
     ClearRaySelection();
 
     // We set the flag to false here to instruct loading the dispatch correctly.
-    uint32_t dispatch_count{};
-    RraRayGetDispatchCount(&dispatch_count);
+    uint32_t     dispatch_count{};
+    RraErrorCode error_code = RraRayGetDispatchCount(&dispatch_count);
+    RRA_ASSERT(error_code == kRraOk);
+    RRA_UNUSED(error_code);
 
     dispatches_loaded_.resize(dispatch_count, false);
     LoadDispatches();
@@ -400,10 +409,12 @@ void RayHistoryPane::UpdateDispatchSpinBoxRanges()
     }
 
     // Update reshape range.
-    uint32_t x{};
-    uint32_t y{};
-    uint32_t z{};
-    RraRayGetDispatchDimensions(dispatch_id_, &x, &y, &z);
+    uint32_t     x{};
+    uint32_t     y{};
+    uint32_t     z{};
+    RraErrorCode error_code = RraRayGetDispatchDimensions(dispatch_id_, &x, &y, &z);
+    RRA_ASSERT(error_code == kRraOk);
+    RRA_UNUSED(error_code);
 
     uint32_t max_dimension = std::max(x, std::max(y, z));
     ray_history_viewer_.x_wrap_spin_box_->blockSignals(true);
@@ -419,8 +430,10 @@ void RayHistoryPane::UpdateDispatchSpinBoxRanges()
 
 void RayHistoryPane::InitializeReshapedDimensions()
 {
-    uint32_t dispatch_count{};
-    RraRayGetDispatchCount(&dispatch_count);
+    uint32_t     dispatch_count{};
+    RraErrorCode error_code = RraRayGetDispatchCount(&dispatch_count);
+    RRA_ASSERT(error_code == kRraOk);
+    RRA_UNUSED(error_code);
 
     dispatch_reshaped_dimensions_.clear();
     dispatch_reshaped_dimensions_.resize(dispatch_count, {});
@@ -452,8 +465,9 @@ void RayHistoryPane::ClearRaySelection()
 
 void RayHistoryPane::UpdateTimer()
 {
-    uint32_t dispatch_count = 0;
-    RraRayGetDispatchCount(&dispatch_count);
+    uint32_t     dispatch_count = 0;
+    RraErrorCode error_code     = RraRayGetDispatchCount(&dispatch_count);
+    RRA_ASSERT(error_code == kRraOk);
 
     if (dispatch_count == 0)
     {
@@ -462,14 +476,17 @@ void RayHistoryPane::UpdateTimer()
     }
 
     RraDispatchLoadStatus load_status = {};
-    RraRayGetDispatchStatus(dispatch_id_, &load_status);
+    error_code                        = RraRayGetDispatchStatus(dispatch_id_, &load_status);
+    RRA_ASSERT(error_code == kRraOk);
 
     DispatchType dispatch_type = kRayTracingPipeline;
 
     RraRayHistoryStats stats = {};
 
-    RraRayGetDispatchType(dispatch_id_, &dispatch_type);
-    RraRayGetDispatchStats(dispatch_id_, &stats);
+    error_code = RraRayGetDispatchType(dispatch_id_, &dispatch_type);
+    RRA_ASSERT(error_code == kRraOk);
+    error_code = RraRayGetDispatchStats(dispatch_id_, &stats);
+    RRA_ASSERT(error_code == kRraOk);
 
     // Start of with the dispatch region and error label hidden.
     ui_->loading_bar_->SetText("Loading dispatch");
@@ -492,7 +509,8 @@ void RayHistoryPane::UpdateTimer()
     for (uint32_t i = 0; i < dispatch_count; i++)
     {
         RraDispatchLoadStatus individual_load_status = {};
-        RraRayGetDispatchStatus(i, &individual_load_status);
+        error_code                                   = RraRayGetDispatchStatus(i, &individual_load_status);
+        RRA_ASSERT(error_code == kRraOk);
         if (!individual_load_status.loading_complete)
         {
             all_dispatches_loaded = false;
@@ -505,7 +523,9 @@ void RayHistoryPane::UpdateTimer()
                 uint32_t x{};
                 uint32_t y{};
                 uint32_t z{};
-                RraRayGetDispatchDimensions(i, &x, &y, &z);
+                error_code = RraRayGetDispatchDimensions(i, &x, &y, &z);
+                RRA_ASSERT(error_code == kRraOk);
+                RRA_UNUSED(error_code);
 
                 dispatch_reshaped_dimensions_[i].x = x;
                 dispatch_reshaped_dimensions_[i].y = y;
@@ -557,15 +577,17 @@ void RayHistoryPane::SetDispatchId(uint64_t dispatch_id)
 {
     dispatch_id_ = dispatch_id;
 
-    uint32_t dispatch_count = 0;
-    RraRayGetDispatchCount(&dispatch_count);
+    uint32_t     dispatch_count = 0;
+    RraErrorCode error_code     = RraRayGetDispatchCount(&dispatch_count);
+    RRA_ASSERT(error_code == kRraOk);
     if (dispatch_count <= dispatch_id)
     {
         return;
     }
 
     RraDispatchLoadStatus load_status = {};
-    RraRayGetDispatchStatus(dispatch_id, &load_status);
+    error_code                        = RraRayGetDispatchStatus(dispatch_id, &load_status);
+    RRA_ASSERT(error_code == kRraOk);
 
     if (load_status.has_errors)
     {
@@ -585,7 +607,9 @@ void RayHistoryPane::SetDispatchId(uint64_t dispatch_id)
     ui_->ray_table_->setSortingEnabled(false);
 
     char user_marker_string_buffer[512];
-    RraRayGetDispatchUserMarkerString(dispatch_id_, user_marker_string_buffer, 512);
+    error_code = RraRayGetDispatchUserMarkerString(dispatch_id_, user_marker_string_buffer, 512);
+    RRA_ASSERT(error_code == kRraOk);
+    RRA_UNUSED(error_code);
     if (strlen(user_marker_string_buffer) > 0)
     {
         ui_->user_marker_stack_->setText(user_marker_string_buffer);
@@ -716,13 +740,15 @@ void RayHistoryPane::SelectRayAndSwitchPane(const QModelIndex& index)
 
 void RayHistoryPane::LoadDispatches()
 {
-    uint32_t dispatch_count{};
-    RraRayGetDispatchCount(&dispatch_count);
+    uint32_t     dispatch_count{};
+    RraErrorCode error_code = RraRayGetDispatchCount(&dispatch_count);
+    RRA_ASSERT(error_code == kRraOk);
     std::vector<std::string> dispatch_options{};
     for (uint32_t id{0}; id < dispatch_count; ++id)
     {
         RraDispatchLoadStatus load_status = {};
-        RraRayGetDispatchStatus(id, &load_status);
+        error_code                        = RraRayGetDispatchStatus(id, &load_status);
+        RRA_ASSERT(error_code == kRraOk);
 
         std::string trace_rays_str = RraApiInfoIsVulkan() ? "vkCmdTraceRaysKHR" : "DispatchRays";
 
@@ -731,7 +757,9 @@ void RayHistoryPane::LoadDispatches()
             uint32_t x{};
             uint32_t y{};
             uint32_t z{};
-            RraRayGetDispatchDimensions(id, &x, &y, &z);
+            error_code = RraRayGetDispatchDimensions(id, &x, &y, &z);
+            RRA_ASSERT(error_code == kRraOk);
+            RRA_UNUSED(error_code);
 
             dispatch_options.push_back(std::to_string(id) + ": " + trace_rays_str + "(" + std::to_string(x) + ", " + std::to_string(y) + ", " +
                                        std::to_string(z) + ")");

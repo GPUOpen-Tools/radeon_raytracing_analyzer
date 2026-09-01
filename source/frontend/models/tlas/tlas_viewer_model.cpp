@@ -1,11 +1,14 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS viewer model.
 //=============================================================================
 
 #include "models/tlas/tlas_viewer_model.h"
+
+#include <array>
 
 #include "qt_common/custom_widgets/arrow_icon_combo_box.h"
 #include "qt_common/custom_widgets/scaled_tree_view.h"
@@ -151,13 +154,52 @@ namespace rra
         uint32_t node_id     = GetNodeIdFromModelIndex(model_index, tlas_index, kIsTlasModel);
         uint32_t child_index = GetChildIndexFromModelIndex(model_index);
 
-        const char* node_str{};
-        RraTlasGetNodeName(tlas_index, node_id, &node_str);
+        const char*  node_str{};
+        RraErrorCode error_code = RraTlasGetNodeName(tlas_index, node_id, &node_str);
+        RRA_ASSERT(error_code == kRraOk);
         std::string node_type{node_str};
 
         if (IsRebraidedNode(tlas_index))
         {
             node_type += " (rebraided)";
+        }
+
+        // RTIP3.1 node packing: count how many sibling parent slots reference this node. When more than one, the node is
+        // shared ("packed") -- surface the count in the stats and annotate the type label inline (mirrors the BLAS tab).
+        last_selected_packed_ref_count_ = 1;
+        if (RraTlasHasNodePacking(tlas_index))
+        {
+            uint32_t     packing_parent_id{};
+            RraErrorCode packing_parent_error = RraTlasGetNodeParent(tlas_index, node_id, &packing_parent_id);
+            if (packing_parent_error == kRraOk && packing_parent_id != std::numeric_limits<uint32_t>::max())
+            {
+                uint32_t child_count{};
+                if (RraTlasGetChildNodeCount(tlas_index, packing_parent_id, &child_count) == kRraOk)
+                {
+                    std::array<uint32_t, MAX_CHILD_NODES> child_nodes{};
+                    if (RraTlasGetChildNodes(tlas_index, packing_parent_id, child_nodes.data()) == kRraOk)
+                    {
+                        uint32_t refs = 0;
+                        for (uint32_t i = 0; i < child_count; ++i)
+                        {
+                            if (child_nodes[i] == node_id)
+                            {
+                                ++refs;
+                            }
+                        }
+                        if (refs > 1)
+                        {
+                            last_selected_packed_ref_count_ = refs;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (last_selected_packed_ref_count_ > 1)
+        {
+            SetModelData(kTlasStatsPackedRefCount, QString::number(last_selected_packed_ref_count_) + " boxes");
+            node_type += " (packed)";
         }
 
         // Show Node name and base address.
@@ -169,7 +211,9 @@ namespace rra
         SetModelData(kTlasStatsAddress, AddressString(tlas_index, node_id));
 
         uint32_t parent_id{};
-        RraTlasGetNodeParent(tlas_index, node_id, &parent_id);
+        error_code = RraTlasGetNodeParent(tlas_index, node_id, &parent_id);
+        RRA_ASSERT(error_code == kRraOk);
+        RRA_UNUSED(error_code);
         bool parent_valid{parent_id != std::numeric_limits<uint32_t>::max()};
         if (parent_valid)
         {
@@ -182,7 +226,7 @@ namespace rra
         bool     is_empty       = false;
         if (SelectedNodeIsLeaf())
         {
-            RraErrorCode error_code = RraTlasGetInstanceNodeInfo(tlas_index, node_id, &blas_address, &instance_count, &is_empty);
+            error_code = RraTlasGetInstanceNodeInfo(tlas_index, node_id, &blas_address, &instance_count, &is_empty);
             RRA_ASSERT(error_code == kRraOk);
             if (is_empty)
             {
@@ -348,6 +392,17 @@ namespace rra
                 return "Instance index: " + QString::number(unique_index);
             break;
         }
+        case renderer::GeometryColoringMode::kPartitionIndex:
+        {
+            uint32_t instance_index = 0;
+            if (RraTlasGetInstanceIndexFromInstanceNode(bvh_index, instance_node, &instance_index) == kRraOk)
+            {
+                uint32_t partition_index = 0;
+                if (RraTlasGetInstancePartitionIndex(bvh_index, instance_index, &partition_index, nullptr) == kRraOk)
+                    return "Partition index: " + QString::number(partition_index);
+            }
+            break;
+        }
         case renderer::GeometryColoringMode::kBlasInstanceCount:
         {
             uint64_t count = 0;
@@ -391,10 +446,13 @@ namespace rra
         {
             if (!has_triangle)
                 break;
-            uint32_t instance_flags = 0;
-            uint32_t geometry_flags = 0;
-            RraTlasGetInstanceFlags(bvh_index, instance_node, &instance_flags);
-            RraBlasGetGeometryFlags(blas_index, triangle_node->GetGeometryIndex(), &geometry_flags);
+            uint32_t     instance_flags = 0;
+            uint32_t     geometry_flags = 0;
+            RraErrorCode error_code     = RraTlasGetInstanceFlags(bvh_index, instance_node, &instance_flags);
+            RRA_ASSERT(error_code == kRraOk);
+            error_code = RraBlasGetGeometryFlags(blas_index, triangle_node->GetGeometryIndex(), &geometry_flags);
+            RRA_ASSERT(error_code == kRraOk);
+            RRA_UNUSED(error_code);
             bool geo_opaque      = (geometry_flags & GeometryFlags::kOpaque) != 0;
             bool force_opaque    = (instance_flags & VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR) != 0;
             bool force_no_opaque = (instance_flags & VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR) != 0;
@@ -572,20 +630,24 @@ namespace rra
         TreeviewNodeIDType node_type    = rra::Settings::Get().GetTreeviewNodeIdType();
         uint64_t           node_address = 0;
 
+        RraErrorCode error_code = kRraOk;
         switch (node_type)
         {
         case kTreeviewNodeIDTypeVirtualAddress:
-            RraTlasGetNodeBaseAddress(bvh_index, node_id, &node_address);
+            error_code = RraTlasGetNodeBaseAddress(bvh_index, node_id, &node_address);
+            RRA_ASSERT(error_code == kRraOk);
             break;
 
         case kTreeviewNodeIDTypeOffset:
-            RraBvhGetNodeOffset(node_id, &node_address);
+            error_code = RraBvhGetNodeOffset(node_id, &node_address);
+            RRA_ASSERT(error_code == kRraOk);
             break;
 
         default:
             break;
         }
 
+        RRA_UNUSED(error_code);
         return "0x" + QString("%1").arg(node_address, 0, 16);
     }
 

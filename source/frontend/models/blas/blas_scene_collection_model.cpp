@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS scene model.
@@ -122,16 +123,51 @@ namespace rra
                                                                   std::vector<rra::SceneNode*>*   blas_root_nodes,
                                                                   SceneCollectionModelClosestHit& scene_model_closest_hit) const
     {
-        RRA_UNUSED(blas_root_nodes);
-
         auto scene = GetSceneByIndex(bvh_index);
-        if (scene)
+        if (!scene)
         {
-            CastClosestHitRayOnBlas(scene->GetRootNode(), UINT32_MAX, origin, direction, scene_model_closest_hit);
+            return kRraErrorIndexOutOfRange;
+        }
+
+        // A Cluster BLAS (CBLAS) renders its CLAS references as instances (nested instancing), so it has no
+        // triangles of its own. Pick like the TLAS pane: find the hit cluster-ref instances, transform the ray
+        // into each referenced CLAS, and trace triangles there. The hit's instance_node is the cluster-ref leaf,
+        // which is what the tree/drill navigation selects on.
+        if (RraBlasIsClusterBlas(bvh_index) && blas_root_nodes)
+        {
+            scene_model_closest_hit.distance = -1.0f;
+
+            auto scene_nodes = scene->CastRayCollectNodes(origin, direction);
+            for (auto node : scene_nodes)
+            {
+                renderer::Instance* instance = node->GetInstance();
+                if (!instance)
+                {
+                    continue;
+                }
+
+                const uint32_t cluster_ref_node = instance->instance_node;
+
+                // The cluster-ref leaf stores a world-to-object transform in the HW instance-node layout.
+                glm::mat4 transform;
+                if (RraBlasGetClusterRefNodeTransform(bvh_index, cluster_ref_node, reinterpret_cast<float*>(&transform)) != kRraOk)
+                {
+                    continue;
+                }
+                transform[3][3] = 1.0f;
+
+                // Transform the ray into the referenced CLAS's space.
+                glm::vec3 transformed_origin    = glm::transpose(transform) * glm::vec4(origin, 1.0f);
+                glm::vec3 transformed_direction = glm::mat3(glm::transpose(transform)) * direction;
+
+                CastClosestHitRayOnBlas(
+                    (*blas_root_nodes)[instance->blas_index], cluster_ref_node, transformed_origin, transformed_direction, scene_model_closest_hit);
+            }
             return kRraOk;
         }
 
-        return kRraErrorIndexOutOfRange;
+        CastClosestHitRayOnBlas(scene->GetRootNode(), UINT32_MAX, origin, direction, scene_model_closest_hit);
+        return kRraOk;
     }
 
     void BlasSceneCollectionModel::ResetModelValues()

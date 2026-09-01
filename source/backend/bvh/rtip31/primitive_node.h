@@ -1,5 +1,6 @@
 //=============================================================================
-//  Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+//  Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific primitive node definition.
@@ -39,7 +40,7 @@ struct HwInstanceTransformNode
 };
 
 //=====================================================================================================================
-// Instance sideband data for RTIP3.x instance nodes
+// Instance sideband data for RTIP3.x instance nodes (legacy per-leaf-slot layout).
 struct InstanceSidebandData
 {
     uint32_t instanceIndex;        // Auto generated instance index
@@ -50,6 +51,23 @@ struct InstanceSidebandData
 };
 
 //=====================================================================================================================
+// New RTIP3.1 instance sideband (GPURT v16.12+, AccelStructHeader info bit 14 set). Indexed by instance index.
+// The object-to-world transform moves to the front so it aligns with InstanceDesc::Transform; the instance index,
+// id, flags and BLAS metadata size are no longer here but inline in the instance node (see offsets below).
+struct InstanceSidebandDataNew
+{
+    float    objectToWorld[3][4];   // Object-to-world transformation matrix (offset 0)
+    float    originalTranslation[3];  // Original (pre-inverse) translation (offset 48)
+    uint32_t partitionIndex;          // PTLAS partition index (offset 60)
+};
+
+// New layout: the intersectable instance node has only 3 valid child boxes, freeing bytes 116..127 of the
+// 128-byte node for inline instance data. See gpurt WriteInstanceNodeInlineData().
+#define RTIP3_1_INSTANCE_NODE_INSTANCE_ID_AND_FLAGS_OFFSET   116  // [0:23] instance id, [24:31] flags
+#define RTIP3_1_INSTANCE_NODE_INDEX_AND_METADATA_PAGE_OFFSET 120  // [0:23] instance index, [24:31] metadata page count
+#define RTIP3_1_INSTANCE_NODE_SIDEBAND_DATA_OFFSET           124  // relative offset from node to its sideband
+#define RTIP3_1_INSTANCE_NODE_METADATA_PAGE_SIZE_SHIFT       8    // metadata size = page count << 8 (256-byte pages)
+
 struct ChildInfoRRA
 {
     union

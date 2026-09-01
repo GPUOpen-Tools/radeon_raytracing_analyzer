@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure (AS) tree-view item.
@@ -84,6 +85,44 @@ namespace rra
         /// @returns True if this item is a node.
         bool IsNode() const;
 
+        /// @brief Mark this item as a node-packing duplicate (RTIP3.1).
+        ///
+        /// A packed item shares its node id (and subtree) with an earlier sibling slot but carries its own bounding
+        /// box. Marking it lets the tree label the row "(packed)".
+        ///
+        /// @param [in] is_packed True if this item is a packed-ref duplicate.
+        void SetIsPacked(bool is_packed)
+        {
+            is_packed_ = is_packed;
+        }
+
+        /// @brief Whether this item is a node-packing duplicate of an earlier sibling.
+        ///
+        /// @returns True if this item is a packed-ref duplicate.
+        bool IsPacked() const
+        {
+            return is_packed_;
+        }
+
+        /// @brief Mark this item as a "Referenced subtree" placeholder (RTIP3.1 node packing).
+        ///
+        /// A packed-ref row does not re-expand the shared subtree; instead it holds a single placeholder child whose
+        /// node_data is the primary (canonical) sibling's composite key. Selecting it jumps to the canonical node.
+        ///
+        /// @param [in] is_reference_placeholder True if this item is a referenced-subtree placeholder.
+        void SetIsReferencePlaceholder(bool is_reference_placeholder)
+        {
+            is_reference_placeholder_ = is_reference_placeholder;
+        }
+
+        /// @brief Whether this item is a "Referenced subtree" placeholder that redirects to the canonical node.
+        ///
+        /// @returns True if this item is a referenced-subtree placeholder.
+        bool IsReferencePlaceholder() const
+        {
+            return is_reference_placeholder_;
+        }
+
         /// @brief Get the data in this item.
         ///
         /// Passes in a role parameter so will work the same way as other Qt objects which
@@ -105,8 +144,10 @@ namespace rra
         QList<AccelerationStructureTreeViewItem*> child_items_{};   ///< A list of child items for this item.
         AccelerationStructureTreeViewItem*        parent_item_{};   ///< A pointer to the parent item.
         uint64_t                                  node_data_{};     ///< The encoded data contained in this item for column 0.
-        uint32_t                                  child_index_{};   ///< The child index of the node.
-        bool                                      is_node_ = true;  ///< The indicator to describe if this item is a node.
+        uint32_t                                  child_index_{};    ///< The child index of the node.
+        bool                                      is_node_   = true;  ///< The indicator to describe if this item is a node.
+        bool                                      is_packed_ = false;  ///< RTIP3.1 node-packing duplicate of an earlier sibling slot.
+        bool is_reference_placeholder_ = false;  ///< RTIP3.1 node-packing "Referenced subtree" link under a packed-ref row.
     };
 }  // namespace rra
 

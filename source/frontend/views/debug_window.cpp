@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the debug window.
@@ -14,7 +15,7 @@
 #include <iostream>
 
 #ifndef _WIN32
-#include "public/linux/safe_crt.h"
+#include "linux/safe_crt.h"
 #endif
 #include "public/rra_assert.h"
 
@@ -122,17 +123,18 @@ void DebugWindow::RegisterDbgWindow()
 
 void DebugWindow::DbgMsg(LogLevel log_level, const char* format, ...)
 {
-    std::cout << format << '\n';
+    char    buffer[2048];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    std::cout << buffer << '\n';
 
     if (debug_window != nullptr)
     {
-        char    buffer[2048];
-        va_list args;
-        va_start(args, format);
-        vsnprintf(buffer, 2048, format, args);
         debug_window->EmitSetText(QString(buffer));
         rra::LogFileWriter::Get().WriteLog(log_level, buffer);
-        va_end(args);
     }
 }
 

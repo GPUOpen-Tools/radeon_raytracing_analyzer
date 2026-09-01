@@ -81,6 +81,25 @@ The left-pane can be resized by moving the mouse over the area of the screen whe
 left pane and view pane meet. The cursor will change, showing the pane can be resized
 by clicking and dragging the mouse.
 
+.. _node-packing-label:
+
+Node packing
+~~~~~~~~~~~~
+
+To save memory, some acceleration structures may use **node packing**, where multiple
+child slots of a box node reference the same subtree. Each reference has its
+own bounding box, but the nodes below it are shared rather than duplicated.
+
+The first occurrence of a shared node displays the subtree normally.
+Additional occurrences are marked ``(packed)`` and contain a
+``Referenced subtree`` entry instead of another copy of the subtree.
+
+Selecting a packed reference highlights the referenced subtree and the other
+references that share it. Selecting ``Referenced subtree`` navigates to the
+primary occurrence of the shared subtree in the tree view.
+
+.. image:: media/tlas/node_packing_1.png
+
 The center section shows a rendering of the scene:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -216,6 +235,9 @@ In traversal counter rendering mode, the controls are slightly different, as see
   trace ray invocation in the shader. The traversal algorithm visualized by the heatmap will be altered
   based on this flag.
 
+* The **Max anyhit invocations** checkbox forces all non-opaque triangle intersections to be rejected,
+  emulating the maximum possible number of anyhit shader invocations.
+
 * The **Box sort heuristic** describes how box nodes are sorted during traversal. This determines the
   order in which box nodes are checked for intersections. It's dependent on ray flags and system configuration.
 
@@ -304,7 +326,7 @@ Traversal counter visualization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Given the complexity of acceleration structures and the specifics of the ray traversal algorithms that
-operates on these structures, it can be very difficult to evaluate the performance cost of a given scene.
+operate on these structures, it can be very difficult to evaluate the performance cost of a given scene.
 
 The traversal counter visualization will help simplify this complexity and help reduce traversal count
 signatures by editing BLASes and repositioning of instances in the TLAS.
@@ -638,6 +660,48 @@ placed in the scene, each instance requires a transformation from its local
 co-ordinate system to the world co-ordinate system. This is shown by the
 position and transform matrix in the table.
 
+The TLAS Partitions Tab
+-----------------------
+
+Some traces use a **partitioned TLAS** (PTLAS). A partitioned TLAS groups its
+instances into partitions, which allows regions of the TLAS to be rebuilt or updated
+independently of one another. This is useful for workloads such as streaming, animation,
+and dynamic level-of-detail. Any instances that are not assigned to a partition belong to
+a special **global** partition.
+
+The Partitions tab is only meaningful for partitioned TLASes. If the currently selected
+TLAS is not partitioned, the tab shows an empty page. Otherwise, it displays a read-only
+table of all partitions in the selected TLAS.
+
+Above the table is the base address of the selected TLAS.
+
+The following fields are displayed:
+
+* Row Id - The row index. This is an incrementing value starting at 0.
+
+* Partition index - The index of the partition. The global partition is given an index
+  equal to the number of partitions.
+
+* Instance count - The number of instances assigned to the partition.
+
+* Internal node count - The number of internal (box) nodes in the partition.
+
+* Fat leaf count - The number of fat leaf nodes in the partition. For the global partition,
+  this is the number of inactive instances.
+
+* Translation X, Translation Y, Translation Z - The translation applied to the partition.
+
+* Global - Whether this row represents the global partition, which holds any instances that
+  are not assigned to a partition.
+
+The columns can be sorted by clicking on the column header. The arrow in the heading shows
+if sorting is in ascending or descending order. The Row Id cannot be sorted.
+
+A search box above the table can be used to filter the displayed rows.
+
+Double-clicking a partition row switches to the TLAS Viewer and focuses on that partition
+in the scene.
+
 The BLAS List
 -------------
 
@@ -699,4 +763,5 @@ The Properties tab displays a read-only table of properties and statistics for
 the selected TLAS.
 
 .. image:: media/tlas/tlas_properties_1.png
+
 

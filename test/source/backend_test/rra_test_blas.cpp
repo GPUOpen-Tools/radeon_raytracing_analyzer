@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test BLAS implementation.
@@ -66,8 +67,8 @@ namespace backend_test
         uint32_t root_node = UINT32_MAX;
         RRA_BUBBLE_ON_ERROR(RraBvhGetRootNodePtr(&root_node));
 
-        std::deque<uint32_t> traversal_stack;
-        traversal_stack.push_back(root_node);
+        std::deque<std::pair<uint32_t, uint32_t>> traversal_stack;  // Pairs of (node_addr, child_index).
+        traversal_stack.push_back({root_node, 0});
         uint32_t global_child_index = UINT32_MAX;
 
         // Assume traversal test will be OK.
@@ -76,93 +77,95 @@ namespace backend_test
         // Traverse the tree and add all triangle nodes to the table.
         while (!traversal_stack.empty())
         {
-            uint32_t node_id = traversal_stack.back();
+            const auto pair        = traversal_stack.back();
+            uint32_t   node_addr   = pair.first;
+            uint32_t   child_index = pair.second;
             traversal_stack.pop_back();
             ++global_child_index;
 
-            // For each item on the stack, add the children if valid.
-            // Sort node types. Loop once for box (interior) nodes, then once for leaf nodes.
-            uint32_t child_node_count = 0;
-            RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(blas_index, node_id, &child_node_count));
-            std::vector<uint32_t> child_nodes(child_node_count);
-            RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(blas_index, node_id, child_nodes.data()));
-
-            for (uint32_t child_index = 0; child_index < child_node_count; child_index++)
+            bool is_internal_node = RraBlasHasChildren(blas_index, node_addr);
+            if (is_internal_node)
             {
-                uint32_t child_node = child_nodes[child_index];
-                if (RraBlasIsBoxNode(blas_index, child_node))
+                // For each item on the stack, add the children if valid.
+                uint32_t child_node_count = 0;
+                RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodeCount(blas_index, node_addr, &child_node_count));
+                std::vector<uint32_t> child_nodes(child_node_count);
+                RRA_BUBBLE_ON_ERROR(RraBlasGetChildNodes(blas_index, node_addr, child_nodes.data()));
+
+                for (uint32_t i = 0; i < child_node_count; i++)
                 {
-                    // Add box nodes to the list of nodes to process.
-                    traversal_stack.push_back(child_node);
+                    uint32_t child_node = child_nodes[i];
+                    traversal_stack.push_back({child_node, i});
                 }
-                else if (RraBlasIsTriangleNode(blas_index, child_node))
+            }
+            else if (RraBlasIsTriangleNode(blas_index, node_addr))
+            {
+                float surface_area = 0.0f;
+                if (RraBlasGetSurfaceArea(blas_index, node_addr, child_index, global_child_index, &surface_area) == kRraOk)
                 {
-                    float surface_area = 0.0f;
-                    if (RraBlasGetSurfaceArea(blas_index, child_node, child_index, global_child_index, &surface_area) == kRraOk)
+                    if (surface_area <= 0.0f)
                     {
-                        if (surface_area <= 0.0f)
-                        {
-                            log.Write(" WARNING: invalid surface area value (%f) for node 0x%x in blas[%llu]", surface_area, child_node, blas_index);
-                        }
+                        log.Write(" WARNING: invalid surface area value (%f) for node 0x%x in blas[%llu]", surface_area, node_addr, blas_index);
                     }
+                }
 
-                    float surface_area_heuristic = 0.0f;
-                    if (RraBlasGetSurfaceAreaHeuristic(blas_index, child_node, global_child_index, &surface_area_heuristic) == kRraOk)
+                float surface_area_heuristic = 0.0f;
+                if (RraBlasGetSurfaceAreaHeuristic(blas_index, node_addr, global_child_index, &surface_area_heuristic) == kRraOk)
+                {
+                    if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
                     {
-                        if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
-                        {
-                            log.Write(" WARNING: invalid surface area heuristic value (%f) for node 0x%x in blas[%llu]",
-                                      surface_area_heuristic,
-                                      child_node,
-                                      blas_index);
-                        }
+                        log.Write(
+                            " WARNING: invalid surface area heuristic value (%f) for node 0x%x in blas[%llu]", surface_area_heuristic, node_addr, blas_index);
                     }
+                }
 
-                    // Show SAH max and average.
-                    if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, child_node, global_child_index, false, &surface_area_heuristic) == kRraOk)
+                // Show SAH max and average.
+                if (RraBlasGetMinimumSurfaceAreaHeuristic(blas_index, node_addr, global_child_index, false, &surface_area_heuristic) == kRraOk)
+                {
+                    if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
                     {
-                        if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
-                        {
-                            log.Write(" WARNING: invalid minimum surface area heuristic value (%f) for node 0x%x in blas[%llu]",
-                                      surface_area_heuristic,
-                                      child_node,
-                                      blas_index);
-                        }
+                        log.Write(" WARNING: invalid minimum surface area heuristic value (%f) for node 0x%x in blas[%llu]",
+                                  surface_area_heuristic,
+                                  node_addr,
+                                  blas_index);
                     }
+                }
 
-                    if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, child_node, global_child_index, false, &surface_area_heuristic) == kRraOk)
+                if (RraBlasGetAverageSurfaceAreaHeuristic(blas_index, node_addr, global_child_index, false, &surface_area_heuristic) == kRraOk)
+                {
+                    if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
                     {
-                        if (surface_area_heuristic < 0.0f || surface_area_heuristic > 1.0 || isnan(surface_area_heuristic))
-                        {
-                            log.Write(" WARNING: invalid average surface area heuristic value (%f) for node 0x%x in blas[%llu]",
-                                      surface_area_heuristic,
-                                      child_node,
-                                      blas_index);
-                        }
+                        log.Write(" WARNING: invalid average surface area heuristic value (%f) for node 0x%x in blas[%llu]",
+                                  surface_area_heuristic,
+                                  node_addr,
+                                  blas_index);
                     }
+                }
 
-                    uint32_t triangle_count;
-                    if (RraBlasGetNodeTriangleCount(blas_index, child_node, child_index, global_child_index, &triangle_count) == kRraOk)
-                    {
-                        total_triangle_count += triangle_count;
-                    }
+                uint32_t triangle_count;
+                if (RraBlasGetNodeTriangleCount(blas_index, node_addr, child_index, global_child_index, &triangle_count) == kRraOk)
+                {
+                    total_triangle_count += triangle_count;
+                }
 
-                    // Make sure geometry index reported by a triangle node is within the geometry info struct range.
-                    uint32_t geometry_index = 0;
-                    if (RraBlasGetGeometryIndex(blas_index, child_node, child_index, global_child_index, &geometry_index) != kRraOk)
-                    {
-                        log.Write(" WARNING: can't get geometry index for triangle node 0x%x in blas[%llu]", child_node, blas_index);
-                    }
+                // Make sure geometry index reported by a triangle node is within the geometry info struct range.
+                uint32_t geometry_index = 0;
+                if (RraBlasGetGeometryIndex(blas_index, node_addr, child_index, global_child_index, &geometry_index) != kRraOk)
+                {
+                    log.Write(" WARNING: can't get geometry index for triangle node 0x%x in blas[%llu]", node_addr, blas_index);
+                }
+                else
+                {
                     uint32_t     geometry_flags{};
                     RraErrorCode flags_result = RraBlasGetGeometryFlags(blas_index, geometry_index, &geometry_flags);
                     if (flags_result != kRraOk)
                     {
-                        if (kRraErrorIndexOutOfRange)
+                        if (flags_result == kRraErrorIndexOutOfRange)
                         {
                             uint32_t geometry_count = 0;
                             RraBlasGetGeometryCount(blas_index, &geometry_count);
                             log.Write(" ERROR: geometry index is out of range for triangle node 0x%x in blas[%llu] : expected max of %u, found %u",
-                                      child_node,
+                                      node_addr,
                                       blas_index,
                                       geometry_count,
                                       geometry_index);
@@ -170,7 +173,7 @@ namespace backend_test
                         }
                         else
                         {
-                            log.Write(" WARNING: can't get geometry flags for triangle node 0x%x in blas[%llu]", child_node, blas_index);
+                            log.Write(" WARNING: can't get geometry flags for triangle node 0x%x in blas[%llu]", node_addr, blas_index);
                         }
                     }
                 }

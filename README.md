@@ -8,7 +8,7 @@ The tool thus far focuses on the visualization of the Acceleration Structures, w
 Game developers are responsible for creating the acceleration structures and so need a method of visualizing these acceleration structures
 and how they can affect performance.
 
-RRA allows the developer to visualize the bounding box hierarchies, and related scene geometries, via a standard rasterizer renderer or using
+RRA allows the developer to visualize the bounding volume hierarchies, and related scene geometries, via a standard rasterized renderer or using
 a traversal counter view which will quickly highlight areas of concern. Once identified, the developer can revisit their BVH generation strategy
 to reduce performance bottlenecks.
 
@@ -21,7 +21,7 @@ to reduce performance bottlenecks.
    * Radeon Developer Panel (RDP)
    * Radeon Raytracing Analyzer (RRA)
 3. To capture a scene from a game, run the Radeon Developer Panel and follow the instructions in the Help. Help can be found in the following locations:
-   * Help web pages exist in the "help" sub directory
+   * Help web pages exist in the "help" subdirectory
    * Help web pages can be accessed from the **Help** button in the Developer Panel
    * Help web pages can be accessed from the Welcome screen in the Radeon Raytracing Analyzer, or from the **Help** menu
    * The documentation is hosted publicly at:

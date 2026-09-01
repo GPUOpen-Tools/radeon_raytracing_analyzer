@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for RTA ray history.
@@ -76,7 +77,6 @@ namespace rta
 
     // Ray history any hit status.
     // Stored in control optional data for AnyHitStatus & ProceduralIntersectionStatus tokens
-    // see https://github.amd.com/AMD-Radeon-Driver/gpurt/blob/amd/stg/gpurt/src/shaders/Common.hlsl#L83
     enum class RayHistoryAnyHitStatus : std::uint8_t
     {
         IgnoreHit             = 0,

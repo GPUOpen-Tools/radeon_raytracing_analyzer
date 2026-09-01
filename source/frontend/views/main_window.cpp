@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the main window.
@@ -140,6 +141,7 @@ MainWindow::MainWindow(std::vector<rra::SceneNode*>* blas_root_nodes, QWidget* p
     // Add any panes created in the Qt .ui files to the pane manager, so they get updated.
     pane_manager_.AddPane(ui_->tlas_viewer_tab_);
     pane_manager_.AddPane(ui_->tlas_instances_tab_);
+    pane_manager_.AddPane(ui_->tlas_partitions_tab_);
     pane_manager_.AddPane(ui_->tlas_blas_list_tab_);
     pane_manager_.AddPane(ui_->tlas_properties_tab_);
     pane_manager_.AddPane(ui_->blas_viewer_tab_);
@@ -164,7 +166,7 @@ MainWindow::MainWindow(std::vector<rra::SceneNode*>* blas_root_nodes, QWidget* p
 
     ViewPane(rra::kPaneIdStartWelcome);
 
-    connect(&navigation_bar_.BackButton(), &QPushButton::clicked, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateBack);
+    connect(&navigation_bar_.BackButton(), &QPushButton::clicked, this, &MainWindow::NavigateBack);
     connect(&navigation_bar_.ForwardButton(), &QPushButton::clicked, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateForward);
     connect(&rra::NavigationManager::Get(), &rra::NavigationManager::EnableBackNavButton, &navigation_bar_, &NavigationBar::EnableBackButton);
     connect(&rra::NavigationManager::Get(), &rra::NavigationManager::EnableForwardNavButton, &navigation_bar_, &NavigationBar::EnableForwardButton);
@@ -221,7 +223,10 @@ MainWindow::~MainWindow()
 {
     disconnect(ui_->tlas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
     disconnect(ui_->blas_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
-    disconnect(ui_->ray_sub_tab_, &QTabWidget::currentChanged, this, &MainWindow::UpdateResetButtons);
+    // Disconnect every currentChanged handler on the ray sub-tab (UpdateResetButtons, InitializeInspectRange, the
+    // dispatch-sync lambda below, and PaneManager::UpdateRayListIndex). During teardown, destroying a ray pane
+    // removes it from this tab widget and emits currentChanged; letting those slots run would touch already-destroyed panes.
+    disconnect(ui_->ray_sub_tab_, &QTabWidget::currentChanged, nullptr, nullptr);
 
     delete recent_traces_menu_;
 
@@ -448,6 +453,7 @@ void MainWindow::CreateActions()
 
     SetupHotkeyNavAction(rra::kGotoTlasViewerPane, rra::kPaneIdTlasViewer);
     SetupHotkeyNavAction(rra::kGotoTlasInstancesPane, rra::kPaneIdTlasInstances);
+    SetupHotkeyNavAction(rra::kGotoTlasPartitionsPane, rra::kPaneIdTlasPartitions);
     SetupHotkeyNavAction(rra::kGotoTlasBlasListPane, rra::kPaneIdTlasBlasList);
     SetupHotkeyNavAction(rra::kGotoTlasPropertiesPane, rra::kPaneIdTlasProperties);
     SetupHotkeyNavAction(rra::kGotoBlasViewerPane, rra::kPaneIdBlasViewer);
@@ -477,14 +483,14 @@ void MainWindow::CreateActions()
     shortcut->setShortcut(QKeySequence(Qt::ALT | rra::kKeyNavBackwardArrow));
     navigation_actions_.push_back(shortcut);
 
-    connect(shortcut, &QAction::triggered, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateBack);
+    connect(shortcut, &QAction::triggered, this, &MainWindow::NavigateBack);
     this->addAction(shortcut);
 
     shortcut = new QAction(this);
     shortcut->setShortcut(rra::kKeyNavBackwardBackspace);
     navigation_actions_.push_back(shortcut);
 
-    connect(shortcut, &QAction::triggered, &rra::NavigationManager::Get(), &rra::NavigationManager::NavigateBack);
+    connect(shortcut, &QAction::triggered, this, &MainWindow::NavigateBack);
     this->addAction(shortcut);
 
     open_trace_action_ = new QAction(tr("Open trace"), this);
@@ -825,6 +831,18 @@ void MainWindow::ViewPane(int pane)
     rra::RRAPaneId current_pane = SetupNextPane(static_cast<rra::RRAPaneId>(pane));
     Q_ASSERT(current_pane == pane);
     rra::NavigationManager::Get().RecordNavigationEventPaneSwitch(current_pane);
+}
+
+void MainWindow::NavigateBack()
+{
+    // While inspecting a CLAS (a drill-down within the BLAS pane), Back first unwinds CLAS -> CBLAS. Only once
+    // there's nothing left to unwind does it fall through to the global pane-based navigation (CBLAS -> TLAS).
+    if (pane_manager_.GetCurrentPane() == rra::kPaneIdBlasViewer && ui_->blas_viewer_tab_->PopClusterDrillBack())
+    {
+        return;
+    }
+
+    rra::NavigationManager::Get().NavigateBack();
 }
 
 QString MainWindow::GetTitleBarString() const

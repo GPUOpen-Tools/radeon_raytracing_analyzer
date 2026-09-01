@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public TLAS interface.
@@ -58,7 +59,7 @@ RraErrorCode RraTlasGetTotalNodeCount(uint64_t tlas_index, uint64_t* out_node_co
 ///
 /// @param [in]  tlas_index         The index of the TLAS to use.
 /// @param [in]  parent_node        The parent to get count for.
-/// @param [out] out_child_count    A pointer to to the child node count.
+/// @param [out] out_child_count    A pointer to the child node count.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraTlasGetChildNodeCount(uint64_t tlas_index, uint32_t parent_node, uint32_t* out_child_count);
@@ -465,6 +466,83 @@ bool RraTlasHasChildren(uint64_t tlas_index, uint32_t node_id);
 ///
 /// @return True if the given node is an instance node, and false if it's not.
 bool RraTlasIsInstanceNode(uint64_t tlas_index, uint32_t node_id);
+
+/// @brief Information describing a single PTLAS partition.
+typedef struct RraPartitionInfo
+{
+    uint32_t partition_index;      ///< The partition index (equals the partition count for the global partition).
+    uint32_t instance_count;       ///< Number of instances assigned to the partition.
+    uint32_t internal_node_count;  ///< Number of internal nodes in the partition.
+    uint32_t fat_leaf_count;       ///< Number of fat leaf nodes in the partition.
+    float    translation[3];       ///< Translation applied to the partition.
+    float    bounds_min[3];        ///< Aggregated min bound of the partition's member instances.
+    float    bounds_max[3];        ///< Aggregated max bound of the partition's member instances.
+    bool     bounds_valid;         ///< True if at least one member instance contributed to the bounds.
+    bool     is_global;            ///< True if this is the global partition slot.
+} RraPartitionInfo;
+
+/// @brief Check if the given TLAS is partitioned (PTLAS).
+///
+/// @param [in] tlas_index  The index of the TLAS to use.
+///
+/// @return True if the TLAS is partitioned, false otherwise.
+bool RraTlasIsPartitioned(uint64_t tlas_index);
+
+/// @brief Does this TLAS use RTIP3.1 node packing (several box slots of one parent sharing a child node)?
+///
+/// When false, every node id is unique per tree position and node ids alone are a valid item key. When true the
+/// shared node id appears in several sibling slots, so callers must fold in the per-slot global child index to keep
+/// those slots distinct. Always false for non-RTIP3.1 structures.
+///
+/// @param [in] tlas_index The index of the TLAS to query.
+///
+/// @return true if the TLAS contains node packing, false otherwise (including invalid or non-RTIP3.1 index).
+bool RraTlasHasNodePacking(uint64_t tlas_index);
+
+/// @brief Get the number of partitions (excluding the global partition slot) for a TLAS.
+///
+/// @param [in]  tlas_index  The index of the TLAS to use.
+/// @param [out] out_count   A pointer to receive the partition count.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetPartitionCount(uint64_t tlas_index, uint32_t* out_count);
+
+/// @brief Get the build-time maximum number of partition instances for a TLAS.
+///
+/// @param [in]  tlas_index  The index of the TLAS to use.
+/// @param [out] out_max     A pointer to receive the max partition instance capacity.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetMaxPartitionInstances(uint64_t tlas_index, uint32_t* out_max);
+
+/// @brief Get the build-time maximum number of global-partition instances for a TLAS.
+///
+/// @param [in]  tlas_index  The index of the TLAS to use.
+/// @param [out] out_max     A pointer to receive the max global instance capacity.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetMaxGlobalInstances(uint64_t tlas_index, uint32_t* out_max);
+
+/// @brief Get the partition info for a given partition index.
+///
+/// Valid indices are [0, RraTlasGetPartitionCount]; passing the partition count returns the global partition.
+///
+/// @param [in]  tlas_index      The index of the TLAS to use.
+/// @param [in]  partition_index The partition index.
+/// @param [out] out_info        A pointer to receive the partition info.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetPartitionInfo(uint64_t tlas_index, uint32_t partition_index, RraPartitionInfo* out_info);
+
+/// @brief Get the partition index assigned to a given instance.
+///
+/// @param [in]  tlas_index          The index of the TLAS to use.
+/// @param [in]  instance_index      The instance index.
+/// @param [out] out_partition_index A pointer to receive the partition index.
+/// @param [out] out_active          A pointer to receive whether the instance is active (may be NULL).
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraTlasGetInstancePartitionIndex(uint64_t tlas_index, uint32_t instance_index, uint32_t* out_partition_index, bool* out_active);
 
 #ifdef __cplusplus
 }

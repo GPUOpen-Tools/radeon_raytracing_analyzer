@@ -1,9 +1,11 @@
 #######################################################################################################################
-### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.25)
+
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(dev_tools)
@@ -15,7 +17,7 @@ project(RRA)
 set(RRA_MAJOR_VERSION 1)
 set(RRA_MINOR_VERSION 11)
 if (NOT RRA_BUGFIX_NUMBER)
-    set(RRA_BUGFIX_NUMBER 0)
+    set(RRA_BUGFIX_NUMBER 1)
 endif ()
 if (NOT RRA_BUILD_NUMBER)
     set(RRA_BUILD_NUMBER 0)
@@ -32,6 +34,7 @@ else()
 endif()
 
 set(RRA_PACKAGE_VERSION "_${RRA_VERSION}${PACKAGE_SUFFIX}")
+set(RRA_TESTKIT_INSTALL_DIR "RRATest")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties.in" "${CMAKE_CURRENT_SOURCE_DIR}/Buildinfo.properties")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/version.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/source/frontend/version.h")
@@ -54,6 +57,7 @@ ENDIF()
 # As default for RRA, include the debug status in filename - but not the platform bitness
 set (CMAKE_DEBUG_POSTFIX -d)
 set (CMAKE_RELEASE_POSTFIX )
+
 
 # Add definitions for supported hardware
 add_definitions(-DGPURT_BUILD_RTIP3)
@@ -127,6 +131,11 @@ if (NOT TARGET system_info)
     add_subdirectory(external/system_info_utils)
 endif()
 
+if (NOT TARGET sdl_utils_safe_crt AND NOT TARGET sdl_utils_binary_security)
+    set(SDL_UTILS_BUILD_TESTS OFF)
+    add_subdirectory(external/sdl_utils sdl_utils)
+endif()
+
 add_subdirectory(source/backend backend)
 add_subdirectory(source/frontend frontend)
 add_subdirectory(source/renderer renderer)
@@ -140,6 +149,10 @@ set_target_properties(QtCustomWidgets
     PROPERTIES
     FOLDER Dependencies
 )
+ENDIF()
+
+IF(LINUX)
+    set_target_properties(sdl_utils_safe_crt PROPERTIES FOLDER Dependencies)
 ENDIF()
 
 IF(WIN32)
@@ -212,10 +225,11 @@ if (WIN32)
     include(InstallRequiredSystemLibraries)
 
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION . COMPONENT apps)
+    install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${RRA_TESTKIT_INSTALL_DIR} COMPONENT testkit)
 endif (WIN32)
 
-# CPack packaging
 
+# CPack packaging
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_GROUPING IGNORE)
 
@@ -224,11 +238,16 @@ set(CPACK_PACKAGE_FILE_NAME "RadeonRaytracingAnalyzer${RRA_PACKAGE_VERSION}")
 
 set(CPACK_ARCHIVE_APPS_FILE_NAME "RadeonRaytracingAnalyzer${RRA_PACKAGE_VERSION}")
 set(CPACK_ARCHIVE_DEBUG_FILE_NAME "RadeonRaytracingAnalyzer-PDB${RRA_PACKAGE_VERSION}")
+set(CPACK_ARCHIVE_TESTKIT_FILE_NAME "RRATest${RRA_PACKAGE_VERSION}")
 
 # Run a post-build CPack script to reshape apps package with top-level directory
 set(CPACK_POST_BUILD_SCRIPTS "${CMAKE_SOURCE_DIR}/cmake/cpack_post_script.cmake")
 
 include(CPack)
+
+# Define components before include(CPack): include(CPack) generates CPackConfig.cmake
+# immediately, so component metadata must be registered first to be captured.
+include(CPackComponent)
 
 cpack_add_component(apps
         DISPLAY_NAME "Applications"
@@ -236,3 +255,7 @@ cpack_add_component(apps
 cpack_add_component(debug
         DISPLAY_NAME "Debug Symbols"
         DESCRIPTION "Debug Symbols")
+cpack_add_component(testkit
+        DISPLAY_NAME "TestKit"
+        DESCRIPTION "RRA Test Kit")
+

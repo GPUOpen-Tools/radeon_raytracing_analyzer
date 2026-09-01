@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the ray history interface.
@@ -17,13 +18,13 @@ extern RraDataSet data_set_;
 
 DispatchCoordinateData& RayDispatchData::GetCoordinate(uint32_t x, uint32_t y, uint32_t z)
 {
-    auto idx = x + (y * dispatch_width) + (z * dispatch_width * dispatch_height);
+    uint64_t idx = static_cast<uint64_t>(x) + (static_cast<uint64_t>(y) * dispatch_width) + (static_cast<uint64_t>(z) * dispatch_width * dispatch_height);
     return dispatch_ray_indices[idx];
 }
 
 bool RayDispatchData::CoordinateIsValid(uint32_t x, uint32_t y, uint32_t z) const
 {
-    auto idx = x + (y * dispatch_width) + (z * dispatch_width * dispatch_height);
+    uint64_t idx = static_cast<uint64_t>(x) + (static_cast<uint64_t>(y) * dispatch_width) + (static_cast<uint64_t>(z) * dispatch_width * dispatch_height);
     return idx < dispatch_ray_indices.size();
 }
 

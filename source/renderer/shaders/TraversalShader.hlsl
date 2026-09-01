@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2024 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Shader for the Traversal counter rendering.
@@ -44,6 +45,10 @@ cbuffer scene_ubo : register(b0)
 
 #define kInstanceFlagTriangleCullDisable 0x1
 #define kInstanceFlagTriangleFrontCounterClockwise 0x2
+#define kInstanceFlagForceOpaque 0x4
+#define kInstanceFlagForceNonOpaque 0x8
+
+#define MAX_CHILD_NODES 8
 
 /// Structures provided by the CPU.
 struct TraversalVolume
@@ -58,11 +63,11 @@ struct TraversalVolume
     uint leaf_end;
 
     int  child_masks;
-    uint child_nodes[8];
+    uint child_nodes[MAX_CHILD_NODES];
 
-    float4 child_nodes_min[8];
-    float4 child_nodes_max[8];
-    
+    float4 child_nodes_min[MAX_CHILD_NODES];
+    float4 child_nodes_max[MAX_CHILD_NODES];
+
     float4 reserved;
 };
 
@@ -359,15 +364,30 @@ SceneStats traverse_scene(float4 original_ray_origin, float3 original_ray_direct
                 float candidate_t = result.x / result.y;
                 if (!face_culled && candidate_t < stats.closest_hit)
                 {
-                    stats.closest_hit = candidate_t;  // Assign closest hit.
-                    stats.triangle_hit_count += 1;    // Count triangle hit.
+                    // When max anyhit invocations mode is enabled, non-opaque triangles
+                    // are never accepted as closest hit (emulating anyhit rejection).
+                    // Final opacity depends on instance force-opaque/force-non-opaque flags
+                    // in addition to the geometry's opaque bit.
+                    bool geo_opaque = (get_vertex(i, tlas_mode, current_blas_index).geometry_index_depth_split_opaque & 0x1) != 0;
+                    bool force_opaque     = (current_instance_flags & kInstanceFlagForceOpaque) != 0;
+                    bool force_non_opaque = (current_instance_flags & kInstanceFlagForceNonOpaque) != 0;
+                    bool is_opaque = force_opaque || (!force_non_opaque && geo_opaque);
+                    if (scene_ubo.traversal_max_anyhit_invocations && !is_opaque)
+                    {
+                        stats.triangle_hit_count += 1;  // Count as a hit (anyhit was invoked).
+                    }
+                    else
+                    {
+                        stats.closest_hit = candidate_t;  // Assign closest hit.
+                        stats.triangle_hit_count += 1;    // Count triangle hit.
 
-                    stats.result.instance_index = current_instance_index;
-                    stats.result.triangle_index = i;
-                    stats.result.hit_flags      = tlas_mode ? kTraversalResultHitFlagTlasHit : kTraversalResultHitFlagBlasHit;
+                        stats.result.instance_index = current_instance_index;
+                        stats.result.triangle_index = i;
+                        stats.result.hit_flags      = tlas_mode ? kTraversalResultHitFlagTlasHit : kTraversalResultHitFlagBlasHit;
 
-                    stats.result.blas_index = current_blas_index;
-                    miss                    = false;
+                        stats.result.blas_index = current_blas_index;
+                        miss                    = false;
+                    }
                 }
             }
 

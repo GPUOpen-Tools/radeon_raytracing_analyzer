@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the RT IP 1.1 acceleration structure header class.
@@ -322,6 +323,13 @@ namespace rta
         // Buffer offset values should be set in ascending order, according to the order they are
         // defined in the offset struct.
         bool prim_nodes_invalid = header_.offsets.prim_node_ptrs < header_.offsets.geometry_info;
+        // Cluster BLASes (geometryType == Instances) and CLASes (ClusterLevel) do not use a
+        // prim-node-pointer array; they store offsets.prim_node_ptrs == 0. Treat a zero offset as
+        // "array not present" rather than an ordering violation, so these structures validate.
+        if (header_.offsets.prim_node_ptrs == 0)
+        {
+            prim_nodes_invalid = false;
+        }
         if (header_.offsets.leaf_nodes < header_.offsets.interior_nodes || prim_nodes_invalid)
         {
             RraPrint(kLogLevelError, "Error with acceleration structure header: Incorrect buffer ordering");
@@ -354,6 +362,11 @@ namespace rta
             return false;
         }
         return true;
+    }
+
+    const AccelStructHeader& RtIpCommonAccelerationStructureHeader::GetRawHeaderImpl() const
+    {
+        return header_;
     }
 
 }  // namespace rta

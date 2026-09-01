@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 3.1 (Navi4x) specific bottom level acceleration structure
@@ -15,11 +16,13 @@
 #include <limits>
 #include <vector>
 
+#include "public/rra_assert.h"
 #include "public/rra_blas.h"
 
 #include "bvh/dxr_definitions.h"
 #include "bvh/rtip31/internal_node.h"
 #include "bvh/rtip31/rt_ip_31_acceleration_structure_header.h"
+#include "bvh/rtip_common/ray_tracing_defs.h"  // NodePointer64, for CBLAS cluster-ref childBasePtr decode.
 #include "rra_blas_impl.h"
 #include "surface_area_heuristic.h"
 
@@ -124,9 +127,15 @@ namespace rta
         geom_infos_               = std::vector<dxr::amd::GeometryInfo>(header_->GetGeometryDescriptionCount());
         buffer_stream.Read(goem_info_size, geom_infos_.data());
 
-        const auto prim_node_ptrs_size = header_->GetPrimitiveCount() * sizeof(dxr::amd::NodePointer);
-        primitive_node_ptrs_           = std::vector<dxr::amd::NodePointer>(header_->GetPrimitiveCount());
-        buffer_stream.Read(prim_node_ptrs_size, primitive_node_ptrs_.data());
+        // Cluster BLASes (geometryType == Instances) and CLASes (ClusterLevel) do not store a
+        // prim-node-pointer array (offsets.prim_node_ptrs == 0); reading one would consume trailing
+        // padding as garbage pointers. Only read the array when it is actually present.
+        if (header_offsets.prim_node_ptrs != 0)
+        {
+            const auto prim_node_ptrs_size = header_->GetPrimitiveCount() * sizeof(dxr::amd::NodePointer);
+            primitive_node_ptrs_           = std::vector<dxr::amd::NodePointer>(header_->GetPrimitiveCount());
+            buffer_stream.Read(prim_node_ptrs_size, primitive_node_ptrs_.data());
+        }
 
         buffer_stream.Close();
 
@@ -644,11 +653,24 @@ namespace rta
                 dxr::amd::NodePointer child_ptrs[8]{};
                 node->DecodeChildrenOffsets((uint32_t*)child_ptrs);
 
-                for (uint32_t i = 0; i < node->ValidChildCount(); ++i)
+                const uint32_t valid_child_count = node->ValidChildCount();
+                for (uint32_t i = 0; i < valid_child_count; ++i)
                 {
                     if (!child_ptrs[i].IsInvalid())
                     {
                         traversal_stack.push_back(child_ptrs[i]);
+
+                        // Node packing: two of this box's slots decode to the same child pointer (the second slot had
+                        // NodeRangeLength()==0, so DecodeChildrenOffsets did not advance the running offset). Flag it so
+                        // the frontend switches to composite (global-child-index + node-id) keys for this BLAS.
+                        for (uint32_t j = 0; j < i; ++j)
+                        {
+                            if (!child_ptrs[j].IsInvalid() && child_ptrs[j].GetRawPointer() == child_ptrs[i].GetRawPointer())
+                            {
+                                has_node_packing_ = true;
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -656,7 +678,17 @@ namespace rta
             {
                 ++leaf_node_count_;
             }
+            else if (node_ptr.IsInstanceNode())
+            {
+                // Cluster BLAS leaves are hardware instance nodes referencing CLASes.
+                ++leaf_node_count_;
+            }
         }
+    }
+
+    bool EncodedRtIp31BottomLevelBvh::HasNodePacking() const
+    {
+        return has_node_packing_;
     }
 
     void EncodedRtIp31BottomLevelBvh::ComputeSurfaceAreaHeuristic()
@@ -724,11 +756,15 @@ namespace rta
             else if (node_ptr.IsTriangleNode())
             {
                 BoundingVolumeExtents extent{};
-                RraBlasGetBoundingVolumeExtents(id_, node_ptr.GetRawPointer(), 0, 0, &extent);  // Pass zero since it's RtIp3.
+                RraErrorCode error_code = RraBlasGetBoundingVolumeExtents(id_, node_ptr.GetRawPointer(), 0, 0, &extent);  // Pass zero since it's RtIp3.
+                RRA_ASSERT(error_code == kRraOk);
                 float obb_total_surface_area{};
-                RraBvhGetBoundingVolumeSurfaceArea(&extent, &obb_total_surface_area);
+                error_code = RraBvhGetBoundingVolumeSurfaceArea(&extent, &obb_total_surface_area);
+                RRA_ASSERT(error_code == kRraOk);
                 float triangle_surface_area{};
-                RraBlasGetSurfaceArea(id_, node_ptr.GetRawPointer(), 0, 0, &triangle_surface_area);  // Pass zero since it's RtIp3.
+                error_code = RraBlasGetSurfaceArea(id_, node_ptr.GetRawPointer(), 0, 0, &triangle_surface_area);  // Pass zero since it's RtIp3.
+                RRA_ASSERT(error_code == kRraOk);
+                RRA_UNUSED(error_code);
                 float sah = 0.0f;
 
                 if (obb_total_surface_area >= triangle_surface_area && obb_total_surface_area > FLT_MIN)
@@ -812,7 +848,9 @@ namespace rta
                 {
                     if (!child_ptrs[i].IsInvalid())
                     {
-                        if (child_ptrs[i].IsTriangleNode())
+                        // Record parents for all leaves (triangles and Cluster-BLAS instance leaves); box-node
+                        // children are pushed for further traversal.
+                        if (child_ptrs[i].IsLeafNode())
                         {
                             triangle_node_parents_[child_ptrs[i].GetRawPointer()] = node_ptr.GetRawPointer();
                         }
@@ -839,7 +877,14 @@ namespace rta
             return std::numeric_limits<float>::quiet_NaN();
         }
         const uint32_t index = (byte_offset - leaf_nodes) / sizeof(dxr::amd::TriangleNode);
-        return triangle_surface_area_heuristic_.at(index);
+        // A CBLAS cluster-reference leaf is a hardware instance node, not a triangle node, so it has no
+        // surface-area-heuristic entry. Return NaN rather than throwing from at().
+        const auto it = triangle_surface_area_heuristic_.find(index);
+        if (it == triangle_surface_area_heuristic_.end())
+        {
+            return std::numeric_limits<float>::quiet_NaN();
+        }
+        return it->second;
     }
 
     void EncodedRtIp31BottomLevelBvh::SetLeafNodeSurfaceAreaHeuristic(uint32_t node_ptr, float surface_area_heuristic)
@@ -854,6 +899,145 @@ namespace rta
         }
         const uint32_t index                    = (byte_offset - leaf_nodes) / sizeof(dxr::amd::TriangleNode);
         triangle_surface_area_heuristic_[index] = surface_area_heuristic;
+    }
+
+    bool EncodedRtIp31BottomLevelBvh::IsClusterBlas() const
+    {
+        return header_->GetRawHeader().IsClusterBlas();
+    }
+
+    bool EncodedRtIp31BottomLevelBvh::IsCluster() const
+    {
+        return header_->GetRawHeader().IsCluster();
+    }
+
+    uint32_t EncodedRtIp31BottomLevelBvh::GetTriangleCount() const
+    {
+        // A CLAS (ClusterLevel) stores its triangles directly in cluster leaf nodes and leaves the
+        // geometry-info primitive count at 0, so fall back to the header's active primitive count for
+        // vertex-buffer sizing / unique-triangle count. Ordinary BLASes use the geometry-info sum unchanged.
+        if (header_->GetRawHeader().IsCluster())
+        {
+            return header_->GetActivePrimitiveCount();
+        }
+        return EncodedBottomLevelBvh::GetTriangleCount();
+    }
+
+    bool EncodedRtIp31BottomLevelBvh::IsClusterRefNode(uint32_t node_id) const
+    {
+        if (!IsClusterBlas())
+        {
+            return false;
+        }
+        return dxr::amd::NodePointer(node_id).IsInstanceNode();
+    }
+
+    const HwInstanceNodeRRA* EncodedRtIp31BottomLevelBvh::GetClusterRefInstanceNode(uint32_t node_id) const
+    {
+        dxr::amd::NodePointer node_ptr(node_id);
+        if (!node_ptr.IsInstanceNode())
+        {
+            return nullptr;
+        }
+
+        const auto&    header_offsets = header_->GetBufferOffsets();
+        const uint32_t byte_offset    = node_ptr.GetByteOffset() - header_offsets.interior_nodes;
+        if (byte_offset >= interior_nodes_.size())
+        {
+            return nullptr;
+        }
+
+        return reinterpret_cast<const HwInstanceNodeRRA*>(&interior_nodes_[byte_offset]);
+    }
+
+    RraErrorCode EncodedRtIp31BottomLevelBvh::GetClasIndexFromClusterRefNode(uint32_t node_id, uint64_t* out_clas_blas_index) const
+    {
+        if (out_clas_blas_index == nullptr)
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        const HwInstanceNodeRRA* instance_node = GetClusterRefInstanceNode(node_id);
+        if (instance_node == nullptr)
+        {
+            return kRraErrorInvalidChildNode;
+        }
+
+        // The cluster-reference leaf encodes the referenced CLAS header address (the same aligned_addr_64b<<6
+        // decode used by TLAS instances). blas_map_ registers that address as a key during load, so this is
+        // an exact lookup.
+        NodePointer64 temp_ptr{};
+        temp_ptr.u64                = instance_node->data.childBasePtr;
+        uint64_t   clas_address     = (temp_ptr.aligned_addr_64b << 6);
+        const auto it               = blas_map_.find(clas_address);
+        if (it == blas_map_.end())
+        {
+            return kRraErrorIndexOutOfRange;
+        }
+        *out_clas_blas_index = it->second;
+        return kRraOk;
+    }
+
+    RraErrorCode EncodedRtIp31BottomLevelBvh::GetClusterRefNodeTransform(uint32_t node_id, float* out_transform) const
+    {
+        if (out_transform == nullptr)
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        const HwInstanceNodeRRA* instance_node = GetClusterRefInstanceNode(node_id);
+        if (instance_node == nullptr)
+        {
+            return kRraErrorInvalidChildNode;
+        }
+
+        memcpy(out_transform, instance_node->data.worldToObject, dxr::kMatrix3x4Size);
+        return kRraOk;
+    }
+
+    RraErrorCode EncodedRtIp31BottomLevelBvh::GetClusterRefNodeId(uint32_t node_id, uint32_t* out_id) const
+    {
+        if (out_id == nullptr)
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        const HwInstanceNodeRRA* instance_node = GetClusterRefInstanceNode(node_id);
+        if (instance_node == nullptr)
+        {
+            return kRraErrorInvalidChildNode;
+        }
+
+        // Low 24 bits hold the instance contribution / CLAS id; the top 8 bits are the instance mask.
+        *out_id = instance_node->data.userDataAndInstanceMask & 0x00FFFFFF;
+        return kRraOk;
+    }
+
+    RraErrorCode EncodedRtIp31BottomLevelBvh::GetClusterRefNodeMask(uint32_t node_id, uint32_t* out_mask) const
+    {
+        if (out_mask == nullptr)
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        const HwInstanceNodeRRA* instance_node = GetClusterRefInstanceNode(node_id);
+        if (instance_node == nullptr)
+        {
+            return kRraErrorInvalidChildNode;
+        }
+
+        // The top 8 bits hold the instance mask; the low 24 bits are the instance contribution / CLAS id.
+        *out_mask = (instance_node->data.userDataAndInstanceMask >> 24) & 0xFF;
+        return kRraOk;
+    }
+
+    void EncodedRtIp31BottomLevelBvh::ConvertBlasAddressesToIndices(const std::unordered_map<GpuVirtualAddress, uint64_t>& blas_map)
+    {
+        // Only a Cluster BLAS needs the map, to resolve its instance-leaves to their referenced CLAS index.
+        if (IsClusterBlas())
+        {
+            blas_map_ = blas_map;
+        }
     }
 
 }  // namespace rta

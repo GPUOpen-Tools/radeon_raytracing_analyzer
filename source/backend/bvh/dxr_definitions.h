@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the DXR helper functions and definitions.
@@ -63,7 +64,6 @@ namespace dxr
     };
 
     // Instance flag bits from the DXR spec
-    // See https://microsoft.github.io/DirectX-Specs/d3d/Raytracing.html#d3d12_raytracing_instance_flags
     enum class InstanceFlags : std::uint32_t
     {
         kFlagNone                = 0,

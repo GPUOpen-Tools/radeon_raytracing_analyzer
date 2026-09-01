@@ -250,6 +250,22 @@
                 </widget>
                </item>
                <item>
+                <widget class="ColoredCheckbox" name="content_ray_flags_max_anyhit_invocations_">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Max anyhit invocations</string>
+                 </property>
+                 <property name="toolTip">
+                  <string>Non-opaque triangles will never be accepted as closest hit, emulating maximum anyhit shader rejections. When combined with Accept first hit, traversal stops at the first opaque hit.</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="ColoredCheckbox" name="content_ray_flags_cull_back_facing_triangles_">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -748,6 +764,22 @@
           </property>
           <property name="toolTip">
            <string>Toggle the bounding volume overlay. Pressing "L" offers the same functionality.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="ColoredCheckbox" name="content_render_partition_bounds_">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Show partition bounding volumes</string>
+          </property>
+          <property name="toolTip">
+           <string>Toggle the per-partition bounding box overlay. Only available for partitioned (PTLAS) traces.</string>
           </property>
          </widget>
         </item>
@@ -1786,3 +1818,4 @@
   <buttongroup name="button_group_architecture_"/>
  </buttongroups>
 </ui>
+

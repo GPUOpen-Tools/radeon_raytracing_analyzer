@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of an acceleration structure tree-view model.
@@ -111,6 +112,23 @@ namespace rra
         /// @return Pointer to the initialized EventTreeViewItem object.
         AccelerationStructureTreeViewItem* AllocateMemory(uint64_t node_data, uint32_t child_index, AccelerationStructureTreeViewItem* parent);
 
+        /// @brief Walk the acceleration structure tree, invoking a visitor once per node in build order.
+        ///
+        /// The traversal order and child-enumeration logic live here so the buffer-sizing count pass and the
+        /// item-building pass are guaranteed to visit the exact same nodes. This is what lets the pre-allocated
+        /// item buffer be sized to exactly what the build produces: PTLAS partition nodes and RTIP3.1 node
+        /// packing make the header's flat node count diverge from the real tree walk, so the buffer cannot be
+        /// sized from that count (see InitializeModel).
+        ///
+        /// @param [in] index               The acceleration structure index.
+        /// @param [in] get_child           Function to get a child node pointer.
+        /// @param [in] use_composite_keys  Whether items are keyed by (global_child_index << 32 | node_id).
+        /// @param [in] root_handle         The parent handle passed to the root node's visit call.
+        /// @param [in] visit               Callback (node_key, child_index, parent_handle, is_packed) that returns
+        ///                                 the parent handle to use for this node's children.
+        template <typename ParentHandle, typename VisitFn>
+        void TraverseTree(uint32_t index, GetChildNodeFunction get_child, bool use_composite_keys, ParentHandle root_handle, VisitFn visit);
+
         /// @brief Gets a tree view item from a given index.
         ///
         /// @param [in] index The index of the tree view item to retrieve.
@@ -124,9 +142,11 @@ namespace rra
         uint64_t                                               item_buffer_size_;   ///< Number of AccelerationStructureTreeViewItem the memory block can hold.
         uint32_t                                               buffer_item_index_;  ///< Index to next block of free memory.
         bool                                                   is_tlas_;            ///< Does this treeview model represent a TLAS?
+        bool tlas_node_packing_{false};  ///< RTIP3.1 TLAS-with-packing: keep composite keys/packed rows for TLAS.
         uint64_t                                               as_index_;  ///< The acceleration structure index, obtained from the treeview combo box index.
     };
 }  // namespace rra
 
 #endif  // RRA_MODELS_ACCELERATION_STRUCTURE_TREE_VIEW_MODEL_H_
+
 

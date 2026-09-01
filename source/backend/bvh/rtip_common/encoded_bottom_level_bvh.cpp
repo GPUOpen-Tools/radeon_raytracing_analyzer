@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific bottom level acceleration structure
@@ -136,6 +137,27 @@ namespace rta
             *out_triangle_count = 0;
         }
         return kRraOk;
+    }
+
+    uint32_t EncodedBottomLevelBvh::GetTriangleCount() const
+    {
+        const auto& geometry_infos       = GetGeometryInfos();
+        uint32_t    total_triangle_count = 0;
+        for (auto geom_iter = geometry_infos.begin(); geom_iter != geometry_infos.end(); ++geom_iter)
+        {
+            total_triangle_count += geom_iter->GetPrimitiveCount();
+        }
+        return total_triangle_count;
+    }
+
+    uint32_t EncodedBottomLevelBvh::GetGeometryTriangleCount(uint32_t geometry_index) const
+    {
+        const auto& geometry_infos = GetGeometryInfos();
+        if (geometry_index >= geometry_infos.size())
+        {
+            return 0;
+        }
+        return geometry_infos[geometry_index].GetPrimitiveCount();
     }
 
     RraErrorCode EncodedBottomLevelBvh::GetProceduralNodeCount(uint32_t* out_procedural_Node_count) const

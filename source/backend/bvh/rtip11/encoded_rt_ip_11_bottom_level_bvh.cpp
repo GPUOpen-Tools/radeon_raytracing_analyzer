@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 (Navi2x) specific bottom level acceleration structure
@@ -8,6 +9,7 @@
 
 #include "bvh/rtip11/encoded_rt_ip_11_bottom_level_bvh.h"
 
+#include "public/rra_assert.h"
 #include "public/rra_blas.h"
 
 #include <float.h>
@@ -720,8 +722,11 @@ namespace rta
 
             const uint32_t node_index = (node_ptr.GetByteOffset() - header_offsets.leaf_nodes) / sizeof(dxr::amd::TriangleNode);
 
-            uint32_t tri_count{};
-            RraBlasGetNodeTriangleCount(GetID(), node_ptr.GetID(), 0, 0, &tri_count);  // Pass 0 since this function is specific to RtIp11.
+            uint32_t     tri_count{};
+            RraErrorCode error_code =
+                RraBlasGetNodeTriangleCount(GetID(), node_ptr.GetID(), 0, 0, &tri_count);  // Pass 0 since this function is specific to RtIp11.
+            RRA_ASSERT(error_code == kRraOk);
+            RRA_UNUSED(error_code);
 
             if (node_ptr.GetType() == dxr::amd::NodeType::kAmdNodeTriangle0)
             {
@@ -904,7 +909,6 @@ namespace rta
 
     float EncodedRtIp11BottomLevelBvh::CalculateSAHForBlasNode(const dxr::amd::NodePointer root_node)
     {
-
         float sah          = 0.0f;
         float sub_tree_sah = 0.0f;
 

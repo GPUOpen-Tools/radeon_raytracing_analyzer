@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2022-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Summary model.
@@ -10,7 +11,7 @@
 #include <QVariant>
 
 #ifdef _LINUX
-#include "public/linux/safe_crt.h"
+#include "linux/safe_crt.h"
 #endif
 #include "public/rra_api_info.h"
 #include "public/rra_ray_history.h"

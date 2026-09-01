@@ -54,7 +54,7 @@ The Radeon Raytracing Analyzer user interface
 ---------------------------------------------
 
 There are four main menus in the Radeon Raytracing Analyzer and each may have a
-number of sub-windows..
+number of sub-windows.
 
 1. **START**
 
@@ -98,7 +98,7 @@ number of sub-windows..
       bottom-level acceleration structure.
 
    d. **Geometries** - Lists statistics for all geometries of the selected
-      selected bottom-level acceleration structure.
+      bottom-level acceleration structure.
 
    e. **Properties** - Lists statistics and properties for the currently
       selected bottom-level acceleration structure.
@@ -131,4 +131,5 @@ to the System information pane. The banner can be dismissed by clicking the "X"
 button. Clicking the "Do not show again" link prevents the banner from being
 shown for subsequently loaded scene files. The notification banner can be
 re-enabled from the Settings pane.
+
 

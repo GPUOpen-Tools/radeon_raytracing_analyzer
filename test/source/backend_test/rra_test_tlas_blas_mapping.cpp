@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test TLAS to BLAS mappings.
@@ -13,7 +14,7 @@
 #include "glm/glm/glm.hpp"
 
 #ifndef _WIN32
-#include "public/linux/safe_crt.h"
+#include "linux/safe_crt.h"
 #endif
 
 #include "public/rra_blas.h"
@@ -167,7 +168,6 @@ namespace backend_test
                         " ERROR - Can't get original instance node transform from TLAS[%d] and BLAS[%d], instance[%d]", tlas_index, blas_index, instance_index);
                     return false;
                 }
-
             }
         }
 
@@ -199,14 +199,6 @@ namespace backend_test
 
     bool RRATestTlasBlasMapping::GetBLASStats(const RRATestConfig& config)
     {
-#ifdef RRA_INTRNAL
-        if (config.dump_stats)
-        {
-            blas_dump_file_.Write("BLAS Data");
-            blas_dump_file_.Write("=========");
-        }
-#endif
-
         struct NodeAttributes
         {
             uint32_t num_interior_nodes = 0;

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  BVH base class implementations.
@@ -198,59 +199,72 @@ namespace rta
         uint64_t depth_sum  = 0;
         uint32_t leaf_count = 0;
 
-        size_t num_box_nodes = header_->GetInteriorNodeCount();
-        if (num_box_nodes == 0)
         {
-            return 0;
-        }
-
-        std::deque<std::pair<dxr::amd::NodePointer, std::uint32_t>> traversal_stack;
-
-        const auto& interior_nodes = GetInteriorNodesData();
-
-        // Top level node doesn't exist in the data so needs to be created. Assumed to be a Box32.
-        dxr::amd::NodePointer root_ptr = dxr::amd::NodePointer(dxr::amd::NodeType::kAmdNodeBoxFp32, dxr::amd::kAccelerationStructureHeaderSize);
-
-        // Assume there's a single root node.
-        auto box_nodes_per_interior_node = 1;
-
-        traversal_stack.push_back(std::make_pair(root_ptr, 0));
-
-        const auto& header_offsets = header_->GetBufferOffsets();
-        while (!traversal_stack.empty())
-        {
-            const auto& index_to_level = traversal_stack.back();
-            auto        node_ptr       = index_to_level.first;
-            auto        level          = index_to_level.second;
-
-            max_tree_depth_ = std::max(max_tree_depth_, level + 1);
-
-            traversal_stack.pop_back();
-
-            for (auto count = 0; count < box_nodes_per_interior_node; count++)
+            size_t num_box_nodes = header_->GetInteriorNodeCount();
+            if (num_box_nodes == 0)
             {
-                // Get the byte offset relative to the internal node buffer.
-                auto byte_offset = node_ptr.GetByteOffset() - header_offsets.interior_nodes;
-                if (node_ptr.IsFp32BoxNode())
-                {
-                    if ((RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == RayTracingIpLevel::RtIp3_1)
-                    {
-                        // The quantized BVH8 node uses the same enum value as Fp32 Box node.
-                        const auto            node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[byte_offset]);
-                        dxr::amd::NodePointer child_ptrs[8]{};
-                        node->DecodeChildrenOffsets((uint32_t*)child_ptrs);
+                return 0;
+            }
 
-                        for (const auto& ptr : child_ptrs)
+            std::deque<std::pair<dxr::amd::NodePointer, std::uint32_t>> traversal_stack;
+
+            const auto& interior_nodes = GetInteriorNodesData();
+
+            // Top level node doesn't exist in the data so needs to be created. Assumed to be a Box32.
+            dxr::amd::NodePointer root_ptr = dxr::amd::NodePointer(dxr::amd::NodeType::kAmdNodeBoxFp32, dxr::amd::kAccelerationStructureHeaderSize);
+
+            // Assume there's a single root node.
+            auto box_nodes_per_interior_node = 1;
+
+            traversal_stack.push_back(std::make_pair(root_ptr, 0));
+
+            const auto& header_offsets = header_->GetBufferOffsets();
+            while (!traversal_stack.empty())
+            {
+                const auto& index_to_level = traversal_stack.back();
+                auto        node_ptr       = index_to_level.first;
+                auto        level          = index_to_level.second;
+
+                max_tree_depth_ = std::max(max_tree_depth_, level + 1);
+
+                traversal_stack.pop_back();
+
+                for (auto count = 0; count < box_nodes_per_interior_node; count++)
+                {
+                    // Get the byte offset relative to the internal node buffer.
+                    auto byte_offset = node_ptr.GetByteOffset() - header_offsets.interior_nodes;
+                    if (node_ptr.IsFp32BoxNode())
+                    {
+                        if ((RayTracingIpLevel)RraRtipInfoGetRaytracingIpLevel() == RayTracingIpLevel::RtIp3_1)
                         {
-                            if (!ptr.IsInvalid())
+                            // The quantized BVH8 node uses the same enum value as Fp32 Box node.
+                            const auto            node = reinterpret_cast<const QuantizedBVH8BoxNode*>(&interior_nodes[byte_offset]);
+                            dxr::amd::NodePointer child_ptrs[8]{};
+                            node->DecodeChildrenOffsets((uint32_t*)child_ptrs);
+
+                            for (const auto& ptr : child_ptrs)
                             {
-                                traversal_stack.push_back(std::make_pair(ptr, level + 1));
+                                if (!ptr.IsInvalid())
+                                {
+                                    traversal_stack.push_back(std::make_pair(ptr, level + 1));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            const auto node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[byte_offset]);
+                            for (const auto& ptr : node->GetChildren())
+                            {
+                                if (!ptr.IsInvalid())
+                                {
+                                    traversal_stack.push_back(std::make_pair(ptr, level + 1));
+                                }
                             }
                         }
                     }
-                    else
+                    else if (node_ptr.IsFp16BoxNode())
                     {
-                        const auto node = reinterpret_cast<const dxr::amd::Float32BoxNode*>(&interior_nodes[byte_offset]);
+                        const auto node = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[byte_offset]);
                         for (const auto& ptr : node->GetChildren())
                         {
                             if (!ptr.IsInvalid())
@@ -259,22 +273,11 @@ namespace rta
                             }
                         }
                     }
-                }
-                else if (node_ptr.IsFp16BoxNode())
-                {
-                    const auto node = reinterpret_cast<const dxr::amd::Float16BoxNode*>(&interior_nodes[byte_offset]);
-                    for (const auto& ptr : node->GetChildren())
+                    else if (node_ptr.IsTriangleNode())
                     {
-                        if (!ptr.IsInvalid())
-                        {
-                            traversal_stack.push_back(std::make_pair(ptr, level + 1));
-                        }
+                        leaf_count++;
+                        depth_sum += static_cast<uint64_t>(level) + 1;
                     }
-                }
-                else if (node_ptr.IsTriangleNode())
-                {
-                    leaf_count++;
-                    depth_sum += static_cast<uint64_t>(level) + 1;
                 }
             }
         }
@@ -305,9 +308,11 @@ namespace rta
 
     float IBvh::GetInteriorNodeSurfaceAreaHeuristic(uint32_t node_id) const
     {
-        dxr::amd::NodePointer* node  = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
-        const uint32_t         index = (node->GetByteOffset() - GetHeader().GetBufferOffsets().interior_nodes) / sizeof(dxr::amd::Float32BoxNode);
-        return GetBoxSurfaceAreaHeuristic(index);
+        {
+            dxr::amd::NodePointer* node  = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+            const uint32_t         index = (node->GetByteOffset() - GetHeader().GetBufferOffsets().interior_nodes) / sizeof(dxr::amd::Float32BoxNode);
+            return GetBoxSurfaceAreaHeuristic(index);
+        }
     }
 
     bool IBvh::IsCompacted() const
@@ -337,12 +342,14 @@ namespace rta
 
     void IBvh::SetInteriorNodeSurfaceAreaHeuristic(uint32_t node_id, float surface_area_heuristic)
     {
-        dxr::amd::NodePointer* node          = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
-        const uint32_t         byte_offset   = node->GetByteOffset();
-        const uint32_t         header_offset = GetHeader().GetBufferOffsets().interior_nodes;
-        const uint32_t         index         = (byte_offset - header_offset) / sizeof(dxr::amd::Float32BoxNode);
-        RRA_ASSERT(index < box_surface_area_heuristic_.size());
-        box_surface_area_heuristic_[index] = surface_area_heuristic;
+        {
+            dxr::amd::NodePointer* node          = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+            const uint32_t         byte_offset   = node->GetByteOffset();
+            const uint32_t         header_offset = GetHeader().GetBufferOffsets().interior_nodes;
+            const uint32_t         index         = (byte_offset - header_offset) / sizeof(dxr::amd::Float32BoxNode);
+            RRA_ASSERT(index < box_surface_area_heuristic_.size());
+            box_surface_area_heuristic_[index] = surface_area_heuristic;
+        }
     }
 
     const dxr::amd::MetaDataV1& IBvh::GetMetaData() const

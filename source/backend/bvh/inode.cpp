@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the node class interface.
@@ -155,6 +156,48 @@ namespace rta
             // If it's not a triangle node type, return false.
             return false;
         }
+    }
+
+    RraErrorCode INode::GetSurfaceAreaHeuristic(const rta::IBvh* bvh, uint32_t node_id, uint32_t global_child_index, float* out_surface_area_heuristic) const
+    {
+        dxr::amd::NodePointer node_ptr = dxr::amd::NodePointer(node_id);
+
+        if (node_ptr.IsInvalid())
+        {
+            return kRraErrorInvalidPointer;
+        }
+
+        if (node_ptr.IsBoxNode())
+        {
+            *out_surface_area_heuristic = bvh->GetInteriorNodeSurfaceAreaHeuristic(node_id);
+            return kRraOk;
+        }
+        else
+        {
+            *out_surface_area_heuristic = bvh->GetLeafNodeSurfaceAreaHeuristic(node_id, global_child_index);
+            return kRraOk;
+        }
+    }
+
+    RraErrorCode INode::GetRootNodePtr(uint32_t* out_node_ptr) const
+    {
+        dxr::amd::NodePointer root_ptr = dxr::amd::NodePointer(dxr::amd::NodeType::kAmdNodeBoxFp32, dxr::amd::kAccelerationStructureHeaderSize);
+        *out_node_ptr                  = root_ptr.GetRawPointer();
+        return kRraOk;
+    }
+
+    RraErrorCode INode::GetNodeOffset(uint32_t node_id, uint64_t* out_offset) const
+    {
+        const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+        *out_offset                       = node->GetGpuVirtualAddress();
+        return kRraOk;
+    }
+
+    RraErrorCode INode::GetBaseAddress(uint32_t node_id, const IBvh* bvh, uint64_t* out_address) const
+    {
+        const dxr::amd::NodePointer* node = reinterpret_cast<dxr::amd::NodePointer*>(&node_id);
+        *out_address                      = bvh->GetVirtualAddress() + bvh->GetHeader().GetMetaDataSize() + node->GetGpuVirtualAddress();
+        return kRraOk;
     }
 
 }  // namespace rta

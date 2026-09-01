@@ -1,9 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.25)
 project(Renderer)
 
 # switch on the autogenerators needed for Qt. Includes the MetaObject Compiler (MOC),
@@ -135,7 +136,7 @@ IF (WIN32)
     target_link_libraries(${PROJECT_NAME} Qt::Widgets RraBackend volk)
 ELSEIF (UNIX)
     add_library(${PROJECT_NAME} ${SOURCES} ${LINUX_SOURCES})
-    target_link_libraries(${PROJECT_NAME} Qt::Widgets Qt::GuiPrivate RraBackend volk ${CMAKE_DL_LIBS})
+    target_link_libraries(${PROJECT_NAME} Qt::Widgets Qt::GuiPrivate RraBackend volk ${CMAKE_DL_LIBS} AMD::sdl_utils::safe_crt)
 ENDIF (WIN32)
 
 # Apply common developer tools target options and definitions
@@ -236,6 +237,8 @@ COMPILE_DXC_HLSL_SHADER(GeometryColorInstanceIndex.hlsl VSMain vs_6_4 GeometryCo
 COMPILE_DXC_HLSL_SHADER(GeometryColorInstanceIndex.hlsl PSMain ps_6_4 GeometryColorInstanceIndex.ps.spv)
 COMPILE_DXC_HLSL_SHADER(GeometryColorInstanceMask.hlsl VSMain vs_6_4 GeometryColorInstanceMask.vs.spv)
 COMPILE_DXC_HLSL_SHADER(GeometryColorInstanceMask.hlsl PSMain ps_6_4 GeometryColorInstanceMask.ps.spv)
+COMPILE_DXC_HLSL_SHADER(GeometryColorPartitionIndex.hlsl VSMain vs_6_4 GeometryColorPartitionIndex.vs.spv)
+COMPILE_DXC_HLSL_SHADER(GeometryColorPartitionIndex.hlsl PSMain ps_6_4 GeometryColorPartitionIndex.ps.spv)
 COMPILE_DXC_HLSL_SHADER(GeometryColorTriangleIndex.hlsl VSMain vs_6_4 GeometryColorTriangleIndex.vs.spv)
 COMPILE_DXC_HLSL_SHADER(GeometryColorTriangleIndex.hlsl PSMain ps_6_4 GeometryColorTriangleIndex.ps.spv)
 COMPILE_DXC_HLSL_SHADER(GeometryColorWireframe.hlsl VSMain vs_6_4 GeometryColorWireframe.vs.spv)
@@ -317,4 +320,5 @@ IF (WIN32)
         source_group("${source_path_msvc}" FILES "${source}")
     endforeach ()
 ENDIF (WIN32)
+
 

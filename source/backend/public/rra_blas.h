@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the public BLAS interface.
@@ -483,6 +484,81 @@ RraErrorCode RraBlasGetNodeBoundingVolumeOrientation(uint64_t blas_index, uint32
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBlasGetMetaDataSize(uint64_t blas_index, uint32_t* out_byte_size);
+
+/// @brief Is the given BLAS a Cluster BLAS (CBLAS)?
+///
+/// A CBLAS is the middle tier of the CLAS hierarchy (TLAS -> CBLAS -> CLAS -> triangles): a
+/// bottom-level structure whose leaves are hardware instance nodes referencing CLASes.
+///
+/// @param [in] blas_index The index of the BLAS to query.
+///
+/// @return true if the BLAS is a Cluster BLAS, false otherwise (including invalid index).
+bool RraBlasIsClusterBlas(uint64_t blas_index);
+
+/// @brief Is the given BLAS a CLAS (Cluster Level Acceleration Structure)?
+///
+/// A CLAS is the leaf tier of the CLAS hierarchy (TLAS -> CBLAS -> CLAS -> triangles): a
+/// cluster-level structure storing triangles directly. It is loaded into the BLAS list.
+///
+/// @param [in] blas_index The index of the BLAS to query.
+///
+/// @return true if the BLAS is a CLAS, false otherwise (including invalid index).
+bool RraBlasIsCluster(uint64_t blas_index);
+
+/// @brief Is the given node a cluster reference (a CBLAS instance-leaf pointing at a CLAS)?
+///
+/// @param [in] blas_index The index of the BLAS to query.
+/// @param [in] node_id    The node of interest.
+///
+/// @return true if the node is a cluster reference, false otherwise.
+bool RraBlasIsClusterRefNode(uint64_t blas_index, uint32_t node_id);
+
+/// @brief Does this BLAS use RTIP3.1 node packing (several box slots of one parent sharing a child node)?
+///
+/// When false, every node id is unique per tree position and node ids alone are a valid item key. When true the
+/// shared node id appears in several sibling slots, so callers must fold in the per-slot global child index to keep
+/// those slots distinct. Always false for non-RTIP3.1 structures.
+///
+/// @param [in] blas_index The index of the BLAS to query.
+///
+/// @return true if the BLAS contains node packing, false otherwise (including invalid or non-RTIP3.1 index).
+bool RraBlasHasNodePacking(uint64_t blas_index);
+
+/// @brief Resolve the CLAS referenced by a cluster-reference leaf to its BLAS index.
+///
+/// @param [in]  blas_index          The index of the (Cluster) BLAS containing the node.
+/// @param [in]  node_id             The cluster-reference node.
+/// @param [out] out_clas_blas_index The BLAS index of the referenced CLAS.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetClasIndexFromClusterRefNode(uint64_t blas_index, uint32_t node_id, uint64_t* out_clas_blas_index);
+
+/// @brief Get the (world-to-object) transform of a cluster-reference leaf.
+///
+/// @param [in]  blas_index    The index of the (Cluster) BLAS containing the node.
+/// @param [in]  node_id       The cluster-reference node.
+/// @param [out] out_transform A pointer to receive 12 floats of transform data.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetClusterRefNodeTransform(uint64_t blas_index, uint32_t node_id, float* out_transform);
+
+/// @brief Get the instance ID of a cluster-reference leaf (used to label "CLAS [id]").
+///
+/// @param [in]  blas_index The index of the (Cluster) BLAS containing the node.
+/// @param [in]  node_id    The cluster-reference node.
+/// @param [out] out_id     A pointer to receive the instance ID.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetClusterRefNodeId(uint64_t blas_index, uint32_t node_id, uint32_t* out_id);
+
+/// @brief Get the instance mask of a cluster-reference leaf.
+///
+/// @param [in]  blas_index The index of the (Cluster) BLAS containing the node.
+/// @param [in]  node_id    The cluster-reference node.
+/// @param [out] out_mask   A pointer to receive the 8-bit instance mask.
+///
+/// @return kRraOk if successful or an RraErrorCode if an error occurred.
+RraErrorCode RraBlasGetClusterRefNodeMask(uint64_t blas_index, uint32_t node_id, uint32_t* out_mask);
 
 #ifdef __cplusplus
 }

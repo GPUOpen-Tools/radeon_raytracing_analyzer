@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the TLAS properties pane.
@@ -8,6 +9,7 @@
 #include "views/tlas/tlas_properties_pane.h"
 
 #include "public/rra_rtip_info.h"
+#include "public/rra_tlas.h"
 
 #include "managers/message_manager.h"
 #include "models/tlas/tlas_properties_model.h"
@@ -40,6 +42,11 @@ TlasPropertiesPane::TlasPropertiesPane(QWidget* parent)
     model_->InitializeModel(ui_->content_memory_tlas_, rra::kTlasPropertiesMemoryTlas, "text");
     model_->InitializeModel(ui_->content_memory_total_, rra::kTlasPropertiesMemoryTotal, "text");
 
+    model_->InitializeModel(ui_->content_num_partitions_, rra::kTlasPropertiesNumPartitions, "text");
+    model_->InitializeModel(ui_->content_max_partition_instances_, rra::kTlasPropertiesMaxPartitionInstances, "text");
+    model_->InitializeModel(ui_->content_max_global_instances_, rra::kTlasPropertiesMaxGlobalInstances, "text");
+    model_->InitializeModel(ui_->content_global_partition_instances_, rra::kTlasPropertiesGlobalPartitionInstances, "text");
+
     connect(&rra::MessageManager::Get(), &rra::MessageManager::TlasSelected, this, &TlasPropertiesPane::SetTlasIndex);
 }
 
@@ -55,6 +62,19 @@ void TlasPropertiesPane::SetTlasIndex(uint64_t tlas_index)
     {
         ui_->label_num_box32_nodes_->setText("Number of Bvh8 nodes:");
     }
+
+    // The partitioning section is only meaningful for PTLAS traces.
+    const bool is_partitioned = RraTlasIsPartitioned(tlas_index);
+    ui_->label_title_partitioning_->setVisible(is_partitioned);
+    ui_->label_num_partitions_->setVisible(is_partitioned);
+    ui_->content_num_partitions_->setVisible(is_partitioned);
+    ui_->label_max_partition_instances_->setVisible(is_partitioned);
+    ui_->content_max_partition_instances_->setVisible(is_partitioned);
+    ui_->label_max_global_instances_->setVisible(is_partitioned);
+    ui_->content_max_global_instances_->setVisible(is_partitioned);
+    ui_->label_global_partition_instances_->setVisible(is_partitioned);
+    ui_->content_global_partition_instances_->setVisible(is_partitioned);
+
     model_->Update(tlas_index);
 }
 

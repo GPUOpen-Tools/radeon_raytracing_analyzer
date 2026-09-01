@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the MessageManager.
@@ -68,6 +69,12 @@ namespace rra
         /// @param [in] blas_index The index of the selected BLAS.
         /// @param [in] instance_index The index of the selected BLAS instance.
         void InstancesTableDoubleClicked(uint64_t tlas_index, uint64_t blas_index, uint64_t instance_index);
+
+        /// @brief Signal to indicate the user has double-clicked on a partition in the partitions pane.
+        ///
+        /// @param [in] tlas_index      The index of the selected TLAS.
+        /// @param [in] partition_index The index of the selected partition.
+        void PartitionsTableDoubleClicked(uint64_t tlas_index, uint32_t partition_index);
 
         /// @brief Signal to indicate that the user has selected a TLAS.
         ///

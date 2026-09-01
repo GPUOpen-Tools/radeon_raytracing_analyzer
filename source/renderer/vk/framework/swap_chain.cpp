@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan swapchain object.
@@ -29,12 +30,12 @@ namespace rra
 
             // Get the surface format count.
             CheckResult(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &surface_format_count, nullptr),
-                        "Could not retreive the surface format count.");
+                        "Could not retrieve the surface format count.");
 
             // Get the supported surface formats.
             std::vector<VkSurfaceFormatKHR> format_pairs(surface_format_count);
             CheckResult(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &surface_format_count, format_pairs.data()),
-                        "Could not retreive the surface formats.");
+                        "Could not retrieve the surface formats.");
 
             if (format_pairs.empty())
             {

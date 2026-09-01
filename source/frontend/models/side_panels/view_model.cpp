@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the View side pane model.
@@ -600,6 +601,24 @@ namespace rra
             return;
         }
         render_state_adapter_->SetRayFlagAcceptFirstHit(false);
+    }
+
+    void ViewModel::EnableRayFlagsMaxAnyhitInvocations()
+    {
+        if (!render_state_adapter_)
+        {
+            return;
+        }
+        render_state_adapter_->SetRayFlagMaxAnyhitInvocations(true);
+    }
+
+    void ViewModel::DisableRayFlagsMaxAnyhitInvocations()
+    {
+        if (!render_state_adapter_)
+        {
+            return;
+        }
+        render_state_adapter_->SetRayFlagMaxAnyhitInvocations(false);
     }
 
     void ViewModel::EnableRayCullBackFacingTriangles()

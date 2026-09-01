@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  RT IP 1.1 acceleration structure header definition.
@@ -46,6 +47,8 @@ namespace rta
         std::uint64_t CalculateLeafNodeBufferSizeImpl() const;
 
         bool IsValidImpl() const override;
+
+        const AccelStructHeader& GetRawHeaderImpl() const override;
 
     protected:
         AccelStructHeader                                              header_     = {};

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration of types used in the renderer.
@@ -105,6 +106,7 @@ namespace rra
             bool                  selected             = false;   ///< The flag to indicate if this instance is selected.
             bool                  use_custom_triangles = false;   ///< The flag to indicate that this instance should use custom triangles.
             bool                  rebraided            = false;   ///< Whether or not this instance was rebraided by the driver.
+            uint32_t              partition_index{};              ///< The PTLAS partition index this instance belongs to (0 when not partitioned).
         };
 
         /// @brief Map of a RenderMesh instance to the instancing data used to draw it.
@@ -156,6 +158,7 @@ namespace rra
             kBlasAverageDepth,
             kInstanceIndex,
             kInstanceMask,
+            kPartitionIndex,
             kCount,
             kFastBuildOrTraceFlag,
             kAllowUpdateFlag,
@@ -243,6 +246,7 @@ namespace rra
             uint32_t    mask;                  ///< The instance mask flags.
             uint32_t    rebraided;             ///< Whether or not this instance is rebraided.
             uint32_t    selection_count;       ///< The number of selections on this instance index.
+            uint32_t    partition_index;       ///< The PTLAS partition index this instance belongs to.
         };
 
         /// Traversal Rendering
@@ -279,11 +283,11 @@ namespace rra
             uint32_t            leaf_start  = 0;                               ///< The leaf start index. Leaf may be instance or triangle.
             uint32_t            leaf_end    = 0;                               ///< The leaf end index.
 
-            int32_t  child_mask     = 0;   ///< The mask to represent which children are enabled.
-            uint32_t child_nodes[8] = {};  ///< The child node indexes.
+            int32_t  child_mask                   = 0;   ///< The mask to represent which children are enabled.
+            uint32_t child_nodes[MAX_CHILD_NODES] = {};  ///< The child node indexes.
 
-            glm::vec4 child_nodes_min[8] = {};  ///< The min bounds for the child nodes.
-            glm::vec4 child_nodes_max[8] = {};  ///< The max bounds for the child nodes.
+            glm::vec4 child_nodes_min[MAX_CHILD_NODES] = {};  ///< The min bounds for the child nodes.
+            glm::vec4 child_nodes_max[MAX_CHILD_NODES] = {};  ///< The max bounds for the child nodes.
 
             uint32_t  obb_index = 0;
             glm::vec3 padding;

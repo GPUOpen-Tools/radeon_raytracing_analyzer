@@ -1,6 +1,7 @@
 #! python3
 ##=============================================================================
-## Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+## Copyright Advanced Micro Devices, Inc.
+## SPDX-License-Identifier: MIT
 ## \author AMD Developer Tools Team
 ## \file
 ## \brief List of all external dependencies.
@@ -23,6 +24,7 @@ github_root  = "https://github.com/"
 # The third parameter in the value field is whether to do a shallow clone. Usually, this will be True but if a commit hash is used as a branch, a full clone is needed.
 git_mapping = {
     github_tools + "qt_common"                                      : ["../external/qt_common",          "v4.5.0",                                   True],
+    github_tools + "sdl_utils"                                      : ["../external/sdl_utils",          "v1.0",                                     True],
     github_tools + "system_info_utils"                              : ["../external/system_info_utils",  "v2.3",                                     True],
     github_tools + "update_check_api"                               : ["../external/update_check_api",   "v2.1.2",                                   True],
     github_root  + "g-truc/glm"                                     : ["../external/third_party/glm",    "1.0.0",                                    True],
@@ -30,8 +32,7 @@ git_mapping = {
     github_root  + "zeux/volk"                                      : ["../external/third_party/volk",   "1.4.304",                                  True],
     github_root  + "GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator" : ["../external/vma",                "d2f0313d20c803f83cc3637ac1facf8e4d6899e4", False],
     github_root  + "GPUOpen-Drivers/libamdrdf"                      : ["../external/rdf",                "v1.4.2",                                   True],
-
-    github_root + "catchorg/Catch2"                                 : ["../external/third_party/catch2", "v2.13.6",                                  True],
+    github_root  + "catchorg/Catch2"                                : ["../external/third_party/catch2", "v2.13.6",                                  True],
 }
 
 # Downloads required for Windows builds.

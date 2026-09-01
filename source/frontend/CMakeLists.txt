@@ -1,9 +1,10 @@
 #######################################################################################################################
-### Copyright (c) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+### Copyright Advanced Micro Devices, Inc.
+### SPDX-License-Identifier: MIT
 ### @author AMD Developer Tools Team
 #######################################################################################################################
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.25)
 project(RadeonRaytracingAnalyzer)
 
 # switch on the autogenerators needed for Qt. Includes the MetaObject Compiler (MOC),
@@ -76,6 +77,10 @@ set(SOURCES
         "models/instances_item_model.h"
         "models/instances_proxy_model.cpp"
         "models/instances_proxy_model.h"
+        "models/partitions_item_model.cpp"
+        "models/partitions_item_model.h"
+        "models/partitions_proxy_model.cpp"
+        "models/partitions_proxy_model.h"
         "models/scene.cpp"
         "models/scene.h"
         "models/scene_node.cpp"
@@ -131,6 +136,8 @@ set(SOURCES
         "models/tlas/blas_list_table_item_delegate.h"
         "models/tlas/tlas_instances_model.cpp"
         "models/tlas/tlas_instances_model.h"
+        "models/tlas/tlas_partitions_model.cpp"
+        "models/tlas/tlas_partitions_model.h"
         "models/tlas/tlas_properties_model.cpp"
         "models/tlas/tlas_properties_model.h"
         "models/tlas/tlas_scene_collection_model.cpp"
@@ -281,6 +288,9 @@ set(SOURCES
         "views/tlas/tlas_instances_pane.cpp"
         "views/tlas/tlas_instances_pane.h"
         "views/tlas/tlas_instances_pane.ui"
+        "views/tlas/tlas_partitions_pane.cpp"
+        "views/tlas/tlas_partitions_pane.h"
+        "views/tlas/tlas_partitions_pane.ui"
         "views/tlas/blas_list_pane.cpp"
         "views/tlas/blas_list_pane.h"
         "views/tlas/blas_list_pane.ui"
@@ -359,9 +369,13 @@ ENDIF (CMAKE_RELEASE_POSTFIX)
 # executable file library dependency list
 target_link_libraries(${PROJECT_NAME} PRIVATE RraBackend Renderer system_info Qt::Widgets QtCustomWidgets QtUtils AMD::update_check_api_qt)
 IF (WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE wsock32 winmm)
+    target_link_libraries(${PROJECT_NAME} PRIVATE wsock32 winmm AMD::sdl_utils::binary_security)
 ELSEIF (UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt::GuiPrivate Threads::Threads ${XCB_LIBRARIES})
+ENDIF ()
+
+IF (LINUX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE AMD::sdl_utils::safe_crt)
 ENDIF ()
 
 if (LINUX)
@@ -401,5 +415,6 @@ endif()
 
 # Deploy Qt binaries for build and install
 deploy_qt(${PROJECT_NAME} apps)
+
 
 

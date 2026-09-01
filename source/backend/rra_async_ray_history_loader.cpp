@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the asynchronous ray history loader.
@@ -58,7 +59,7 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
         int64_t offset = 0;
 
         // Iterate through each metadata field and load them if possible.
-        while (offset < metadata_chunk_size)
+        while (offset + static_cast<int64_t>(sizeof(rta::RayHistoryMetadataInfo)) <= metadata_chunk_size)
         {
             rta::RayHistoryMetadataInfo current_info = {};
             std::memcpy(&current_info, metadata_buffer.data() + offset, sizeof(rta::RayHistoryMetadataInfo));
@@ -69,7 +70,6 @@ RraAsyncRayHistoryLoader::RraAsyncRayHistoryLoader(const char* file_path, int64_
                 // Copy CounterInfo struct.
                 if (ChunkVersionLessThan(version, 1, 1))
                 {
-                    // Back compat. file versions < 1.1
                     struct CounterInfo_V0
                     {
                         GpuRt::uint32 dispatchRayDimensionX;      // DispatchRayDimension X
@@ -328,13 +328,15 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
         bool endToken   = false;
     };
 
-    std::vector<RayStateAsyncLoader> rayData(dx * dy * dz);
+    const uint64_t                   ray_count = static_cast<uint64_t>(dx) * dy * dz;
+    std::vector<RayStateAsyncLoader> rayData(ray_count);
     int                              totalTokenCount = 0;
 
     const auto bufferStart          = buffer_data;
     const auto bufferEnd            = buffer_data + buffer_size;
     auto       CheckOffsetIsInRange = [bufferStart, bufferEnd](const void* p, const size_t size) -> bool {
-        return p >= bufferStart && (static_cast<const std::byte*>(p) + size) <= bufferEnd;
+        const auto* p_bytes = static_cast<const std::byte*>(p);
+        return p_bytes >= bufferStart && size <= static_cast<size_t>(bufferEnd - p_bytes);
     };
 
     // First pass over buffer_size counts token size and index count.
@@ -551,6 +553,14 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
             combinedTokenIndices[rayState.current_index++] = tokenIndex;
 
             size_t token_data_size{sizeof(RayHistoryTokenControl) + static_cast<std::size_t>(control->tokenLength) * 4};  // Size in DWORDS.
+            if (rayState.token_byte_current_idx + token_data_size > combinedTokenData.size())
+            {
+                {
+                    std::scoped_lock<std::mutex> plock(process_mutex_);
+                    error_state_ = true;
+                }
+                break;
+            }
             std::memcpy(&combinedTokenData[rayState.token_byte_current_idx], buffer_data + offset, token_data_size);
             rayState.token_byte_current_idx += token_data_size;
 
@@ -582,8 +592,8 @@ void RraAsyncRayHistoryLoader::ReadRayHistoryTraceFromRawBuffer(size_t buffer_si
         }
     }
 
-    auto result =
-        std::make_shared<RayHistoryTrace>(std::move(combinedTokenData), std::move(combinedTokenIndices), std::move(combinedRayRanges), (dx * dy * dz) - 1);
+    auto result = std::make_shared<RayHistoryTrace>(
+        std::move(combinedTokenData), std::move(combinedTokenIndices), std::move(combinedRayRanges), ray_count > 0 ? static_cast<uint32_t>(ray_count - 1) : 0);
 
     const DispatchSize dispatchSize = {dx, dy, dz};
 

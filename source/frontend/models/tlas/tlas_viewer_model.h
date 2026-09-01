@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the TLAS viewer model.
@@ -24,6 +25,7 @@ namespace rra
         kTlasStatsType,
         kTlasStatsBlasAddress,
         kTlasStatsParent,
+        kTlasStatsPackedRefCount,
         kTlasStatsInstanceIndex,
         kTlasStatsInstanceId,
         kTlasStatsInstanceMask,
@@ -195,7 +197,16 @@ namespace rra
         /// @return A string ready to be displayed by the UI.
         virtual QString AddressString(uint64_t bvh_index, uint32_t node_id) const override;
 
+        /// @brief Get how many parent slots reference the last selected node (RTIP3.1 node packing; >1 means packed).
+        ///
+        /// @return The reference count (1 when the node is not packed).
+        uint32_t SelectedNodePackedRefCount() const
+        {
+            return last_selected_packed_ref_count_;
+        }
+
     private:
+        uint32_t             last_selected_packed_ref_count_ = 1;        ///< Parent slots referencing the last selected node (RTIP3.1 packing; >1 = packed).
         bool                 last_selected_node_is_instance_ = false;    ///< True if the last selected node is an instance node.
         QStandardItemModel*  transform_table_model_          = nullptr;  ///< Model associated with the transform table.
         QStandardItemModel*  position_table_model_           = nullptr;  ///< Model associated with the position table.

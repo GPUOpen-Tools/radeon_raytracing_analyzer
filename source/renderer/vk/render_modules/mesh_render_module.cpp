@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the mesh render module.
@@ -685,6 +686,16 @@ namespace rra
             InitializeGeometryColorPipeline(
                 "GeometryColorInstanceMask.vs.spv", "GeometryColorInstanceMask.ps.spv", instance_mask_attr, GeometryColoringMode::kInstanceMask);
 
+            std::vector<VkVertexInputAttributeDescription> partition_index_attr{
+                VERTEX_ATTRIBUTE(0, position),
+
+                INSTANCE_ATTRIBUTE_FOUR_SLOTS(1, instance_transform),
+                INSTANCE_ATTRIBUTE(5, wireframe_metadata),
+                INSTANCE_ATTRIBUTE(6, partition_index),
+            };
+            InitializeGeometryColorPipeline(
+                "GeometryColorPartitionIndex.vs.spv", "GeometryColorPartitionIndex.ps.spv", partition_index_attr, GeometryColoringMode::kPartitionIndex);
+
             std::vector<VkVertexInputAttributeDescription> lit_attr{
                 VERTEX_ATTRIBUTE(0, position),
                 VERTEX_ATTRIBUTE(1, normal),
@@ -1003,6 +1014,7 @@ namespace rra
                     mesh_instance_data.average_triangle_sah = instance_transforms[i].average_triangle_sah;
                     mesh_instance_data.build_flags          = instance_transforms[i].build_flags;
                     mesh_instance_data.rebraided            = instance_transforms[i].rebraided;
+                    mesh_instance_data.partition_index      = instance_transforms[i].partition_index;
                     mesh_instance_data.wireframe_metadata =
                         GetWireframeColor(render_state_.render_wireframe, instance_transforms[i].selected, current_scene_info_);
 

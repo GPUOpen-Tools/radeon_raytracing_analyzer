@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test file chunks implementation.
@@ -13,7 +14,7 @@
 #include "public/rra_ray_history.h"
 
 #ifndef _WIN32
-#include "public/linux/safe_crt.h"
+#include "linux/safe_crt.h"
 #endif
 
 #include "api_info.h"

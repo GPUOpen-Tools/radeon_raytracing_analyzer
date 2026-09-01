@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition for the BVH interface.
@@ -54,7 +55,7 @@ bool RraBvhHasChildren(const rta::IBvh* bvh, uint32_t node_id);
 ///
 /// @param [in]  bvh                The acceleration structure containing the node of interest.
 /// @param [in]  parent_node        The parent to get count for.
-/// @param [out] out_child_count    A pointer to to the child node count.
+/// @param [out] out_child_count    A pointer to the child node count.
 ///
 /// @return kRraOk if successful or an RraErrorCode if an error occurred.
 RraErrorCode RraBvhGetChildNodeCount(const rta::IBvh* bvh, uint32_t parent_node, uint32_t* out_child_count);

@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Backend test config header.
@@ -14,8 +15,8 @@
 
 struct RRATestConfig
 {
-    std::string trace_file_name;  ///< The name of the current file being tested.
-    backend_test::Log log;  ///< The log file.
+    std::string       trace_file_name;  ///< The name of the current file being tested.
+    backend_test::Log log;              ///< The log file.
 };
 
 #endif  //  RRA_BACKEND_TEST_RRA_TEST_CONFIG_H_

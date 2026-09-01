@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the Vulkan renderer.
@@ -542,6 +543,17 @@ namespace rra
 
         void RendererVulkan::HandleDimensionsUpdated()
         {
+            swapchain_.OnDestroyWindowSizeDependentResources();
+
+            swapchain_.OnCreateWindowSizeDependentResources(width_, height_, (bool)VSYNC_ENABLE);
+
+            // The swapchain clamps the requested dimensions to the surface's capabilities, so the
+            // resulting framebuffer size may differ from width_/height_. Sync to the actual extent
+            // so renderArea, viewport, and scissor never exceed the framebuffer dimensions.
+            const VkExtent2D swapchain_extent = swapchain_.GetSwapchainExtent();
+            width_                            = static_cast<int>(swapchain_extent.width);
+            height_                           = static_cast<int>(swapchain_extent.height);
+
             // Set the viewport dimensions.
             viewport_.x        = 0;
             viewport_.y        = static_cast<float>(height_);
@@ -555,10 +567,6 @@ namespace rra
             scissor_.extent.height = height_;
             scissor_.offset.x      = 0;
             scissor_.offset.y      = 0;
-
-            swapchain_.OnDestroyWindowSizeDependentResources();
-
-            swapchain_.OnCreateWindowSizeDependentResources(width_, height_, (bool)VSYNC_ENABLE);
 
             float aspect_ratio = static_cast<float>(width_) / static_cast<float>(height_);
             camera_.UpdateAspectRatio(aspect_ratio);

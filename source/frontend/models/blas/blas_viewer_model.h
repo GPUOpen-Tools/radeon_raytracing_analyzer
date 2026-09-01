@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Definition of the BLAS viewer model.
@@ -43,6 +44,7 @@ namespace rra
         kBlasStatsPrimitiveIndexLabel8,
         kBlasStatsGeometryIndex,
         kBlasStatsParent,
+        kBlasStatsPackedRefCount,
         kBlasStatsFocus,
 
         kBlasStatsNumWidgets,
@@ -144,6 +146,14 @@ namespace rra
         /// @returns True if selected node is a triangle node, false otherwise.
         virtual bool SelectedNodeIsLeaf() const override;
 
+        /// @brief Get whether the selected node is a Cluster BLAS (CBLAS) cluster-reference leaf (a CLAS reference).
+        ///
+        /// Such a node is a hardware instance node, not a box/triangle node, so surface-area-heuristic stats
+        /// do not apply to it.
+        ///
+        /// @returns True if the selected node is a cluster-reference leaf, false otherwise.
+        bool SelectedNodeIsClusterRef() const;
+
         /// @brief Update internal state tracking whether the last selected node is a leaf node.
         ///
         /// @param [in] model_index The instance node model index.
@@ -168,6 +178,17 @@ namespace rra
         ///
         /// @return The triangle count.
         uint32_t SelectedNodeTriangleCount() const;
+
+        /// @brief Get how many parent box slots reference the selected node (RTIP3.1 node packing).
+        ///
+        /// A value > 1 means the node is packed: multiple sibling slots point at it, each with its own bounding
+        /// box but sharing one child subtree. 1 means it is a normal, singly-referenced node.
+        ///
+        /// @return The number of referencing slots.
+        uint32_t SelectedNodePackedRefCount() const
+        {
+            return last_selected_packed_ref_count_;
+        }
 
     private:
         /// @brief Get the parent node ID of the currently selected node.
@@ -200,7 +221,9 @@ namespace rra
         void UpdateStatistics(uint64_t blas_index, uint32_t node_id, uint32_t child_index, uint32_t global_child_index);
 
         bool                             last_selected_node_is_tri_    = false;    ///< True if last selected node is triangle node.
+        bool                             last_selected_node_is_cluster_ref_ = false;  ///< True if last selected node is a CBLAS cluster-reference leaf.
         uint32_t                         last_selected_node_tri_count_ = 0;        ///< The triangle count of the last selected node.
+        uint32_t                         last_selected_packed_ref_count_ = 1;      ///< Parent slots referencing the last selected node (RTIP3.1 packing; >1 = packed).
         std::vector<QStandardItemModel*> vertex_table_models_triangle_ = {};       ///< Model associated with the vertex table for triangle 1.
         FlagsTableItemModel*             geometry_flags_table_model_   = nullptr;  ///< Model associated with the geometry flags table.
     };

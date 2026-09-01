@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of useful utility functions.
@@ -15,7 +16,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "public/linux/safe_crt.h"
+#include "linux/safe_crt.h"
 #endif
 
 #include <QDir>

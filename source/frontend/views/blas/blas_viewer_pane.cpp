@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of the BLAS viewer pane.
@@ -7,8 +8,11 @@
 
 #include "views/blas/blas_viewer_pane.h"
 
+#include <QTimer>
+
 #include "qt_common/utils/qt_util.h"
 
+#include "public/rra_blas.h"
 #include "public/rra_rtip_info.h"
 
 #include "ui_triangle_group.h"
@@ -96,8 +100,12 @@ BlasViewerPane::BlasViewerPane(QWidget* parent)
     model_->InitializeModel(ui_->content_subtree_mean_, rra::kBlasStatsSAHSubTreeMean, "text");
     model_->InitializeModel(ui_->content_geometry_index_, rra::kBlasStatsGeometryIndex, "text");
     model_->InitializeModel(ui_->content_parent_blas_, rra::kBlasStatsParent, "text");
+    model_->InitializeModel(ui_->content_packed_ref_count_, rra::kBlasStatsPackedRefCount, "text");
 
     ui_->content_parent_blas_->SetLinkStyleSheet();
+
+    // RTIP3.1 node-packing metric; shown only when the selected node is shared by multiple parent slots.
+    ui_->packed_ref_group_->hide();
 
     ui_->triangle_split_info_->setCursor(Qt::PointingHandCursor);
     ui_->triangle_split_info_->hide();
@@ -200,6 +208,7 @@ void BlasViewerPane::OnTraceOpen()
     InitializeRendererWidget(ui_->blas_scene_, ui_->side_panel_container_, ui_->viewer_container_widget_, rra::renderer::BvhTypeFlags::BottomLevel);
 
     last_selected_as_id_ = 0;
+    cluster_drill_stack_.clear();
     ui_->side_panel_container_->OnTraceOpen();
     ui_->tree_depth_slider_->SetLowerValue(0);
     ui_->tree_depth_slider_->SetUpperValue(0);
@@ -208,17 +217,91 @@ void BlasViewerPane::OnTraceOpen()
 
 void BlasViewerPane::showEvent(QShowEvent* event)
 {
-    ui_->label_bvh_->setText("BLAS:");
+    UpdateBvhTypeLabel();
     ui_->side_panel_container_->GetViewPane()->SetControlStyle(rra::Settings::Get().GetControlStyle(rra::kPaneIdBlasViewer));
     AccelerationStructureViewerPane::showEvent(event);
 }
 
+void BlasViewerPane::UpdateBvhTypeLabel()
+{
+    // The BLAS pane inspects three AS tiers of the CLAS hierarchy; label them so the user knows which one they see.
+    if (RraBlasIsClusterBlas(last_selected_as_id_))
+    {
+        ui_->label_bvh_->setText("CBLAS:");
+    }
+    else if (RraBlasIsCluster(last_selected_as_id_))
+    {
+        ui_->label_bvh_->setText("CLAS:");
+    }
+    else
+    {
+        ui_->label_bvh_->setText("BLAS:");
+    }
+}
+
 void BlasViewerPane::SetBlasSelection(uint64_t blas_index)
 {
+    // A fresh BLAS selection from outside the CLAS drill machinery (a TLAS drill-in or a manual combo-box pick)
+    // starts a new inspection chain, so discard any pending CLAS drill-down history. In-drill switches keep it.
+    if (!in_cluster_nav_)
+    {
+        cluster_drill_stack_.clear();
+    }
+
     last_selected_as_id_ = blas_index;
 
     uint32_t procedural_node_count = derived_model_->GetProceduralNodeCount(blas_index);
     ui_->side_panel_container_->MarkProceduralGeometry(procedural_node_count > 0);
+}
+
+void BlasViewerPane::SelectClusterBlas(uint64_t clas_blas_index)
+{
+    // Remember the CBLAS (or parent CLAS) we're drilling from so Back can walk CLAS -> CBLAS -> TLAS.
+    cluster_drill_stack_.push_back(last_selected_as_id_);
+    SwitchToClusterBlas(clas_blas_index);
+}
+
+bool BlasViewerPane::PopClusterDrillBack()
+{
+    if (cluster_drill_stack_.empty())
+    {
+        return false;
+    }
+
+    uint64_t parent_blas_index = cluster_drill_stack_.back();
+    cluster_drill_stack_.pop_back();
+    SwitchToClusterBlas(parent_blas_index);
+    return true;
+}
+
+void BlasViewerPane::SwitchToClusterBlas(uint64_t blas_index)
+{
+    // Switch the AS combo box to the target row, which reloads the viewer scene and tree via UpdateSelectedBlas.
+    int target_row = -1;
+    for (int i = 0; i < acceleration_structure_combo_box_->RowCount(); ++i)
+    {
+        QListWidgetItem* item = acceleration_structure_combo_box_->FindItem(i);
+        if (item && item->data(Qt::UserRole).toULongLong() == blas_index)
+        {
+            target_row = i;
+            break;
+        }
+    }
+    if (target_row < 0)
+    {
+        return;
+    }
+
+    // Guard so the BlasSelected emissions below don't clear the drill stack we're maintaining.
+    in_cluster_nav_ = true;
+
+    // Keep the BLAS sub-panes (properties/geometries/instances/triangles) in sync with the drilled-into AS.
+    emit rra::MessageManager::Get().BlasSelected(blas_index);
+
+    acceleration_structure_combo_box_->SetSelectedRow(target_row);
+    UpdateSelectedBlas();
+
+    in_cluster_nav_ = false;
 }
 
 void BlasViewerPane::UpdateTreeDepths(int min_value, int max_value)
@@ -254,6 +337,7 @@ void BlasViewerPane::UpdateWidgets(const QModelIndex& index)
     ui_->geometry_information_->setVisible(model_->SelectedNodeIsLeaf());
     ui_->triangle_scroll_area_->setVisible(model_->SelectedNodeIsLeaf());
     ui_->triangle_split_group_->setVisible(model_->IsTriangleSplit(last_selected_as_id_));
+    ui_->packed_ref_group_->setVisible(common_valid && derived_model_->SelectedNodePackedRefCount() > 1);
 
     uint32_t tri_count{derived_model_->SelectedNodeTriangleCount()};
     ui_->triangle_scroll_area_->setMinimumHeight(150 * std::min(tri_count, 2u));
@@ -262,16 +346,32 @@ void BlasViewerPane::UpdateWidgets(const QModelIndex& index)
         triangle_widgets_[i]->setVisible(i < tri_count);
     }
 
-    // Subtrees are redundant for leaf nodes.
-    ui_->label_subtree_max_->setVisible(!model_->SelectedNodeIsLeaf());
-    ui_->content_subtree_min_->setVisible(!model_->SelectedNodeIsLeaf());
-    ui_->label_subtree_mean_->setVisible(!model_->SelectedNodeIsLeaf());
-    ui_->content_subtree_mean_->setVisible(!model_->SelectedNodeIsLeaf());
+    // Subtrees are redundant for leaf nodes. A CBLAS cluster-ref leaf is a hardware instance node with no
+    // surface-area heuristic; repurpose the top SAH row to show the instance mask, hide the sub-tree rows, and
+    // show the leaf's world-to-object transform in the bottom matrix table (mirroring the TLAS instance view).
+    const bool is_cluster_ref = derived_model_->SelectedNodeIsClusterRef();
+    const bool show_subtree   = !model_->SelectedNodeIsLeaf() && !is_cluster_ref;
+    ui_->label_current_sah_->setVisible(true);
+    ui_->content_current_sah_->setVisible(true);
+    ui_->label_current_sah_->setText(is_cluster_ref ? "Instance mask" : "Surface area heuristic");
+    ui_->label_subtree_max_->setVisible(show_subtree);
+    ui_->content_subtree_min_->setVisible(show_subtree);
+    ui_->label_subtree_mean_->setVisible(show_subtree);
+    ui_->content_subtree_mean_->setVisible(show_subtree);
 
-    if (RraRtipInfoGetOBBSupported())
+    if (is_cluster_ref)
     {
+        ui_->label_bottom_table_->setText("Instance transform");
+        ui_->label_bottom_table_->setToolTip("The world-to-object transform of this CLAS reference.");
         ui_->label_bottom_table_->setVisible(true);
         ui_->bottom_table_->setVisible(true);
+    }
+    else
+    {
+        ui_->label_bottom_table_->setText("Bounding box orientation");
+        ui_->label_bottom_table_->setToolTip("The rotation matrix of the bounding volume.");
+        ui_->label_bottom_table_->setVisible(RraRtipInfoGetOBBSupported());
+        ui_->bottom_table_->setVisible(RraRtipInfoGetOBBSupported());
     }
 }
 
@@ -293,6 +393,8 @@ void BlasViewerPane::UpdateSelectedBlas()
         ui_->blas_tree_->SetViewerModel(model_, last_selected_as_id_);
         ui_->viewer_container_widget_->SetScene(scene);
         ui_->expand_collapse_tree_->SetCurrentItemIndex(rra::AccelerationStructureViewerModel::TreeViewExpandMode::kCollapsed);
+
+        UpdateBvhTypeLabel();
 
         int current_row = acceleration_structure_combo_box_->CurrentRow();
         int row         = model_->FindRowFromAccelerationStructureIndex(last_selected_as_id_);
@@ -325,6 +427,23 @@ void BlasViewerPane::SelectLeafNode(const bool navigate_to_triangles_pane)
         // If the node isn't visible or enabled (it's grayed out), then don't select anything.
         if (node && !(node->IsEnabled() && node->IsVisible()))
         {
+            return;
+        }
+
+        // A Cluster BLAS (CBLAS) cluster-ref leaf references a CLAS, which is itself a BLAS index. Double-clicking
+        // drills into that CLAS within this same BLAS pane (nested instancing); single-clicking just leaves it
+        // selected (already applied to the scene) with no triangle-pane side effects, since a cluster-ref leaf
+        // has no triangle of its own.
+        if (RraBlasIsClusterRefNode(last_selected_as_id_, static_cast<uint32_t>(node_id)))
+        {
+            if (navigate_to_triangles_pane)
+            {
+                uint64_t clas_blas_index = 0;
+                if (RraBlasGetClasIndexFromClusterRefNode(last_selected_as_id_, static_cast<uint32_t>(node_id), &clas_blas_index) == kRraOk)
+                {
+                    SelectClusterBlas(clas_blas_index);
+                }
+            }
             return;
         }
 
@@ -444,7 +563,40 @@ void BlasViewerPane::TreeNodeChanged(const QItemSelection& selected, const QItem
     if (selected_indices.size() > 0)
     {
         const QModelIndex& model_index = selected_indices[0];
-        bool               is_root     = !model_index.parent().isValid();
+
+        // RTIP3.1 node packing: a "Referenced subtree" placeholder redirects to the canonical (primary) node that owns
+        // the shared subtree. Selecting it jumps the tree to that canonical node, which then drives the normal
+        // selection/highlight path via the re-fired selection change.
+        if (model_ != nullptr && model_->IsModelIndexReferencePlaceholder(model_index))
+        {
+            // The tree model's data() only exposes DisplayRole/ToolTipRole, so read the canonical key from the display
+            // payload (node_child_id) rather than UserRole, which the model returns empty.
+            const auto        item_data       = qvariant_cast<rra::AccelerationStructureTreeViewItemData>(model_index.data(Qt::DisplayRole));
+            const uint64_t    canonical_id    = item_data.node_child_id;
+            const QModelIndex canonical_index = model_->GetModelIndexForNode(canonical_id);
+            if (canonical_index.isValid())
+            {
+                // Defer the jump to the next event-loop tick: changing the selection synchronously inside this
+                // selectionChanged handler gets clobbered when the in-flight click finishes, leaving the placeholder as
+                // the active (blue) row. setCurrentIndex moves both the current row and the selection so the tree
+                // scrolls to and focuses the canonical node, which then drives the normal highlight path.
+                QTreeView*                  tree = ui_->blas_tree_;
+                const QPersistentModelIndex target(canonical_index);
+                QTimer::singleShot(0, this, [this, tree, target]() {
+                    if (target.isValid())
+                    {
+                        QModelIndex idx(target);
+                        // SelectTreeItem expands collapsed ancestors and scrolls the canonical node into view;
+                        // setCurrentIndex then moves the active (blue) row and re-fires the normal highlight path.
+                        SelectTreeItem(tree, idx);
+                        tree->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+                    }
+                });
+                return;
+            }
+        }
+
+        bool is_root = !model_index.parent().isValid();
 
         // We only show the parent address if the selected node is not the root node.
         ui_->label_parent_blas_->setVisible(!is_root);

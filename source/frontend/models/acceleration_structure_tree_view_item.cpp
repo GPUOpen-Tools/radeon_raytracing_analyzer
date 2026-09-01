@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure (AS) tree-view item.
@@ -80,6 +81,32 @@ namespace rra
 
         if (column == 0)
         {
+            // RTIP3.1 node packing: a "Referenced subtree" placeholder redirects to the primary sibling that owns the
+            // shared subtree. It carries the primary's composite key (so selecting it jumps to the canonical node via
+            // the scene selection round-trip) but shows a fixed label instead of the primary's node name/address.
+            if (is_reference_placeholder_)
+            {
+                switch (role)
+                {
+                case Qt::DisplayRole:
+                {
+                    AccelerationStructureTreeViewItemData placeholder_data;
+                    placeholder_data.display_name     = "Referenced subtree";
+                    placeholder_data.node_child_id    = node_data_;
+                    placeholder_data.node_child_index = child_index_;
+                    QVariant variant;
+                    variant.setValue(placeholder_data);
+                    return variant;
+                }
+                case Qt::ToolTipRole:
+                    return QString("This subtree is shared (node packing). Select to jump to the canonical node.");
+                case Qt::UserRole:
+                    return static_cast<qulonglong>(node_data_);
+                default:
+                    return QVariant();
+                }
+            }
+
             switch (role)
             {
             case Qt::DisplayRole:
@@ -128,16 +155,32 @@ namespace rra
                     item_data.node_child_id    = node_data_;
                     item_data.node_child_index = child_index_;
 
+                    // RTIP3.1 node packing: several sibling slots point to the same child node, so tag the duplicate
+                    // rows to make the shared subtree obvious in the tree.
+                    if (is_packed_)
+                    {
+                        item_data.display_name += " (packed)";
+                    }
+
                     const dxr::amd::NodePointer* node = reinterpret_cast<const dxr::amd::NodePointer*>(&node_data_);
-                    if (node->IsInstanceNode())
+                    if (is_tlas && node->IsInstanceNode())
                     {
                         uint64_t blas_index{};
                         error_code = RraTlasGetBlasIndexFromInstanceNode(as_index, node_data_, &blas_index);
-                        RRA_ASSERT(error_code == kRraOk);
-                        if (RraBlasIsEmpty(blas_index))
+                        // A partitioned/incomplete trace may reference a BLAS that isn't present in the
+                        // capture, so a failed lookup is expected here rather than a hard error.
+                        if (error_code != kRraOk || RraBlasIsEmpty(blas_index))
                         {
                             item_data.display_name += " (missing BLAS)";
                         }
+                    }
+                    else if (!is_tlas && RraBlasIsClusterRefNode(as_index, node_data_))
+                    {
+                        // A Cluster BLAS (CBLAS) leaf references a CLAS; display it as "CLAS [id]" rather than a
+                        // triangle/instance node name.
+                        uint32_t clas_id = 0;
+                        RraBlasGetClusterRefNodeId(as_index, node_data_, &clas_id);
+                        item_data.display_name = QString("CLAS [%1] - 0x").arg(clas_id) + QString("%1").arg(node_address, 0, 16);
                     }
 
                     variant.setValue(item_data);

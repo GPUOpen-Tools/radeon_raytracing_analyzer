@@ -20,7 +20,7 @@ As well as selecting dispatches from the **Overview pane**, they can also be sel
 in the top-left. The UI will be updated according to the dispatch selected.
 
 If a user marker has been associated with a dispatch, it will show up under the dispatch dropdown as
-show here:
+shown here:
 
 .. image:: media/ray/ray_user_markers.png
 
@@ -169,4 +169,5 @@ These controls function almost identically to those in the TLAS and BLAS viewer 
 A notable difference is that this pane contains a lock button to the right of the Camera position label. When locked,
 the camera will preserve its position when changing the selected dispatch coordinate in the Dispatches tab instead of
 focusing on the first ray in that coordinate's ray list.
+
 

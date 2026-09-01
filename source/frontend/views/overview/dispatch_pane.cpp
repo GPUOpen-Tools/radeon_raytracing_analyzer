@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2023-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation for the dispatch pane.
@@ -233,14 +234,17 @@ void DispatchPane::ConfigureForComputeOrGraphicsDispatch()
 void DispatchPane::Update()
 {
     RraDispatchLoadStatus load_status = {};
-    RraRayGetDispatchStatus(dispatch_id_, &load_status);
+    RraErrorCode          error_code  = RraRayGetDispatchStatus(dispatch_id_, &load_status);
+    RRA_ASSERT(error_code == kRraOk);
 
     DispatchType dispatch_type = kRayTracingPipeline;
 
     RraRayHistoryStats stats = {};
 
-    RraRayGetDispatchType(dispatch_id_, &dispatch_type);
-    RraRayGetDispatchStats(dispatch_id_, &stats);
+    error_code = RraRayGetDispatchType(dispatch_id_, &dispatch_type);
+    RRA_ASSERT(error_code == kRraOk);
+    error_code = RraRayGetDispatchStats(dispatch_id_, &stats);
+    RRA_ASSERT(error_code == kRraOk);
 
     SetTraversalParameters(stats.ray_count, stats.loop_iteration_count, stats.instance_intersection_count, stats.ray_count / (float)stats.pixel_count);
     SetInvocationParameters(dispatch_type, stats.raygen_count, stats.closest_hit_count, stats.any_hit_count, stats.intersection_count, stats.miss_count);
@@ -308,7 +312,8 @@ void DispatchPane::Update()
         RraApiInfoIsVulkan() ? (is_rt_pipeline ? "vkCmdTraceRaysKHR" : "vkCmdDispatch") : (is_rt_pipeline ? "DispatchRays" : "Dispatch");
 
     char user_marker_string_buffer[512];
-    RraRayGetDispatchUserMarkerString(dispatch_id_, user_marker_string_buffer, 512);
+    error_code = RraRayGetDispatchUserMarkerString(dispatch_id_, user_marker_string_buffer, 512);
+    RRA_ASSERT(error_code == kRraOk);
     if (strlen(user_marker_string_buffer) > 0)
     {
         std::string user_marker_string{user_marker_string_buffer};
@@ -342,7 +347,9 @@ void DispatchPane::Update()
     uint32_t width  = 0;
     uint32_t height = 0;
     uint32_t depth  = 0;
-    RraRayGetDispatchDimensions(dispatch_id_, &width, &height, &depth);
+    error_code      = RraRayGetDispatchDimensions(dispatch_id_, &width, &height, &depth);
+    RRA_ASSERT(error_code == kRraOk);
+    RRA_UNUSED(error_code);
 
     SetDispatchDimensions(trace_rays_str.c_str(), width, height, depth);
 

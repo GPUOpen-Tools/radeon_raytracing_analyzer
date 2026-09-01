@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Declaration for the Scene class.
@@ -299,6 +300,13 @@ namespace rra
         /// @param [in] show_leaf_bounds      Should the leaf bounding volume wireframes be shown.
         void SetShowBounds(bool show_internal_bounds, bool show_leaf_bounds);
 
+        /// @brief Set the per-partition bounding box overlay visibility state for the scene.
+        ///
+        /// Only has a visible effect for PTLAS traces; non-partitioned scenes append no partition boxes.
+        ///
+        /// @param [in] show_partition_bounds  Should the per-partition bounding boxes be shown.
+        void SetShowPartitionBounds(bool show_partition_bounds);
+
         /// @brief Get the current options avaiable for the selection in the scene.
         ///
         /// @param [in] request               The request that the options are requested with.
@@ -426,6 +434,11 @@ namespace rra
         /// @brief Update custom triangle list.
         void UpdateBoundingVolumes();
 
+        /// @brief Append one bounding box per PTLAS partition to the bounding volume list.
+        ///
+        /// No-op unless the scene is a partitioned TLAS and the partition-bounds overlay is enabled.
+        void AppendPartitionBoundingVolumes();
+
         /// @brief Compute the maximum triangle count across all BLAS meshes.
         ///
         /// @returns The maximum triangle count.
@@ -477,11 +490,13 @@ namespace rra
         uint32_t depth_range_lower_bound_ = 0;  ///< The lower bound for the depth range.
         uint32_t depth_range_upper_bound_ = 0;  ///< The upper bound for the depth range.
 
-        bool show_internal_bounds_ = true;
-        bool show_leaf_bounds_     = true;
+        bool show_internal_bounds_  = true;
+        bool show_leaf_bounds_      = true;
+        bool show_partition_bounds_ = false;
 
         uint64_t bvh_index_ = {};  ///< The BVH index of this scene.
         bool     is_tlas_   = {};  ///< True if this is a TLAS scene, false if it's a BLAS scene.
+        bool     tlas_has_node_packing_ = false;  ///< RTIP3.1 TLAS node packing: node keys are composite, so don't mask to 32 bits.
 
         GeometryFilterState geometry_filter_state_;  ///< The current geometry filter state for CPU-side raycast filtering.
 

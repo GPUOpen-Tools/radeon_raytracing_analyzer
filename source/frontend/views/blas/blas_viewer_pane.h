@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the BLAS viewer pane.
@@ -60,6 +61,16 @@ public:
     /// @param blas_root_nodes The root nodes.
     void SetBlasRootNodes(std::vector<rra::SceneNode*>* blas_root_nodes);
 
+    /// @brief Unwind one level of CLAS drill-down (walk back CLAS -> CBLAS within the BLAS pane).
+    ///
+    /// CLAS visualization is nested instancing (TLAS -> CBLAS -> CLAS), all shown in the BLAS pane. Since
+    /// drilling CBLAS -> CLAS stays in the same pane, the global (pane-based) navigation manager can't
+    /// distinguish these levels. The main window consults this before the navigation manager on Back so the
+    /// back-stack walks CLAS -> CBLAS -> TLAS. Non-CLAS navigation never populates the drill stack.
+    ///
+    /// @return true if a drill level was unwound (Back consumed); false if there's nothing to unwind.
+    bool PopClusterDrillBack();
+
 protected:
     /// @brief Updates widgets depending on the model.
     ///
@@ -105,6 +116,9 @@ private:
     /// Calls the base class and emits a signal indicating the BLAS index has changed.
     void UpdateSelectedBlas();
 
+    /// @brief Set the AS-type label ("BLAS:", "CBLAS:", or "CLAS:") for the currently inspected AS.
+    void UpdateBvhTypeLabel();
+
     /// @brief Set the BLAS index in the BLAS combo box.
     ///
     /// Selecting the index in the BLAS combo box should force a redraw of
@@ -112,6 +126,20 @@ private:
     ///
     /// @param [in] blas_index The index to select in the combo box.
     void SetBlasSelection(uint64_t blas_index);
+
+    /// @brief Drill into the CLAS referenced by a Cluster BLAS (CBLAS) cluster-ref leaf, switching the inspected AS.
+    ///
+    /// A CLAS is itself a BLAS index, so this stays within the BLAS pane and switches the inspected AS to the CLAS.
+    ///
+    /// @param [in] clas_blas_index The BLAS index of the referenced CLAS.
+    void SelectClusterBlas(uint64_t clas_blas_index);
+
+    /// @brief Switch the inspected AS to the given BLAS/CLAS index within the BLAS pane (no drill-stack push).
+    ///
+    /// Shared by the forward drill (SelectClusterBlas) and the Back unwind (PopClusterDrillBack).
+    ///
+    /// @param [in] blas_index The BLAS/CLAS index to inspect.
+    void SwitchToClusterBlas(uint64_t blas_index);
 
     /// @brief Select the leaf node under the mouse. This will be a triangle node.
     ///
@@ -135,6 +163,9 @@ private:
     FlagTableItemDelegate*         flag_table_delegate_ = nullptr;   ///< Delegate for drawing the geometry flags table.
     std::vector<ScaledPushButton*> split_triangle_sibling_buttons_;  ///< The buttons to navigate to split triangle siblings for split triangles.
     std::vector<QWidget*>          triangle_widgets_;                ///< A list of dynamic triangle widgets in the pane which need manual deletion.
+
+    std::vector<uint64_t> cluster_drill_stack_;   ///< AS indices to return to when unwinding CLAS drill-down (parent per drill level).
+    bool                  in_cluster_nav_ = false;  ///< True while a CLAS drill/unwind is switching the AS, so the drill stack isn't reset by the resulting BlasSelected.
 };
 
 #endif  // RRA_VIEWS_BLAS_BLAS_VIEWER_PANE_H_

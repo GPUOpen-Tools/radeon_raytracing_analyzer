@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for miscellaneous GPU definitions.
@@ -13,7 +14,7 @@
 
 // RawAccelStruct currently supported version numbers.
 #define GPURT_ACCEL_STRUCT_MAJOR_VERSION 16
-#define GPURT_ACCEL_STRUCT_MINOR_VERSION 5
+#define GPURT_ACCEL_STRUCT_MINOR_VERSION 12
 #define GPURT_ACCEL_STRUCT_VERSION ((GPURT_ACCEL_STRUCT_MAJOR_VERSION << 16) | GPURT_ACCEL_STRUCT_MINOR_VERSION)
 
 namespace rta

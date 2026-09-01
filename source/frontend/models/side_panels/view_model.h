@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Header for the View side pane model.
@@ -52,6 +53,7 @@ namespace rra
         kSidePaneArchitectureNavi3,
 
         kSidePaneRayFlagsAcceptFirstHit,
+        kSidePaneRayFlagsMaxAnyhitInvocations,
 
         kSidePaneViewXUp,
         kSidePaneViewYUp,
@@ -272,6 +274,12 @@ namespace rra
 
         /// @brief Disable the accept first hit flag.
         void DisableRayFlagsAcceptFirstHit();
+
+        /// @brief Enable the max anyhit invocations flag.
+        void EnableRayFlagsMaxAnyhitInvocations();
+
+        /// @brief Disable the max anyhit invocations flag.
+        void DisableRayFlagsMaxAnyhitInvocations();
 
         /// @brief Enable the cull back facing triangles flag.
         void EnableRayCullBackFacingTriangles();

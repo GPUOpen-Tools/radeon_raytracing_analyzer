@@ -1,5 +1,6 @@
 //=============================================================================
-// Copyright (c) 2021-2026 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright Advanced Micro Devices, Inc.
+// SPDX-License-Identifier: MIT
 /// @author AMD Developer Tools Team
 /// @file
 /// @brief  Implementation of an acceleration structure viewer model base class.
@@ -99,6 +100,8 @@ namespace rra
 
     void AccelerationStructureViewerModel::PopulateRotationTable(const glm::mat3& rotation)
     {
+        // Reset to 3 columns in case a prior selection widened this to a 4-column instance transform.
+        bottom_table_model_->setColumnCount(3);
         widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[0][0], 0, 0, Qt::AlignRight);
         widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[0][1], 1, 0, Qt::AlignRight);
         widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[0][2], 2, 0, Qt::AlignRight);
@@ -108,6 +111,19 @@ namespace rra
         widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[2][0], 0, 2, Qt::AlignRight);
         widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[2][1], 1, 2, Qt::AlignRight);
         widget_util::SetTableModelDecimalData(bottom_table_model_, rotation[2][2], 2, 2, Qt::AlignRight);
+    }
+
+    void AccelerationStructureViewerModel::PopulateInstanceTransformTable(const float* transform)
+    {
+        // The rotation table is a 3x3 model; widen it to 4 columns so the translation column is shown too.
+        bottom_table_model_->setColumnCount(4);
+        for (int row = 0; row < 3; ++row)
+        {
+            for (int col = 0; col < 4; ++col)
+            {
+                widget_util::SetTableModelDecimalData(bottom_table_model_, transform[row * 4 + col], row, col, Qt::AlignRight);
+            }
+        }
     }
 
     void AccelerationStructureViewerModel::PopulateExtentsTable(const BoundingVolumeExtents& bounding_volume_extents)
@@ -320,6 +336,13 @@ namespace rra
         }
     }
 
+    std::string uintToHexString2(uint64_t value)
+    {
+        std::stringstream ss;
+        ss << std::hex << std::setfill('0') << std::setw(8) << value;
+        return "0x" + ss.str();
+    }
+
     renderer::GraphicsContextSceneInfo* GetGraphicsContextSceneInfo(std::vector<SceneNode*>& blas_root_nodes, renderer::GraphicsContextSceneInfo* info)
     {
         uint64_t     blas_count = 0;
@@ -333,9 +356,9 @@ namespace rra
         {
             renderer::TraversalTree& traversal_tree{info->acceleration_structures[blas_index]};
 
-            uint32_t total_tri_count{};
-            error_code = RraBlasGetUniqueTriangleCount(blas_index, &total_tri_count);
-            RRA_ASSERT(error_code == kRraOk);
+            // Size against the triangles the traversal actually emits (see SceneNode::CountBlasEmittedTriangles); the
+            // header's unique-triangle count can under-count when triangle nodes share prim-ranges and overflow the buffer.
+            const uint32_t total_tri_count = SceneNode::CountBlasEmittedTriangles(blas_index);
             traversal_tree.vertices.resize((size_t)total_tri_count * 3);
 
             uint64_t total_node_count{};
@@ -661,6 +684,17 @@ namespace rra
         }
 
         return item->IsNode();
+    }
+
+    bool AccelerationStructureViewerModel::IsModelIndexReferencePlaceholder(const QModelIndex& model_index) const
+    {
+        const QModelIndex                       proxy_model_index = tree_view_proxy_model_->mapToSource(model_index);
+        rra::AccelerationStructureTreeViewItem* item              = static_cast<rra::AccelerationStructureTreeViewItem*>(proxy_model_index.internalPointer());
+        if (!item)
+        {
+            return false;
+        }
+        return item->IsReferencePlaceholder();
     }
 
     void AccelerationStructureViewerModel::ToggleInstanceTransformWireframe()
